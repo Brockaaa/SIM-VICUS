@@ -44,6 +44,7 @@ public:
 		DT_Windows,
 		DT_WindowGlazingSystems,
 		DT_BoundaryConditions,
+		DT_LCAPeriods,
 		DT_Components,
 		DT_SubSurfaceComponents,
 		DT_SurfaceHeating,
@@ -147,6 +148,9 @@ public:
 
 	/*! Map of all database boundary conditions. */
 	VICUS::Database<VICUS::BoundaryCondition>			m_boundaryConditions;
+
+	/*! Map of all database lca periods. */
+	VICUS::Database<VICUS::LCAPeriod>					m_lcaPeriods;
 
 	/*! Map of all database components. */
 	VICUS::Database<VICUS::Component>					m_components;

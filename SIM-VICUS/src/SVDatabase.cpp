@@ -62,6 +62,7 @@ ToDo Hauke prüfen bitte Network würde ich dann bei ID-Space 1100000 anfangen l
 - NetworkComponents: 1105000-1107500
 - NetworkControllers: 1107500-1110000
 - SubNetworks: 1110000-1112500
+- LCAPeriods: 1112500-1212500
 */
 
 SVDatabase::SVDatabase() :
@@ -70,6 +71,7 @@ SVDatabase::SVDatabase() :
 	m_windows(1035000),
 	m_windowGlazingSystems(1031000),
 	m_boundaryConditions(1030000),
+	m_lcaPeriods(1112500),
 	m_components(1000001),
 	m_subSurfaceComponents(1040000),
 	m_surfaceHeatings(1050000),
@@ -105,6 +107,7 @@ void SVDatabase::readDatabases(DatabaseTypes t) {
 		m_windows.readXML(					dbDir / "db_windows.xml", "Windows", "Window", true);
 		m_windowGlazingSystems.readXML(		dbDir / "db_windowGlazingSystems.xml", "WindowGlazingSystems", "WindowGlazingSystem", true);
 		m_boundaryConditions.readXML(		dbDir / "db_boundaryConditions.xml", "BoundaryConditions", "BoundaryCondition", true);
+		m_lcaPeriods.readXML(			dbDir / "db_lcaPeriods.xml", "LCAPeriods", "LCAPeriod", true);
 		m_components.readXML(				dbDir / "db_components.xml", "Components", "Component", true);
 		m_subSurfaceComponents.readXML(		dbDir / "db_subSurfaceComponents.xml", "SubSurfaceComponents", "SubSurfaceComponent", true);
 		m_surfaceHeatings.readXML(			dbDir / "db_surfaceHeatings.xml", "SurfaceHeatings", "SurfaceHeating", true);
@@ -142,6 +145,8 @@ void SVDatabase::readDatabases(DatabaseTypes t) {
 		m_windowGlazingSystems.readXML(		userDbDir / "db_windowGlazingSystems.xml", "WindowGlazingSystems", "WindowGlazingSystem", false);
 	if (t == NUM_DT || t == DT_BoundaryConditions)
 		m_boundaryConditions.readXML(		userDbDir / "db_boundaryConditions.xml", "BoundaryConditions", "BoundaryCondition", false);
+	if (t == NUM_DT || t == DT_LCAPeriods)
+		m_lcaPeriods.readXML(			userDbDir / "db_lcaPeriods.xml", "LCAPeriods", "LCAPeriod", false);
 	if (t == NUM_DT || t == DT_Components)
 		m_components.readXML(				userDbDir / "db_components.xml", "Components", "Component", false);
 	if (t == NUM_DT || t == DT_SubSurfaceComponents)
@@ -194,6 +199,7 @@ void SVDatabase::writeDatabases() {
 	m_windows.writeXML(				userDbDir / "db_windows.xml", "Windows");
 	m_windowGlazingSystems.writeXML(userDbDir / "db_windowGlazingSystems.xml", "WindowGlazingSystems");
 	m_boundaryConditions.writeXML(	userDbDir / "db_boundaryConditions.xml", "BoundaryConditions");
+	m_lcaPeriods.writeXML(		userDbDir / "db_lcaPeriods.xml", "LCAPeriods");
 	m_components.writeXML(			userDbDir / "db_components.xml", "Components");
 	m_subSurfaceComponents.writeXML(userDbDir / "db_subSurfaceComponents.xml", "SubSurfaceComponents");
 	m_surfaceHeatings.writeXML(		userDbDir / "db_surfaceHeatings.xml", "SurfaceHeatings");
@@ -264,6 +270,7 @@ void SVDatabase::updateEmbeddedDatabase(VICUS::Project & p) {
 	storeVector(p.m_embeddedDB.m_windows, m_windows);
 	storeVector(p.m_embeddedDB.m_windowGlazingSystems, m_windowGlazingSystems);
 	storeVector(p.m_embeddedDB.m_boundaryConditions, m_boundaryConditions);
+	storeVector(p.m_embeddedDB.m_lcaPeriods, m_lcaPeriods);
 	storeVector(p.m_embeddedDB.m_components, m_components);
 	storeVector(p.m_embeddedDB.m_subSurfaceComponents, m_subSurfaceComponents);
 	storeVector(p.m_embeddedDB.m_surfaceHeatings, m_surfaceHeatings);
@@ -297,6 +304,8 @@ void SVDatabase::updateReferencedElements(const VICUS::Project &p) {
 	for (auto it=m_windowGlazingSystems.begin(); it!=m_windowGlazingSystems.end(); ++it)
 		it->second.m_isReferenced = false;
 	for (auto it=m_boundaryConditions.begin(); it!=m_boundaryConditions.end(); ++it)
+		it->second.m_isReferenced = false;
+	for (auto it=m_lcaPeriods.begin(); it!=m_lcaPeriods.end(); ++it)
 		it->second.m_isReferenced = false;
 	for (auto it=m_components.begin(); it!=m_components.end(); ++it)
 		it->second.m_isReferenced = false;
@@ -401,6 +410,7 @@ void SVDatabase::updateElementChildren() {
 	m_windows.clearChildren();
 	m_windowGlazingSystems.clearChildren();
 	m_boundaryConditions.clearChildren();
+	m_lcaPeriods.clearChildren();
 	m_components.clearChildren();
 	m_subSurfaceComponents.clearChildren();
 	m_surfaceHeatings.clearChildren();
@@ -621,6 +631,7 @@ void SVDatabase::determineDuplicates(std::vector<std::vector<SVDatabase::Duplica
 	findDublicates(m_windows, duplicatePairs[DT_Windows]);
 	findDublicates(m_windowGlazingSystems, duplicatePairs[DT_WindowGlazingSystems]);
 	findDublicates(m_boundaryConditions, duplicatePairs[DT_BoundaryConditions]);
+	findDublicates(m_lcaPeriods, duplicatePairs[DT_LCAPeriods]);
 	findDublicates(m_components, duplicatePairs[DT_Components]);
 	findDublicates(m_subSurfaceComponents, duplicatePairs[DT_SubSurfaceComponents]);
 	findDublicates(m_surfaceHeatings, duplicatePairs[DT_SurfaceHeating]);
@@ -977,6 +988,7 @@ void SVDatabase::removeLocalElements() {
 	m_windows.removeLocalElements();
 	m_windowGlazingSystems.removeLocalElements();
 	m_boundaryConditions.removeLocalElements();
+	m_lcaPeriods.removeLocalElements();
 	m_components.removeLocalElements();
 	m_subSurfaceComponents.removeLocalElements();
 	m_surfaceHeatings.removeLocalElements();
@@ -1011,6 +1023,8 @@ void SVDatabase::removeNotReferencedLocalElements(SVDatabase::DatabaseTypes dbTy
 			m_windowGlazingSystems.removeNotReferencedLocalElements(); break;
 		case DT_BoundaryConditions:
 			m_boundaryConditions.removeNotReferencedLocalElements(); break;
+		case DT_LCAPeriods:
+			m_lcaPeriods.removeNotReferencedLocalElements(); break;
 		case DT_Components:
 			m_components.removeNotReferencedLocalElements(); break;
 		case DT_SubSurfaceComponents:
@@ -1100,6 +1114,9 @@ void SVDatabase::findLocalChildren(DatabaseTypes dbType, unsigned int id,
 		case DT_BoundaryConditions:
 			Q_ASSERT(m_boundaryConditions[id] != nullptr);
 			m_boundaryConditions[id]->collectLocalChildren(localChildren); break;
+		case DT_LCAPeriods:
+			Q_ASSERT(m_lcaPeriods[id] != nullptr);
+			m_lcaPeriods[id]->collectLocalChildren(localChildren); break;
 		case DT_Components:
 			Q_ASSERT(m_components[id] != nullptr);
 			m_components[id]->collectLocalChildren(localChildren); break;

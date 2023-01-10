@@ -37,6 +37,7 @@
 #include "VICUS_WindowFrame.h"
 #include "VICUS_WindowDivider.h"
 #include "VICUS_BoundaryCondition.h"
+#include "VICUS_LCAPeriod.h"
 #include "VICUS_NetworkPipe.h"
 #include "VICUS_NetworkFluid.h"
 #include "VICUS_NetworkComponent.h"
@@ -77,6 +78,9 @@ public:
 	/*! Map of all database boundary conditions. */
 	std::vector<VICUS::BoundaryCondition>				m_boundaryConditions;				// XML:E
 
+	/*! Map of all database boundary conditions. */
+	std::vector<VICUS::LCAPeriod>					m_lcaPeriods;					// XML:E
+
 	/*! Map of all database components. */
 	std::vector<VICUS::Component>						m_components;						// XML:E
 
@@ -87,7 +91,7 @@ public:
 	std::vector<VICUS::SurfaceHeating>					m_surfaceHeatings;					// XML:E
 
 	/*! Map of all database supply systems. */
-	std::vector<VICUS::SupplySystem>					m_supplySystems;				// XML:E
+	std::vector<VICUS::SupplySystem>					m_supplySystems;					// XML:E
 
 	/*! Map of all database pipes */
 	std::vector<VICUS::NetworkPipe>						m_pipes;							// XML:E

@@ -132,6 +132,8 @@ public:
 	SVDatabaseEditDialog * dbSubSurfaceComponentEditDialog();
 	/*! Returns the boundary condition edit dialog. */
 	SVDatabaseEditDialog * dbBoundaryConditionEditDialog();
+	/*! Returns the lca period edit dialog. */
+	SVDatabaseEditDialog * dbLCAPeriodEditDialog();
 	/*! Returns the window edit dialog. */
 	SVDatabaseEditDialog * dbWindowEditDialog();
 	/*! Returns the window glazing system edit dialog. */
@@ -284,6 +286,7 @@ private slots:
 	void on_actionDBConstructions_triggered();
 
 	void on_actionDBBoundaryConditions_triggered();
+	void on_actionDBLCAPeriods_triggered();
 	void on_actionDBSchedules_triggered();
 	void on_actionDBInternalLoadsPerson_triggered();
 	void on_actionDBInternalLoadsElectricEquipment_triggered();
@@ -498,6 +501,7 @@ private:
 	SVDatabaseEditDialog				*m_dbComponentEditDialog						= nullptr;
 	SVDatabaseEditDialog				*m_dbSubSurfaceComponentEditDialog				= nullptr;
 	SVDatabaseEditDialog				*m_dbBoundaryConditionEditDialog				= nullptr;
+	SVDatabaseEditDialog				*m_dbLCAPeriodEditDialog						= nullptr;
 	SVDatabaseEditDialog				*m_dbPipeEditDialog								= nullptr;
 	SVDatabaseEditDialog				*m_dbFluidEditDialog							= nullptr;
 	SVDatabaseEditDialog				*m_dbNetworkControllerEditDialog				= nullptr;

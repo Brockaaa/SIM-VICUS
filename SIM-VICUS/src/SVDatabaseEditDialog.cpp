@@ -58,6 +58,8 @@
 #include "SVDBWindowGlazingSystemEditWidget.h"
 #include "SVDBBoundaryConditionTableModel.h"
 #include "SVDBBoundaryConditionEditWidget.h"
+#include "SVDBLCAPeriodTableModel.h"
+#include "SVDBLCAPeriodEditWidget.h"
 #include "SVDBScheduleTableModel.h"
 #include "SVDBScheduleEditWidget.h"
 #include "SVDBInternalLoadsTableModel.h"
@@ -359,6 +361,7 @@ void SVDatabaseEditDialog::on_pushButtonReloadUserDB_clicked() {
 			case SVDatabase::DT_Windows:				SVSettings::instance().m_db.m_windows.removeUserElements(); break;
 			case SVDatabase::DT_WindowGlazingSystems:	SVSettings::instance().m_db.m_windowGlazingSystems.removeUserElements(); break;
 			case SVDatabase::DT_BoundaryConditions:		SVSettings::instance().m_db.m_boundaryConditions.removeUserElements(); break;
+			case SVDatabase::DT_LCAPeriods:				SVSettings::instance().m_db.m_lcaPeriods.removeUserElements(); break;
 			case SVDatabase::DT_Components:				SVSettings::instance().m_db.m_components.removeUserElements(); break;
 			case SVDatabase::DT_SubSurfaceComponents:	SVSettings::instance().m_db.m_subSurfaceComponents.removeUserElements(); break;
 			case SVDatabase::DT_SurfaceHeating:			SVSettings::instance().m_db.m_surfaceHeatings.removeUserElements(); break;
@@ -540,6 +543,16 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createBoundaryConditionsEditDialog(
 		new SVDBBoundaryConditionTableModel(parent, SVSettings::instance().m_db),
 		new SVDBBoundaryConditionEditWidget(parent),
 		tr("Boundary Condition Database"), tr("Boundary condition properties"), true
+	);
+	dlg->resize(1400,800);
+	return dlg;
+}
+
+SVDatabaseEditDialog * SVDatabaseEditDialog::createLCAPeriodsEditDialog(QWidget * parent) {
+	SVDatabaseEditDialog * dlg = new SVDatabaseEditDialog(parent,
+		new SVDBLCAPeriodTableModel(parent, SVSettings::instance().m_db),
+		new SVDBLCAPeriodEditWidget(parent),
+		tr("LCA Period Database"), tr("LCA period properties"), true
 	);
 	dlg->resize(1400,800);
 	return dlg;

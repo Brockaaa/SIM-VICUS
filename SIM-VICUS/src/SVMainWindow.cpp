@@ -173,7 +173,7 @@ SVMainWindow::SVMainWindow(QWidget * /*parent*/) :
 	connect(w, &QWindow::screenChanged, this, &SVMainWindow::onScreenChanged);
 
 
-    m_ui->actionDBZoneControlShading->setEnabled(true);
+	m_ui->actionDBZoneControlShading->setEnabled(true);
 }
 
 
@@ -283,6 +283,12 @@ SVDatabaseEditDialog * SVMainWindow::dbBoundaryConditionEditDialog() {
 	if (m_dbBoundaryConditionEditDialog == nullptr)
 		m_dbBoundaryConditionEditDialog = SVDatabaseEditDialog::createBoundaryConditionsEditDialog(this);
 	return m_dbBoundaryConditionEditDialog;
+}
+
+SVDatabaseEditDialog * SVMainWindow::dbLCAPeriodEditDialog() {
+	if (m_dbLCAPeriodEditDialog == nullptr)
+		m_dbLCAPeriodEditDialog = SVDatabaseEditDialog::createLCAPeriodsEditDialog(this);
+	return m_dbLCAPeriodEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbWindowEditDialog() {
@@ -452,6 +458,10 @@ void SVMainWindow::on_actionDBSubSurfaceComponents_triggered() {
 
 void SVMainWindow::on_actionDBBoundaryConditions_triggered() {
 	dbBoundaryConditionEditDialog()->edit();
+}
+
+void SVMainWindow::on_actionDBLCAPeriods_triggered() {
+	dbLCAPeriodEditDialog()->edit();
 }
 
 void SVMainWindow::on_actionDBSchedules_triggered() {

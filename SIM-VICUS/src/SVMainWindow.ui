@@ -17,7 +17,7 @@
      <x>0</x>
      <y>0</y>
      <width>1112</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -142,6 +142,7 @@
     <addaction name="actionDBWindows"/>
     <addaction name="actionDBWindowGlazingSystems"/>
     <addaction name="actionDBBoundaryConditions"/>
+    <addaction name="actionDBLCAPeriods"/>
     <addaction name="actionDBSchedules"/>
     <addaction name="menuInternal_Loads"/>
     <addaction name="menuZoneControl"/>
@@ -806,6 +807,11 @@
   <action name="actionExportNetworkAsGeoJson">
    <property name="text">
     <string>Export Network as GeoJson...</string>
+   </property>
+  </action>
+  <action name="actionDBLCAPeriods">
+   <property name="text">
+    <string>LCA Periods...</string>
    </property>
   </action>
  </widget>

@@ -113,6 +113,7 @@ private:
 	static SVDatabaseEditDialog * createWindowEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createWindowGlazingSystemEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createBoundaryConditionsEditDialog(QWidget * parent);
+	static SVDatabaseEditDialog * createLCAPeriodsEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createScheduleEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createInternalLoadsEditDialog(QWidget * parent, VICUS::InternalLoad::Category category);
 	static SVDatabaseEditDialog * createZoneControlThermostatEditDialog(QWidget * parent);

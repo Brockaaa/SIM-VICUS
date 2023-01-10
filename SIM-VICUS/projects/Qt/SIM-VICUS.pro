@@ -80,6 +80,8 @@ SOURCES += \
 	../../src/SVCoSimCO2VentilationDialog.cpp \
 	../../src/SVDBDialogAddDependentElements.cpp \
 	../../src/SVDBDuplicatesDialog.cpp \
+	../../src/SVDBLCAPeriodEditWidget.cpp \
+	../../src/SVDBLCAPeriodTableModel.cpp \
 	../../src/SVDBNetworkControllerEditWidget.cpp \
 	../../src/SVDBNetworkControllerTableModel.cpp \
 	../../src/SVDBSubNetworkEditWidget.cpp \
@@ -273,6 +275,8 @@ HEADERS  += \
 	../../src/SVConversions.h \
 	../../src/SVDBDialogAddDependentElements.h \
 	../../src/SVDBDuplicatesDialog.h \
+	../../src/SVDBLCAPeriodEditWidget.h \
+	../../src/SVDBLCAPeriodTableModel.h \
 	../../src/SVDBNetworkControllerEditWidget.h \
 	../../src/SVDBNetworkControllerTableModel.h \
 	../../src/SVDBSubNetworkEditWidget.h \
@@ -473,6 +477,7 @@ FORMS    += \
 	../../src/SVCoSimCO2VentilationDialog.ui \
 	../../src/SVDBDialogAddDependentElements.ui \
 	../../src/SVDBDuplicatesDialog.ui \
+	../../src/SVDBLCAPeriodEditWidget.ui \
 	../../src/SVDBNetworkControllerEditWidget.ui \
 	../../src/SVDBSubNetworkEditWidget.ui \
 	../../src/SVDBSupplySystemEditWidget.ui \

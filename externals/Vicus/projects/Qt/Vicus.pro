@@ -37,6 +37,7 @@ HEADERS += \
 	../../src/VICUS_ArgsParser.h \
 	../../src/VICUS_BoundaryCondition.h \
 	../../src/VICUS_Building.h \
+	../../src/VICUS_LCAPeriod.h \
 	../../src/VICUS_BuildingLevel.h \
 	../../src/VICUS_CodeGenMacros.h \
 	../../src/VICUS_Component.h \
@@ -103,6 +104,7 @@ SOURCES += \
 	../../src/VICUS_AbstractDBElement.cpp \
 	../../src/VICUS_ArgsParser.cpp \
 	../../src/VICUS_BoundaryCondition.cpp \
+	../../src/VICUS_LCAPeriod.cpp \
 	../../src/VICUS_Component.cpp \
 	../../src/VICUS_Constants.cpp \
 	../../src/VICUS_Construction.cpp \
@@ -155,6 +157,7 @@ SOURCES += \
 	../../src/VICUS_utilities.cpp \
 	../../src/ncg/ncg_VICUS_BoundaryCondition.cpp \
 	../../src/ncg/ncg_VICUS_Building.cpp \
+	../../src/ncg/ncg_VICUS_LCAPeriod.cpp \
 	../../src/ncg/ncg_VICUS_BuildingLevel.cpp \
 	../../src/ncg/ncg_VICUS_Component.cpp \
 	../../src/ncg/ncg_VICUS_ComponentInstance.cpp \

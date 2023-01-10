@@ -116,6 +116,7 @@ void SVDBDuplicatesDialog::onCurrentRowChanged(const QModelIndex & current, cons
 		case SVDatabase::DT_Windows:				dbItem(db.m_windows, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_WindowGlazingSystems:	dbItem(db.m_windowGlazingSystems, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_BoundaryConditions:		dbItem(db.m_boundaryConditions, leftID, rightID, dbElemLeft, dbElemRight); break;
+		case SVDatabase::DT_LCAPeriods:				dbItem(db.m_lcaPeriods, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_Components:				dbItem(db.m_components, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_SubSurfaceComponents:	dbItem(db.m_subSurfaceComponents, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_SurfaceHeating:			dbItem(db.m_surfaceHeatings, leftID, rightID, dbElemLeft, dbElemRight); break;
