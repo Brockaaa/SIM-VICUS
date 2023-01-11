@@ -162,16 +162,6 @@ QModelIndex SVDBLCAPeriodTableModel::addNewItem() {
 	bc.m_displayName.setEncodedString("en:<new boundary condition>");
 	bc.m_color = SVStyle::randomColor();
 
-	//set default parameters
-	bc.m_heatConduction.m_modelType = VICUS::InterfaceHeatConduction::MT_Constant;
-	NANDRAD::KeywordList::setParameter(bc.m_heatConduction.m_para, "InterfaceHeatConduction::para_t", VICUS::InterfaceHeatConduction::P_HeatTransferCoefficient, 8);
-
-	bc.m_solarAbsorption.m_modelType = NANDRAD::InterfaceSolarAbsorption::MT_Constant;
-	NANDRAD::KeywordList::setParameter(bc.m_solarAbsorption.m_para, "InterfaceSolarAbsorption::para_t", NANDRAD::InterfaceSolarAbsorption::P_AbsorptionCoefficient, 0.6);
-
-	bc.m_longWaveEmission.m_modelType = NANDRAD::InterfaceLongWaveEmission::MT_Constant;
-	NANDRAD::KeywordList::setParameter(bc.m_longWaveEmission.m_para, "InterfaceLongWaveEmission::para_t", NANDRAD::InterfaceLongWaveEmission::P_Emissivity, 0.9);
-
 	beginInsertRows(QModelIndex(), rowCount(), rowCount());
 	unsigned int id = m_db->m_lcaPeriods.add( bc );
 	endInsertRows();

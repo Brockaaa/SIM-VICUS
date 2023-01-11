@@ -58,15 +58,7 @@ public:
 	VICUS_READWRITE_OVERRIDE
 	VICUS_COMPARE_WITH_ID
 
-
-	/*! Checks if all parameters are valid. */
 	bool isValid(const Database<Schedule> &scheduleDB) const;
-
-	/*! Checks if this boundary has a heat conduction model to a constant or scheduled temperature zone.*/
-	bool hasSetpointTemperatureForZone() const;
-
-	/*! Generates a short html-description of the defined parameters. */
-	QString htmlDescription(const VICUS::Database<Schedule> & scheduleDB) const;
 
 	/*! Comparison operator */
 	ComparisonResult equal(const AbstractDBElement *other) const override;
@@ -75,21 +67,6 @@ public:
 
 	//:inherited	unsigned int					m_id = INVALID_ID;		// XML:A:required
 	//:inherited	IBK::MultiLanguageString		m_displayName;			// XML:A
-	//:inherited	QColor							m_color;				// XML:A
-
-	/*! Model for convective heat transfer. */
-	VICUS::InterfaceHeatConduction			m_heatConduction;				// XML:E
-	/*! Model for solar absorption. */
-	NANDRAD::InterfaceSolarAbsorption		m_solarAbsorption;				// XML:E
-	/*! Model for long wave emissivity. */
-	NANDRAD::InterfaceLongWaveEmission		m_longWaveEmission;				// XML:E
-	/*! Model for vapor diffusion (requires enabled moisture balance). */
-	NANDRAD::InterfaceVaporDiffusion		m_vaporDiffusion;				// XML:E
-	/*! Model for air flow calculation. */
-	NANDRAD::InterfaceAirFlow				m_airFlow;						// XML:E
-
-	/*! Holds error string in order to give users a tooltip in db dialog. */
-	mutable std::string						m_errorMsg;
 
 };
 

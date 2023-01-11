@@ -100,6 +100,18 @@ void EmbeddedDatabase::readXML(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
+			else if (cName == "LcaPeriods") {
+				const TiXmlElement * c2 = c->FirstChildElement();
+				while (c2) {
+					const std::string & c2Name = c2->ValueStr();
+					if (c2Name != "LCAPeriod")
+						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+					VICUS::LCAPeriod obj;
+					obj.readXML(c2);
+					m_lcaPeriods.push_back(obj);
+					c2 = c2->NextSiblingElement();
+				}
+			}
 			else if (cName == "Components") {
 				const TiXmlElement * c2 = c->FirstChildElement();
 				while (c2) {
@@ -401,6 +413,18 @@ TiXmlElement * EmbeddedDatabase::writeXML(TiXmlElement * parent) const {
 
 		for (std::vector<VICUS::BoundaryCondition>::const_iterator it = m_boundaryConditions.begin();
 			it != m_boundaryConditions.end(); ++it)
+		{
+			it->writeXML(child);
+		}
+	}
+
+
+	if (!m_lcaPeriods.empty()) {
+		TiXmlElement * child = new TiXmlElement("LcaPeriods");
+		e->LinkEndChild(child);
+
+		for (std::vector<VICUS::LCAPeriod>::const_iterator it = m_lcaPeriods.begin();
+			it != m_lcaPeriods.end(); ++it)
 		{
 			it->writeXML(child);
 		}

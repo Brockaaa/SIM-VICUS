@@ -63,24 +63,8 @@ public:
 
 private slots:
 	void on_lineEditName_editingFinished();
-	void on_lineEditHeatTransferCoefficient_editingFinished();
-	void on_lineEditSolarAbsorptionCoefficient_editingFinished();
-	void on_lineEditLongWaveEmissivity_editingFinished();
-	void on_comboBoxHeatTransferCoeffModelType_currentIndexChanged(int index);
-	void on_comboBoxLWModelType_currentIndexChanged(int index);
-	void on_comboBoxSWModelType_currentIndexChanged(int index);
 
 	void on_pushButtonColor_colorChanged();
-
-
-	void on_comboBoxConnectedZoneType_currentIndexChanged(int index);
-
-
-	void on_toolButtonSelectTemperatureSchedule_clicked();
-
-	void on_toolButtonRemoveTemperatureSchedule_clicked();
-
-	void on_lineEditZoneConstTemperature_editingFinishedSuccessfully();
 
 private:
 	/*! Set up the modified variable of the model to true. */
