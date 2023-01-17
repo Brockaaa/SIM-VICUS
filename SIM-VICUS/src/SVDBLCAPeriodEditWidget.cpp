@@ -33,11 +33,37 @@
 #include <QtExt_LanguageHandler.h>
 #include <SVConversions.h>
 
+#include <IBK_FileReader.h>
+
 #include "SVDBLCAPeriodTableModel.h"
 #include "SVConstants.h"
 #include "SVSettings.h"
 #include "SVMainWindow.h"
 #include "SVDatabaseEditDialog.h"
+
+void SVDBLCAPeriodEditWidget::readDatabaseLCAPeriods(const IBK::Path & csvPath)
+{
+	FUNCID(SVDBLCAPeriodEditWidget::readDatabaseLCAPeriods);
+
+	// Read csv
+	std::vector< std::string > dataLines;
+
+	// Explode all lines
+	if (IBK::FileReader::readAll(csvPath, dataLines, std::vector<std::string>()) == -1)
+		throw IBK::Exception("Error reading csv-file with LCA Database!", FUNC_ID);
+
+	// Remove header
+	dataLines.erase(dataLines.begin());
+
+	// extract vector of string-xy-pairs
+	std::vector<std::string> tokens;
+
+	//std::map<QString, VICUS::EpdDataset> dataSets;
+
+
+
+
+}
 
 SVDBLCAPeriodEditWidget::SVDBLCAPeriodEditWidget(QWidget *parent) :
 	SVAbstractDatabaseEditWidget(parent),
@@ -63,33 +89,12 @@ void SVDBLCAPeriodEditWidget::setup(SVDatabase * db, SVAbstractDatabaseTableMode
 void SVDBLCAPeriodEditWidget::updateInput(int id) {
 	m_current = nullptr; // disable edit triggers
 
-	bool isEnabled = id == -1 ? false : true;
-
-	m_ui->lineEditName->setEnabled(isEnabled);
-	m_ui->pushButtonColor->setEnabled(isEnabled);
-	m_ui->labelDisplayName->setEnabled(isEnabled);
-	// disable all the group boxes - this disables all their subwidgets as well
-
-	if (!isEnabled) {
-		// clear input controls
-		m_ui->lineEditName->setString(IBK::MultiLanguageString());
-		m_ui->lineEditSolarAbsorptionCoefficient->setText("");
-		m_ui->lineEditLongWaveEmissivity->setText("");
-		m_ui->lineEditHeatTransferCoefficient->setText("");
-
-		return;
-	}
-
 }
 
 
 void SVDBLCAPeriodEditWidget::on_lineEditName_editingFinished() {
 	Q_ASSERT(m_current != nullptr);
 
-	if (m_current->m_displayName != m_ui->lineEditName->string()) {
-		m_current->m_displayName = m_ui->lineEditName->string();
-		modelModify();
-	}
 }
 
 

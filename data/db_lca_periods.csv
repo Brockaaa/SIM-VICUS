@@ -1,0 +1,438 @@
+﻿KG;Code;Bezeichnung Kostengruppe oder Bauteil/Material;Description cost group or component/material;Nutzungsdauer;Ersatzzyklen;Wartung;Instandsetzung;Lebenszyklus-kosten;Ökobilanzierung Standard;Ökobilanzierung vereinf. Verfahren
+300;;Bauwerk-Baukonstruktionen;Building construction;;;;;0;0;0
+310;;Baugrube;Building pit;;;;;1;0;0
+311;;Baugrubenherstellung;Construction pit production;;;;;1;0;0
+312;;Baugrubenumschließung;Excavation pit enclosure;;;;;1;0;0
+313;;Wasserhaltung;Dewatering;;;;;1;0;0
+319;;Baugrube, sonstiges;excavation pit, other;;;;;1;0;0
+320;;Gründung;Foundation;;;0,001;0,0035;1;1;1
+322;;Flachgründungen;Shallow foundations;;;0,001;0,0035;1;1;1
+322;111;Einzel-/Streifenfundamente;Single/strip foundations;50;0;0,001;0,0035;1;1;1
+322;112;Fundamentplatten;Foundation slabs;50;0;0,001;0,0035;1;1;1
+323;;Tiefgründungen;Deep foundations;;;0,001;0,0035;1;1;1
+323;111;Bohrpfähle, Presspfähle, Rammpfähle, Pfahlwände, Schlitzwände, Spundwände, Trägerbohlwände;Bored piles, pressed piles, driven piles, pile walls, diaphragm walls, sheet pile walls, soldier pile walls;50;0;0,001;0,0035;1;1;1
+324;;Unterböden und Bodenplatten;Subfloors and floor slabs;;;0,001;0,0035;1;1;1
+324;111;Bodenplatte;Floor slab;50;0;0,001;0,0035;1;1;1
+326;;Bauwerksabdichtungen;Structural waterproofing;;;0,001;0,0035;1;1;1
+326;111;Abdichtung gegen nichtdrückendes Wasser;Waterproofing against non-pressing water;35;1;0,001;0,0035;1;1;1
+330;;Außenwände;Exterior walls;;;0,001;0,0035;1;1;1
+331;;Tragende Außenwände;Load-bearing exterior walls;;;0,001;0,0035;1;1;1
+331;111;Mauerwerkswand;Masonry wall;50;0;0,001;0,0035;1;1;1
+331;211;Betonwand;Concrete wall;50;0;0,001;0,0035;1;1;1
+331;311;Holzwand;Wooden wall;50;0;0,001;0,0035;1;1;1
+331;411;Stahlbauwand;Steel construction wall;50;0;0,001;0,0035;1;1;1
+331;511;Lehmbauwand;Clay wall;50;0;0,001;0,0035;1;1;1
+331;611;Formsteine mit Betonfüllung;Molded brick with concrete filling;50;0;0,001;0,0035;1;1;1
+332;;Nichttragende Außenwände;Non-bearing exterior walls;;;0,001;0,0035;1;1;1
+332;111;Mauerwerkswand;Masonry wall;50;0;0,001;0,0035;1;1;1
+332;211;Betonwand;Concrete wall;50;0;0,001;0,0035;1;1;1
+332;311;Holzwand;Wooden wall;50;0;0,001;0,0035;1;1;1
+332;411;Stahlbauwand;Steel construction wall;50;0;0,001;0,0035;1;1;1
+332;511;Lehmbauwand;Clay wall;50;0;0,001;0,0035;1;1;1
+332;611;Formsteine mit Betonfüllung;Molded brick with concrete filling;50;0;0,001;0,0035;1;1;1
+333;;Außenstützen;Exterior columns;;;0,001;0,0035;1;1;1
+333;111;Mauerwerksstütze;Masonry column;50;0;0,001;0,0035;1;1;1
+333;211;Betonstütze;Concrete column;50;0;0,001;0,0035;1;1;1
+333;311;Holzstütze;Wooden column;50;0;0,001;0,0035;1;1;1
+333;411;Stahlstütze;Steel column;50;0;0,001;0,0035;1;1;1
+334;;Außentüren und -fenster;Exterior doors and windows;;;0,001;0,0035;1;1;1
+334;;Außentüren;Exterior doors;;;0,001;0,0035;1;1;1
+334;111;Standardtüren: Laubholz;Standard doors: hardwood;50;0;0,001;0,0035;1;1;1
+334;112;Standardtüren: Nadelholz;Standard doors: softwood;35;1;0,001;0,0035;1;1;1
+334;113;Standardtüren: Holzwerkstoff;Standard doors: wood material;40;1;0,001;0,0035;1;1;1
+334;114;Standardtüren: Kunststoff;Standard doors: plastic;40;1;0,001;0,0035;1;1;1
+334;115;Standardtüren: Metall;Standard doors: Metal;50;0;0,001;0,0035;1;1;1
+334;121;Brandschutztüren;Fire doors;50;0;0,001;0,0035;1;1;1
+334;131;Sondertüren: Schallschutztüren, Glastüren;Special doors: soundproof doors, glass doors;50;0;0,001;0,0035;1;1;1
+334;132;Sondertüren: Automatiktüren;Special doors: automatic doors;20;2;0,001;0,0035;1;1;1
+334;133;Sondertüren: Schiebetüren, Rotationstüren;Special doors: sliding doors, revolving doors;30;1;0,001;0,0035;1;1;1
+334;;Außenfenster;Exterior windows;;;0,001;0,0035;1;1;1
+334;211;Fenster (Rahmen und Flügel): Aluminium, Aluminium-Holz-Komposit, Aluminium-Kunststoff-Komposit, Laubholz behandelt, Stahl;Windows (frames and sashes): Aluminum, aluminum-wood composite, aluminum-plastic composite, hardwood treated, steel.;50;0;0,001;0,0035;1;1;1
+334;212;Fenster (Rahmen und Flügel): Kunststoff, Nadelholz behandelt;Windows (frames and sashes): Plastic, softwood treated;40;1;0,001;0,0035;1;1;1
+334;;Sonstiges;Other;;;0,001;0,0035;1;1;1
+334;311;Beschläge: einfache Beschläge, Schiebebeschläge;Fittings: simple fittings, sliding fittings;30;1;0,001;0,0035;1;1;1
+334;312;Beschläge: Drehkippbeschläge, Schwingflügelbeschläge, Hebedrehkippbeschläge;Fittings: Tilt and turn fittings, swing sash fittings, lift and turn fittings;25;1;0,001;0,0035;1;1;1
+334;313;Türschlösser, Türanschlagdämpfer, Panikverschlüsse;door locks, door stop dampers, panic locks;25;1;0,001;0,0035;1;1;1
+334;314;Türschließer;Door closers;20;2;0,001;0,0035;1;1;1
+334;315;Türantriebe;Door operators;15;3;0,001;0,0035;1;1;1
+334;316;Verglasung: Sicherheits-Isolierglas, 3-Scheiben-Wärmeschutz-Isolierglas, 2-Scheiben-Wärmeschutz-Isolierglas, Brandschutz-Isolierglas, Schallschutz-Isolierglas, Angriffhemmendes Isolierglas, Sonnenschutz-Isolierglas;Glazing: safety insulating glass, 3-pane thermal insulation glass, 2-pane thermal insulation glass, fire protection insulating glass, sound insulation glass, attack-resistant insulating glass, sun protection insulating glass;30;1;0,001;0,0035;1;1;1
+334;317;Dichtungsprofile;Sealing profiles;20;2;0,001;0,0035;1;1;1
+334;318;Dichtungsstoffe;Sealing materials;12;4;0,001;0,0035;1;1;1
+334;319;Rolläden;Roller shutters;40;1;0,001;0,0035;1;1;1
+335;;Außenwandbekleidungen, außen;Exterior wall cladding, outside;;;0,001;0,0035;1;1;1
+335;;Abdichtung und Dämmung erdberührt;Waterproofing and insulation in contact with the ground;;;0,001;0,0035;1;1;1
+335;111;Abdichtungen erdberührt, gegen drückendes Wasser: Dichtungsbahnen;Waterproofing in contact with the ground, against pressing water: waterproofing membranes;50;0;0,001;0,0035;1;1;1
+335;112;Abdichtungen erdberührt, gegen drückendes Wasser: Bentonit;Waterproofing in contact with the ground, against pressing water: Bentonite;40;1;0,001;0,0035;1;1;1
+335;113;Abdichtungen erdberührt: Konstruktionen aus wasserundurchlässigem Beton;Waterproofing in contact with the ground: Constructions of waterproof concrete;50;0;0,001;0,0035;1;1;1
+335;121;Abdichtungen erdberührt, gegen nichtdrückendes Wasser: Dichtungsbahnen aus Bitumen, Spachtelmasse;Waterproofing in contact with the ground, against non-pressing water: Bitumen waterproofing membranes, filler compound;40;1;0,001;0,0035;1;1;1
+335;122;Abdichtungen erdberührt, gegen nichtdrückendes Wasser: Beschichtungen und Anstriche;Waterproofing in contact with the ground, against non-pressing water: coatings and paints;30;1;0,001;0,0035;1;1;1
+335;131;Abdichtungen erdberührt nachträglich: Querschnittsabdichtungen gegen aufsteigende Feuchtigkeit durch mechanische Injektion;Waterproofing in contact with the ground: cross-section waterproofing against rising damp by mechanical injection;40;1;0,001;0,0035;1;1;1
+335;132;Abdichtungen erdberührt nachträglich: Vergelung, Schleierinjektion;Waterproofing in contact with the ground, retrospective: levelling, veil injection;20;2;0,001;0,0035;1;1;1
+335;141;Abdichtungen erdberührt: Abdichtungsschutz aus Schutzmauern (Beton, Ziegel, Hartbrandklinker);Waterproofing in contact with the ground: Waterproofing protection from protective walls (concrete, brick, hard-fired clinker);50;0;0,001;0,0035;1;1;1
+335;142;Abdichtungen erdberührt: Abdichtungsschutz aus Hartschaumplatten Polystyrol, Noppenbahnen (Polyethylen Polypropylen), Wellplatten faserverstärkt auf Zementbasis;Waterproofing in contact with the ground: Waterproofing protection made of rigid polystyrene foam sheets, dimpled sheets (polyethylene polypropylene), corrugated sheets fiber-reinforced on cement basis;40;1;0,001;0,0035;1;1;1
+335;143;Abdichtungen erdberührt: Abdichtungsschutz aus Granulatmatten, Wellplatten;Waterproofing in contact with the ground: Waterproofing protection made of granulate mats, corrugated sheets;30;1;0,001;0,0035;1;1;1
+335;151;Wärmedämmung erdberührter Bauteile: Perimenterdämmung Schaumglas;Thermal insulation of components in contact with the ground: Perimeter insulation foam glass;50;0;0,001;0,0035;1;1;1
+335;152;Wärmedämmung erdberührter Bauteile: Perimenterdämmung Extrudiertes Polystyrol;Thermal insulation of components in contact with the ground: Perimeter insulation Extruded polystyrene;40;1;0,001;0,0035;1;1;1
+335;;Oberflächenbehandlung;Surface treatment;;;0,001;0,0035;1;1;1
+335;211;Außenanstriche, mineralischer Untergrund: Dipersionsfarbe, Dispersions-Silikatfarbe, Weißzementfarbe, Kunststoffbeschichtungen auf Beton;Exterior coatings, mineral substrate: dipersion paint, dispersion silicate paint, white cement paint, plastic coatings on concrete;20;2;0,001;0,0035;1;1;1
+335;212;Außenanstriche, mineralischer Untergrund: Silikonharzfarbe, Silikatfarbe, Polymerisatharzfarben;Exterior coatings, mineral substrate: silicone resin paint, silicate paint, polymer resin paints;15;3;0,001;0,0035;1;1;1
+335;213;Außenanstriche, mineralischer Untergrund: Kaseinfarbe;Exterior coatings, mineral substrate: casein paint;10;4;0,001;0,0035;1;1;1
+335;214;Außenanstriche, mineralischer Untergrund: Kalkfarbe;Exterior coatings, mineral substrate: lime paint;8;6;0,001;0,0035;1;1;1
+335;215;Außenanstriche, mineralischer Untergrund: Imprägnierung auf Mauerwerk;Exterior coatings, mineral substrate: impregnation on masonry;15;3;0,001;0,0035;1;1;1
+335;216;Außenanstriche, mineralischer Untergrund: Lasur, Graffitischutz;Exterior coatings, mineral substrate: Glaze, graffiti protection;10;4;0,001;0,0035;1;1;1
+335;221;Holzschutzanstriche, außen: Holzlacke, Holzlasuren;Wood protective coatings, exterior: Wood varnishes, wood stains;8;6;0,001;0,0035;1;1;1
+335;222;Holzschutzanstriche, außen: Holzöle/-wachse;Wood protective coatings, exterior: Wood oils/waxes;5;9;0,001;0,0035;1;1;1
+335;223;Holzschutzimprägnierungen, außen: Druckimprägnierung;Wood preservative impregnations, exterior: pressure impregnation;18;2;0,001;0,0035;1;1;1
+335;;Putz;Plaster;;;0,001;0,0035;1;1;1
+335;311;Putz auf monolitischer Tragschicht: hochhydraulischer Kalkmörtel, Mörtel mit Putz und Mauerbinder, Kalkzementmörtel, Zementmörtel mit Zusatz von Luftkalk, Zementmörtel, Luftkalk, Hydraulischer Kalkmörtel, Wasserkalkmörtel;Plaster on monolithic base layer: highly hydraulic lime mortar, mortar with plaster and masonry binder, lime cement mortar, cement mortar with addition of air lime, cement mortar, air lime, hydraulic lime mortar, water lime mortar;45;1;0,001;0,0035;1;1;1
+335;312;Putz auf monolitischer Tragschicht: Sanierputzsysteme, mineralische Leichtputzsysteme auf porosierter Tragschicht;Plaster on monolithic base course: restoration plaster systems, mineral light plaster systems on porous base course;40;1;0,001;0,0035;1;1;1
+335;313;Putz auf monolitischer Tragschicht: Silikatputze, Silikonharzputze, Kunstharzputze;Plaster on monolithic base layer: silicate plasters, silicone resin plasters, synthetic resin plasters;30;1;0,001;0,0035;1;1;1
+335;314;Putz auf Wärmedämmung: mineralische Putzsysteme, silikatische Putzsysteme, Kunstharzputzsysteme, Silikonharzputzsysteme;Plaster on thermal insulation: mineral plaster systems, silicate plaster systems, synthetic resin plaster systems, silicone resin plaster systems;30;1;0,001;0,0035;1;1;1
+335;;Mauerwerk;Masonry;;;0,001;0,0035;1;1;1
+335;411;Bekleidungen: Klinker, Kalksandstein, Sichtbeton;Claddings: Clinker, sand-lime brick, exposed concrete;50;0;0,001;0,0035;1;1;1
+335;;Platten, Stein;slabs, stone;;;0,001;0,0035;1;1;1
+335;511;Bekleidungen: Naturstein, Kunststein, Betonsteinplatten, Faserzementplatten, Kunstharzstein, Ziegelplatten, keramische Fliesen und Platten, Feinsteinzeug, Steinzeug und Spaltplatten;Claddings: Natural stone, artificial stone, concrete block slabs, fiber cement slabs, synthetic resin stone, brick slabs, ceramic tiles and slabs, porcelain stoneware, stoneware and split tiles;50;0;0,001;0,0035;1;1;1
+335;521;Verfugungsmassen;Grouting materials;30;1;0,001;0,0035;1;1;1
+335;522;Bekleidungen: harte Belagsmaterialien auf Wärmedämmung;Coverings: hard covering materials on thermal insulation;30;1;0,001;0,0035;1;1;1
+335;;Dämmung;Insulation;;;0,001;0,0035;1;1;1
+335;611;Dämmschicht als Kerndämmung: Mineralwolledämmplatten, Polyurethandämmplatten, Polystyrol, Blähschiefergranulat, Blähglasgranulat, Blähtongranulat;Insulation layer as core insulation: mineral wool insulation boards, polyurethane insulation boards, polystyrene, expanded slate granules, expanded glass granules, expanded clay granules;50;0;0,001;0,0035;1;1;1
+335;621;Dämmschicht hinter Vorsatzschale, hinterlüftet: Mineralschaumplatten, Schaumglasplatten;Insulation layer behind facing shell, back-ventilated: mineral foam boards, foam glass boards;50;0;0,001;0,0035;1;1;1
+335;631;Dämmschicht hinter Vorsatzschale: Vakuumdämmpaneele;Insulation layer behind facing shell: vacuum insulation panels;30;1;0,001;0,0035;1;1;1
+335;641;Wärmedämmverbundsystem: Mineralwolledämmplatten, Polystyroldämmplatten, Polyurethandämmplatten, Holzfaserdämmplatten, Holzwolleleichtbauplatten, Korkplatten;External thermal insulation composite system: mineral wool insulation panels, polystyrene insulation panels, polyurethane insulation panels, wood fiber insulation panels, wood wool lightweight panels, cork panels;40;1;0,001;0,0035;1;1;1
+335;642;Wärmedämmverbundsystem, transparent;External thermal insulation composite system, transparent;20;2;0,001;0,0035;1;1;1
+335;;Holzbekleidungen: Holz, Holzwerkstoffe und Mehrschichtleichtbauplatten;Wood cladding: Wood, wood-based materials and multilayer lightweight panels;;;0,001;0,0035;1;1;1
+335;711;Holzbekleidungen: Nadelholz behandelt, Laubholz, Holzwerkstoff-Systeme;Wood claddings: Softwood treated, hardwood, engineered wood systems.;40;1;0,001;0,0035;1;1;1
+335;712;Holzbekleidung: Nadelholz unbehandelt;Wood cladding: Coniferous wood untreated;30;1;0,001;0,0035;1;1;1
+335;713;Holzbekleidung: Holzschindeln;wood cladding: Wood shingles;50;0;0,001;0,0035;1;1;1
+335;;Metallbekleidungen;Metal claddings;;;0,001;0,0035;1;1;1
+335;811;Metallbekleidungen: Zink, Kupfer, Aluminium eloxiert, Aluminium lackiert, Stahl nicht rostend;Metal claddings: Zinc, copper, anodized aluminum, painted aluminum, stainless steel.;50;0;0,001;0,0035;1;1;1
+335;812;Metallbekleidungen: Stahl galvanisch verzinkt;Metal claddings: galvanized steel;40;1;0,001;0,0035;1;1;1
+335;813;Vorsatzschale, hinterlüftet: Kupferblech;Facing, ventilated: sheet copper;50;0;0,001;0,0035;1;1;1
+335;814;Vorsatzschale, hinterlüftet: Zink, Stahl nicht rostend;Facing, rear-ventilated: zinc, stainless steel;45;1;0,001;0,0035;1;1;1
+335;815;Vorsatzschale, hinterlüftet: Aluminium-Verbundplatten, korrosionsreduzierter Stahl, Stahl galvanisch verzinkt und beschichtet;Facing, rear-ventilated: aluminum composite panels, corrosion-reduced steel, steel galvanized and coated;30;1;0,001;0,0035;1;1;1
+335;;Sonstiges;Other;;;0,001;0,0035;1;1;1
+335;911;Vorsatzschale, hinterlüftet: Glas;Facing, back-ventilated: Glass;50;0;0,001;0,0035;1;1;1
+335;912;Kunststoffstegplatten, transparent: Acrylglasplatten;Plastic multiwall sheets, transparent: Acrylic sheets;40;1;0,001;0,0035;1;1;1
+335;913;Kunststoffstegplatten, transparent: Polycarbonatplatten;Plastic multiwall sheets, transparent: polycarbonate sheets;30;1;0,001;0,0035;1;1;1
+335;914;Vorsatzschale, hinterlüftet: faserverstärkte Harzkompositplatten;Facing, back-ventilated: fiber-reinforced resin composite panels;30;1;0,001;0,0035;1;1;1
+335;915;Wandbekleidungen (Systeme): Kunststoff, Mehrschichtleichtbauplatten;Wall cladding (systems): Plastic, multilayer lightweight panels;40;1;0,001;0,0035;1;1;1
+335;916;Vorsatzschale: Fugen und Kompriband, Verfugung, Dehnungsfuge, Profil;Facing shell: joints and compressive tape, jointing, expansion joint, profile;40;1;0,001;0,0035;1;1;1
+335;917;Vorsatzschale: Unterkonstruktion;facing shell: substructure;50;0;0,001;0,0035;1;1;1
+336;;Außenwandbekleidungen, innen;Exterior wall cladding, interior;;;0,001;0,0035;1;1;1
+336;111;Bekleidung Dämmplatten: Mineralschaumdämmplatten, Calciumsilikatplatten;cladding insulation boards: mineral foam insulation boards, calcium silicate boards;50;0;0,001;0,0035;1;1;1
+338;;Sonnenschutz;Sun protection;;;0,001;0,0035;1;1;1
+338;111;Jalousien: Kunststoff;blinds: plastic;15;3;0,001;0,0035;1;1;1
+338;112;Jalousien: Aluminium;Blinds: aluminum;25;1;0,001;0,0035;1;1;1
+338;211;Markisen;Awnings;15;3;0,001;0,0035;1;1;1
+338;311;Sonnenschutz, feststehend: Aluminium;Sun protection, fixed: aluminum;50;0;0,001;0,0035;1;1;1
+339;;Außenwände, sonstiges;Exterior walls, other;;;0,001;0,0035;1;1;1
+339;;Balkone;Balconies;;;0,001;0,0035;1;1;1
+339;111;frei stehende Konstruktion: Mauerwerk, Stahlbeton, Stahl nicht rostend, Stahl feuerverzinkt (stückverzinkt), Aluminium beschichtet, Laubholz, Kunststoff-Komposit;free-standing construction: masonry, reinforced concrete, stainless steel, hot-dip galvanized steel (zinc-coated), coated aluminum, hardwood, plastic composite;50;0;0,001;0,0035;1;1;1
+339;112;frei stehende Konstruktion: Nadelholz, behandelt;free standing construction: coniferous wood, treated;45;1;0,001;0,0035;1;1;1
+339;121;Brüstung: Stahlgitterkonstruktion feuerverzinkt (stückverzinkt), Glas, Mauerwerk, Stahlbeton;parapet: steel lattice construction hot-dip galvanized (piece galvanized), glass, masonry, reinforced concrete;50;0;0,001;0,0035;1;1;1
+339;122;Brüstung aus Holzkonstruktion;parapet made of wooden construction;30;1;0,001;0,0035;1;1;1
+339;123;Brüstungsbekleidung aus Aluminiumplatten, Glasplatten;parapet cladding of aluminum plates, glass plates;50;0;0,001;0,0035;1;1;1
+339;124;Brüstungsbekleidung aus Kunststoffplatten;Parapet cladding made of plastic plates;40;1;0,001;0,0035;1;1;1
+340;;Innenwände;Interior walls;;;0,001;0,0035;1;1;1
+341;;Tragende Innenwände;Load-bearing interior walls;;;0,001;0,0035;1;1;1
+341;111;Mauerwerkswand;Masonry wall;50;0;0,001;0,0035;1;1;1
+341;211;Betonwand;Concrete wall;50;0;0,001;0,0035;1;1;1
+341;311;Holzwand;Wooden wall;50;0;0,001;0,0035;1;1;1
+342;;Nichttragende Innenwände;Non-bearing interior walls;;;0,001;0,0035;1;1;1
+342;111;Mauerwerkswand;Masonry wall;50;0;0,001;0,0035;1;1;1
+342;211;Betonwand;Concrete wall;50;0;0,001;0,0035;1;1;1
+342;311;Holzwand;Wooden wall;50;0;0,001;0,0035;1;1;1
+342;411;Ständersysteme;Stud systems;50;0;0,001;0,0035;1;1;1
+342;511;Gips-Wandbauplatten;Gypsum wallboard;50;0;0,001;0,0035;1;1;1
+343;;Innenstützen;Interior columns;;;0,001;0,0035;1;1;1
+343;111;Mauerwerksstütze;Masonry column;50;0;0,001;0,0035;1;1;1
+343;211;Betonstütze;Concrete column;50;0;0,001;0,0035;1;1;1
+343;311;Holzstütze;Wooden column;50;0;0,001;0,0035;1;1;1
+343;411;Stahlstütze;Steel column;50;0;0,001;0,0035;1;1;1
+344;;Innentüren und -fenster;Interior doors and windows;;;0,001;0,0035;1;1;1
+344;;Innentüren;Interior doors;;;0,001;0,0035;1;1;1
+344;111;Standardtüren: Holztüren, Holzwerkstofftüren, Aluminiumtüren, Kunststofftüren, Stahltüren und Stahltüren rostfrei;Standard doors: wooden doors, wood material doors, aluminum doors, plastic doors, steel doors and stainless steel doors;50;0;0,001;0,0035;1;1;1
+344;211;Sondertüren: Glastüren, Rauchschutztüren, Schallschutztüren;Special doors: glass doors, smoke control doors, soundproof doors;50;0;0,001;0,0035;1;1;1
+344;311;Brandschutztüren;Fire doors;50;0;0,001;0,0035;1;1;1
+344;312;Sondertüren: Feuchtraumtüren;Special doors: damp room doors;40;1;0,001;0,0035;1;1;1
+344;313;Sondertüren: Schiebetüren, Rotationstüren;Special doors: sliding doors, revolving doors;30;1;0,001;0,0035;1;1;1
+344;314;Sondertüren: Automatiktüren;Special doors: Automatic doors;20;2;0,001;0,0035;1;1;1
+344;411;Tore: Brandschutztore;Doors: Fire doors;30;1;0,001;0,0035;1;1;1
+344;;Innenfenster;Interior windows;;;0,001;0,0035;1;1;1
+344;511;Fenster (Rahmen und Flügel);Windows (frames and sashes);50;0;0,001;0,0035;1;1;1
+344;;Sonstiges;Other;;;0,001;0,0035;1;1;1
+344;611;Beschläge: einfache Beschläge;Fittings: simple fittings;50;0;0,001;0,0035;1;1;1
+344;612;Beschläge: Schwingflügelbeschläge, Falttürbeschläge, Schiebebeschläge, Drehkippbeschläge, Hebedrehkippbeschläge;Fittings: Swing door hardware, folding door hardware, sliding door hardware, tilt and turn hardware, lift and tilt and turn hardware;30;1;0,001;0,0035;1;1;1
+344;613;Türschließer, Türschlösser, Fensterschlösser;door closers, door locks, window locks;30;1;0,001;0,0035;1;1;1
+344;614;Panikverschlüsse;Panic locks;25;1;0,001;0,0035;1;1;1
+344;615;Türantriebe;Door operators;15;3;0,001;0,0035;1;1;1
+344;616;Türanschlagdämpfer;Door stop dampers;20;2;0,001;0,0035;1;1;1
+344;617;Fenster und Türverglasung: Einfachverglasung;Windows and door glazing: single glazing;50;0;0,001;0,0035;1;1;1
+344;618;Fenster und Türverglasung: angriffhemmendes Isolierglas, Sicherheits-Isolierglas, Brandschutz-Isolierglas, Schallschutz-Isolierglas;Windows and door glazing: attack-resistant insulating glass, safety insulating glass, fire-resistant insulating glass, soundproof insulating glass;40;1;0,001;0,0035;1;1;1
+344;621;Dichtungsprofile;Sealing profiles;30;1;0,001;0,0035;1;1;1
+344;622;Dichtungsstoffe;Sealants;20;2;0,001;0,0035;1;1;1
+345;;Innenwandbekleidungen;Interior wall cladding;;;0,001;0,0035;1;1;1
+345;;Beschichtungen;Coatings;;;0,001;0,0035;1;1;1
+345;111;Innenanstriche: Dispersionsfarbe, Dispersions-Silikatfarbe, Silikatfarbe, Silikonharzfarbe, Polymerisatharzfarben, Weißzementfarbe, Kaseinfarbe, Kalkfarbe, Leimfarbe;Interior coatings: Dispersion paint, dispersion silicate paint, silicate paint, silicone resin paint, polymer resin paints, white cement paint, casein paint, lime paint, distemper paint.;10;4;0,001;0,0035;1;1;1
+345;112;Innenanstriche: Latexfarbe;Interior paints: Latex paint;10;4;0,001;0,0035;1;1;1
+345;113;Innenanstriche: Lasur;Interior paints: Glaze;18;2;0,001;0,0035;1;1;1
+345;;Putz;Plaster;;;0,001;0,0035;1;1;1
+345;211;Standard-Innenputze: Gipsputz, Anhydritputz, Kalkputz, Kalkgipsputz, Kalkzementputz, Kunstharzputz, Lehmputz;standard interior plasters: gypsum plaster, anhydrite plaster, lime plaster, lime-gypsum plaster, lime-cement plaster, synthetic resin plaster, clay plaster;50;0;0,001;0,0035;1;1;1
+345;212;mineralische Deckputze: Zementputz, Trasskalkputz, Trasszementputz;mineral finishing plasters: cement plaster, trass lime plaster, trass cement plaster;50;0;0,001;0,0035;1;1;1
+345;213;Spezialputze: Sanierputz/-System;special plasters: renovation plaster/system;15;3;0,001;0,0035;1;1;1
+345;214;Spezialputze: Akustikputz, Strahlenschutzputz;special plasters: Acoustic plaster, radiation protection plaster;50;0;0,001;0,0035;1;1;1
+345;221;Putzprofile: Kunststoff, Stahl, Glasfaser;Plaster profiles: Plastic, steel, fiberglass;50;0;0,001;0,0035;1;1;1
+345;222;Putzträger: Stahldrahtnetz, Rippenstreckmetall, Kunststoffgewebe;Plaster base: steel wire mesh, ribbed expanded metal, plastic fabric;50;0;0,001;0,0035;1;1;1
+345;;Bekleidung;Cladding;;;0,001;0,0035;1;1;1
+345;311;Bekleidungen: Holz, Holzwerkstoff und Mehrschichtleichtbauplatten, Aluminium, Stahl, Kupfer, Zink, Naturstein, Kunststein, keramische Fliesen und Platten, Feinsteinzeug, Steinzeug, Steingut und Spaltplatten, Glasmosaik;Cladding: Wood, wood-based material and multilayer lightweight panels, aluminum, steel, copper, zinc, natural stone, artificial stone, ceramic tiles and slabs, porcelain stoneware, stoneware and split tiles, glass mosaic;50;0;0,001;0,0035;1;1;1
+345;313;Bekleidungen (Systeme): Gipskartonplatten, Gipskartonverbundplatten;Cladding (systems): Gypsum board, gypsum board composite panels.;50;0;0,001;0,0035;1;1;1
+345;314;Bekleidungen: Kunststoff (PVC, PE. PP);Claddings: Plastic (PVC, PE. PP);40;1;0,001;0,0035;1;1;1
+345;315;Bekleidungen: Sonderkonstruktionen aus Glas;claddings: Special constructions made of glass;50;0;0,001;0,0035;1;1;1
+345;316;Spezial-Bekleidungen: Brandschutz, Schallschutz, Wärmeschutz (Innendämmung), feuchteressistente Bekleidungen;Special claddings: fire protection, soundproofing, thermal insulation (interior insulation), moisture resistant claddings;50;0;0,001;0,0035;1;1;1
+345;;Tapeten;Wallpapers;;;0,001;0,0035;1;1;1
+345;411;Tapeten: Papier, Kunststoff, Tapeten nicht überstreichbar, Tapeten überstreichbar;Wallpapers: paper, plastic, wallpapers not paintable, wallpapers paintable;10;4;0,001;0,0035;1;1;1
+345;412;Tapeten: Textil, Webstoff;wallpapers: Textile, woven fabric;15;3;0,001;0,0035;1;1;1
+346;;Elementierte Innenwände;Elementary interior walls;;;0,001;0,0035;1;1;1
+346;111;Sanitärtrennwände: Toilettentrennwände, Urinaltrennwände;Sanitary partitions: toilet partitions, urinal partitions;30;1;0,001;0,0035;1;1;1
+346;112;Sanitärtrennwände: Duschtrennwände;Sanitary partitions: shower partitions;25;1;0,001;0,0035;1;1;1
+346;211;Umkleidekabinen;Changing rooms;30;1;0,001;0,0035;1;1;1
+349;;Innenwände, sonstiges;Interior walls, other;;;0,001;0,0035;1;1;1
+349;111;Treppengeländer: Handläufe aus Aluminium, Laubholz, Stahl;Stair railings: handrails made of aluminum, hardwood, steel;50;0;0,001;0,0035;1;1;1
+349;112;Treppengeländer: Handläufe aus Kunststoff, Nadelholz;stair railings: handrails made of plastic, softwood;30;1;0,001;0,0035;1;1;1
+350;;Decken;Ceilings;;;0,001;0,0035;1;1;1
+351;;Deckenkonstruktionen;Ceiling constructions;;;0,001;0,0035;1;1;1
+351;111;Betondecken: Vollbetondecke, STB-Hohlraumdecke, Porenbetondecke;concrete ceilings: solid concrete ceiling, STB cavity ceiling, aerated concrete ceiling;50;0;0,001;0,0035;1;1;1
+351;211;Fertigteildecken: Gitterträgerdecke, Rippendecke;prefabricated ceilings: lattice girder ceiling, ribbed ceiling;50;0;0,001;0,0035;1;1;1
+351;311;Metalldecken: Stahlverbunddecke, Stahlträgerdecke;Metal ceilings: steel composite ceiling, steel girder ceiling;50;0;0,001;0,0035;1;1;1
+351;411;Holzdecken: Massivholzdecke, Holzbalkendecke, Holz-Fertigteilelemente, Holz-Beton-Verbunddecke;Wooden ceilings: Solid wood ceiling, wood beam ceiling, prefabricated wood elements, wood-concrete composite ceiling;50;0;0,001;0,0035;1;1;1
+351;511;Treppe: Tragkonstruktion aus Stahlbeton, Stahl, Holz, Aluminium;Stairs: supporting structure made of reinforced concrete, steel, wood, aluminum;50;0;0,001;0,0035;1;1;1
+352;;Deckenbeläge;Ceiling coverings;;;0,001;0,0035;1;1;1
+352;111;Fließestriche: Zementestrich, Gussasphaltestrich, Anhydritestrich, Magnesiaestrich;Flowing screeds: Cement screed, mastic asphalt screed, anhydrite screed, magnesia screed.;50;0;0,001;0,0035;1;1;1
+352;112;Trockenestriche (Systeme): Holzwerkstoffplatten, Gipsfaserplatten, Gipskartonplatten;Dry screeds (systems): Wood-based panels, gypsum fiberboard, gypsum plasterboard.;50;0;0,001;0,0035;1;1;1
+352;113;Estrische als Verschleißboden;Estrische as wearing floor;50;0;0,001;0,0035;1;1;1
+352;121;Trittschalldämmung;Impact sound insulation;50;0;0,001;0,0035;1;1;1
+352;122;Fussbodendämmung, einschl. Dämmung der obersten Geschossdecke;Floor insulation, including insulation of the top floor ceiling;50;0;0,001;0,0035;1;1;1
+352;211;Natursteinbeläge;Natural stone coverings;50;0;0,001;0,0035;1;1;1
+352;311;Kunststeinbeläge;artificial stone coverings;50;0;0,001;0,0035;1;1;1
+352;411;keramische Fliesen und Platten: Feinsteinzeug, Steinzeug, Steingut, Spaltplatten, Glasmosaik;ceramic tiles and slabs: fine stoneware, stoneware, stoneware, split tiles, glass mosaic;50;0;0,001;0,0035;1;1;1
+352;511;Gussböden: Kunstharz;cast floors: synthetic resin;30;1;0,001;0,0035;1;1;1
+352;512;Gussböden: Terrazzo;cast floors: terrazzo;50;0;0,001;0,0035;1;1;1
+352;611;textile Beläge: Baumwolle, Wolle, Synthetikfaser, Sisal, Naturfasergemisch, Jute, Kokos;textile coverings: Cotton, wool, synthetic fiber, sisal, natural fiber blend, jute, coir.;10;4;0,001;0,0035;1;1;1
+352;711;Linoleum, Laminat, PVC, Kunststoff-Parkett, Kork, Kautschuk, Sporthallenbeläge;linoleum, laminate, PVC, synthetic parquet, cork, rubber, sports hall floorings;20;2;0,001;0,0035;1;1;1
+352;811;Vollholzparkett, Holzdielen, Holzpflaster;solid wood parquet, wooden floorboards, wooden plasters;50;0;0,001;0,0035;1;1;1
+352;812;Holz-Mehrschichtparkett;Wood multilayer parquet;40;1;0,001;0,0035;1;1;1
+352;813;Holzschutzanstriche für Bodenbeläge: Holzlacke;Wood protective coatings for floor coverings: Wood varnishes;8;6;0,001;0,0035;1;1;1
+352;814;Holzschutzanstriche für Bodenbeläge: Holzversiegelungen;Wood protective coatings for floor coverings: Wood sealers;10;4;0,001;0,0035;1;1;1
+352;815;Holzschutzanstriche für Bodenbeläge: Holzimprägnierungen, Holzöle/-wachse;Wood protective coatings for floor coverings: Wood impregnations, wood oils/waxes;5;9;0,001;0,0035;1;1;1
+352;;Sonstiges;Other;;;0,001;0,0035;1;1;1
+352;911;Doppelböden und Hohlraumböden;Raised floors and cavity floors;50;0;0,001;0,0035;1;1;1
+352;912;Doppelbodenstützen und Hohlraumbodenstützen: Stahl;Raised floor supports and cavity floor supports: Steel;50;0;0,001;0,0035;1;1;1
+352;921;Schwingböden: Holz, Kunststoff;sprung floors: wood, plastic;45;1;0,001;0,0035;1;1;1
+352;931;Sockelleisten: Naturstein, Kunststein, Klinker, Keramik, Holz;Skirting boards: natural stone, artificial stone, clinker, ceramic, wood;50;0;0,001;0,0035;1;1;1
+352;941;Schmutzfangbeläge: Synthetikfaser, Kunststoff, Baumwolle, Sisal, Jute, Kokos;Dirt trap coverings: Synthetic fiber, plastic, cotton, sisal, jute, coir.;8;6;0,001;0,0035;1;1;1
+352;951;Oberflächenbehandlung: Versiegelung;Surface treatment: sealing;12;4;0,001;0,0035;1;1;1
+352;952;Oberflächenbehandlung: Beschichtung auf Kunststoffbasis;Surface treatment: plastic-based coating;10;4;0,001;0,0035;1;1;1
+352;953;Oberflächenbehandlung: Beschichtung auf Wachs oder Ölbasis;Surface treatment: wax or oil-based coating;8;6;0,001;0,0035;1;1;1
+353;;Deckenbekleidungen;Ceiling coverings;;;0,001;0,0035;1;1;1
+353;111;Gipskartonbekleidungen;Plasterboard claddings;50;0;0,001;0,0035;1;1;1
+353;211;Metallbekeidungen: Aluminium, Stahl, Kupfer, Zink;Metal claddings: Aluminum, steel, copper, zinc;50;0;0,001;0,0035;1;1;1
+353;311;Holzbekleidungen: Holz, Holzwerkstoffe und Mehrschichtleichtbauplatten;Wood cladding: Wood, wood-based materials and multilayer lightweight panels;50;0;0,001;0,0035;1;1;1
+353;411;Sonderkonstruktionen inkl. Befestigung: Mineralfaserplatten, Kunststoffplatten, Glasplatten;Special constructions incl. fastening: mineral fiber boards, plastic boards, glass boards;50;0;0,001;0,0035;1;1;1
+353;412;Sonderkonstruktionen inkl. Befestigung: Brandschutz-Unterdecken;Special constructions incl. fastening: Fire protection suspended ceilings;40;1;0,001;0,0035;1;1;1
+353;413;Sonderkonstruktionen inkl. Befestigung: Akustikdecken, Akustikelemente, Akustikschaum, Schallabsorber;Special constructions incl. fastening: acoustic ceilings, acoustic elements, acoustic foam, sound absorbers;40;1;0,001;0,0035;1;1;1
+353;414;Sonderkonstruktionen inkl. Befestigung: Lichtdecken;Special constructions incl. fastening: Light ceilings;25;1;0,001;0,0035;1;1;1
+353;421;Dämmung der Kellerdecke;Insulation of basement ceiling;50;0;0,001;0,0035;1;1;1
+353;511;Tapeten: überstreichbar;Wallpapers: paintable;10;4;0,001;0,0035;1;1;1
+353;512;Tapeten: Kunststoff, Texil, Webstoff, Papier nicht überstreichbar;wallpapers: Plastic, texil, woven fabric, paper not paintable over;5;9;0,001;0,0035;1;1;1
+353;611;Unterkonstruktionen: Trockenbauprofile (Stahl, Holz);substructures: Drywall profiles (steel, wood);50;0;0,001;0,0035;1;1;1
+359;;Decken, sonstiges;Ceilings, other;;;0,001;0,0035;1;1;1
+359;111;Geländer, Gitter, Roste, Leitern: Stahl, Aluminium, Holz, Holzwerkstoff, Gusseisen;Railings, gratings, ladders: steel, aluminum, wood, wood-based materials, cast iron;50;0;0,001;0,0035;1;1;1
+359;112;Gitter und Roste: Kunststoff;Gratings and gratings: Plastic;40;1;0,001;0,0035;1;1;1
+360;;Dächer;Roofs;;;0,001;0,0035;1;1;1
+361;;Dachkonstruktion;Roof construction;;;0,001;0,0035;1;1;1
+361;111;Tragkonstruktion: Schrägdach;supporting structure: pitched roof;50;0;0,001;0,0035;1;1;1
+361;211;Tragkonstruktion: Flachdach;Supporting structure: flat roof;50;0;0,001;0,0035;1;1;1
+362;;Dachfenster, Dachöffnungen, Überdachungen;Roof windows, roof openings, roofings;;;0,001;0,0035;1;1;1
+362;111;Dachflächenfenster (Rahmen): Aluminium, Kunststoff, Aluminium-Holz-Komposit;Roof windows (frames): Aluminum, plastic, aluminum-wood composite;50;0;0,001;0,0035;1;1;1
+362;112;Dachflächenfenster (Rahmen): Aluminium-Kunststoff-Komposit;Skylights (frames): Aluminum-plastic composite;35;1;0,001;0,0035;1;1;1
+362;113;Dachflächenfenster (Rahmen): Laubholz, behandelt;Skylights (frames): Hardwood, treated;40;1;0,001;0,0035;1;1;1
+362;114;Dachflächenfenster (Rahmen): Nadelholz, behandelt;Skylight windows (frame): Coniferous wood, treated;25;1;0,001;0,0035;1;1;1
+362;211;Lichtkuppeln;Skylight domes;25;1;0,001;0,0035;1;1;1
+362;221;Lichtbänder;Rooflights;20;2;0,001;0,0035;1;1;1
+362;311;Dachausstiege und Luken: Stahl feuerverzinkt (stückverzinkt);Roof outlets and hatches: hot-dip galvanized steel (piece-galvanized);40;1;0,001;0,0035;1;1;1
+362;312;Dachausstiege und Luken: Kunststoff;egresses and hatches: plastic;30;1;0,001;0,0035;1;1;1
+362;411;Antriebe für Öffnungen: Handantrieb;Drives for openings: manual drive;35;1;0,001;0,0035;1;1;1
+362;412;Antriebe für Öffnungen: elektrischer Antrieb;drives for openings: electric drive;25;1;0,001;0,0035;1;1;1
+362;413;Antriebe für Öffnungen: pneumatischer Antrieb;actuators for openings: pneumatic actuator;20;2;0,001;0,0035;1;1;1
+363;;Dachbeläge;Roof coverings;;;0,001;0,0035;1;1;1
+363;;Flachdachabdichtungen;Flat roof waterproofing;;;0,001;0,0035;1;1;1
+363;111;Abdichtungsbahnen: Elastomerbahnen, Kunststoffbahnen unterhalb der Dämmung ;waterproofing membranes: Elastomeric membranes, plastic membranes under insulation ;40;1;0,001;0,0035;1;1;1
+363;112;Abdichtungsbahnen: Bitumenbahnen unterhalb der Dämmung ;waterproofing membranes: Bitumen membranes underneath the insulation ;30;1;0,001;0,0035;1;1;1
+363;113;Abdichtungsbahnen: Bitumenbahnen, Elastomerbahnen, Kunststoffbahnen oberhalb Dämmung mit schwerer Schutzschicht ;Waterproofing membranes: Bituminous membranes, elastomeric membranes, plastic membranes above insulation with heavy protective layer ;30;1;0,001;0,0035;1;1;1
+363;114;Abdichtungsbahnen: Bitumenbahnen, Elastomerbahnen, Kunststoffbahnen oberhalb Dämmung mit leichter Schutzschicht ;Waterproofing membranes: Bituminous membranes, elastomeric membranes, plastic membranes above insulation with light protective layer ;20;2;0,001;0,0035;1;1;1
+363;211;Abdichtmassen: Asphaltmastix, Flüssigabdichtung, Gussasphalt unterhalb der Dämmung ;Waterproofing compounds: Asphalt mastic, liquid waterproofing, mastic asphalt below insulation. ;40;1;0,001;0,0035;1;1;1
+363;212;Abdichtmassen: Asphaltmastix, Flüssigabdichtung, Gussasphalt oberhalb Dämmung mit schwerer Schutzschicht ;Waterproofing compounds: Asphalt mastic, liquid waterproofing, mastic asphalt above insulation with heavy protective layer. ;30;1;0,001;0,0035;1;1;1
+363;213;Abdichtmassen: Asphaltmastix, Flüssigabdichtung, Gussasphalt oberhalb Dämmung mit leichter Schutzschicht ;Waterproofing compounds: Asphalt mastic, liquid waterproofing, mastic asphalt above insulation with light protective layer. ;20;2;0,001;0,0035;1;1;1
+363;214;Abdichtmassen: Flüssigabdichtung oberhalb Dämmung ohne Schutzschicht ;Waterproofing compounds: Liquid waterproofing above insulation without protective layer ;20;2;0,001;0,0035;1;1;1
+363;311;Schwere Schutzschicht: Extensive Begrünung ;Heavy protective layer: Extensive greening ;40;1;0,001;0,0035;1;1;1
+363;312;Schwere Schutzschicht: Bekiesung, Verlegeplatten, Intensive Begrünung ;Heavy protective layer: graveling, laying plates, intensive greening ;30;1;0,001;0,0035;1;1;1
+363;313;Leichte Schutzschicht: Besplitterung vor Ort, werkseitige Bestreuung ;Light protective layer: splintering on site, sprinkling in factory ;15;3;0,001;0,0035;1;1;1
+363;411;Beschichtungen: Metallanstrich ;Coatings: Metal coating ;12;4;0,001;0,0035;1;1;1
+363;;Dachdeckung;Roofing;;;0,001;0,0035;1;1;1
+363;511;Deckungen: Schiefer;Coverings: Slate;50;0;0,001;0,0035;1;1;1
+363;512;Deckungen: Ziegel;Coverings: Tile;50;0;0,001;0,0035;1;1;1
+363;513;Deckungen: Beton, Faserzement;Coverings: Concrete, fiber cement;50;0;0,001;0,0035;1;1;1
+363;514;Deckungen: Zink, Kupferblech, Stahl nicht rostend;Coverings: Zinc, copper sheet, stainless steel;50;0;0,001;0,0035;1;1;1
+363;515;Deckungen: Holzschindeln;Coverings: Wood shingles;50;0;0,001;0,0035;1;1;1
+363;516;Deckungen: Stahl galvanisch verzinkt und beschichtet;Coverings: Steel galvanized and coated;45;1;0,001;0,0035;1;1;1
+363;517;Deckungen: Stahl galvanisch verzinkt, Aluminium;Coverings: Galvanized steel, aluminum;40;1;0,001;0,0035;1;1;1
+363;518;Deckungen: Glas;Coverings: Glass;30;1;0,001;0,0035;1;1;1
+363;519;Deckungen: Bitumenschindeln, Bitumen-Wellplatten;Coverings: Bitumen shingles, corrugated bitumen sheets.;25;1;0,001;0,0035;1;1;1
+363;521;Metallbanddeckungen: Stahl nicht rostend, Kupfer;Metal strip coverings: Stainless steel, copper;50;0;0,001;0,0035;1;1;1
+363;522;Metallbanddeckungen: Stahlblech galvanisch verzinkt und beschichtet ;Metal strip coverings: Steel galvanized and coated ;45;1;0,001;0,0035;1;1;1
+363;523;Metallbanddeckungen: Aluminiumblech, galvanisch verzinktes Stahlblech ;Metal strip coverings: Aluminum sheet, galvanized steel sheet. ;40;1;0,001;0,0035;1;1;1
+363;524;Deckungen: Reet ;Coverings: Reet ;30;1;0,001;0,0035;1;1;1
+363;531;Dämmschicht als Auf- und Zwischensparrendämmung: Schaumglasplatten, Steinwollplatten, extrudierte Polystyrolplatten, expandierte Polystyrolplatten, Glaswollplatten, Polyurethanplatten, Faserplatten aus Holz, Hanf, Zellulose;Insulation layer as above and between rafters: foam glass boards, rock wool boards, extruded polystyrene boards, expanded polystyrene boards, glass wool boards, polyurethane boards, fiber boards made of wood, hemp, cellulose;50;0;0,001;0,0035;1;1;1
+363;;Attikaabdeckung;Attica cover;;;0,001;0,0035;1;1;1
+363;611;Attikaabdeckungen: Naturstein, Kunststein, Betonfertigteil, Betonsteinplatten, keramische Fliesen und Platten, Feinsteinzeug, Steinzeug, Spaltplatten, Kupfer, Stahl nicht rostend, Zink;Attic covers: Natural stone, cast stone, precast concrete, concrete block panels, ceramic tiles and slabs, porcelain stoneware, stoneware, split tiles, copper, stainless steel, zinc;50;0;0,001;0,0035;1;1;1
+363;612;Attikaabdeckungen: Aluminium, Faserzement ;Parapet covers: Aluminum, fiber cement ;40;1;0,001;0,0035;1;1;1
+363;613;Attikaabdeckungen: Stahl galvanisch verzinkt ;Parapet covers: Steel galvanized ;30;1;0,001;0,0035;1;1;1
+363;614;Attikaabdeckungen: Kunststoff ;parapet covers: Plastic ;20;2;0,001;0,0035;1;1;1
+363;;Entwässerung;Drainage;;;0,001;0,0035;1;1;1
+363;711;Entwässerung (Dachrinnen, Regenfallrohre, Dachabläufe): Stahl nicht rostend, Kupfer, Zink, Alu;Drainage (gutters, downspouts, roof drains): Stainless steel, copper, zinc, aluminum;50;0;0,001;0,0035;1;1;1
+363;712;Entwässerung (Dachrinnen, Regenfallrohre, Dachabläufe): Stahl galvanisch verzinkt und beschichtet ;Drainage (gutters, downspouts, roof drains): Steel galvanized and coated ;40;1;0,001;0,0035;1;1;1
+363;713;Entwässerung (Dachrinnen, Regenfallrohre, Dachabläufe): Stahl galvanisch verzinkt ;Drainage (gutters, downspouts, roof drains): Galvanized steel ;30;1;0,001;0,0035;1;1;1
+363;714;Entwässerung (Dachrinnen, Regenfallrohre, Dachabläufe): Kunststoff ;Drainage (gutters, downspouts, roof drains): Plastic ;20;2;0,001;0,0035;1;1;1
+364;;Dachbekleidungen;Roof coverings;;;0,001;0,0035;1;1;1
+364;111;Unterdach: Bitumen-Holzfaserplatten;Sub-roof: Bitumen wood fiber boards;50;0;0,001;0,0035;1;1;1
+364;112;Unterdach: Imprägnierte Faserplatten aus Holz, Hanf, Zellulose ;Sub-roof: impregnated fiber boards made of wood, hemp, cellulose ;30;1;0,001;0,0035;1;1;1
+364;113;Unterdach: dampfdiffusionsoffene Kunststofffolien ;sub-roof: vapor-diffusion-open plastic foils ;30;1;0,001;0,0035;1;1;1
+364;211;"Zwischen-, Auf- und Untersparrendämmung: 
+Mineralwolle, Polystyrol, Polyurethan, Blähgranult, nachwachsende Dämmstoffe (z. B. Holzdämmstoffe, Zellulose, Kork, Leichtlehmmischung, Flachs, Wiesengras, Hanf)";"Between, ""above"" and ""below"" rafter insulation: Mineral wool, polystyrene, polyurethane, expanded granules, renewable insulation materials (e.g., wood insulation, cellulose, cork, light clay mix, flax, meadow grass, hemp)";50;0;0,001;0,0035;1;1;1
+369;;Dächer, sonstiges;Roofs, other;;;0,001;0,0035;1;1;1
+369;;Überdachungen;Roofing;;;0,001;0,0035;1;1;1
+369;111;Eingangsüberdachung: Stahlbaukonstruktion, Stahl-Glas-Konstruktion, Stahlbetonkonstruktion, Spannbetonkonstruktion, Holzkonstruktion (bekleidet);Entrance roofing: steel construction, steel-glass construction, reinforced concrete construction, prestressed concrete construction, wooden construction (clad);50;0;0,001;0,0035;1;1;1
+369;112;Eingangsüberdachung: Holzkonstruktion (unbekleidet), Holz-Glas-Konstruktionen, Glaskonstruktion (tragend) ;Entrance roofing: wooden construction (uncovered), wood-glass construction, glass construction (load-bearing) ;40;1;0,001;0,0035;1;1;1
+369;211;Hofüberdachung: Stahl-Glas-Konstruktionen;Courtyard roofing: steel-glass constructions;50;0;0,001;0,0035;1;1;1
+369;212;Hofüberdachung: Holz-Glas-Konstruktionen, Seilnetzkonstruktionen ;Courtyard roofing: wood-glass constructions, cable net constructions ;40;1;0,001;0,0035;1;1;1
+369;213;Hofüberdachung: Textile Konstruktionen ;Courtyard roofing: textile constructions ;8;6;0,001;0,0035;1;1;1
+369;;Geländer, Gitter, Roste, Leitern;Railings, gratings, ladders;;;0,001;0,0035;1;1;1
+369;311;Stahl nicht rostend, Stahl feuerverzinkt (stückverzinkt);Stainless steel, hot-dip galvanized steel (piece galvanized);50;0;0,001;0,0035;1;1;1
+369;312;Aluminium, Laubholz behandelt ;Aluminum, hardwood treated ;45;1;0,001;0,0035;1;1;1
+369;313;Laubholz unbehandelt, Nadelholz behandelt, Holzwerkstoff beschichtet ;Hardwood untreated, softwood treated, wood material coated ;30;1;0,001;0,0035;1;1;1
+369;314;Nadelholz unbehandelt ;Softwood untreated ;20;2;0,001;0,0035;1;1;1
+369;;Sonstiges;Other;;;0,001;0,0035;1;1;1
+369;411;Absturzsicherung, Trittstufen, Laufflächen, Laub- und Schneefangvorrichtungen, Blitzschutzanlagen: Stahl feuerverzinkt (stückverzinkt), Stahl nicht rostend;Fall protection, steps, treads, leaf and snow guards, lightning protection systems: hot-dip galvanized steel (piece-galvanized), stainless steel;50;0;0,001;0,0035;1;1;1
+369;412;Dachbe- und Dachentlüftung Stahl galvanisch verzinkt ;Roof ventilation and venting steel electrogalvanized ;25;1;0,001;0,0035;1;1;1
+369;413;Entlüftungsrohre Kunststoff ;Ventilation pipes plastic ;25;1;0,001;0,0035;1;1;1
+370;;Baukonstruktive Einbauten;Structural fixtures;;;0,001;0,0035;1;0;0
+371;;Allgemeine Einbauten;General fixtures;;;0,001;0,0035;1;0;0
+371;111;Möblierungssysteme: Büros, Laboratorien ;Furnishing systems: Offices, laboratories ;30;1;0,001;0,0035;1;0;0
+371;112;Möblierungssysteme: Bildschirmarbeitsplätze, Konferenzräume ;Furnishing systems: Computer workstations, conference rooms ;10;4;0,001;0,0035;1;0;0
+371;113;Möblierungssysteme: Bibliotheken, Schutzräume ;Furnishing systems: Libraries, shelters ;40;1;0,001;0,0035;1;0;0
+371;114;Möblierungssysteme: Kantinen, Rechenzentren ;Furnishing systems: canteens, computer centers ;15;3;0,001;0,0035;1;0;0
+371;115;Möblierungssysteme: Schulungsräume, Schulen ;Furnishing systems: training rooms, schools ;20;2;0,001;0,0035;1;0;0
+371;116;Möblierungssysteme: Kontrollräume, Leitstellen ;Furnishing systems: control rooms, control centers ;25;1;0,001;0,0035;1;0;0
+371;121;Regale: Stahl, Aluminium, Holzwerkstoff, Kunststoff ;Shelves: steel, aluminum, wood-based materials, plastics ;40;1;0,001;0,0035;1;0;0
+371;122;Schrankmöbel: Stahl, Stahl nicht rostend, Aluminium, Holzwerkstoff, Kunststoff, Holz ;Cabinet furniture: steel, stainless steel, aluminum, wood-based material, plastic, wood ;30;1;0,001;0,0035;1;0;0
+371;311;Garderobeneinrichtungen: Stahl, Stahl nicht rostend, Messing, Holz, Aluminium ;Wardrobe furniture: Steel, stainless steel, brass, wood, aluminum ;20;2;0,001;0,0035;1;0;0
+371;312;Garderobeneinrichtungen: Kunststoff ;Wardrobe furnishings: Plastic ;15;3;0,001;0,0035;1;0;0
+372;;Besondere Einbauten;Special fixtures;;;0,001;0,0035;1;0;0
+379;;Baukonstruktive Einbauten, Sonstiges;Structural fixtures, other;;;0,001;0,0035;1;0;0
+390;;Sonstige Maßnahmen für Baukonstruktionen;Other measures for building constructions;;;;;1;0;0
+391;;Baustelleneinrichtung;Site equipment;;;;;1;0;0
+392;;Gerüste;Scaffolding;;;;;1;0;0
+393;;Sicherungsmaßnahmen;Safety measures;;;;;1;0;0
+394;;Abbruchmaßnahmen;Demolition measures;;;;;1;0;0
+395;;Instandsetzungen;Repairs;;;;;1;0;0
+396;;Materialentsorgung;Material disposal;;;;;1;0;0
+397;;Zusätzliche Maßnahmen;Additional measures;;;;;1;0;0
+398;;Provisorien;Temporary measures;;;;;1;0;0
+399;;Sonstige Maßnahmen für Baukonstruktionen;Other measures for building structures;;;;;1;0;0
+400;;Bauwerk-Technische Anlagen;Structural-technical installations;;;;;0;0;0
+410;;Abwasser-, Wasser- und Gasanlagen;Sewage, water and gas installations;50;0;0,0101;0,0098;1;1;0
+411;;Abwasseranlagen;Waste water plants;50;0;0,0101;0,0098;1;1;0
+412;;Wasseranlagen;Water plants;50;0;0,0101;0,0098;1;1;0
+413;;Gasanlagen;Gas installations;50;0;0,0101;0,0098;1;1;0
+419;;Abwasser-, Wasser- und Gasanlagen, Sonstiges;Sewage, water and gas plants, others;50;0;0,0101;0,0098;1;1;0
+420;;Wärmeversorgungsanlagen;Heat supply plants;25;1;0,0041;0,0066;1;1;0
+421;;Wärmeerzeugungsanlagen;Heat generation plants;25;1;0,0041;0,0066;1;1;0
+422;;Wärmeverteilnetze;Heat distribution networks;25;1;0,0041;0,0066;1;1;0
+423;;Raumheizflächen;Space heating systems;25;1;0,0041;0,0066;1;1;0
+429;;Wärmeversorgungsanlagen, Sonstiges (WW);Heat supply systems, other (WW);25;1;0,0041;0,0066;1;1;0
+430;;Lufttechnische Anlagen;Ventilation systems;25;1;0,0096;0,011;1;1;0
+431;;Lüftungsanlagen;Ventilation systems;25;1;0,0096;0,011;1;1;0
+432;;Teilklimaanlagen;Partial air conditioning systems;25;1;0,0096;0,011;1;1;0
+433;;Klimaanlagen;Air conditioning systems;25;1;0,0096;0,011;1;1;0
+434;;Kälteanlagen;Refrigeration plants;25;1;0,0096;0,011;1;1;0
+439;;Lufttechnische Anlagen, Sonstiges;Air conditioning systems, other;25;1;0,0096;0,011;1;1;0
+440;;Starkstromanlagen;Power installations;25;1;0,006;0,007;1;0;0
+441;;Hoch- und Mittelspannungsanlagen;High and medium voltage plants;25;1;0,006;0,007;1;0;0
+442;;Eigenstromversorgungsanlagen;In-house power supply systems;25;1;0,006;0,007;1;0;0
+443;;Niederspannungsschaltanlagen;Low voltage switchgears;25;1;0,006;0,007;1;0;0
+444;;Niederspannungsinstallationsanlagen;Low-voltage installation plants;25;1;0,006;0,007;1;0;0
+445;;Beleuchtungsanlagen;Lighting installations;25;1;0,006;0,007;1;1;0
+446;;Blitzschutz- und Erdungsanlagen;Lightning protection and grounding systems;25;1;0,006;0,007;1;0;0
+449;;Starkstromanlagen, Sonstiges;Heavy current installations, other;25;1;0,006;0,007;1;0;0
+450;;Fernmelde- und informationstechnische Anlagen;Telecommunication and information technology installations;25;1;0,0104;0,0104;1;0;0
+451;;Telekommunikationsanlagen;Telecommunication installations;25;1;0,0104;0,0104;1;0;0
+452;;Such- und Signalanlagen;Search and signaling systems;25;1;0,0104;0,0104;1;0;0
+453;;Zeitdienstanlagen;Time service installations;25;1;0,0104;0,0104;1;0;0
+454;;Elektroakustische Anlagen;Electroacoustic installations;25;1;0,0104;0,0104;1;0;0
+455;;Fernseh- und Antennenanlagen;Television and antenna systems;25;1;0,0104;0,0104;1;0;0
+456;;Gefahrenmelde- und Alarmanlagen;Hazard detection and alarm systems;25;1;0,0104;0,0104;1;0;0
+457;;Übertragungsnetze;Transmission networks;25;1;0,0104;0,0104;1;0;0
+459;;Fernmelde- und informationstechnische Anlagen, Sonstiges;Telecommunication and information technology equipment, miscellaneous;25;1;0,0104;0,0104;1;0;0
+460;;Förderanlagen;Conveyor systems;25;1;0,0176;0,0178;0;0;0
+461;;Aufzugsanlagen;Elevator systems;25;1;0,0176;0,0178;1;1;0
+462;;Fahrtreppen, Fahrsteige;Escalators, moving walks;25;1;0,0176;0,0178;1;1;0
+463;;Befahranlagen;Traveling installations;25;1;0,0176;0,0178;1;0;0
+464;;Transportanlagen;Transport systems;25;1;0,0176;0,0178;0;0;0
+465;;Krananlagen;Crane systems;25;1;0,0176;0,0178;0;0;0
+469;;Förderanlagen, Sonstiges;Conveyor systems, other;25;1;0,0176;0,0178;0;0;0
+470;;Nutzungsspezifische Anlagen;Usage specific plants;25;1;;;0;0;0
+471;;Küchentechnische Anlagen;Kitchen equipment;25;1;;;0;0;0
+472;;Wäscherei- und Reinigungsanlagen;Laundry and cleaning systems;25;1;;;0;0;0
+473;;Medienversorgungsanlagen;Media supply systems;25;1;;;0;0;0
+474;;Medizin-, labortechnische Anlagen;Medical and laboratory equipment;25;1;;;0;0;0
+475;;Feuerlöschanlagen;Fire extinguishing systems;25;1;;;0;0;0
+476;;Badetechnische Anlagen;Bathroom equipment;25;1;;;0;0;0
+477;;Prozezzwärme-, -kälte-, -luftanlagen;Process heating, cooling and air conditioning systems;25;1;;;0;0;0
+478;;Entsorgungsanlagen;Waste disposal systems;25;1;;;0;0;0
+479;;Nutzungsspezifische Anlagen, Sonstiges;User-specific systems, other;25;1;;;0;0;0
+480;;Gebäudeautomation;Building automation;10;4;0,0116;0,0076;1;0;0
+481;;Automationssysteme;Automation systems;10;4;0,0116;0,0076;1;0;0
+482;;Schaltschränke;Switch cabinets;10;4;0,0116;0,0076;1;0;0
+483;;Management- und Bedieneinrichtungen;Management and control equipment;10;4;0,0116;0,0076;1;0;0
+484;;Raumautomationssysteme;Room automation systems;10;4;0,0116;0,0076;1;0;0
+485;;Übertragungsnetze;Transmission networks;10;4;0,0116;0,0076;1;0;0
+489;;Gebäudeautomation, Sonstiges;Building automation, other;10;4;0,0116;0,0076;1;0;0
+490;;Sonstige Maßnahmen für Technische Anlagen;Other measures for technical installations;50;0;;;1;0;0
+491;;Baustelleneinrichtung;Site equipment;50;0;;;1;0;0
+492;;Gerüste;Scaffolding;50;0;;;1;0;0
+493;;Sicherungsmaßnahmen;Security measures;50;0;;;1;0;0
+494;;Abbruchmaßnahmen;Demolition measures;50;0;;;1;0;0
+495;;Instandsetzungen;Repairs;50;0;;;1;0;0
+496;;Materialentsorgung;Material disposal;50;0;;;1;0;0
+497;;Zusätzliche Maßnahmen;Additional measures;50;0;;;1;0;0
+498;;Provisorien;Temporary measures;50;0;;;1;0;0
+499;;Sonstige Maßnahmen für Technische Anlagen, Sonstiges;Other measures for technical facilities, miscellaneous;50;0;;;1;0;0
+500;;Außenanlagen;Outdoor facilities;;;;;0;0;0
+530;;Baukonstruktionen in Außenanlagen;Structures in outdoor facilities;50;0;0,001;0,0035;1;1;1
+534;;Rampen, Treppen, Tribünen (nur Kiwa- und Behindertenrampen);Ramps, stairs, stands (only Kiwa and handicapped ramps);50;0;0,001;0,0035;1;1;1
+535;;Überdachungen (nur Fahrradstellplätze);Canopies (only bicycle stands);50;0;0,001;0,0035;1;1;1
+537;;Kanal- und Schachtbauanlagen (nur baul. Anlagen für Medien);Sewer and shaft construction facilities (only construction facilities for media);50;0;0,001;0,0035;1;1;1
+538;;Wasserbauliche Anlagen (nur Brunnen für Wasser-Wasser-WP);Water engineering facilities (only wells for water-water-WP);50;0;0,001;0,0035;1;1;1
+540;;Technische Anlagen in Außenanlagen;Technical installations in outdoor facilities;;;;;1;0;0
+541;;Abwasseranlagen in Außenanlagen;Sewage systems in outdoor facilities;50;0;0,0093;0,0107;1;1;0
+542;;Wasseranlagen in Außenanlagen;Water installations in outdoor facilities;50;0;0,0093;0,0107;1;1;0
+543;;Gasanlagen in Außenanlagen;Gas plants in outdoor facilities;50;0;0,0093;0,0107;1;1;0
+544;;Wärmeversorgungsanlagen in Außenanlagen;Heat supply plants in outdoor facilities;25;1;0,0088;0,008;1;1;0
+545;;Lufttechnische Anlagen in Außenanlagen;Ventilation systems in outdoor facilities;25;1;0,0088;0,008;1;1;0
+546;;Starkstromanlagen in Außenanlagen;Heavy current installations in outdoor facilities;25;1;0,0043;0,0107;1;1;0
+547;;Fernmelde- und informationstechnische Anlagen in Außenanlagen;Telecommunication and information technology systems in outdoor facilities;25;1;0,0043;0,0107;1;0;0
+500;;Außenanlagen;Outdoor facilities;;;;;0;0;0
+550;;Einbauten in Außenanlagen;Fixtures in outdoor facilities;;;;;0;0;0
+551;;Allgemeine Einbauten (nur Fahrradständer und Abfallbehälter);General fixtures (only bicycle racks and waste containers);25;1;0,001;0,0035;1;1;1
+570;;Pflanz- und Saatflächen;Planting and seeding areas;;;;;0;0;0
+576;;Begrünung unterbauter Flächen;Greening of underbuilt areas;30;1;0,001;0,0035;1;1;1

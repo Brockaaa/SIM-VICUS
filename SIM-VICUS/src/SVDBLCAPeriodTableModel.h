@@ -43,10 +43,10 @@ class SVDBLCAPeriodTableModel : public SVAbstractDatabaseTableModel {
 public:
 	/*! Columns shown in the table view. */
 	enum Columns {
-		ColId,
-		ColColor,
-		ColCheck,
+		ColKg,
+		ColCode,
 		ColName,
+		ColPeriod,
 		NumColumns
 	};
 
@@ -64,7 +64,7 @@ public:
 
 	// ** SVAbstractDatabaseTableModel interface **
 
-	int columnIndexId() const override { return ColId; }
+	int columnIndexId() const override { return ColKg; }
 	SVDatabase::DatabaseTypes databaseType() const override { return SVDatabase::DT_LCAPeriods; }
 	virtual void resetModel() override;
 	QModelIndex addNewItem() override;

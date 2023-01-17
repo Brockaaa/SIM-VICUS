@@ -34,15 +34,10 @@
 #include <IBK_Parameter.h>
 #include <IBK_MultiLanguageString.h>
 
-#include <NANDRAD_InterfaceLongWaveEmission.h>
-#include <NANDRAD_InterfaceSolarAbsorption.h>
-#include <NANDRAD_InterfaceVaporDiffusion.h>
-#include <NANDRAD_InterfaceAirFlow.h>
-
 #include "VICUS_CodeGenMacros.h"
 #include "VICUS_Constants.h"
+#include "VICUS_Database.h"
 #include "VICUS_AbstractDBElement.h"
-#include "VICUS_InterfaceHeatConduction.h"
 #include "VICUS_Schedule.h"
 
 
@@ -52,6 +47,32 @@ namespace VICUS {
 class LCAPeriod : public AbstractDBElement {
 	Q_DECLARE_TR_FUNCTIONS(LCAPeriod)
 public:
+	/*! Basic parameters. */
+	enum para_t {
+
+		/*! Costgroup */
+		P_Costgroup,				// Keyword: Costgroup				[---]	'Material cost group'
+		/*! Code */
+		P_Code,						// Keyword: Code					[---]	'Material Code'
+		/*! Global Warming Potential. */
+		P_Lifetime,					// Keyword: Lifetime				[a]	'Material Lifetime in years'
+		/*! ReplacementCycles */
+		P_ReplacementCycles,		// Keyword: ReplacementCycles		[---]	'Absolute replacement count within LCA period'
+		/*! Maintenance */
+		P_Maintenance,				// Keyword: Maintenance				[---]	'??? TODO'
+		/*! Repair */
+		P_Repair,					// Keyword: Repair					[---]	'??? TODO'
+
+		NUM_P
+	};
+
+	/*! Flags. */
+	enum flag_t {
+		F_LifeCycleCosts,							// Keyword: LifeCycleCosts							'??? TODO'
+		F_LifeCycleAssessmentStandard,				// Keyword: LifeCycleAssessmentStandard				'??? TODO'
+		F_LifeCycleAssessmentSimplifiedProcedure,	// Keyword: LifeCycleAssessmentSimplifiedProcedure	'??? TODO'
+		NUM_F
+	};
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
@@ -65,8 +86,15 @@ public:
 
 	// *** PUBLIC MEMBER VARIABLES ***
 
-	//:inherited	unsigned int					m_id = INVALID_ID;		// XML:A:required
-	//:inherited	IBK::MultiLanguageString		m_displayName;			// XML:A
+	//:inherited	unsigned int					m_id = INVALID_ID;			// XML:A:required
+	//:inherited	IBK::MultiLanguageString		m_displayName;				// XML:A:required
+
+	/*! Parameters */
+	IBK::Parameter					m_para[NUM_P];								// XML:E
+
+	/*! Flags */
+	IBK::Flag						m_flags[NUM_F];								// XML:E:required
+
 
 };
 

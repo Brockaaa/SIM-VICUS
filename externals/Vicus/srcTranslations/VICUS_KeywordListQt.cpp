@@ -95,6 +95,15 @@ KeywordListQt::KeywordListQt() {
 	tr("Power");
 	tr("Some temperatures");
 	tr("Some mass");
+	tr("Material cost group");
+	tr("Material Code");
+	tr("Material Lifetime in years");
+	tr("Absolute replacement count within LCA period");
+	tr("??? TODO");
+	tr("??? TODO");
+	tr("??? TODO");
+	tr("??? TODO");
+	tr("??? TODO");
 	tr("Dry density of the material.");
 	tr("Specific heat capacity of the material.");
 	tr("Thermal conductivity of the dry material.");

@@ -62,6 +62,8 @@ public:
 
 
 private slots:
+	void readDatabaseLCAPeriods(const IBK::Path &filename);
+
 	void on_lineEditName_editingFinished();
 
 	void on_pushButtonColor_colorChanged();

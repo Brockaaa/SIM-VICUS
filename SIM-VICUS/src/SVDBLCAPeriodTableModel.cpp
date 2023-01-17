@@ -53,49 +53,23 @@ QVariant SVDBLCAPeriodTableModel::data ( const QModelIndex & index, int role) co
 	if (!index.isValid())
 		return QVariant();
 
-	if (index.column() == ColColor && role == Role_Color) {
-		return true;
-	}
-
 	// readability improvement
-	const VICUS::Database<VICUS::LCAPeriod> & bcDB = m_db->m_lcaPeriods;
+	const VICUS::Database<VICUS::LCAPeriod> & lcaDB = m_db->m_lcaPeriods;
 
 	int row = index.row();
-	if (row >= (int)bcDB.size())
+	if (row >= (int)lcaDB.size())
 		return QVariant();
 
-	std::map<unsigned int, VICUS::LCAPeriod>::const_iterator it = bcDB.begin();
+	std::map<unsigned int, VICUS::LCAPeriod>::const_iterator it = lcaDB.begin();
 	std::advance(it, row);
 
 	switch (role) {
 		case Qt::DisplayRole : {
 			switch (index.column()) {
-				case ColId					: return it->first;
+				case ColKg					: return it->first;
+				case ColCode				: return it->first;
 				case ColName				: return QtExt::MultiLangString2QString(it->second.m_displayName);
-			}
-		} break;
-
-		case Qt::SizeHintRole :
-			switch (index.column()) {
-				case ColCheck :
-				case ColColor :
-					return QSize(22, 16);
-			} // switch
-		break;
-
-		case Qt::DecorationRole : {
-			if (index.column() == ColCheck) {
-				std::string errorMsg = "";
-				if (it->second.isValid(m_db->m_schedules))
-					return QIcon(":/gfx/actions/16x16/ok.png");
-				else
-					return QIcon(":/gfx/actions/16x16/error.png");
-			}
-		} break;
-
-		case Qt::BackgroundRole : {
-			if (index.column() == ColColor) {
-				return it->second.m_color;
+				case ColPeriod				: return it->first;
 			}
 		} break;
 
@@ -110,14 +84,6 @@ QVariant SVDBLCAPeriodTableModel::data ( const QModelIndex & index, int role) co
 
 		case Role_Referenced:
 			return it->second.m_isReferenced;
-
-		case Qt::ToolTipRole: {
-			if(index.column() == ColCheck) {
-				std::string errorMsg = "";
-				if (!it->second.isValid(m_db->m_schedules))
-					return QString::fromStdString(it->second.m_errorMsg);
-			}
-		}
 	}
 
 	return QVariant();
@@ -135,8 +101,10 @@ QVariant SVDBLCAPeriodTableModel::headerData(int section, Qt::Orientation orient
 	switch (role) {
 		case Qt::DisplayRole: {
 			switch ( section ) {
-				case ColId					: return tr("Id");
-				case ColName				: return tr("Name");
+				case ColKg					: return tr("Group");
+				case ColCode				: return tr("Code");
+				case ColName				: return tr("Description");
+				case ColPeriod				: return tr("Lifetime");
 			}
 		} break;
 
@@ -198,10 +166,10 @@ void SVDBLCAPeriodTableModel::deleteItem(const QModelIndex & index) {
 
 
 void SVDBLCAPeriodTableModel::setColumnResizeModes(QTableView * tableView) {
-	tableView->horizontalHeader()->setSectionResizeMode(SVDBLCAPeriodTableModel::ColId, QHeaderView::Fixed);
-	tableView->horizontalHeader()->setSectionResizeMode(SVDBLCAPeriodTableModel::ColCheck, QHeaderView::Fixed);
-	tableView->horizontalHeader()->setSectionResizeMode(SVDBLCAPeriodTableModel::ColColor, QHeaderView::Fixed);
-	tableView->horizontalHeader()->setSectionResizeMode(SVDBLCAPeriodTableModel::ColName, QHeaderView::Stretch);
+	tableView->horizontalHeader()->setSectionResizeMode(SVDBLCAPeriodTableModel::ColKg, QHeaderView::Fixed);
+	tableView->horizontalHeader()->setSectionResizeMode(SVDBLCAPeriodTableModel::ColCode, QHeaderView::Fixed);
+	tableView->horizontalHeader()->setSectionResizeMode(SVDBLCAPeriodTableModel::ColName, QHeaderView::Fixed);
+	tableView->horizontalHeader()->setSectionResizeMode(SVDBLCAPeriodTableModel::ColPeriod, QHeaderView::Stretch);
 }
 
 
