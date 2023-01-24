@@ -51,26 +51,26 @@ public:
 	enum para_t {
 
 		/*! Costgroup */
-		P_Costgroup,				// Keyword: Costgroup				[---]	'Material cost group'
+		P_Costgroup,				// Keyword: Costgroup				[-]	'Material cost group'
 		/*! Code */
-		P_Code,						// Keyword: Code					[---]	'Material Code'
-		/*! Global Warming Potential. */
+		P_Code,						// Keyword: Code					[-]	'Material Code'
+		/*! Lifetime */
 		P_Lifetime,					// Keyword: Lifetime				[a]	'Material Lifetime in years'
 		/*! ReplacementCycles */
-		P_ReplacementCycles,		// Keyword: ReplacementCycles		[---]	'Absolute replacement count within LCA period'
+		P_ReplacementCycles,		// Keyword: ReplacementCycles		[-]	'Absolute replacement count within LCA period'
 		/*! Maintenance */
-		P_Maintenance,				// Keyword: Maintenance				[---]	'??? TODO'
+		P_Maintenance,				// Keyword: Maintenance				[-]	'??? TODO'
 		/*! Repair */
-		P_Repair,					// Keyword: Repair					[---]	'??? TODO'
+		P_Repair,					// Keyword: Repair					[-]	'??? TODO'
 
 		NUM_P
 	};
 
 	/*! Flags. */
 	enum flag_t {
-		F_LifeCycleCosts,							// Keyword: LifeCycleCosts							'??? TODO'
-		F_LifeCycleAssessmentStandard,				// Keyword: LifeCycleAssessmentStandard				'??? TODO'
-		F_LifeCycleAssessmentSimplifiedProcedure,	// Keyword: LifeCycleAssessmentSimplifiedProcedure	'??? TODO'
+		F_LCC,						// Keyword: LCC							'??? TODO'
+		F_LCAStandard,				// Keyword: LCAStandard					'??? TODO'
+		F_LCASimplifiedProcedure,	// Keyword: LCASimplifiedProcedure		'??? TODO'
 		NUM_F
 	};
 

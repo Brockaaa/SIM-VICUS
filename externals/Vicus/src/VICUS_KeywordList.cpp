@@ -254,9 +254,9 @@ namespace VICUS {
 			// LCAPeriod::flag_t
 			case 16 :
 			switch (t) {
-				case 0 : return "LifeCycleCosts";
-				case 1 : return "LifeCycleAssessmentStandard";
-				case 2 : return "LifeCycleAssessmentSimplifiedProcedure";
+				case 0 : return "LCC";
+				case 1 : return "LCAStandard";
+				case 2 : return "LCASimplifiedProcedure";
 			} break;
 			// Material::para_t
 			case 17 :
@@ -766,9 +766,9 @@ namespace VICUS {
 			// LCAPeriod::flag_t
 			case 16 :
 			switch (t) {
-				case 0 : return "LifeCycleCosts";
-				case 1 : return "LifeCycleAssessmentStandard";
-				case 2 : return "LifeCycleAssessmentSimplifiedProcedure";
+				case 0 : return "LCC";
+				case 1 : return "LCAStandard";
+				case 2 : return "LCASimplifiedProcedure";
 			} break;
 			// Material::para_t
 			case 17 :
@@ -1781,12 +1781,12 @@ namespace VICUS {
 			// LCAPeriod::para_t
 			case 15 :
 			switch (t) {
-				case 0 : return "---";
-				case 1 : return "---";
+				case 0 : return "-";
+				case 1 : return "-";
 				case 2 : return "a";
-				case 3 : return "---";
-				case 4 : return "---";
-				case 5 : return "---";
+				case 3 : return "-";
+				case 4 : return "-";
+				case 5 : return "-";
 			} break;
 			// LCAPeriod::flag_t
 			case 16 :

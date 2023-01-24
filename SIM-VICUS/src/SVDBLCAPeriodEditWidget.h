@@ -51,6 +51,22 @@ class SVDBLCAPeriodEditWidget : public SVAbstractDatabaseEditWidget {
 	Q_OBJECT
 
 public:
+
+	/*! Column enums. */
+	enum ColData {
+		ColKg,
+		ColCode,
+		ColNameDe,
+		ColNameEn,
+		ColLifetime,
+		ColReplacementCycles,
+		ColMaintenance,
+		ColRepair,
+		ColLCC,
+		ColLCAStandard,
+		ColLCASimplifiedProcedure,
+	};
+
 	explicit SVDBLCAPeriodEditWidget(QWidget *parent = nullptr);
 	~SVDBLCAPeriodEditWidget() override;
 
@@ -62,11 +78,9 @@ public:
 
 
 private slots:
-	void readDatabaseLCAPeriods(const IBK::Path &filename);
+	void importDatabaseLCAPeriods(const IBK::Path &filename);
 
-	void on_lineEditName_editingFinished();
-
-	void on_pushButtonColor_colorChanged();
+	void on_pushButton_clicked();
 
 private:
 	/*! Set up the modified variable of the model to true. */

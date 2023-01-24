@@ -74,6 +74,8 @@ public:
 	/*! Event filter for resizing events in order to resize row to its contents. */
 	bool eventFilter(QObject * obj, QEvent * event) override;
 
+	SVAbstractDatabaseTableModel * dbModel() const;
+
 private slots:
 	void on_pushButtonSelect_clicked();
 	void on_pushButtonCancel_clicked();

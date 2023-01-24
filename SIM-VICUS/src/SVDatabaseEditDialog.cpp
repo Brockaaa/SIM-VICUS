@@ -740,3 +740,7 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createSubNetworkEditDialog(QWidget *
 	dlg->resize(1400,800);
 	return dlg;
 }
+
+SVAbstractDatabaseTableModel * SVDatabaseEditDialog::dbModel() const {
+	return m_dbModel;
+}

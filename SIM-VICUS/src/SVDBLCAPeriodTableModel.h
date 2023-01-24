@@ -43,6 +43,7 @@ class SVDBLCAPeriodTableModel : public SVAbstractDatabaseTableModel {
 public:
 	/*! Columns shown in the table view. */
 	enum Columns {
+		ColId,
 		ColKg,
 		ColCode,
 		ColName,
@@ -74,6 +75,8 @@ public:
 	void setItemLocal(const QModelIndex &index, bool local) override;
 
 	// ** other members **
+	/*! Add LCA to Database. */
+	void importDatasets(const std::map<QString, VICUS::LCAPeriod> & lcas);
 
 	/*! Tells the model that an item has been modified, triggers a dataChanged() signal. */
 	void setItemModified(unsigned int id);
