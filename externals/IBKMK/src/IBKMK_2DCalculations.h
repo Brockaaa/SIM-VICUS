@@ -68,6 +68,9 @@ void eliminateCollinearPoints(std::vector<IBKMK::Vector2D> & polygon, double eps
 /*! Takes the vector v and enlarges the current bounding box defined through 'minVec' and 'maxVec'. */
 void enlargeBoundingBox(const IBKMK::Vector2D & v, IBKMK::Vector2D & minVec, IBKMK::Vector2D & maxVec);
 
+/*! Takes two 2D polygons and checks for intersection */
+bool polyIntersect2D(const std::vector<IBKMK::Vector2D> & vertsA, const std::vector<IBKMK::Vector2D> & vertsB);
+
 } // namespace IBKMK
 
 #endif // IBKMK_2DCalculationsH

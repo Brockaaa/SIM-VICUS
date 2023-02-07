@@ -119,6 +119,36 @@ inline double angleBetweenVectorsDeg ( const IBKMK::Vector3D &v1, const IBKMK::V
 /*! Takes the vector v and enlarges the current bounding box defined through 'minVec' and 'maxVec'. */
 void enlargeBoundingBox(const IBKMK::Vector3D & v, IBKMK::Vector3D & minVec, IBKMK::Vector3D & maxVec);
 
+/*! Transforms 3D Polygon to 2D by eliminating one dimension and applies 2D Point in Polygon.
+	It's assumed the point is already coplanar. This should previously be tested.
+
+	Point in Polygon function. Result:
+	-1 point not in polyline
+	0 point on polyline
+	1 point in polyline
+*/
+int coplanarPointInPolygon3D(const std::vector<Vector3D> & poly, const IBK::point3D<double> &point);
+
+/*! Determines if intersection occurs between polygon and other polygon.
+	Touching is not counted as intersecting.
+	Returns true in case of intersection.
+
+	Algorithm design:
+
+		 * first we test if planes actually intersect
+		 * if so, we have 2 consecutive concepts for detecting intersection:
+		 *
+		 *	 we iterate over all edges of both polygons and calculate the intersection points with the respective other polygon plane
+		 *   if these intersection points are contained within the other polygon, an intersection is detected (true)
+		 *
+		 *   then we calculate the intersection line between the two planes, and list all polygon vertices which lie on the line
+		 *   if there are >=2 (after duplicate elimination) we iterate over the center-points between each neighboring vertices on the line
+		 *   if any of the center points is contained within both polygons, an intersection is detected (true)
+
+	This 2-step algorithm ensures we won't miss any edge cases, e.g. polygons sharing intersection points or lines
+ */
+bool polyIntersect(const std::vector<IBKMK::Vector3D> & vertsA, const std::vector<IBKMK::Vector3D> & vertsB);
+
 } // namespace IBKMK
 
 #endif // IBKMK_3DCalculationsH

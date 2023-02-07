@@ -177,5 +177,29 @@ void enlargeBoundingBox(const Vector2D & v, Vector2D & minVec, Vector2D & maxVec
 	maxVec.m_y = std::max(maxVec.m_y, v.m_y);
 }
 
+bool polyIntersect2D(const std::vector<Vector2D> & vertsA, const std::vector<Vector2D> & vertsB) {
+	IBKMK::Vector2D intersectP;
+	for (unsigned int i = 0, count = vertsA.size(); i<count; ++i ) {
+		// check if any of the edge centerpoints are contained within the other polygon
+		// this is a catch-all solution for all cases of partial overlapping intersections that
+		// would go undetected by testing for edge intersections, as well as edge-intersection-free containment
+		if (IBKMK::pointInPolygon(vertsB, (vertsA[(i+1)%vertsA.size()]+vertsA[i])*0.5) == 1) {
+			return true;
+		}
+		// check for 2D polygon line intersections
+		if (IBKMK::intersectsLine2D(vertsB, vertsA[(i+1)%vertsA.size()], vertsA[i], intersectP)) {
+			return true;
+		}
+	}
+	for (unsigned int i = 0, count = vertsB.size(); i<count; ++i ) {
+		if (IBKMK::pointInPolygon(vertsA, (vertsB[(i+1)%vertsB.size()]+vertsB[i])*0.5) == 1) {
+			return true;
+		}
+		if (IBKMK::intersectsLine2D(vertsA, vertsB[(i+1)%vertsB.size()], vertsB[i], intersectP)) {
+			return true;
+		}
+	}
+	return false;
+}
 
 } // namespace IBKMK

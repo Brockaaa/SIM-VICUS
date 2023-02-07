@@ -117,7 +117,7 @@ public:
 
 	// Transformation functions
 
-	/*! Totates the polygon/plane and updates the y-axis.
+	/*! Rotates the polygon/plane and updates the y-axis.
 		Throws an exception if either normal or xAxis do not have unit length, or if both vectors are colliniar.
 	*/
 	void setRotation(const IBKMK::Vector3D & normal, const IBKMK::Vector3D & localX);
