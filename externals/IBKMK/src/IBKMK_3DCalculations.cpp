@@ -350,7 +350,7 @@ void enlargeBoundingBox(const Vector3D & v, Vector3D & minVec, Vector3D & maxVec
 }
 
 
-int coplanarPointInPolygon3D(const std::vector<Vector3D> & polygon, const IBK::point3D<double> &point) {
+int coplanarPointInPolygon3D(const std::vector<Vector3D> polygon, const IBK::point3D<double> point) {
 	IBK_ASSERT(polygon.size() >= 3);
 	// Todo: eliminateCollinearPoints
 	// use cross product to obtain normal vector
@@ -363,23 +363,20 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> & polygon, const IBK::p
 		//other cases respective, point respective
 		point2D.m_x = point.m_x;
 		point2D.m_y = point.m_y;
-		for (unsigned int i = 0, count = polygon.size(); i<count; ++i ) {
-			polygon2D[i].m_x = polygon[i].m_x;
-			polygon2D[i].m_y = polygon[i].m_y;
+		for (Vector3D i : polygon) {
+			polygon2D.push_back(Vector2D(i.m_x,i.m_y)); // eliminate z
 		}
 	} else if (polyNormalVector.m_y != 0) {
 		point2D.m_x = point.m_x;
 		point2D.m_y = point.m_z;
-		for (unsigned int i = 0, count = polygon.size(); i<count; ++i ) {
-			polygon2D[i].m_x = polygon[i].m_x;
-			polygon2D[i].m_y = polygon[i].m_z; // eliminate y
+		for (Vector3D i : polygon) {
+			polygon2D.push_back(Vector2D(i.m_x,i.m_z)); // eliminate y
 		}
 	} else if (polyNormalVector.m_x != 0) {
 		point2D.m_x = point.m_z;
 		point2D.m_y = point.m_y;
-		for (unsigned int i = 0, count = polygon.size(); i<count; ++i ) {
-			polygon2D[i].m_x = polygon[i].m_z; // eliminate x
-			polygon2D[i].m_y = polygon[i].m_y;
+		for (Vector3D i : polygon) {
+			polygon2D.push_back(Vector2D(i.m_z,i.m_y)); // eliminate x
 		}
 	}
 	return pointInPolygon(polygon2D, point2D);

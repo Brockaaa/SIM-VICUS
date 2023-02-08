@@ -127,7 +127,7 @@ void enlargeBoundingBox(const IBKMK::Vector3D & v, IBKMK::Vector3D & minVec, IBK
 	0 point on polyline
 	1 point in polyline
 */
-int coplanarPointInPolygon3D(const std::vector<Vector3D> & poly, const IBK::point3D<double> &point);
+int coplanarPointInPolygon3D(const std::vector<Vector3D> poly, const IBK::point3D<double> point);
 
 /*! Determines if intersection occurs between polygon and other polygon.
 	Touching is not counted as intersecting.
