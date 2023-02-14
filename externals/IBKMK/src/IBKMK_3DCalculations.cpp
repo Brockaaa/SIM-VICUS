@@ -469,6 +469,9 @@ bool polyIntersect(const std::vector<Vector3D> & vertsA, const std::vector<Vecto
 		IBKMK::Vector3D edgeA;
 		IBKMK::Vector3D edgeB;
 		IBKMK::Vector3D pointOfIntersection;
+
+		// list of all points of intersection, which is needed later
+		std::vector<IBKMK::Vector3D> intersectionPointsOfPolyEdgeAndIntersectionLine;
 		double r = 0;
 
 		// first we iterate over polygon edges and test for intersection points with the other polygon's plane
@@ -485,6 +488,7 @@ bool polyIntersect(const std::vector<Vector3D> & vertsA, const std::vector<Vecto
 					r = (offsetB - normalVectorB.scalarProduct(vertsA[i])) / normalVectorB.scalarProduct(edgeA);
 					// get point of intersection:
 					pointOfIntersection = vertsA[i] + r * edgeA;
+					intersectionPointsOfPolyEdgeAndIntersectionLine.push_back(pointOfIntersection);
 					if (coplanarPointInPolygon3D(vertsB, pointOfIntersection) == 1) {
 						return true;
 					}
@@ -498,6 +502,7 @@ bool polyIntersect(const std::vector<Vector3D> & vertsA, const std::vector<Vecto
 				if (( (normalVectorA.scalarProduct(vertsB[i])-offsetA) * (normalVectorA.scalarProduct(vertsB[(i+1)%vertsB.size()])-offsetA) ) < 0) {
 					r = (offsetA - normalVectorA.scalarProduct(vertsB[i])) / normalVectorA.scalarProduct(edgeB);
 					pointOfIntersection = vertsB[i] + r * edgeB;
+					intersectionPointsOfPolyEdgeAndIntersectionLine.push_back(pointOfIntersection);
 					if (coplanarPointInPolygon3D(vertsA, pointOfIntersection) == 1) {
 						return true;
 					}
@@ -557,8 +562,22 @@ bool polyIntersect(const std::vector<Vector3D> & vertsA, const std::vector<Vecto
 			}
 		}
 
-		// std::map is already ordered by key
+		//add the points, where poly edges intersect the other polygons plane, to the map
+		for (unsigned int i = 0, count = intersectionPointsOfPolyEdgeAndIntersectionLine.size(); i<count; ++i ) {
+			//we already know the points lie on the intersection line, but for automatic sorting we need to calculate the intersectionToPolyvertexFactor
+			//avoid division by zero
+			if (dirVector.m_x != 0) {
+				intersectionToPolyvertexFactor = (intersectionPointsOfPolyEdgeAndIntersectionLine[i].m_x - supportVector.m_x) / dirVector.m_x;
+			} else if (dirVector.m_y != 0) {
+				intersectionToPolyvertexFactor = (intersectionPointsOfPolyEdgeAndIntersectionLine[i].m_y - supportVector.m_y) / dirVector.m_y;
+			} else /*if (dirVector.m_z != 0)*/ {
+				intersectionToPolyvertexFactor = (intersectionPointsOfPolyEdgeAndIntersectionLine[i].m_z - supportVector.m_z) / dirVector.m_z;
+			}
+			polyPointsOnIntersectionLine.insert({intersectionToPolyvertexFactor, intersectionPointsOfPolyEdgeAndIntersectionLine[i]});
 
+		}
+
+		// std::map is already ordered by key
 		if (polyPointsOnIntersectionLine.size() >=2) {
 
 			// iterate over all center points inbetween poly vertices on intersection lines
@@ -569,10 +588,9 @@ bool polyIntersect(const std::vector<Vector3D> & vertsA, const std::vector<Vecto
 				centerpoint = it->second + (next->second - it->second) * 0.5;
 
 				// test if centerpoint is contained within both polygons
-				if ((coplanarPointInPolygon3D(vertsA, centerpoint) == 1) && (coplanarPointInPolygon3D(vertsA, centerpoint) == 1)) {
+				if ((coplanarPointInPolygon3D(vertsA, centerpoint) == 1) && (coplanarPointInPolygon3D(vertsB, centerpoint) == 1)) {
 					return true;
 				}
-
 			}
 		}
 	}
