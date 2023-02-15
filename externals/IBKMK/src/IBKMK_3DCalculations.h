@@ -147,7 +147,7 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> poly, const IBK::point3
 
 	This 2-step algorithm ensures we won't miss any edge cases, e.g. polygons sharing intersection points or lines
  */
-bool polyIntersect(const std::vector<IBKMK::Vector3D> & vertsA, const std::vector<IBKMK::Vector3D> & vertsB);
+bool polyIntersect(const std::vector<IBKMK::Vector3D> & vertsAexact, const std::vector<IBKMK::Vector3D> & vertsBexact);
 
 } // namespace IBKMK
 

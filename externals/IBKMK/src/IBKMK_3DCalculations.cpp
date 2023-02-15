@@ -383,18 +383,40 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> polygon, const IBK::poi
 }
 
 
-bool polyIntersect(const std::vector<Vector3D> & vertsA, const std::vector<Vector3D> & vertsB) {
-	IBK_ASSERT(vertsA.size() >= 3);
-	IBK_ASSERT(vertsB.size() >= 3);
+bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<Vector3D> & vertsBexact) {
+	IBK_ASSERT(vertsAexact.size() >= 3);
+	IBK_ASSERT(vertsBexact.size() >= 3);
+
+	IBK::NearEqual<double> near_equal5(1e-5);
+	IBK::NearEqual<double> near_equal1(1e-1);
+
+	const double coordFactor = 1e4;
+
+	std::vector<Vector3D> vertsA;
+	std::vector<Vector3D> vertsB;
+
+	// rounding all vertices to achieve near_equal precision
+	for (Vector3D i : vertsAexact) {
+			vertsA.push_back(Vector3D(std::round(i.m_x*coordFactor)/coordFactor,std::round(i.m_y*coordFactor)/coordFactor,std::round(i.m_z*coordFactor)/coordFactor));
+	}
+	for (Vector3D i : vertsBexact) {
+			vertsB.push_back(Vector3D(std::round(i.m_x*coordFactor)/coordFactor,std::round(i.m_y*coordFactor)/coordFactor,std::round(i.m_z*coordFactor)/coordFactor));
+	}
+
+
 
 	// get arbitrary base vectors for polygon A and B's planes
 	// TODO: error handling in case polygon is malformatted and first 3 points are located on a straight line .. eliminateCollinearPoints?
-
+	// compensating for different sizes of span vectors to have later calculations in the same order of magnitude
 	IBKMK::Vector3D vectorA1 = vertsA[1] - vertsA[0];
+	vectorA1 = vectorA1 * (10/vectorA1.magnitude());
 	IBKMK::Vector3D vectorA2 = vertsA[2] - vertsA[0];
+	vectorA2 = vectorA2 * (10/vectorA2.magnitude());
 
 	IBKMK::Vector3D vectorB1 = vertsB[1] - vertsB[0];
+	vectorB1 = vectorB1 * (10/vectorB1.magnitude());
 	IBKMK::Vector3D vectorB2 = vertsB[2] - vertsB[0];
+	vectorB2 = vectorB2 * (10/vectorB2.magnitude());
 
 	// use cross product to obtain normal vectors
 	IBKMK::Vector3D normalVectorA = vectorA1.crossProduct(vectorA2);
@@ -405,7 +427,8 @@ bool polyIntersect(const std::vector<Vector3D> & vertsA, const std::vector<Vecto
 
 	// check if polygon planes A & B are parallel
 	// if crossProduct of normal vectors returns 0-vector then normal vectors are parallel
-	if (normalVectorA.crossProduct(normalVectorB).magnitude() == 0) {
+	// magnitude of normal vector will quickly exceed 1e+2 for small rotations, so 1e-2 check is suited
+	if (near_equal1(normalVectorA.crossProduct(normalVectorB).magnitude(), 0)) {
 		// planes are parallel
 		// ### for parallel cases intersection is not intended.
 		// ### otherwise 2D intersection for the coplanar case can be implemented like this:
@@ -532,6 +555,7 @@ bool polyIntersect(const std::vector<Vector3D> & vertsA, const std::vector<Vecto
 		// find all polygon vertices which lie on the line
 		std::map<double, IBKMK::Vector3D> polyPointsOnIntersectionLine = {/*{ 1, IBKMK::Vector3D( 1,  2,  3) }*/};
 		double intersectionToPolyvertexFactor;
+		Vector3D temporaryVector;
 
 		for (unsigned int i = 0, count = vertsA.size(); i<count; ++i ) {
 			//avoid division by zero
@@ -542,7 +566,8 @@ bool polyIntersect(const std::vector<Vector3D> & vertsA, const std::vector<Vecto
 			} else /*if (dirVector.m_z != 0)*/ {
 				intersectionToPolyvertexFactor = (vertsA[i].m_z - supportVector.m_z) / dirVector.m_z;
 			}
-			if (supportVector + intersectionToPolyvertexFactor * dirVector == vertsA[i]) {
+			temporaryVector = (supportVector + intersectionToPolyvertexFactor * dirVector);
+			if (near_equal5(temporaryVector.m_x, vertsA[i].m_x) && near_equal5(temporaryVector.m_y, vertsA[i].m_y) && near_equal5(temporaryVector.m_z, vertsA[i].m_z)) {
 				//using a map avoids duplicates
 				polyPointsOnIntersectionLine.insert({intersectionToPolyvertexFactor, vertsA[i]});
 			}
@@ -556,7 +581,8 @@ bool polyIntersect(const std::vector<Vector3D> & vertsA, const std::vector<Vecto
 			} else /*if (dirVector.m_z != 0)*/ {
 				intersectionToPolyvertexFactor = (vertsB[i].m_z - supportVector.m_z) / dirVector.m_z;
 			}
-			if (supportVector + intersectionToPolyvertexFactor * dirVector == vertsB[i]) {
+			temporaryVector = (supportVector + intersectionToPolyvertexFactor * dirVector);
+			if (near_equal5(temporaryVector.m_x, vertsA[i].m_x) && near_equal5(temporaryVector.m_y, vertsA[i].m_y) && near_equal5(temporaryVector.m_z, vertsA[i].m_z)) {
 				//using a map avoids duplicates
 				polyPointsOnIntersectionLine.insert({intersectionToPolyvertexFactor, vertsB[i]});
 			}
