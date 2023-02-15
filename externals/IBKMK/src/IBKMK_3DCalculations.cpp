@@ -582,7 +582,7 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 				intersectionToPolyvertexFactor = (vertsB[i].m_z - supportVector.m_z) / dirVector.m_z;
 			}
 			temporaryVector = (supportVector + intersectionToPolyvertexFactor * dirVector);
-			if (near_equal5(temporaryVector.m_x, vertsA[i].m_x) && near_equal5(temporaryVector.m_y, vertsA[i].m_y) && near_equal5(temporaryVector.m_z, vertsA[i].m_z)) {
+			if (near_equal5(temporaryVector.m_x, vertsB[i].m_x) && near_equal5(temporaryVector.m_y, vertsB[i].m_y) && near_equal5(temporaryVector.m_z, vertsB[i].m_z)) {
 				//using a map avoids duplicates
 				polyPointsOnIntersectionLine.insert({intersectionToPolyvertexFactor, vertsB[i]});
 			}
