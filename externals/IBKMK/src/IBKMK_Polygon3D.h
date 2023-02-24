@@ -190,6 +190,17 @@ private:
 	mutable	std::vector<IBKMK::Vector3D>	m_vertexes;
 };
 
+/*! Detects disjunct polygons that remain after trimming with a plane and divides into multiple polygons
+ */
+void dividePolyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsInput, const IBKMK::Vector3D & planeNormal, const double offset);
+
+/*! Trims a polygon along the plane of another support polygon.
+ *  The intersection line is calculated, and the first polygon is trimmed along.
+ *  Returns true after success, returns false if planes are coplanar or intersection line does not intersect with polygon.
+ */
+bool polyTrim(std::vector<std::vector<IBKMK::Vector3D>> & vertsA, const std::vector<IBKMK::Vector3D> & vertsB);
+
+
 } // namespace IBKMK
 
 #endif // IBKMK_Polygon3DH

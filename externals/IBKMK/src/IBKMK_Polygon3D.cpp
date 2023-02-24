@@ -436,6 +436,184 @@ void Polygon3D::update2DPolyline(const std::vector<Vector3D> & verts) {
 	m_polyline.setVertexes(poly);
 }
 
+void dividePolyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsInput, const IBKMK::Vector3D & trimPlaneNormal, const double offset) {
+	IBK::NearEqual<double> near_equal5(1e-5);
+	for (std::vector<Vector3D> verts : vertsInput) {
+		if (verts.size() > 3) {
+			for (unsigned int i = 0, count = verts.size(); i<count; ++i ) {
+				// j+3 because we dont need to match the same edge, neither the neighbouring edges
+				for (unsigned int j = 0, count = verts.size(); (j+3)<count; ++j ) {
+
+					unsigned int indexIStart = i;
+					unsigned int indexIEnd = (i+1)   % verts.size();
+					unsigned int indexJStart = (j+i+2) % verts.size();
+					unsigned int indexJEnd =(j+i+3) % verts.size();
+
+					IBKMK::Vector3D iStart = verts[indexIStart];
+					IBKMK::Vector3D iEnd = verts[indexIEnd];
+					IBKMK::Vector3D jStart = verts[indexJStart];
+					IBKMK::Vector3D jEnd = verts[indexJEnd];
+
+					if (near_equal5(trimPlaneNormal.scalarProduct(iStart)-offset,0)
+					 && near_equal5(trimPlaneNormal.scalarProduct(iEnd)-offset,0)
+					 && near_equal5(trimPlaneNormal.scalarProduct(jStart)-offset,0)
+					 && near_equal5(trimPlaneNormal.scalarProduct(jEnd)-offset,0)) {
+
+						// both edges lie on the plane
+						if (jStart.m_x > std::min(iStart.m_x, iEnd.m_x)
+						 && jStart.m_x < std::max(iStart.m_x, iEnd.m_x)
+						 && jStart.m_y > std::min(iStart.m_y, iEnd.m_y)
+						 && jStart.m_y < std::max(iStart.m_y, iEnd.m_y)
+						 && jStart.m_z > std::min(iStart.m_z, iEnd.m_z)
+						 && jStart.m_z < std::max(iStart.m_z, iEnd.m_z)) {
+
+							// lies inbetween -> edges i and j intersect
+							//! TODO Split polygon at iterator position
+							//! Mind different treatment of these cases:
+							//!					  _    _
+							//! ___/\/\___ and __|_|__|_|__
+							//!
+							//! where the polygons might share a vertex (left)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+bool polyTrim(std::vector<std::vector<Vector3D>> & vertsInput, const std::vector<Vector3D> & vertsB) {
+	std::vector<Vector3D> vertsA = vertsInput.back();
+	IBK_ASSERT(vertsA.size() >= 3);
+	static int vertsSize = vertsA.size();
+	IBK_ASSERT(vertsB.size() >= 3);
+
+	IBK::NearEqual<double> near_equal5(1e-5);
+	IBK::NearEqual<double> near_equal1(1e-1);
+
+	// get arbitrary base vectors for polygon A and B's planes
+	// TODO: error handling in case polygon is malformatted and first 3 points are located on a straight line .. eliminateCollinearPoints?
+	// compensating for different sizes of span vectors to have later calculations in the same order of magnitude
+	IBKMK::Vector3D vectorA1 = vertsA[1] - vertsA[0];
+	vectorA1 = vectorA1 * (10/vectorA1.magnitude());
+	IBKMK::Vector3D vectorA2 = vertsA[2] - vertsA[0];
+	vectorA2 = vectorA2 * (10/vectorA2.magnitude());
+
+	IBKMK::Vector3D vectorB1 = vertsB[1] - vertsB[0];
+	vectorB1 = vectorB1 * (10/vectorB1.magnitude());
+	IBKMK::Vector3D vectorB2 = vertsB[2] - vertsB[0];
+	vectorB2 = vectorB2 * (10/vectorB2.magnitude());
+
+	// use cross product to obtain normal vectors
+	const IBKMK::Vector3D normalVectorA = vectorA1.crossProduct(vectorA2);
+	const IBKMK::Vector3D normalVectorB = vectorB1.crossProduct(vectorB2);
+
+	int offsetB = normalVectorB.scalarProduct(vertsB[0]);
+
+	// check if polygon planes A & B are parallel
+	// if crossProduct of normal vectors returns 0-vector then normal vectors are parallel
+	// magnitude of normal vector will quickly exceed 1e+2 for small rotations, so 1e-1 check is suited
+	if (near_equal1(normalVectorA.crossProduct(normalVectorB).magnitude(), 0)) {
+		// planes are parallel
+		IBK::IBK_Message("Trimming plane is coplanar", IBK::MSG_WARNING);
+		return false;
+	} else {
+		// planes intersect
+		// iterate over all vertices in A
+		// create a vector of vertex locations -1 / 0 / 1 depending on the vertex's side of the trimming plane
+
+		std::vector<int> vertsAsorted;
+		double distVertToPlane;
+
+		for (unsigned int i = 0, count = vertsSize; i<count; ++i ) {
+			distVertToPlane = normalVectorB.scalarProduct(vertsA[i])-offsetB;
+			if (near_equal5(distVertToPlane, 0)) {
+				vertsAsorted.push_back(0);
+			} else if (distVertToPlane > 0) {
+				vertsAsorted.push_back(1);
+			} else /* distVertToPlane < 0 */ {
+				vertsAsorted.push_back(-1);
+			}
+
+		}
+
+		// sort vertices by the side of the trimming plane they're located on
+		std::vector<IBKMK::Vector3D> vertsPos;
+		std::vector<IBKMK::Vector3D> vertsNeg;
+		IBKMK::Vector3D edgeA;
+		IBKMK::Vector3D pointOfIntersection;
+		double r = 0;
+
+		for (unsigned int i = 0, count = vertsSize; i<count; ++i ) {
+			// if vertex lies on plane
+			if (vertsAsorted[i] == 0) {
+				// if predecessor and successor are on different sides: add vertex to both halves
+				if (vertsAsorted[(i-1+vertsSize)%vertsSize] * vertsAsorted[(i+1)%vertsSize] == -1) {
+					vertsPos.push_back(vertsA[i]);
+					vertsNeg.push_back(vertsA[i]);
+
+				// else if they are on the same side
+				} else if (vertsAsorted[(i-1+vertsSize)%vertsSize] * vertsAsorted[(i+1)%vertsSize] == 1) {
+					if (vertsAsorted[(i+1)%vertsSize] == 1) {
+						vertsPos.push_back(vertsA[i]);
+					} else /* vertsAsorted[i+1] == -1 */ {
+						vertsNeg.push_back(vertsA[i]);
+					}
+				} else {
+					// one of the neighbouring vertices lies on the intersection plane too, so only add vertex to one side.
+					// if both neighboring vertices lie on plane, the polygon is malformatted. This case is not regarded here anymore.
+					if (vertsAsorted[(i-1+vertsSize)%vertsSize] == 1 || vertsAsorted[(i+1)%vertsSize] == 1) {
+						// either one of the neighbouring points is on the positive side
+						vertsPos.push_back(vertsA[i]);
+					} else {
+						vertsNeg.push_back(vertsA[i]);
+					}
+				}
+			} else {
+				// vertex is not on the plane
+				if (vertsAsorted[i] == 1) {
+					vertsPos.push_back(vertsA[i]);
+				} else /* vertsAsorted[i] == -1 */ {
+					vertsNeg.push_back(vertsA[i]);
+				}
+
+				// if the next vertex lies on the other trim-plane side
+				if (vertsAsorted[i] * vertsAsorted[(i+1)%vertsSize] == -1) {
+					// add intersection point to both halves
+					edgeA = vertsA[(i+1)%vertsSize] - vertsA[i];
+					// calculating point of intersection
+					// ...by inserting edgeA into plane B to get factor r, for our edge equation
+					// equation: normalVectorB * (vertsA[i] + r * edgeA) == offsetB;
+					// division by zero can't occure because we already checked for parallelism
+					r = (offsetB - normalVectorB.scalarProduct(vertsA[i])) / normalVectorB.scalarProduct(edgeA);
+					// get point of intersection:
+					pointOfIntersection = vertsA[i] + r * edgeA;
+					vertsPos.push_back(pointOfIntersection);
+					vertsNeg.push_back(pointOfIntersection);
+				} // otherwise the next one is either on the same side or on the plane (do nothing in this iteration)
+			}
+		}
+
+		if (vertsPos.size() == 0 || vertsNeg.size() == 0) {
+			IBK::IBK_Message("Plane does not intersect polygon", IBK::MSG_WARNING);
+			return false;
+		} else {
+			// we need to detect if Pos / Neg side is divided into multiple polygons
+			std::vector<std::vector<Vector3D>> tempPolygons;
+			tempPolygons.push_back(vertsPos);
+			tempPolygons.push_back(vertsNeg);
+
+			dividePolyCyclesAfterTrim(tempPolygons, normalVectorB, offsetB);
+
+			vertsInput.pop_back();
+			for (std::vector<Vector3D> polygon : tempPolygons) {
+				vertsInput.push_back(polygon);
+			}
+			return true;
+		}
+	}
+}
+
 
 } // namespace IBKMK
 
