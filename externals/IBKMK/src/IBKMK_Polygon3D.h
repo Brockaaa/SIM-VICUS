@@ -192,7 +192,7 @@ private:
 
 /*! Detects disjunct polygons that remain after trimming with a plane and divides into multiple polygons
  */
-void dividePolyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsInput, const IBKMK::Vector3D & planeNormal, const double offset);
+void dividePolyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsInput, const IBKMK::Vector3D trimPlaneNormal, const double offset);
 
 /*! Trims a polygon along the plane of another support polygon.
  *  The intersection line is calculated, and the first polygon is trimmed along.

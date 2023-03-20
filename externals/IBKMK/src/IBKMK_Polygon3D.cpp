@@ -436,7 +436,7 @@ void Polygon3D::update2DPolyline(const std::vector<Vector3D> & verts) {
 	m_polyline.setVertexes(poly);
 }
 
-void dividePolyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsInput, const IBKMK::Vector3D & trimPlaneNormal, const double offset) {
+void dividePolyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsInput, const IBKMK::Vector3D trimPlaneNormal, const double offset) {
 	IBK::NearEqual<double> near_equal5(1e-5);
 	for (std::vector<Vector3D> verts : vertsInput) {
 		if (verts.size() > 3) {
@@ -584,13 +584,13 @@ bool polyTrim(std::vector<std::vector<Vector3D>> & vertsInput, const std::vector
 					// calculating point of intersection
 					// ...by inserting edgeA into plane B to get factor r, for our edge equation
 					// equation: normalVectorB * (vertsA[i] + r * edgeA) == offsetB;
-					// division by zero can't occure because we already checked for parallelism
+					// division by zero can't occure because the end points lie on different plane sides -> edgeA not coplanar
 					r = (offsetB - normalVectorB.scalarProduct(vertsA[i])) / normalVectorB.scalarProduct(edgeA);
 					// get point of intersection:
 					pointOfIntersection = vertsA[i] + r * edgeA;
 					vertsPos.push_back(pointOfIntersection);
 					vertsNeg.push_back(pointOfIntersection);
-				} // otherwise the next one is either on the same side or on the plane (do nothing in this iteration)
+				} // otherwise the next one is either on the same side or on the plane (do nothing yet in this iteration)
 			}
 		}
 
