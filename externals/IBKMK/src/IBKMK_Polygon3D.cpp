@@ -435,50 +435,153 @@ void Polygon3D::update2DPolyline(const std::vector<Vector3D> & verts) {
 	//       and thus also cause the polygon to be invalid
 	m_polyline.setVertexes(poly);
 }
-
-void dividePolyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsInput, const IBKMK::Vector3D trimPlaneNormal, const double offset) {
+bool pointInEdge(const Vector3D point, const Vector3D edgeA, const Vector3D edgeB) {
 	IBK::NearEqual<double> near_equal5(1e-5);
-	for (std::vector<Vector3D> verts : vertsInput) {
-		if (verts.size() > 3) {
-			for (unsigned int i = 0, count = verts.size(); i<count; ++i ) {
-				// j+3 because we dont need to match the same edge, neither the neighbouring edges
-				for (unsigned int j = 0, count = verts.size(); (j+3)<count; ++j ) {
+	return ((point.m_x > std::min(edgeA.m_x, edgeB.m_x) || near_equal5(point.m_x, std::min(edgeA.m_x, edgeB.m_x)))
+	 && (point.m_x < std::max(edgeA.m_x, edgeB.m_x) || near_equal5(point.m_x, std::max(edgeA.m_x, edgeB.m_x)))
+	 && (point.m_y > std::min(edgeA.m_y, edgeB.m_y) || near_equal5(point.m_y, std::min(edgeA.m_y, edgeB.m_y)))
+	 && (point.m_y < std::max(edgeA.m_y, edgeB.m_y) || near_equal5(point.m_y, std::max(edgeA.m_y, edgeB.m_y)))
+	 && (point.m_z > std::min(edgeA.m_z, edgeB.m_z) || near_equal5(point.m_z, std::min(edgeA.m_z, edgeB.m_z)))
+	 && (point.m_z < std::max(edgeA.m_z, edgeB.m_z) || near_equal5(point.m_z, std::max(edgeA.m_z, edgeB.m_z))));
+}
 
-					unsigned int indexIStart = i;
-					unsigned int indexIEnd = (i+1)   % verts.size();
-					unsigned int indexJStart = (j+i+2) % verts.size();
-					unsigned int indexJEnd =(j+i+3) % verts.size();
+bool dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vector3D trimPlaneNormal, const double offset, std::vector<std::vector<Vector3D>> & outputVerts) {
+	IBK::NearEqual<double> near_equal5(1e-5);
+	if (verts.size() > 3) {
+		// we test for edges on the trimPlane that are contained within each other, which means the polygon needs to be divided
+		for (unsigned int i = 0, count = verts.size(); i<count; ++i ) {
+			// j+3 because we dont need to match the same edge, neither the neighbouring edges
+			for (unsigned int j = 0, count = verts.size(); (j+3)<count; ++j ) {
 
-					IBKMK::Vector3D iStart = verts[indexIStart];
-					IBKMK::Vector3D iEnd = verts[indexIEnd];
-					IBKMK::Vector3D jStart = verts[indexJStart];
-					IBKMK::Vector3D jEnd = verts[indexJEnd];
+				// the vertex indices of the edges to be matched for containment
+				int indexIStart =  i;
+				int indexIEnd =   (i+1)   % verts.size();
+				int indexJStart = (j+i+2) % verts.size();
+				int indexJEnd =   (j+i+3) % verts.size();
 
-					if (near_equal5(trimPlaneNormal.scalarProduct(iStart)-offset,0)
-					 && near_equal5(trimPlaneNormal.scalarProduct(iEnd)-offset,0)
-					 && near_equal5(trimPlaneNormal.scalarProduct(jStart)-offset,0)
-					 && near_equal5(trimPlaneNormal.scalarProduct(jEnd)-offset,0)) {
+				IBKMK::Vector3D iStart = verts[indexIStart];
+				IBKMK::Vector3D iEnd =   verts[indexIEnd];
+				IBKMK::Vector3D jStart = verts[indexJStart];
+				IBKMK::Vector3D jEnd =   verts[indexJEnd];
 
-						// both edges lie on the plane
-						if (jStart.m_x > std::min(iStart.m_x, iEnd.m_x)
-						 && jStart.m_x < std::max(iStart.m_x, iEnd.m_x)
-						 && jStart.m_y > std::min(iStart.m_y, iEnd.m_y)
-						 && jStart.m_y < std::max(iStart.m_y, iEnd.m_y)
-						 && jStart.m_z > std::min(iStart.m_z, iEnd.m_z)
-						 && jStart.m_z < std::max(iStart.m_z, iEnd.m_z)) {
+				// test if edge i lies on the trimPlane
+				if (near_equal5(trimPlaneNormal.scalarProduct(iStart)-offset,0)
+				 && near_equal5(trimPlaneNormal.scalarProduct(iEnd)-offset,0)) {
 
-							// lies inbetween -> edges i and j intersect
-							//! TODO Split polygon at iterator position
-							//! Mind different treatment of these cases:
-							//!					  _    _
-							//! ___/\/\___ and __|_|__|_|__
-							//!
-							//! where the polygons might share a vertex (left)
+					// test if first vertex of edge j is contained within edge i
+					// near equal is necessary because the edges might be constant regarding 1 or 2 coordinates, and won't be "contained" in all 3 dimensions
+					if (pointInEdge(jStart, iStart, iEnd) && near_equal5(trimPlaneNormal.scalarProduct(jStart)-offset,0)) {
+
+						// test if second vertex of edge j is contained within edge i
+							if (pointInEdge(jEnd, iStart, iEnd) && near_equal5(trimPlaneNormal.scalarProduct(jEnd)-offset,0)) {
+							//     _    _
+							//  __|_|__|_|__
+
+							std::vector<Vector3D> subPolyA = {};
+							std::vector<Vector3D> subPolyB = {};
+
+							// we create two new polygons:
+							// iEnd...jStart and jEnd...iStart
+
+							for (int k = 0, count = ((indexJStart - indexIEnd + verts.size())%verts.size())+1; k<count; ++k ) {
+								subPolyA.push_back(verts[(indexIEnd + k)%verts.size()]);
+							}
+
+							for (int k = 0, count = ((indexIStart - indexJEnd + verts.size())%verts.size())+1; k<count; ++k ) {
+								subPolyB.push_back(verts[(indexJEnd + k)%verts.size()]);
+							}
+
+							// recursive cycle divison on resulting polygons
+
+							std::vector<std::vector<Vector3D>> outputVertsA = {};
+							std::vector<std::vector<Vector3D>> outputVertsB = {};
+							if (dividePolyCycles(subPolyA, trimPlaneNormal, offset, outputVertsA)) {
+								for (std::vector<Vector3D> verts : outputVertsA) {
+									outputVerts.push_back(verts);
+								}
+							} else {
+								outputVerts.push_back(subPolyA);
+							}
+
+							if (dividePolyCycles(subPolyB, trimPlaneNormal, offset, outputVertsB)) {
+								for (std::vector<Vector3D> verts : outputVertsB) {
+									outputVerts.push_back(verts);
+								}
+							} else {
+								outputVerts.push_back(subPolyB);
+							}
+
+							return true;
+
+						} else {
+							// ___/\/\___ where point jStart divides edge i
+							// mark current polygon for removal
+
+							// append new polygons after recursive processing
+							std::vector<Vector3D> subPolyA = {};
+							std::vector<Vector3D> subPolyB = {};
+
+							// we create two new polygons:
+							// iEnd...jStart and jStart...iStart
+							for (int k = 0, count = ((indexJStart - indexIEnd + verts.size())%verts.size())+1; k<count; ++k ) {
+								subPolyA.push_back(verts[(indexIEnd + k)%verts.size()]);
+							}
+
+							for (int k = 0, count = ((indexIStart - indexJStart + verts.size())%verts.size())+1; k<count; ++k ) {
+								subPolyB.push_back(verts[(indexJStart + k)%verts.size()]);
+							}
+
+							// recursive cycle divison on resulting polygons
+							std::vector<std::vector<Vector3D>> outputVertsA = {};
+							std::vector<std::vector<Vector3D>> outputVertsB = {};
+
+							if (dividePolyCycles(subPolyA, trimPlaneNormal, offset, outputVertsA)) {
+								for (std::vector<Vector3D> verts : outputVertsA) {
+									outputVerts.push_back(verts);
+								}
+							} else {
+								outputVerts.push_back(subPolyA);
+							}
+
+							if (dividePolyCycles(subPolyB, trimPlaneNormal, offset, outputVertsB)) {
+								for (std::vector<Vector3D> verts : outputVertsB) {
+									outputVerts.push_back(verts);
+								}
+							} else {
+								outputVerts.push_back(subPolyB);
+							}
+
+							return true;
 						}
 					}
 				}
 			}
 		}
+	}
+	return false;
+}
+
+void polyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsArray, const IBKMK::Vector3D trimPlaneNormal, const double offset) {
+	std::list<int> indicesToBeRemovedAfter = {};
+
+	for (unsigned int vertsIterator = 0, count = vertsArray.size(); vertsIterator<count; ++vertsIterator ) {
+		std::vector<Vector3D> verts = vertsArray[vertsIterator];
+		std::vector<std::vector<Vector3D>> outputVerts = {};
+
+		if (dividePolyCycles(verts, trimPlaneNormal, offset, outputVerts)) {
+			indicesToBeRemovedAfter.push_back(vertsIterator);
+			for (std::vector<Vector3D> vertsOut : outputVerts) {
+				vertsArray.push_back(vertsOut);
+			}
+		}
+	}
+
+	// reverse indices so we don't interfere with the iterator
+	indicesToBeRemovedAfter.sort();
+	indicesToBeRemovedAfter.reverse();
+	for (int index : indicesToBeRemovedAfter) {
+		vertsArray.erase(vertsArray.begin()+index);
+
 	}
 }
 
@@ -515,7 +618,7 @@ bool polyTrim(std::vector<std::vector<Vector3D>> & vertsInput, const std::vector
 	// magnitude of normal vector will quickly exceed 1e+2 for small rotations, so 1e-1 check is suited
 	if (near_equal1(normalVectorA.crossProduct(normalVectorB).magnitude(), 0)) {
 		// planes are parallel
-		IBK::IBK_Message("Trimming plane is coplanar", IBK::MSG_WARNING);
+		IBK::IBK_Message("Trimming plane is coplanar", IBK::MSG_ERROR);
 		return false;
 	} else {
 		// planes intersect
@@ -595,7 +698,7 @@ bool polyTrim(std::vector<std::vector<Vector3D>> & vertsInput, const std::vector
 		}
 
 		if (vertsPos.size() == 0 || vertsNeg.size() == 0) {
-			IBK::IBK_Message("Plane does not intersect polygon", IBK::MSG_WARNING);
+			IBK::IBK_Message("Plane does not intersect polygon", IBK::MSG_ERROR);
 			return false;
 		} else {
 			// we need to detect if Pos / Neg side is divided into multiple polygons
@@ -603,7 +706,7 @@ bool polyTrim(std::vector<std::vector<Vector3D>> & vertsInput, const std::vector
 			tempPolygons.push_back(vertsPos);
 			tempPolygons.push_back(vertsNeg);
 
-			dividePolyCyclesAfterTrim(tempPolygons, normalVectorB, offsetB);
+			polyCyclesAfterTrim(tempPolygons, normalVectorB, offsetB);
 
 			vertsInput.pop_back();
 			for (std::vector<Vector3D> polygon : tempPolygons) {
