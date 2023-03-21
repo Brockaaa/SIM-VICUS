@@ -185,6 +185,8 @@
     <addaction name="actionSimulationExportFMI"/>
     <addaction name="separator"/>
     <addaction name="menuCoSimulation"/>
+    <addaction name="actiontest"/>
+    <addaction name="actionTRIM"/>
    </widget>
    <widget class="QMenu" name="menuBuildings">
     <property name="title">
@@ -871,6 +873,27 @@
   <action name="actionExportNetworkAsGeoJSON">
    <property name="text">
     <string>Export network as geoJSON...</string>
+   </property>
+  </action>
+  <action name="actionpolygon_test">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>polygon test</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="actiontest">
+   <property name="text">
+    <string>test</string>
+   </property>
+  </action>
+  <action name="actionTRIM">
+   <property name="text">
+    <string>TRIM</string>
    </property>
   </action>
  </widget>

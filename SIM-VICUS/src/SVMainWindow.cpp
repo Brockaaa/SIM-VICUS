@@ -51,6 +51,7 @@
 #include <QApplication>
 #include <QGuiApplication>
 #include <QMessageBox>
+#include "SVUndoAddSurface.h"
 
 #include <numeric>
 
@@ -111,6 +112,9 @@
 #include "SVUndoAddNetwork.h"
 #include "SVUndoAddBuilding.h"
 #include "SVUndoAddProject.h"
+#include "IBKMK_Vector3D.h"
+#include "IBKMK_3DCalculations.h"
+#include "IBKMK_Polygon3D.h"
 #include "SVUndoModifySiteData.h"
 
 #include "plugins/SVDatabasePluginInterface.h"
@@ -2169,5 +2173,57 @@ static bool copyRecursively(const QString &srcFilePath,
 			return false;
 	}
 	return true;
+}
+
+
+void SVMainWindow::on_actionpolygon_test_triggered()
+{
+}
+
+
+void SVMainWindow::on_actiontest_triggered()
+{
+	const VICUS::Project &project = SVProjectHandler::instance().project();
+	const std::vector<VICUS::Surface> surfaces = project.m_buildings[0].m_buildingLevels[0].m_rooms[0].m_surfaces;
+
+	std::vector<IBKMK::Vector3D> polyOne = surfaces[0].polygon3D().vertexes();
+	std::vector<IBKMK::Vector3D> polyTwo = surfaces[1].polygon3D().vertexes();
+	bool t = IBKMK::polyIntersect(polyOne, polyTwo);
+
+	qInfo() << (t ? "true6" : "false6");
+}
+
+
+void SVMainWindow::on_actionTRIM_triggered()
+{
+	const VICUS::Project &project = SVProjectHandler::instance().project();
+	const std::vector<VICUS::Surface> & surfaces = project.m_buildings[0].m_buildingLevels[0].m_rooms[0].m_surfaces;
+
+	std::vector<IBKMK::Vector3D> polyOne = surfaces[0].polygon3D().vertexes();
+	std::vector<IBKMK::Vector3D> polyTwo = surfaces[1].polygon3D().vertexes();
+	std::vector<std::vector<IBKMK::Vector3D>> polyInput;
+	polyInput.push_back(polyOne);
+
+	bool t = IBKMK::polyTrim(polyInput, polyTwo);
+
+
+	VICUS::Surface s;
+	for (std::vector<IBKMK::Vector3D> entry : polyInput) {
+
+		unsigned int nextId = project.nextUnusedID();
+		s.m_id = nextId;
+		s.m_displayName = "test";
+		s.setPolygon3D(IBKMK::Polygon3D(entry));
+
+		s.m_displayColor = s.m_color = QColor("#206000");
+		// modify project
+		SVUndoAddSurface * undo = new SVUndoAddSurface(tr("Added surface '%1'").arg(s.m_displayName), s, 0);
+		undo->push();
+
+
+	}
+
+	qInfo() << (t ? "trueTrim7" : "falseTrim");
+
 }
 
