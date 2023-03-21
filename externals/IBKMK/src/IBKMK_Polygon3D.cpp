@@ -588,7 +588,7 @@ void polyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsArray, const 
 bool polyTrim(std::vector<std::vector<Vector3D>> & vertsInput, const std::vector<Vector3D> & vertsB) {
 	std::vector<Vector3D> vertsA = vertsInput.back();
 	IBK_ASSERT(vertsA.size() >= 3);
-	static int vertsSize = vertsA.size();
+	int vertsSize = vertsA.size();
 	IBK_ASSERT(vertsB.size() >= 3);
 
 	IBK::NearEqual<double> near_equal5(1e-5);
@@ -625,7 +625,7 @@ bool polyTrim(std::vector<std::vector<Vector3D>> & vertsInput, const std::vector
 		// iterate over all vertices in A
 		// create a vector of vertex locations -1 / 0 / 1 depending on the vertex's side of the trimming plane
 
-		std::vector<int> vertsAsorted;
+		std::vector<int> vertsAsorted = {};
 		double distVertToPlane;
 
 		for (unsigned int i = 0, count = vertsSize; i<count; ++i ) {
@@ -641,8 +641,8 @@ bool polyTrim(std::vector<std::vector<Vector3D>> & vertsInput, const std::vector
 		}
 
 		// sort vertices by the side of the trimming plane they're located on
-		std::vector<IBKMK::Vector3D> vertsPos;
-		std::vector<IBKMK::Vector3D> vertsNeg;
+		std::vector<IBKMK::Vector3D> vertsPos = {};
+		std::vector<IBKMK::Vector3D> vertsNeg = {};
 		IBKMK::Vector3D edgeA;
 		IBKMK::Vector3D pointOfIntersection;
 		double r = 0;
