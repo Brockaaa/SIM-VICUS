@@ -122,16 +122,19 @@ void enlargeBoundingBox(const IBKMK::Vector3D & v, IBKMK::Vector3D & minVec, IBK
 /*! Transforms 3D Polygon to 2D by eliminating one dimension and applies 2D Point in Polygon.
 	It's assumed the point is already coplanar. This should previously be tested.
 
-	Point in Polygon function. Result:
-	-1 point not in polyline
-	0 point on polyline
-	1 point in polyline
+	\return
+		Point in Polygon function. Result:
+		-1 point not in polyline
+		0 point on polyline
+		1 point in polyline
 */
 int coplanarPointInPolygon3D(const std::vector<Vector3D> poly, const IBK::point3D<double> point);
 
 /*! Determines if intersection occurs between polygon and other polygon.
 	Touching is not counted as intersecting.
-	Returns true in case of intersection.
+
+	\param coordinatePrecisionMagnitude rounding magnitude for coordinates, default 5 (translates to 1e-5)
+	\param degreeTolerance degrees tolerance below which planes are considered parallel, default 5
 
 	Algorithm design:
 
@@ -146,8 +149,10 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> poly, const IBK::point3
 		 *   if any of the center points is contained within both polygons, an intersection is detected (true)
 
 	This 2-step algorithm ensures we won't miss any edge cases, e.g. polygons sharing intersection points or lines
+	\return
+		Returns true in case of intersection.
  */
-bool polyIntersect(const std::vector<IBKMK::Vector3D> & vertsAexact, const std::vector<IBKMK::Vector3D> & vertsBexact);
+bool polyIntersect(const std::vector<IBKMK::Vector3D> & vertsAexact, const std::vector<IBKMK::Vector3D> & vertsBexact, int coordinatePrecisionMagnitude = 5, unsigned int degreeTolerance = 5);
 
 } // namespace IBKMK
 

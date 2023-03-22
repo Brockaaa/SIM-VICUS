@@ -383,24 +383,28 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> polygon, const IBK::poi
 }
 
 
-bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<Vector3D> & vertsBexact) {
+bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<Vector3D> & vertsBexact, unsigned int coordinatePrecisionMagnitude, unsigned int degreeTolerance) {
 	IBK_ASSERT(vertsAexact.size() >= 3);
 	IBK_ASSERT(vertsBexact.size() >= 3);
+	if (degreeTolerance < 0 || degreeTolerance > 90) {degreeTolerance = 5;}
 
-	IBK::NearEqual<double> near_equal5(1e-5);
-	IBK::NearEqual<double> near_equal1(1e-1);
+	IBK::NearEqual<double> near_equal(10^(-coordinatePrecisionMagnitude));
 
-	const double coordFactor = 1e4;
+	const double coordFactor = 10^coordinatePrecisionMagnitude;
 
 	std::vector<Vector3D> vertsA;
 	std::vector<Vector3D> vertsB;
 
 	// rounding all vertices to achieve near_equal precision
 	for (Vector3D i : vertsAexact) {
-			vertsA.push_back(Vector3D(std::round(i.m_x*coordFactor)/coordFactor,std::round(i.m_y*coordFactor)/coordFactor,std::round(i.m_z*coordFactor)/coordFactor));
+			vertsA.push_back(Vector3D(std::round(i.m_x*coordFactor)/coordFactor,
+									  std::round(i.m_y*coordFactor)/coordFactor,
+									  std::round(i.m_z*coordFactor)/coordFactor));
 	}
 	for (Vector3D i : vertsBexact) {
-			vertsB.push_back(Vector3D(std::round(i.m_x*coordFactor)/coordFactor,std::round(i.m_y*coordFactor)/coordFactor,std::round(i.m_z*coordFactor)/coordFactor));
+			vertsB.push_back(Vector3D(std::round(i.m_x*coordFactor)/coordFactor,
+									  std::round(i.m_y*coordFactor)/coordFactor,
+									  std::round(i.m_z*coordFactor)/coordFactor));
 	}
 
 
@@ -428,7 +432,11 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 	// check if polygon planes A & B are parallel
 	// if crossProduct of normal vectors returns 0-vector then normal vectors are parallel
 	// magnitude of normal vector will quickly exceed 1e+2 for small rotations, so 1e-2 check is suited
-	if (near_equal1(normalVectorA.crossProduct(normalVectorB).magnitude(), 0)) {
+
+	double normalVectorRad = std::acos( normalVectorA.scalarProduct(normalVectorB) / (normalVectorA.magnitude() * normalVectorB.magnitude()) ) ;
+	double normalVectorDegrees = normalVectorRad * 180 / (atan(1)*4)/*pi*/  ;
+
+	if (normalVectorDegrees < degreeTolerance) {
 		// planes are parallel
 		// ### for parallel cases intersection is not intended.
 		// ### otherwise 2D intersection for the coplanar case can be implemented like this:
@@ -567,7 +575,7 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 				intersectionToPolyvertexFactor = (vertsA[i].m_z - supportVector.m_z) / dirVector.m_z;
 			}
 			temporaryVector = (supportVector + intersectionToPolyvertexFactor * dirVector);
-			if (near_equal5(temporaryVector.m_x, vertsA[i].m_x) && near_equal5(temporaryVector.m_y, vertsA[i].m_y) && near_equal5(temporaryVector.m_z, vertsA[i].m_z)) {
+			if (near_equal(temporaryVector.m_x, vertsA[i].m_x) && near_equal(temporaryVector.m_y, vertsA[i].m_y) && near_equal(temporaryVector.m_z, vertsA[i].m_z)) {
 				//using a map avoids duplicates
 				polyPointsOnIntersectionLine.insert({intersectionToPolyvertexFactor, vertsA[i]});
 			}
@@ -582,7 +590,7 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 				intersectionToPolyvertexFactor = (vertsB[i].m_z - supportVector.m_z) / dirVector.m_z;
 			}
 			temporaryVector = (supportVector + intersectionToPolyvertexFactor * dirVector);
-			if (near_equal5(temporaryVector.m_x, vertsB[i].m_x) && near_equal5(temporaryVector.m_y, vertsB[i].m_y) && near_equal5(temporaryVector.m_z, vertsB[i].m_z)) {
+			if (near_equal(temporaryVector.m_x, vertsB[i].m_x) && near_equal(temporaryVector.m_y, vertsB[i].m_y) && near_equal(temporaryVector.m_z, vertsB[i].m_z)) {
 				//using a map avoids duplicates
 				polyPointsOnIntersectionLine.insert({intersectionToPolyvertexFactor, vertsB[i]});
 			}
