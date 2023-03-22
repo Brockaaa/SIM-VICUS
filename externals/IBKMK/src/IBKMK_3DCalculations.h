@@ -152,7 +152,7 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> poly, const IBK::point3
 	\return
 		Returns true in case of intersection.
  */
-bool polyIntersect(const std::vector<IBKMK::Vector3D> & vertsAexact, const std::vector<IBKMK::Vector3D> & vertsBexact, int coordinatePrecisionMagnitude = 5, unsigned int degreeTolerance = 5);
+bool polyIntersect(const std::vector<IBKMK::Vector3D> & vertsAexact, const std::vector<IBKMK::Vector3D> & vertsBexact, unsigned int coordinatePrecisionMagnitude = 5, unsigned int degreeTolerance = 5);
 
 } // namespace IBKMK
 
