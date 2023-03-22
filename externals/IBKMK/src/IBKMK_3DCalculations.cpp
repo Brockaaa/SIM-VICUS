@@ -383,10 +383,11 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> polygon, const IBK::poi
 }
 
 
-bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<Vector3D> & vertsBexact, unsigned int coordinatePrecisionMagnitude, unsigned int degreeTolerance) {
+bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<Vector3D> & vertsBexact, unsigned int degreeTolerance, unsigned int coordinatePrecisionMagnitude) {
 	IBK_ASSERT(vertsAexact.size() >= 3);
 	IBK_ASSERT(vertsBexact.size() >= 3);
-	if (degreeTolerance < 0 || degreeTolerance > 90) {degreeTolerance = 5;}
+	if (degreeTolerance < 0) {degreeTolerance = 0;}
+	else if (degreeTolerance > 90) {degreeTolerance = 90;}
 
 	IBK::NearEqual<double> near_equal(10^(-coordinatePrecisionMagnitude));
 
