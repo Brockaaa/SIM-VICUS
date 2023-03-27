@@ -389,9 +389,9 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 	if (degreeTolerance < 0) {degreeTolerance = 0;}
 	else if (degreeTolerance > 90) {degreeTolerance = 90;}
 
-	IBK::NearEqual<double> near_equal(10^(-coordinatePrecisionMagnitude));
+	IBK::NearEqual<double> near_equal(pow(10,(-coordinatePrecisionMagnitude)));
 
-	const double coordFactor = 10^coordinatePrecisionMagnitude;
+	const double coordFactor = pow(10,coordinatePrecisionMagnitude);
 
 	std::vector<Vector3D> vertsA;
 	std::vector<Vector3D> vertsB;
