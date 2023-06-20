@@ -40,7 +40,8 @@ LIBS += \
 	-lSuiteSparse \
 	-lRoomClipper \
 	-lclipper \
-	-lqwt6
+	-lqwt6 \
+	-lBlockMod
 
 win32 {
 	LIBS += -luser32
@@ -73,7 +74,8 @@ INCLUDEPATH = \
 	../../../externals/IDFReader/src \
 	../../../externals/clipper/src \
 	../../../externals/RoomClipper/src \
-	../../../externals/QtExt/src
+	../../../externals/QtExt/src \
+	../../../externals/BlockMod/src \
 
 DEPENDPATH = $${INCLUDEPATH}
 
@@ -222,6 +224,9 @@ SOURCES += \
 	../../src/SVSmartIntersectionDialog.cpp \
 	../../src/SVSmartSelectDialog.cpp \
 	../../src/SVStyle.cpp \
+	../../src/SVSubNetworkEditDialog.cpp \
+	../../src/SVSubNetworkEditDialogTable.cpp \
+	../../src/SVSubNetworkEditDialogTableItem.cpp \
 	../../src/SVThreadBase.cpp \
 	../../src/SVTimeSeriesPreviewDialog.cpp \
 	../../src/SVTimeSeriesPreviewWidget.cpp \
@@ -424,6 +429,9 @@ HEADERS  += \
 	../../src/SVSmartIntersectionDialog.h \
 	../../src/SVSmartSelectDialog.h \
 	../../src/SVStyle.h \
+	../../src/SVSubNetworkEditDialog.h \
+	../../src/SVSubNetworkEditDialogTable.h \
+	../../src/SVSubNetworkEditDialogTableItem.h \
 	../../src/SVThreadBase.h \
 	../../src/SVTimeSeriesPreviewDialog.h \
 	../../src/SVTimeSeriesPreviewWidget.h \
@@ -580,6 +588,9 @@ FORMS    += \
 	../../src/SVSimulationStartNandrad.ui \
 	../../src/SVSmartIntersectionDialog.ui \
 	../../src/SVSmartSelectDialog.ui \
+	../../src/SVSubNetworkEditDialog.ui \
+	../../src/SVSubNetworkEditDialogTable.ui \
+	../../src/SVSubNetworkEditDialogTableItem.ui \
 	../../src/SVTimeSeriesPreviewDialog.ui \
 	../../src/SVTimeSliderWidget.ui \
 	../../src/SVWelcomeScreen.ui \

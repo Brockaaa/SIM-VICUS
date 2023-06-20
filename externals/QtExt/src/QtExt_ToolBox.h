@@ -12,51 +12,54 @@ class QFrame;
 namespace QtExt {
 
 /*! The ToolBox class implements a widget similar to QToolBox with some more flexibility and custom style.
-	Basically, this class holds multiple pages that can be expanded/collapsed. The idea of this class is that only ONE page is expanded at a time.
-	Each page contains a header with collapsed/expanded arrow icon. An additional icon can be added to the header as well.
-	Header label and icons are all QtExt::ClickableLabels, so they have no click animation but still emit a clicked(id) signal
-	that also tells their given id.
+    Basically, this class holds multiple pages that can be expanded/collapsed. The idea of this class is that only ONE page is expanded at a time.
+    Each page contains a header with collapsed/expanded arrow icon. An additional icon can be added to the header as well.
+    Header label and icons are all QtExt::ClickableLabels, so they have no click animation but still emit a clicked(id) signal
+    that also tells their given id.
 */
 class ToolBox : public QWidget {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
 
-	explicit ToolBox(QWidget *parent = nullptr);
-	~ToolBox() override;
+    explicit ToolBox(QWidget *parent = nullptr);
+    ~ToolBox() override;
 
-	/*! Adds a page with given header name, widget and custom icon. */
-	void addPage(const QString & headerName, QWidget * widget, QIcon * icon = nullptr, int headerFontSize=10);
+    /*! Adds a page with given header name, widget and custom icon. */
+    void addPage(const QString & headerName, QWidget * widget, QIcon * icon = nullptr, int headerFontSize=10);
 
-	/*! Returns widget according to given index. */
-	QWidget * widget(unsigned int index) const;
+    /*! Returns widget according to given index. */
+    QWidget * widget(unsigned int index) const;
 
-	/*! Set index from outside */
-	void setCurrentIndex(unsigned int index);
+    /*! Set index from outside */
+    void setCurrentIndex(unsigned int index);
 
-	/*! Returns index of currently expanded page */
-	unsigned int currentIndex();
+    /*! Returns index of currently expanded page */
+    unsigned int currentIndex();
 
-	void updatePageBackgroundColorFromStyle();
+    void updatePageBackgroundColorFromStyle();
+
+    /*! Mode. If true, allows multiple pages to be open */
+    bool									m_mode = false;
 
 private slots:
-	/*! Changes arrow icons and visibility of given page, connected to ClickableLabels */
-	void onLabelClicked();
+    /*! Changes arrow icons and visibility of given page, connected to ClickableLabels */
+    void onLabelClicked();
 
 signals:
-	void indexChanged(unsigned int currentIndex);
+    void indexChanged(unsigned int currentIndex);
 
 private:
-	class Page;
+    class Page;
 
-	/*! Stores pointer to all pages. */
-	std::vector<Page*>						m_pages;
-	/*! Stores pointer to layouts. */
-	QVBoxLayout								*m_layout = nullptr;
-	/*! Collapsed arrow icon */
-	QPixmap									m_arrowRight;
-	/*! Expanded arrow icon */
-	QPixmap									m_arrowDown;
+    /*! Stores pointer to all pages. */
+    std::vector<Page*>						m_pages;
+    /*! Stores pointer to layouts. */
+    QVBoxLayout								*m_layout = nullptr;
+    /*! Collapsed arrow icon */
+    QPixmap									m_arrowRight;
+    /*! Expanded arrow icon */
+    QPixmap									m_arrowDown;
 
 };
 
