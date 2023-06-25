@@ -36,19 +36,20 @@
 
 #include <QGraphicsItem>
 
-namespace BLOCKMOD {
+namespace VICUS {
+class BMSocket;
+class BMBlock;
+}
 
-class Socket;
-class Block;
-class BlockItem;
+class SVBMBlockItem;
 
 /*! Base class for sockets to be painted on a block item. */
-class SocketItem : public QGraphicsItem {
+class SVBMSocketItem : public QGraphicsItem {
 public:
     /*! Constructor, takes a pointer to the associated socket data structure (which
         must have a lifetime longer than the graphics item.
     */
-    explicit SocketItem(BlockItem * parent, Socket * socket);
+    explicit SVBMSocketItem(SVBMBlockItem * parent, VICUS::BMSocket * socket);
 
     /*! Call this function whenever the socket's geometry in the associated socket object has changed. */
     void updateSocketItem();
@@ -56,7 +57,7 @@ public:
     QRectF boundingRect() const override;
 
     /*! Returns pointer to socket. */
-    Socket * socket() const { return m_socket; }
+    VICUS::BMSocket * socket() const { return m_socket; }
 
     QPointF pos();
 
@@ -72,10 +73,10 @@ protected:
 
 private:
     /*! The parent block that this socket belongs to. */
-    const Block	*m_block;
+    const VICUS::BMBlock	*m_block;
 
     /*! Pointer to the socket data structure. */
-    Socket	*m_socket;
+    VICUS::BMSocket	*m_socket;
 
     /*! The bounding rectangle of the symbol (updated whenever content of the socket changes). */
     QRectF	m_symbolRect;
@@ -85,10 +86,8 @@ private:
     */
     bool	m_hovered;
 
-    friend class SceneManager;
+    friend class SVBMSceneManager;
 };
-
-} // namespace BLOCKMOD
 
 
 #endif // BM_SocketItemH

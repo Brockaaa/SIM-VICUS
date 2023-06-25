@@ -34,9 +34,16 @@ INCLUDEPATH = \
 DEPENDPATH = $${INCLUDEPATH}
 
 HEADERS += \
+	../../src/BM_XMLHelpers.h \
 	../../src/VICUS_AbstractDBElement.h \
 	../../src/VICUS_AcousticTemplate.h \
 	../../src/VICUS_ArgsParser.h \
+	../../src/VICUS_BMBlock.h \
+	../../src/VICUS_BMConnector.h \
+	../../src/VICUS_BMConstants.h \
+	../../src/VICUS_BMGlobals.h \
+	../../src/VICUS_BMNetwork.h \
+	../../src/VICUS_BMSocket.h \
 	../../src/VICUS_BoundaryCondition.h \
 	../../src/VICUS_Building.h \
 	../../src/VICUS_BuildingLevel.h \
@@ -102,9 +109,15 @@ HEADERS += \
 	../../src/VICUS_NetworkBuriedPipeProperties.h
 
 SOURCES += \
+	../../src/BM_XMLHelpers.cpp \
 	../../src/VICUS_AbstractDBElement.cpp \
 	../../src/VICUS_AcousticTemplate.cpp \
 	../../src/VICUS_ArgsParser.cpp \
+	../../src/VICUS_BMBlock.cpp \
+	../../src/VICUS_BMConnector.cpp \
+	../../src/VICUS_BMGlobals.cpp \
+	../../src/VICUS_BMNetwork.cpp \
+	../../src/VICUS_BMSocket.cpp \
 	../../src/VICUS_BoundaryCondition.cpp \
 	../../src/VICUS_Component.cpp \
 	../../src/VICUS_Constants.cpp \

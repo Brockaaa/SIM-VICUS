@@ -12,7 +12,7 @@
 #include <QDrag>
 
 #include "SVSubNetworkEditDialog.h"
-#include <BM_ZoomMeshGraphicsView.h>
+#include <SVBMZoomMeshGraphicsView.h>
 
 #include "SVConstants.h"
 #include "SVStyle.h"
@@ -29,7 +29,7 @@ SVSubNetworkEditDialogTable::SVSubNetworkEditDialogTable(QWidget *parent) :
     setDefaultDropAction(Qt::CopyAction);
     setColumnCount(1);
 
-    BM_GraphicsView = (BLOCKMOD::ZoomMeshGraphicsView *)(dynamic_cast<SVSubNetworkEditDialog*>(parent)->ZoomMeshGraphicsView());
+    BM_GraphicsView = (SVBMZoomMeshGraphicsView *)(dynamic_cast<SVSubNetworkEditDialog*>(parent)->zoomMeshGraphicsView());
 
 
     QPalette palette = this->palette();

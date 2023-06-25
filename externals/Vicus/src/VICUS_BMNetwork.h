@@ -36,26 +36,26 @@
 
 #include <QList>
 
-#include "BM_Block.h"
-#include "BM_Socket.h"
-#include "BM_Connector.h"
+#include "VICUS_BMBlock.h"
+#include "VICUS_BMSocket.h"
+#include "VICUS_BMConnector.h"
 
 class QXmlStreamReader;
 
-namespace BLOCKMOD {
+namespace VICUS {
 
 /*! Holds data of connected block network.
     The network acts as the 'project' data structure that owns all other entities of the network.
 
     You can derive this class to implement/add own meta data for the network.
 */
-class Network {
+class BMNetwork {
 public:
     /*! Default C'tor. */
-    Network();
+    BMNetwork();
 
     /*! Efficient swap function. */
-    void swap(Network & other);
+    void swap(BMNetwork & other);
 
     /*! Reads network from file. */
     void readXML(const QString & fname);
@@ -78,10 +78,10 @@ public:
     /*! Processes a single connector and adjusts the connection segments.
         Function first checks if blocks and sockets match using <block-name>.<socket-name> referencing.
     */
-    void adjustConnector(Connector & con);
+    void adjustConnector(BMConnector & con);
 
     /*! Searches block and socket data structure by flat variable name. */
-    void lookupBlockAndSocket(const QString & flatName, const Block * &block, const Socket * &socket) const;
+    void lookupBlockAndSocket(const QString & flatName, const BMBlock * &block, const BMSocket * &socket) const;
 
     /*! Removes block at given index and all associated connectors.
         \warning Invalidates all block and connector pointers!
@@ -100,13 +100,13 @@ public:
             We must use a list here, so that when we add a block during the socket-connect operation
             (the invisible block) the existing nodes are not invalidated.
     */
-    std::list<Block>		m_blocks;
+    std::list<BMBlock>		m_blocks;
 
     /*! List of all connectors in the network.
         Connectors are always associated with sockets (referenced via
         block-id and socket-id).
     */
-    std::list<Connector>	m_connectors;
+    std::list<BMConnector>	m_connectors;
 
 
     // *** static functions ***
@@ -121,6 +121,6 @@ private:
     void readBlocks(QXmlStreamReader & reader);
 };
 
-} // namespace BLOCKMOD
+} // namespace VICUS
 
 #endif // BM_NetworkH

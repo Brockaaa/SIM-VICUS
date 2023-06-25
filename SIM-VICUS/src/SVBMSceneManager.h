@@ -36,35 +36,35 @@
 
 #include <QGraphicsScene>
 #include <QMap>
-#include "BM_SocketItem.h"
+#include "SVBMSocketItem.h"
 #include "VICUS_NetworkComponent.h"
 
 class QGraphicsItem;
+namespace VICUS{
+class BMNetwork;
+class BMBlock;
+class BMConnector;
+class BMSocket;
+}
 
-namespace BLOCKMOD {
-
-class Network;
-class Block;
-class BlockItem;
-class ConnectorBlockItem;
-class Socket;
-class SocketItem;
-class Connector;
-class ConnectorSegmentItem;
+class SVBMBlockItem;
+class SVBMConnectorBlockItem;
+class SVBMSocketItem;
+class SVBMConnectorSegmentItem;
 
 /*! The graphics scene that visualizes the network. */
-class SceneManager : public QGraphicsScene {
+class SVBMSceneManager : public QGraphicsScene {
     Q_OBJECT
 public:
-    explicit SceneManager(QObject *parent = nullptr);
+    explicit SVBMSceneManager(QObject *parent = nullptr);
 
     /*! D-tor. */
-    virtual ~SceneManager() override;
+    virtual ~SVBMSceneManager() override;
 
     /*! Set a new network (a local copy is made of the network object).
         This will recreate the entire scene.
     */
-    void setNetwork(const Network & network);
+    void setNetwork(const VICUS::BMNetwork & network);
 
     /*! opens network from XML file */
     void openNetwork(QString fname);
@@ -75,7 +75,7 @@ public:
         already the changes. If you need to create UNDO actions based on the previous
         state of the network, you must keep a separate copy of the network.
     */
-    const Network & network() const;
+    const VICUS::BMNetwork & network() const;
 
     /*! Generates a pixmap from the current scene rect.
         Aspect ratio is kept, and the image is fitted into the selected target size.
@@ -85,7 +85,7 @@ public:
     // query functions
 
     /*! Looks up the block item with a block that has the given name. */
-    const BlockItem * blockItemByName(const QString & blockName) const;
+    const SVBMBlockItem * blockItemByName(const QString & blockName) const;
 
 
     // Functions called from blocks/items to adjust the network due to user interaction
@@ -93,12 +93,12 @@ public:
     /*! Called from BlockItem when a block was moved to signal the scene manager
         to adjust the connected connectors.
     */
-    void blockMoved(const Block * block, const QPointF oldPos);
+    void blockMoved(const VICUS::BMBlock * block, const QPointF oldPos);
 
     /*! Calls from BlockItem when a block was moved.
         Results in blockSelected(blockName) to be emitted.
     */
-    void blockSelected(const Block * block);
+    void blockSelected(const VICUS::BMBlock * block);
 
     /*! Called from ConnectorSegmentItem when a segment was moved to signal the scene manager
         to adjust the connected connectors.
@@ -108,30 +108,30 @@ public:
         This function creates new segment items as needed and removes no longer needed segments
         (after a segment merge, for example).
     */
-    void connectorSegmentMoved(ConnectorSegmentItem * currentItem);
+    void connectorSegmentMoved(SVBMConnectorSegmentItem * currentItem);
 
     /*! Toggles high-lighting of connector segments. */
-    void highlightConnectorSegments(const Connector & con, bool highlighted);
+    void highlightConnectorSegments(const  VICUS::BMConnector& con, bool highlighted);
 
     /*! This will select all not yet selected segments of this connector.
         \note Item change flag will be turned off for all touched items, so that
         this function is not called several times.
     */
-    void selectConnectorSegments(const Connector & con);
+    void selectConnectorSegments(const  VICUS::BMConnector& con);
 
     /*! Connected to selectionChanged() signal. */
     void onSelectionChanged();
 
     /*! Called from a block item when a block has been double-clicked, emits signal blockActionTriggered()  */
-    void blockDoubleClicked(const BlockItem * blockItem);
+    void blockDoubleClicked(const SVBMBlockItem * blockItem);
 
     /*! This function removes line segments with 0 offset and merges the neighboring segments into one.
         Must not be called from within a move operation (only, for example, from mouse-release event handlers).
     */
-    void mergeConnectorSegments(Connector & con);
+    void mergeConnectorSegments( VICUS::BMConnector & con);
 
     /*! Quick test if a socket is connected anywhere by a connector. */
-    bool isConnectedSocket(const Block * b, const Socket * s) const;
+    bool isConnectedSocket(const VICUS::BMBlock * b, const VICUS::BMSocket * s) const;
 
     /*! Returns true, if the user currently drags a connection.
         In this case, the hover effects for moving connectors/blocks are disabled.
@@ -146,7 +146,7 @@ public:
         - all unconnected inlet sockets are marked as highlightable
         - all outlet sockets are marked as not highlightable
     */
-    void startSocketConnection(const SocketItem & outletSocketItem, const QPointF & mousePos);
+    void startSocketConnection(const SVBMSocketItem & outletSocketItem, const QPointF & mousePos);
 
     /*! Finishes "actively connecting" mode and puts the scene back into regular modification mode.
         This function is called when a connection was made, or the mouse button was released without reaching an
@@ -160,12 +160,12 @@ public:
     /*! There can be several currently selected blocks.
         \return Returns a list of selected blocks or an empty list, if none is selected.
     */
-    QList<const Block*> selectedBlocks() const;
+    QList<const VICUS::BMBlock*> selectedBlocks() const;
 
     /*! There can be only one selected connector.
         \return Returns a pointer to the selected connector or a nullptr, if none is selected.
     */
-    const Connector * selectedConnector() const;
+    const  VICUS::BMConnector * selectedConnector() const;
 
 
     // functions to modify managed network
@@ -173,26 +173,26 @@ public:
     /*! Adds a new block to the network.
         The block is copied into the network and shown at the given coordinates.
     */
-    void addBlock(const Block & block);
+    void addBlock(const VICUS::BMBlock & block);
     void addBlock(VICUS::NetworkComponent::ModelType type, QPoint point);
 
     /*! Adds a new ConnectorBlock to the network.
         The ConnectorBlock is copied into the network and shown at the given coordinates.
     */
-    void addConnectorBlock(const Block & block);
-    void addConnectorBlock(ConnectorBlockItem blockItem);
+    void addConnectorBlock(const VICUS::BMBlock & block);
+    void addConnectorBlock(SVBMConnectorBlockItem blockItem);
 
     /*! Adds a new connector.
         The source and target sockets must match existing blocks/sockets in the network.
         Otherwise an exception is thrown.
     */
-    void addConnector(const Connector & con);
+    void addConnector(const  VICUS::BMConnector & con);
 
     /*! Removes the block by giving a pointer to the block.
         Block must be stored in the network's block list.
         Also removes any connections made to this block.
     */
-    void removeBlock(const Block * block);
+    void removeBlock(const VICUS::BMBlock * block);
 
     /*! Removes the block at the given index in the network's block list.
         Index must be a valid, otherwise an exception is thrown.
@@ -206,7 +206,7 @@ public:
     /*! Removes connector by giving a pointer to a connector in the managed network.
         Connector must be stored in the network's connector list.
     */
-    void removeConnector(const Connector * con);
+    void removeConnector(const  VICUS::BMConnector * con);
 
     /*! Removes connector with given index.
         Index must be a valid, otherwise an exception is thrown.
@@ -217,14 +217,14 @@ public:
         Index must be a valid, otherwise an exception is thrown.
         Also removes any connections made to this block.
     */
-    void removeConnectorBlock(const Block * block);
+    void removeConnectorBlock(const VICUS::BMBlock * block);
 
     /* Function to highlight all Connectors of ConnectorBlock
     */
-    void setHighlightallConnectorsOfBlock(const Block * block, bool highlighted);
+    void setHighlightallConnectorsOfBlock(const VICUS::BMBlock * block, bool highlighted);
 
 
-    Socket*					m_connectingSocket = nullptr;
+    VICUS::BMSocket*					m_connectingSocket = nullptr;
 signals:
     /*! Emitted when a new connection was made and a connector was added.
         The new connector is added to the end of the connectors in the network.
@@ -232,7 +232,7 @@ signals:
     void newConnectionAdded();
 
     /*! Emitted whenever a block action was triggered (usually by double-clicking on the block). */
-    void blockActionTriggered(const BLOCKMOD::BlockItem * blockItem);
+    void blockActionTriggered(const SVBMBlockItem * blockItem);
 
     /*! Emitted, when a block was selected. */
     void newBlockSelected(const QString & blockName);
@@ -262,19 +262,19 @@ protected:
         You can override this method and create your own graphics items, derived from
         base class BlockItem (which contains all the move/selection logic).
     */
-    virtual BlockItem * createBlockItem(Block & b);
+    virtual SVBMBlockItem * createBlockItem(VICUS::BMBlock & b);
 
     /*! Helper Function to initialise a network at startup */
     void setupNetwork();
 
     /*! Helper function to create ConnectorBlock and Sockets*/
-    void addConnectorBlockAndSocket(Block *startBlock, Block *targetBlock, Socket *startSocket, Socket *targetSocket, int id);
+    void addConnectorBlockAndSocket(VICUS::BMBlock *startBlock, VICUS::BMBlock *targetBlock, VICUS::BMSocket *startSocket, VICUS::BMSocket *targetSocket, int id);
 
     /*! Create the graphics item for a single connector line segment.
         You can override this method and create your own graphics items, derived from
         base class ConnectorSegmentItem (which contains all the move/selection logic).
     */
-    virtual ConnectorSegmentItem * createConnectorItem(Connector & con);
+    virtual SVBMConnectorSegmentItem * createConnectorItem( VICUS::BMConnector & con);
 
     /*! A single connect yields actually several line segments, which are created here.
         You can override this method and create your own graphics items, derived from
@@ -282,7 +282,7 @@ protected:
         \note This function calls createConnectorItem() internally, so it may be sufficient to
         replace the logic there.
     */
-    virtual QList<ConnectorSegmentItem *> createConnectorItems(Connector & con);
+    virtual QList<SVBMConnectorSegmentItem *> createConnectorItems( VICUS::BMConnector & con);
 
 
 private:
@@ -294,25 +294,25 @@ private:
         \param currentItem Pointer to currently moved item. May be a nullptr, in which case the
             first segment is treated as current item.
     */
-    void updateConnectorSegmentItems(const Connector & con, ConnectorSegmentItem * currentItem);
+    void updateConnectorSegmentItems(const  VICUS::BMConnector & con, SVBMConnectorSegmentItem * currentItem);
 
     /*! The network that we own and manage. */
-    Network							*m_network;
+    VICUS::BMNetwork							*m_network;
 
     /*! The block-graphics items that we show on the scene. */
-    QList<BlockItem*>				m_blockItems;
+    QList<SVBMBlockItem*>				m_blockItems;
 
     /*! The connector-graphics items that we show on the scene. */
-    QList<ConnectorSegmentItem*>	m_connectorSegmentItems;
+    QList<SVBMConnectorSegmentItem*>	m_connectorSegmentItems;
 
     /*! The List of ConnectorBlocks */
-    QList<ConnectorBlockItem*>      m_connectorBlockItems;
+    QList<SVBMConnectorBlockItem*>      m_connectorBlockItems;
 
     /*! Map to speed up lookup of connectors connected to a block.
         This map is initialized in createConnectorItems() and updated, whenever a connection is
         made/removed.
     */
-    QMap<const Block*, QSet<Connector*> >	m_blockConnectorMap;
+    QMap<const VICUS::BMBlock*, QSet< VICUS::BMConnector*> >	m_blockConnectorMap;
 
     /*! If true, the we are currently dragging a connection line. */
     bool							m_currentlyConnecting;
@@ -323,6 +323,5 @@ private:
 
 };
 
-} // namespace BLOCKMOD
 
 #endif // BM_SceneManagerH

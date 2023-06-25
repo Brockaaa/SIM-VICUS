@@ -12,11 +12,11 @@
 #include <QString>
 #include <QFileDialog>
 
-#include <BM_Network.h>
-#include <BM_ZoomMeshGraphicsView.h>
-#include <BM_SceneManager.h>
-#include <BM_Block.h>
-#include <BM_Globals.h>
+#include <VICUS_BMNetwork.h>
+#include <SVBMZoomMeshGraphicsView.h>
+#include <SVBMSceneManager.h>
+#include <VICUS_BMBlock.h>
+#include <VICUS_BMGlobals.h>
 #include "SVSubNetworkEditDialogTable.h"
 
 #include "SVSettings.h"
@@ -37,10 +37,10 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent) :
     ui->viewWidget->setDragMode(QGraphicsView::ScrollHandDrag);
     ui->viewWidget->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     ui->viewWidget->setResolution(1);
-    m_sceneManager = qobject_cast<BLOCKMOD::SceneManager*>(ui->viewWidget->scene());
-    connect(m_sceneManager, &BLOCKMOD::SceneManager::newBlockSelected,
+    m_sceneManager = qobject_cast<SVBMSceneManager*>(ui->viewWidget->scene());
+    connect(m_sceneManager, &SVBMSceneManager::newBlockSelected,
             this, &SVSubNetworkEditDialog::blockSelectedEvent);
-    connect(m_sceneManager, &BLOCKMOD::SceneManager::selectionCleared,
+    connect(m_sceneManager, &SVBMSceneManager::selectionCleared,
             this, &SVSubNetworkEditDialog::selectionClearedEvent);
     ui->stackedWidget->setCurrentIndex(0);
     for(QObject* const widget : ui->stackedWidget->children())
@@ -93,15 +93,15 @@ void SVSubNetworkEditDialog::createToolBox(){
 
 }
 
-BLOCKMOD::ZoomMeshGraphicsView *SVSubNetworkEditDialog::ZoomMeshGraphicsView(){
+SVBMZoomMeshGraphicsView *SVSubNetworkEditDialog::zoomMeshGraphicsView(){
     return ui->viewWidget;
 }
 
 void SVSubNetworkEditDialog::blockSelectedEvent()
 {
     bool ok = false;
-    BLOCKMOD::Block const  *blockToDisplay = nullptr;
-    QList<const BLOCKMOD::Block*> blocks = m_sceneManager->selectedBlocks();
+    VICUS::BMBlock const  *blockToDisplay = nullptr;
+    QList<const VICUS::BMBlock*> blocks = m_sceneManager->selectedBlocks();
     if(blocks.size() == 1){
         blockToDisplay = blocks.first();
         blockToDisplay->m_name.toInt(&ok);
@@ -128,7 +128,7 @@ void SVSubNetworkEditDialog::on_saveButton_clicked()
     QString fname = QFileDialog::getSaveFileName(this, tr("Save File"), QDir::homePath(), tr("BM File (*.bm);;All Files(*.*)"), nullptr, SVSettings::instance().m_dontUseNativeDialogs ? QFileDialog::DontUseNativeDialog : QFileDialog::Options());
 
     qDebug() << "Save to: " << fname;
-    ZoomMeshGraphicsView()->saveNetwork(fname);
+    zoomMeshGraphicsView()->saveNetwork(fname);
 }
 
 
@@ -146,5 +146,5 @@ void SVSubNetworkEditDialog::on_openButton_clicked()
         return;
 
     qDebug() << fname;
-    static_cast<BLOCKMOD::ZoomMeshGraphicsView*>(ZoomMeshGraphicsView())->openNetwork(fname);
+    static_cast<SVBMZoomMeshGraphicsView*>(zoomMeshGraphicsView())->openNetwork(fname);
 }

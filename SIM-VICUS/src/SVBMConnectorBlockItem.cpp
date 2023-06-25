@@ -1,22 +1,20 @@
-#include "BM_ConnectorBlockItem.h"
+#include "SVBMConnectorBlockItem.h"
 
-#include "BM_Block.h"
-#include "BM_SceneManager.h"
+#include "VICUS_BMBlock.h"
+#include "SVBMSceneManager.h"
 #include <QDebug>
 #include <QPainter>
 #include <QPen>
 #include <QStyleOptionGraphicsItem>
 
-namespace BLOCKMOD {
-
-ConnectorBlockItem::ConnectorBlockItem(Block *b) : BlockItem(b)
+SVBMConnectorBlockItem::SVBMConnectorBlockItem(VICUS::BMBlock *b) : SVBMBlockItem(b)
 {
     setAcceptHoverEvents(true);
     setRect(0,0,b->m_size.width(), b->m_size.height());
     setPos(b->m_pos);
 }
 
-void ConnectorBlockItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget){
+void SVBMConnectorBlockItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget){
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing, true);
     QLinearGradient grad(QPointF(0,0), QPointF(rect().width(),0));
@@ -50,18 +48,16 @@ void ConnectorBlockItem::paint(QPainter *painter, const QStyleOptionGraphicsItem
     painter->restore();
 }
 
-void ConnectorBlockItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event){
+void SVBMConnectorBlockItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event){
     QGraphicsItem::hoverEnterEvent(event);
-    SceneManager * sceneManager = qobject_cast<SceneManager *>(scene());
+    SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
     sceneManager->setHighlightallConnectorsOfBlock(block(), true);
     m_isHighlighted = true;
 }
 
-void ConnectorBlockItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event){
+void SVBMConnectorBlockItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event){
     QGraphicsItem::hoverLeaveEvent(event);
-    SceneManager * sceneManager = qobject_cast<SceneManager *>(scene());
+    SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
     sceneManager->setHighlightallConnectorsOfBlock(block(), false);
     m_isHighlighted = false;
 }
-
-} // namespace BLOCKMOD

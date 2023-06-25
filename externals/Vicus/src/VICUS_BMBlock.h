@@ -45,9 +45,9 @@
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 
-#include "BM_Socket.h"
+#include "VICUS_BMSocket.h"
 
-namespace BLOCKMOD {
+namespace VICUS {
 
 /*! Stores properties of a block.
     * appearance properties of block
@@ -55,12 +55,12 @@ namespace BLOCKMOD {
     * sockets
     * custom properties in the property map
 */
-class Block {
+class BMBlock {
 public:
-    Block() : m_connectionHelperBlock(false) {}
+    BMBlock() : m_connectionHelperBlock(false) {}
 
-    Block(const QString & name);
-    Block(const QString & name, double x, double y);
+    BMBlock(const QString & name);
+    BMBlock(const QString & name, double x, double y);
 
     /*! Reads content of the block from XML stream. */
     void readXML(QXmlStreamReader & reader);
@@ -71,7 +71,7 @@ public:
     /*! Generate connection line between socket and point, where first connector segment starts.
         Returned coordinates are in scene-coordinates.
     */
-    QLineF socketStartLine(const Socket * socket) const;
+    QLineF socketStartLine(const BMSocket * socket) const;
 
     /*! Utility function, that determines a free position for inserting a slot.
         Inlet sockets are inserted first left (top to bottom), then on top (left to right).
@@ -104,7 +104,7 @@ public:
     void autoUpdateSockets(const QStringList & inletSockets, const QStringList & outletSockets);
 
     /*! Returns a list of socket pointers with either inlet or outlet sockets. */
-    QList<const Socket*>	filterSockets(bool inletSocket) const;
+    QList<const BMSocket*>	filterSockets(bool inletSocket) const;
 
     /*! Unique identification name of this block instance. */
     QString						m_name;
@@ -113,7 +113,7 @@ public:
     QPointF						m_pos;
 
     /*! Sockets that belong to this block. */
-    QList<Socket>				m_sockets;
+    QList<BMSocket>				m_sockets;
 
     /*! Size of block. */
     QSizeF						m_size;
@@ -133,7 +133,7 @@ public:
     bool						m_connectionHelperBlock;
 };
 
-} // namespace BLOCKMOD
+} // namespace VICUS
 
 
 #endif // BM_BlockH

@@ -31,7 +31,7 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "BM_Network.h"
+#include "VICUS_BMNetwork.h"
 
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
@@ -44,31 +44,31 @@
 #include <iostream>
 #include <cmath>
 
-#include "BM_Block.h"
-#include "BM_Connector.h"
+#include "VICUS_BMBlock.h"
+#include "VICUS_BMConnector.h"
 #include "BM_XMLHelpers.h"
-#include "BM_Globals.h"
-#include "BM_Constants.h"
+#include "VICUS_BMGlobals.h"
+#include "VICUS_BMConstants.h"
 
 #include "IBK_Exception.h"
 
 #include <VICUS_NetworkComponent.h>
 
 
-namespace BLOCKMOD {
+namespace VICUS {
 
-Network::Network()
+BMNetwork::BMNetwork()
 {
 }
 
 
-void Network::swap(Network & other) {
+void BMNetwork::swap(BMNetwork & other) {
     other.m_blocks.swap(m_blocks);
     other.m_connectors.swap(m_connectors);
 }
 
 
-void Network::readXML(const QString & fname) {
+void BMNetwork::readXML(const QString & fname) {
     qDebug() << "Reading network from file " << fname;
     QFile xmlFile(fname);
     if (!xmlFile.open(QIODevice::ReadOnly | QFile::Text))
@@ -127,11 +127,11 @@ void Network::readXML(const QString & fname) {
                                             ename = reader.name().toString();
                                             if (reader.isStartElement()){
                                                     int id = reader.attributes().value("NetworkElementid").toInt();
-                                                    Block block;
+                                                    BMBlock block;
                                                     // if regular block
                                                     if(id != -1){
-                                                        Socket inlet = Socket();
-                                                        Socket outlet = Socket();
+                                                        BMSocket inlet = BMSocket();
+                                                        BMSocket outlet = BMSocket();
                                                         if (networkElementMap.find(id) == networkElementMap.end())
                                                             throw IBK::Exception("todo Maik","[Network::readXML]");
                                                         inlet.m_id = networkElementMap[id].inletNodeId;
@@ -157,10 +157,10 @@ void Network::readXML(const QString & fname) {
                                                     }
                                                     // if either Entrance, Exit or Connectorblock
                                                     else{
-                                                        block = Block( reader.attributes().value("name").toString() );
+                                                        block = BMBlock( reader.attributes().value("name").toString() );
                                                         // if Entrance block
                                                         if(block.m_name == ENTRANCE_NAME){
-                                                            Socket outlet = Socket();
+                                                            BMSocket outlet = BMSocket();
                                                             outlet.m_id = ENTRANCE_ID;
                                                             outlet.m_name = OUTLET_NAME;
                                                             outlet.m_orientation = Qt::Horizontal;
@@ -173,7 +173,7 @@ void Network::readXML(const QString & fname) {
                                                         }
                                                         // if Exit block
                                                         else if(block.m_name == EXIT_NAME){
-                                                            Socket inlet = Socket();
+                                                            BMSocket inlet = BMSocket();
                                                             inlet.m_id = EXIT_ID;
                                                             inlet.m_name = INLET_NAME;
                                                             inlet.m_orientation = Qt::Horizontal;
@@ -186,8 +186,8 @@ void Network::readXML(const QString & fname) {
                                                         // if ConnectorBlock
                                                         else{
                                                             int nodeId = reader.attributes().value("NodeId").toInt();
-                                                            Socket inlet = Socket();
-                                                            Socket outlet = Socket();
+                                                            BMSocket inlet = BMSocket();
+                                                            BMSocket outlet = BMSocket();
                                                             inlet.m_id = nodeId;
                                                             outlet.m_id = nodeId;
                                                             inlet.m_name = INLET_NAME;
@@ -223,7 +223,7 @@ void Network::readXML(const QString & fname) {
                                             if (reader.isStartElement()){
 
                                                 if(ename == "Connector"){
-                                                    Connector conn = Connector();
+                                                    BMConnector conn = BMConnector();
                                                     conn.m_name = CONNECTOR_NAME;
                                                     conn.readXML(reader);
                                                     qDebug() << "Connector: " << reader.attributes().value("source").toString() << " " << reader.attributes().value("target").toString();
@@ -264,7 +264,7 @@ void Network::readXML(const QString & fname) {
 
 
 
-void Network::writeXML(const QString & fname) const {
+void BMNetwork::writeXML(const QString & fname) const {
 
     QFile xmlFile(fname);
     if (!xmlFile.open(QIODevice::WriteOnly | QFile::Truncate | QFile::Text))
@@ -280,7 +280,7 @@ void Network::writeXML(const QString & fname) const {
     for(unsigned int i = 0; i < m_blocks.size(); i++){
         // Skip Connector Blocks
 
-        Block block = *iterator;
+        BMBlock block = *iterator;
         if(block.m_name.contains(CONNECTORBLOCK_NAME) || block.m_name == ENTRANCE_NAME || block.m_name == EXIT_NAME){
             iterator++;
             continue;
@@ -300,14 +300,14 @@ void Network::writeXML(const QString & fname) const {
     stream.writeStartElement("Connections");
     stream.writeStartElement("Blocks");
     if (!m_blocks.empty()) {
-        for (const Block & b : m_blocks)
+        for (const BMBlock & b : m_blocks)
             b.writeXML(stream);
     }
     stream.writeEndElement(); // Blocks
 
     stream.writeStartElement("Connectors");
     if (!m_connectors.empty()) {
-        for (const Connector & c : m_connectors)
+        for (const BMConnector & c : m_connectors)
             c.writeXML(stream);
     }
     stream.writeEndElement(); // Connectors
@@ -320,9 +320,9 @@ void Network::writeXML(const QString & fname) const {
 
 
 
-void Network::checkNames(bool printNames) const {
+void BMNetwork::checkNames(bool printNames) const {
     QSet<QString> blockNames;
-    for (const Block & b : m_blocks) {
+    for (const BMBlock & b : m_blocks) {
         QString bName = b.m_name;
         if (bName.indexOf(".") != -1)
             throw std::runtime_error("Invalid Block ID name '"+bName.toStdString()+"'");
@@ -333,7 +333,7 @@ void Network::checkNames(bool printNames) const {
             qDebug() << bName;
         // now all sockets
         QSet<QString> socketNames;
-        for (const Socket & s : b.m_sockets) {
+        for (const BMSocket & s : b.m_sockets) {
             QString sName = s.m_name;
             // check if such a name already exists
             if (socketNames.contains(sName))
@@ -345,14 +345,14 @@ void Network::checkNames(bool printNames) const {
     }
     // check all connections for valid socket names
     QSet<QString> connectedSockets;
-    for (const Connector & con : m_connectors) {
+    for (const BMConnector & con : m_connectors) {
         // first check, that indeed the source/target connectors are valid
-        const Block * b1, * b2;
-        const Socket * s1, * s2;
+        const BMBlock * b1, * b2;
+        const BMSocket * s1, * s2;
         qDebug() << "checkNames";
-        for(Block block : m_blocks) {
+        for(BMBlock block : m_blocks) {
             qDebug() << "block: " << block.m_name;
-            for(Socket socket : block.m_sockets) {
+            for(BMSocket socket : block.m_sockets) {
                 qDebug() << "   socket: " << socket.m_name << socket.m_inlet;
             }
         }
@@ -378,12 +378,12 @@ void Network::checkNames(bool printNames) const {
 }
 
 
-bool Network::haveSocket(const QString & socketVariableName, bool inletSocket) const {
+bool BMNetwork::haveSocket(const QString & socketVariableName, bool inletSocket) const {
     QString blockName, socketName;
     splitFlatName(socketVariableName, blockName, socketName);
-    for (const BLOCKMOD::Block & b : m_blocks) {
+    for (const VICUS::BMBlock & b : m_blocks) {
         if (b.m_name == blockName) {
-            for (const BLOCKMOD::Socket & s : b.m_sockets) {
+            for (const VICUS::BMSocket & s : b.m_sockets) {
                 if (s.m_name == socketName && (s.m_inlet == inletSocket)) {
                     return true;
                 }
@@ -394,8 +394,8 @@ bool Network::haveSocket(const QString & socketVariableName, bool inletSocket) c
 }
 
 
-void Network::adjustConnectors() {
-    for (Connector & c : m_connectors) {
+void BMNetwork::adjustConnectors() {
+    for (BMConnector & c : m_connectors) {
         try {
             adjustConnector(c);
         }
@@ -407,10 +407,10 @@ void Network::adjustConnectors() {
 }
 
 
-void Network::adjustConnector(Connector & con) {
+void BMNetwork::adjustConnector(BMConnector & con) {
     // split socket name into block and socket
-    const Socket * socket;
-    const Block * block;
+    const BMSocket * socket;
+    const BMBlock * block;
     lookupBlockAndSocket(con.m_sourceSocket, block, socket);
     // get start coordinates: first point is the socket's center, second point is the connection point outside the socket
     QLineF startLine = block->socketStartLine(socket);
@@ -431,7 +431,7 @@ void Network::adjustConnector(Connector & con) {
     }
 
     // remaining distance must be distributed to segments
-    if (!Globals::nearZero(dy)) {
+    if (!BMGlobals::nearZero(dy)) {
         // now search for first connector segment that is vertical
         int i;
         for (i=0;i<con.m_segments.count(); ++i) {
@@ -442,13 +442,13 @@ void Network::adjustConnector(Connector & con) {
         }
         if (i == con.m_segments.count()) {
             // add a new segment with proper size
-            Connector::Segment s;
+            BMConnector::Segment s;
             s.m_direction = Qt::Vertical;
             s.m_offset = dy;
             con.m_segments.append(s);
         }
     }
-    if (!Globals::nearZero(dx)) {
+    if (!BMGlobals::nearZero(dx)) {
         // now search for first connector segment that is horizontal
         int i;
         for (i=0;i<con.m_segments.count(); ++i) {
@@ -459,7 +459,7 @@ void Network::adjustConnector(Connector & con) {
         }
         if (i == con.m_segments.count()) {
             // add a new segment with proper size
-            Connector::Segment s;
+            BMConnector::Segment s;
             s.m_direction = Qt::Horizontal;
             s.m_offset = dx;
             con.m_segments.append(s);
@@ -468,12 +468,12 @@ void Network::adjustConnector(Connector & con) {
 }
 
 
-void Network::lookupBlockAndSocket(const QString & flatName, const Block *& block, const Socket * &socket) const {
+void BMNetwork::lookupBlockAndSocket(const QString & flatName, const BMBlock *& block, const BMSocket * &socket) const {
     QString blockName, socketName;
     splitFlatName(flatName, blockName, socketName);
     // search block by name
     auto blockIt = std::find_if(m_blocks.begin(), m_blocks.end(),
-                                [&] (const Block& b) { return b.m_name == blockName; } );
+                                [&] (const BMBlock& b) { return b.m_name == blockName; } );
 
     if (blockIt == m_blocks.end()){
         block == nullptr;
@@ -481,19 +481,19 @@ void Network::lookupBlockAndSocket(const QString & flatName, const Block *& bloc
         return;
     }
 
-    const Block & b = *blockIt;
+    const BMBlock & b = *blockIt;
     block = &b;
 
 
     // search socket by name
     auto socketIt = std::find_if(b.m_sockets.constBegin(), b.m_sockets.constEnd(),
-                                [&] (const Socket& s) { return s.m_name == socketName; } );
+                                [&] (const BMSocket& s) { return s.m_name == socketName; } );
 
 
     if (socketIt == b.m_sockets.constEnd())
         socket == nullptr;
     else{
-        const Socket & s = *socketIt;
+        const BMSocket & s = *socketIt;
         socket = &s;
     }
 
@@ -501,7 +501,7 @@ void Network::lookupBlockAndSocket(const QString & flatName, const Block *& bloc
 }
 
 
-void Network::removeBlock(unsigned int blockIdx) {
+void BMNetwork::removeBlock(unsigned int blockIdx) {
     Q_ASSERT(blockIdx < static_cast<unsigned int>(m_blocks.size()));
 
     // get block ID name
@@ -534,12 +534,12 @@ void Network::removeBlock(unsigned int blockIdx) {
 }
 
 
-void Network::renameBlock(unsigned int blockIdx, const QString &newName) {
+void BMNetwork::renameBlock(unsigned int blockIdx, const QString &newName) {
     auto bit = m_blocks.begin(); std::advance(bit, blockIdx);
     QString oldName = bit->m_name;
     bit->m_name = newName;
 
-    for (Connector & c : m_connectors) {
+    for (BMConnector & c : m_connectors) {
         QString blockName, socketName;
         splitFlatName(c.m_sourceSocket, blockName, socketName);
         if (blockName == oldName) {
@@ -553,7 +553,7 @@ void Network::renameBlock(unsigned int blockIdx, const QString &newName) {
 }
 
 
-void Network::splitFlatName(const QString & flatVariableName, QString & blockName, QString & socketName) {
+void BMNetwork::splitFlatName(const QString & flatVariableName, QString & blockName, QString & socketName) {
     int pos = flatVariableName.indexOf('.');
     if (pos == -1)
         throw std::runtime_error("Bad flat name, missing . character");
@@ -562,4 +562,4 @@ void Network::splitFlatName(const QString & flatVariableName, QString & blockNam
 }
 
 
-} // namespace BLOCKMOD
+} // namespace VICUS

@@ -1,5 +1,5 @@
-#ifndef BM_CONSTANTS_H
-#define BM_CONSTANTS_H
+#ifndef VICUS_BMCONSTANTS_H
+#define VICUS_BMCONSTANTS_H
 
 
 const int BLOCK_WIDTH = 64;
@@ -21,4 +21,4 @@ const QString EXIT_NAME = "Exit";
 const QString CONNECTORBLOCK_NAME = "connector";
 const QString CONNECTOR_NAME = "con";
 
-#endif // BM_CONSTANTS_H
+#endif // VICUS_BMCONSTANTS_H

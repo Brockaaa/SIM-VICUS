@@ -31,8 +31,8 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef BM_ZoomMeshGraphicsViewH
-#define BM_ZoomMeshGraphicsViewH
+#ifndef SVBMZoomMeshGraphicsViewH
+#define SVBMZoomMeshGraphicsViewH
 
 #include <QGraphicsView>
 #include <QVarLengthArray>
@@ -40,30 +40,30 @@
 #include <QColor>
 #include "VICUS_NetworkComponent.h"
 
-namespace BLOCKMOD {
-
-class Block;
-class SceneManager;
+namespace VICUS {
+class BMBlock;
+}
+class SVBMSceneManager;
 
 /*! Basic 2D graphics view that provides a mesh and
     a zoom functionality.
 */
-class ZoomMeshGraphicsView : public QGraphicsView {
+class SVBMZoomMeshGraphicsView : public QGraphicsView {
     Q_OBJECT
 public:
-    explicit ZoomMeshGraphicsView(QWidget *parent=0);
+    explicit SVBMZoomMeshGraphicsView(QWidget *parent=0);
 
     /*! Returns current zoom level. */
     int zoomLevel() const { return m_zoomLevel; }
 
-    SceneManager* const m_sceneManager;
+    SVBMSceneManager* const m_sceneManager;
 
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
     void dropEvent(QDropEvent *event) override;
 
     /*! forwards request to SceneManager */
-    void addBlock(Block* block);
+    void addBlock(VICUS::BMBlock* block);
     /*! forwards request to SceneManager */
     void addBlock(VICUS::NetworkComponent::ModelType type, QPoint point);
     /*! forwards request to SceneManager */
@@ -165,7 +165,6 @@ private:
     QSize							m_windowSizeLast;
 };
 
-} // namespace BLOCKMOD
 
 
-#endif // BM_ZoomMeshGraphicsViewH
+#endif // SVBMZoomMeshGraphicsViewH

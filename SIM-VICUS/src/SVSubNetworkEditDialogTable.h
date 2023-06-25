@@ -5,13 +5,11 @@
 #include <QTableWidget>
 #include <QListWidget>
 
-#include <BM_Constants.h>
+#include <VICUS_BMConstants.h>
 
 #include "VICUS_NetworkComponent.h"
 
-namespace BLOCKMOD{
-class ZoomMeshGraphicsView;
-}
+class SVBMZoomMeshGraphicsView;
 
 namespace Ui {
 class SVSubNetworkEditDialogTable;
@@ -35,7 +33,7 @@ private:
     int m_rowSize = 0;
     int m_defaultRowHeight = BLOCK_HEIGHT;
 
-    BLOCKMOD::ZoomMeshGraphicsView *BM_GraphicsView = nullptr;
+    SVBMZoomMeshGraphicsView *BM_GraphicsView = nullptr;
 
     void startDrag(Qt::DropActions supportedActions) override;
 

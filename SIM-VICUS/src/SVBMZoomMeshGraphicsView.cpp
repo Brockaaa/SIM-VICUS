@@ -31,7 +31,7 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "BM_ZoomMeshGraphicsView.h"
+#include "SVBMZoomMeshGraphicsView.h"
 
 #include <QWheelEvent>
 #include <QList>
@@ -42,13 +42,12 @@
 
 #include <cmath>
 
-#include "BM_SceneManager.h"
-#include "BM_Network.h"
-#include "BM_Constants.h"
+#include "SVBMSceneManager.h"
+#include "VICUS_BMNetwork.h"
+#include "VICUS_BMConstants.h"
 
-namespace BLOCKMOD {
 
-ZoomMeshGraphicsView::ZoomMeshGraphicsView(QWidget *parent) :
+SVBMZoomMeshGraphicsView::SVBMZoomMeshGraphicsView(QWidget *parent) :
     QGraphicsView(parent),
     m_resolution(1000), // 1000 px/m
     m_gridStep(100),
@@ -56,7 +55,7 @@ ZoomMeshGraphicsView::ZoomMeshGraphicsView(QWidget *parent) :
     m_zoomLevel(0),
     m_gridColor( 175, 175, 255 ),
     m_gridSpacingPixLast(0),
-    m_sceneManager(new SceneManager(this))
+    m_sceneManager(new SVBMSceneManager(this))
 {
     setTransformationAnchor(AnchorUnderMouse);
 
@@ -71,7 +70,7 @@ ZoomMeshGraphicsView::ZoomMeshGraphicsView(QWidget *parent) :
 
 
 
-void ZoomMeshGraphicsView::wheelEvent(QWheelEvent *i_event){
+void SVBMZoomMeshGraphicsView::wheelEvent(QWheelEvent *i_event){
 
     if (i_event->angleDelta().y() < 0) {
         zoomOut();
@@ -84,7 +83,7 @@ void ZoomMeshGraphicsView::wheelEvent(QWheelEvent *i_event){
 
 
 
-void ZoomMeshGraphicsView::paintEvent(QPaintEvent *i_event){
+void SVBMZoomMeshGraphicsView::paintEvent(QPaintEvent *i_event){
 
     if (m_gridEnabled) {
 
@@ -188,10 +187,10 @@ void ZoomMeshGraphicsView::paintEvent(QPaintEvent *i_event){
 }
 
 
-void ZoomMeshGraphicsView::enterEvent(QEvent *event) {
+void SVBMZoomMeshGraphicsView::enterEvent(QEvent *event) {
     Q_ASSERT(event->type() == QEvent::Enter);
 
-    SceneManager * sceneManager = qobject_cast<SceneManager *>(scene());
+    SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
     if (sceneManager) {
         // clear any override cursors that we had enabled when leaving the scene
         while (QApplication::overrideCursor() != nullptr)
@@ -201,8 +200,8 @@ void ZoomMeshGraphicsView::enterEvent(QEvent *event) {
 }
 
 
-void ZoomMeshGraphicsView::leaveEvent(QEvent *event) {
-    SceneManager * sceneManager = qobject_cast<SceneManager *>(scene());
+void SVBMZoomMeshGraphicsView::leaveEvent(QEvent *event) {
+    SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
     if (sceneManager) {
         if (sceneManager->isCurrentlyConnecting())
             sceneManager->finishConnection();
@@ -212,26 +211,26 @@ void ZoomMeshGraphicsView::leaveEvent(QEvent *event) {
 }
 
 
-void ZoomMeshGraphicsView::mouseMoveEvent(QMouseEvent *i_event) {
+void SVBMZoomMeshGraphicsView::mouseMoveEvent(QMouseEvent *i_event) {
     QGraphicsView::mouseMoveEvent(i_event);
     m_pos = mapToScene(i_event->pos());
     viewport()->update();
 }
 
 
-void ZoomMeshGraphicsView::setGridColor( QColor color ) {
+void SVBMZoomMeshGraphicsView::setGridColor( QColor color ) {
     m_gridColor = color;
     viewport()->update();
 }
 
 
-void ZoomMeshGraphicsView::setGridEnabled( bool enabled ) {
+void SVBMZoomMeshGraphicsView::setGridEnabled( bool enabled ) {
     m_gridEnabled = enabled;
     viewport()->update();
 }
 
 
-void ZoomMeshGraphicsView::zoomIn() {
+void SVBMZoomMeshGraphicsView::zoomIn() {
 
     if(m_zoomLevel  >= 10) return;
     m_zoomLevel = std::min(m_zoomLevel+1, 3000);
@@ -243,7 +242,7 @@ void ZoomMeshGraphicsView::zoomIn() {
 }
 
 
-void ZoomMeshGraphicsView::zoomOut() {
+void SVBMZoomMeshGraphicsView::zoomOut() {
 
     if(m_zoomLevel  <= -3) return;
     m_zoomLevel = std::max(m_zoomLevel-1, -3000);
@@ -255,7 +254,7 @@ void ZoomMeshGraphicsView::zoomOut() {
 }
 
 
-void ZoomMeshGraphicsView::setZoomLevel(int zoomLevel) {
+void SVBMZoomMeshGraphicsView::setZoomLevel(int zoomLevel) {
 
     m_zoomLevel = std::max(zoomLevel, -3000);
     m_zoomLevel = std::min(m_zoomLevel, 3000);
@@ -268,7 +267,7 @@ void ZoomMeshGraphicsView::setZoomLevel(int zoomLevel) {
 }
 
 
-void ZoomMeshGraphicsView::resetZoom() {
+void SVBMZoomMeshGraphicsView::resetZoom() {
 
     m_zoomLevel = 0;
     resetTransform();
@@ -276,28 +275,28 @@ void ZoomMeshGraphicsView::resetZoom() {
 }
 
 
-void ZoomMeshGraphicsView::setGridStep(double gridStep) {
+void SVBMZoomMeshGraphicsView::setGridStep(double gridStep) {
     if (gridStep <=0) return;
     m_gridStep = gridStep;
     viewport()->update();
 }
 
 
-void ZoomMeshGraphicsView::setResolution(double res) {
+void SVBMZoomMeshGraphicsView::setResolution(double res) {
     if (res <=0) return;
     m_resolution = res;
     viewport()->update();
 }
 
-void ZoomMeshGraphicsView::dragEnterEvent(QDragEnterEvent *event){
+void SVBMZoomMeshGraphicsView::dragEnterEvent(QDragEnterEvent *event){
     event->acceptProposedAction();
 }
 
-void ZoomMeshGraphicsView::dragMoveEvent(QDragMoveEvent *event){
+void SVBMZoomMeshGraphicsView::dragMoveEvent(QDragMoveEvent *event){
     event->acceptProposedAction();
 }
 
-void ZoomMeshGraphicsView::dropEvent(QDropEvent *event){
+void SVBMZoomMeshGraphicsView::dropEvent(QDropEvent *event){
     event->acceptProposedAction();
     QString sentText = event->mimeData()->text();
     QPoint point = event->pos();
@@ -307,34 +306,33 @@ void ZoomMeshGraphicsView::dropEvent(QDropEvent *event){
 
 
 
-void ZoomMeshGraphicsView::addBlock(Block *block){
-    SceneManager * sceneManager = qobject_cast<SceneManager *>(scene());
+void SVBMZoomMeshGraphicsView::addBlock(VICUS::BMBlock *block){
+    SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
     sceneManager->addBlock((*block));
 }
 
-void ZoomMeshGraphicsView::addBlock(VICUS::NetworkComponent::ModelType type, QPoint point){
+void SVBMZoomMeshGraphicsView::addBlock(VICUS::NetworkComponent::ModelType type, QPoint point){
     m_sceneManager->addBlock(type, point);
 }
 
-void ZoomMeshGraphicsView::removeBlock(){
+void SVBMZoomMeshGraphicsView::removeBlock(){
     m_sceneManager->removeSelectedBlocks();
 }
 
 
-void ZoomMeshGraphicsView::openNetwork(QString fname){
+void SVBMZoomMeshGraphicsView::openNetwork(QString fname){
     m_sceneManager->openNetwork(fname);
 }
 
-void ZoomMeshGraphicsView::saveNetwork(QString filename){
+void SVBMZoomMeshGraphicsView::saveNetwork(QString filename){
     m_sceneManager->network().writeXML(filename);
 }
 
-double ZoomMeshGraphicsView::getScaleX(){
+double SVBMZoomMeshGraphicsView::getScaleX(){
     return transform().m11();
 }
 
-double ZoomMeshGraphicsView::getScaleY(){
+double SVBMZoomMeshGraphicsView::getScaleY(){
     return transform().m22();
 }
 
-} // namespace BLOCKMOD

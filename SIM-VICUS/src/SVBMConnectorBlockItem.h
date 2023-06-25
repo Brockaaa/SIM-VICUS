@@ -1,19 +1,20 @@
-#ifndef BM_CONNECTORBLOCKITEM_H
-#define BM_CONNECTORBLOCKITEM_H
+#ifndef SVBMCONNECTORBLOCKITEM_H
+#define SVBMCONNECTORBLOCKITEM_H
 
-#include "BM_BlockItem.h"
+#include "SVBMBlockItem.h"
+namespace VICUS{
+class BMBlock;
+}
 
-namespace BLOCKMOD {
-
-class ConnectorBlockItem : public BLOCKMOD::BlockItem
+class SVBMConnectorBlockItem : public SVBMBlockItem
 {
 public:
-    ConnectorBlockItem(Block *b);
+    SVBMConnectorBlockItem(VICUS::BMBlock *b);
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
     bool m_isHighlighted = false;
 
-    SceneManager* m_sceneManager;
+    SVBMSceneManager* m_sceneManager;
 
 protected:
     /*! Re-implemented to highlight the entire connectorBlock + connectorlines when hovered. */
@@ -25,6 +26,4 @@ protected:
 
 
 
-} // namespace BLOCKMOD
-
-#endif // BM_CONNECTORBLOCKITEM_H
+#endif // SVBMCONNECTORBLOCKITEM_H

@@ -31,7 +31,7 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "BM_Socket.h"
+#include "VICUS_BMSocket.h"
 
 #include <QXmlStreamWriter>
 #include <QStringList>
@@ -39,10 +39,10 @@
 
 #include "BM_XMLHelpers.h"
 
-namespace BLOCKMOD {
+namespace VICUS {
 
 
-void Socket::readXML(QXmlStreamReader & reader) {
+void BMSocket::readXML(QXmlStreamReader & reader) {
     qDebug() << "Socket::readXML()";
     Q_ASSERT(reader.isStartElement());
     // read attributes of Block element
@@ -53,22 +53,22 @@ void Socket::readXML(QXmlStreamReader & reader) {
         if (reader.isStartElement()) {
             QString ename = reader.name().toString();
             if (ename == "Position") {
-                QString pos = readTextElement(reader);
-                m_pos = decodePoint(pos);
+                QString pos = BLOCKMOD::readTextElement(reader);
+                m_pos = BLOCKMOD::decodePoint(pos);
             }
             else if (ename == "Orientation") {
-                QString orient = readTextElement(reader);
+                QString orient = BLOCKMOD::readTextElement(reader);
                 if (orient == "Horizontal")
                     m_orientation = Qt::Horizontal;
                 else
                     m_orientation = Qt::Vertical;
             }
             else if (ename == "Inlet") {
-                QString flag = readTextElement(reader);
+                QString flag = BLOCKMOD::readTextElement(reader);
                 m_inlet = (flag == "true");
             }
             else if(ename == "ID") {
-                QString readID = readTextElement(reader);
+                QString readID = BLOCKMOD::readTextElement(reader);
                 m_id = readID.toInt();
             }
             else {
@@ -86,10 +86,10 @@ void Socket::readXML(QXmlStreamReader & reader) {
 }
 
 
-void Socket::writeXML(QXmlStreamWriter & writer) const {
+void BMSocket::writeXML(QXmlStreamWriter & writer) const {
     writer.writeStartElement("Socket");
     writer.writeAttribute("name", m_name);
-    writer.writeTextElement("Position", encodePoint(m_pos));
+    writer.writeTextElement("Position", BLOCKMOD::encodePoint(m_pos));
     writer.writeTextElement("Orientation", m_orientation == Qt::Horizontal ? "Horizontal" : "Vertical");
     writer.writeTextElement("Inlet", m_inlet ? "true" : "false");
     writer.writeTextElement("ID", QString::number(m_id));
@@ -97,4 +97,4 @@ void Socket::writeXML(QXmlStreamWriter & writer) const {
 }
 
 
-} // namespace BLOCKMOD
+} // namespace VICUS

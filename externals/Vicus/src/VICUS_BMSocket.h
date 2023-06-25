@@ -40,7 +40,7 @@
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 
-namespace BLOCKMOD {
+namespace VICUS {
 
 /*! Stores properties of a Socket.
 
@@ -49,10 +49,10 @@ namespace BLOCKMOD {
 
     Sockets are owned by parent block and do not exist in separate socket list.
 */
-class Socket {
+class BMSocket {
 public:
     /*! Default C'tor. */
-    Socket() :
+    BMSocket() :
         m_pos(0,0),
         m_orientation(Qt::Horizontal),
         m_inlet(false)
@@ -60,7 +60,7 @@ public:
     }
 
     /*! C'tor, creating named default socket. */
-    Socket(const QString & name) :
+    BMSocket(const QString & name) :
         m_name(name),
         m_pos(0,0),
         m_orientation(Qt::Horizontal),
@@ -69,7 +69,7 @@ public:
     }
 
     /*! C'tor, initializes all members. */
-    Socket(const QString & name, const QPointF & pos, Qt::Orientation orientation, bool inlet) :
+    BMSocket(const QString & name, const QPointF & pos, Qt::Orientation orientation, bool inlet) :
         m_name(name),
         m_pos(pos),
         m_orientation(orientation),
@@ -129,7 +129,7 @@ public:
     bool                    m_connectorSocket = false;
 };
 
-} // namespace BLOCKMOD
+} // namespace VICUS
 
 
 #endif // BM_SocketH

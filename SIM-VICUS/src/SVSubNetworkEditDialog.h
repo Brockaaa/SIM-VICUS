@@ -8,10 +8,8 @@ namespace Ui {
 class SVSubNetworkEditDialog;
 }
 
-namespace BLOCKMOD{
-class ZoomMeshGraphicsView;
-class SceneManager;
-}
+class SVBMSceneManager;
+class SVBMZoomMeshGraphicsView;
 
 class SVSubNetworkEditDialog : public QDialog
 {
@@ -20,7 +18,7 @@ class SVSubNetworkEditDialog : public QDialog
 public:
     explicit SVSubNetworkEditDialog(QWidget *parent = nullptr);
     ~SVSubNetworkEditDialog();
-    BLOCKMOD::ZoomMeshGraphicsView *ZoomMeshGraphicsView();
+    SVBMZoomMeshGraphicsView *zoomMeshGraphicsView();
 
 protected:
     void blockSelectedEvent();
@@ -37,7 +35,7 @@ private slots:
 private:
     Ui::SVSubNetworkEditDialog *ui;
     void createToolBox();
-    BLOCKMOD::SceneManager        *m_sceneManager = nullptr;
+    SVBMSceneManager        *m_sceneManager = nullptr;
 };
 
 #endif // SVSUBNETWORKEDITDIALOG_H

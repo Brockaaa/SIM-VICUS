@@ -41,7 +41,6 @@ LIBS += \
 	-lRoomClipper \
 	-lclipper \
 	-lqwt6 \
-	-lBlockMod
 
 win32 {
 	LIBS += -luser32
@@ -75,7 +74,6 @@ INCLUDEPATH = \
 	../../../externals/clipper/src \
 	../../../externals/RoomClipper/src \
 	../../../externals/QtExt/src \
-	../../../externals/BlockMod/src \
 
 DEPENDPATH = $${INCLUDEPATH}
 
@@ -85,6 +83,12 @@ SOURCES += \
 	../../../externals/Vicus/srcTranslations/VICUS_KeywordListQt.cpp \
 	../../src/SVAboutDialog.cpp \
 	../../src/SVAbstractDatabaseEditWidget.cpp \
+	../../src/SVBMBlockItem.cpp \
+	../../src/SVBMConnectorBlockItem.cpp \
+	../../src/SVBMConnectorSegmentItem.cpp \
+	../../src/SVBMSocketItem.cpp \
+	../../src/SVBMSceneManager.cpp \
+	../../src/SVBMZoomMeshGraphicsView.cpp \
 	../../src/SVChartUtils.cpp \
 	../../src/SVClimateDataSortFilterProxyModel.cpp \
 	../../src/SVClimateDataTableModel.cpp \
@@ -290,6 +294,12 @@ SOURCES += \
 HEADERS  += \
 	../../src/SVAboutDialog.h \
 	../../src/SVAbstractDatabaseEditWidget.h \
+	../../src/SVBMBlockItem.h \
+	../../src/SVBMConnectorBlockItem.h \
+	../../src/SVBMConnectorSegmentItem.h \
+	../../src/SVBMSocketItem.h \
+	../../src/SVBMSceneManager.h \
+	../../src/SVBMZoomMeshGraphicsView.h \
 	../../src/SVChartUtils.h \
 	../../src/SVClimateDataSortFilterProxyModel.h \
 	../../src/SVClimateDataTableModel.h \

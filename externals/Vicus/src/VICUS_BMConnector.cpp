@@ -31,17 +31,17 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "BM_Connector.h"
+#include "VICUS_BMConnector.h"
 
 #include <QXmlStreamWriter>
 #include <QStringList>
 #include <QDebug>
 
-#include "BM_XMLHelpers.h"
+#include <BM_XMLHelpers.h>
 
-namespace BLOCKMOD {
+namespace VICUS {
 
-void Connector::readXML(QXmlStreamReader & reader) {
+void BMConnector::readXML(QXmlStreamReader & reader) {
     Q_ASSERT(reader.isStartElement());
     m_sourceSocket = reader.attributes().value("source").toString();
     m_targetSocket = reader.attributes().value("target").toString();
@@ -63,7 +63,7 @@ void Connector::readXML(QXmlStreamReader & reader) {
 }
 
 
-void Connector::writeXML(QXmlStreamWriter & writer) const {
+void BMConnector::writeXML(QXmlStreamWriter & writer) const {
     writer.writeStartElement("Connector");
     writer.writeAttribute("source", m_sourceSocket);
     writer.writeAttribute("target", m_targetSocket);
@@ -75,7 +75,7 @@ void Connector::writeXML(QXmlStreamWriter & writer) const {
 }
 
 
-void Connector::Segment::readXML(QXmlStreamReader & reader) {
+void BMConnector::Segment::readXML(QXmlStreamReader & reader) {
     Q_ASSERT(reader.isStartElement());
     // read attributes of Segment element
     // read child tags
@@ -124,7 +124,7 @@ void Connector::Segment::readXML(QXmlStreamReader & reader) {
 }
 
 
-void Connector::Segment::writeXML(QXmlStreamWriter & writer) const {
+void BMConnector::Segment::writeXML(QXmlStreamWriter & writer) const {
     writer.writeStartElement("Segment");
     writer.writeAttribute("Orientation", m_direction == Qt::Horizontal ? "Horizontal" : "Vertical");
     writer.writeAttribute("Offset", QString("%1").arg(m_offset));
@@ -132,5 +132,5 @@ void Connector::Segment::writeXML(QXmlStreamWriter & writer) const {
 }
 
 
-} // namespace BLOCKMOD
+} // namespace VICUS
 

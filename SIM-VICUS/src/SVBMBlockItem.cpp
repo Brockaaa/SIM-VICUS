@@ -31,7 +31,7 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "BM_BlockItem.h"
+#include "SVBMBlockItem.h"
 
 #include <cmath>
 #include <iostream>
@@ -44,14 +44,13 @@
 #include <QDebug>
 #include <QFontMetrics>
 
-#include "BM_Block.h"
-#include "BM_Globals.h"
-#include "BM_SocketItem.h"
-#include "BM_SceneManager.h"
+#include "VICUS_BMBlock.h"
+#include "VICUS_BMGlobals.h"
+#include "SVBMSocketItem.h"
+#include "SVBMSceneManager.h"
 
-namespace BLOCKMOD {
 
-BlockItem::BlockItem(Block * b) :
+SVBMBlockItem::SVBMBlockItem(VICUS::BMBlock * b) :
     QGraphicsRectItem(),
     m_block(b)
 {
@@ -62,14 +61,14 @@ BlockItem::BlockItem(Block * b) :
 }
 
 
-SocketItem * BlockItem::inletSocketAcceptingConnection(const QPointF & scenePos) {
-    for (SocketItem * si : m_socketItems) {
+SVBMSocketItem * SVBMBlockItem::inletSocketAcceptingConnection(const QPointF & scenePos) {
+    for (SVBMSocketItem * si : m_socketItems) {
         QPointF socketScenePos = si->mapToScene(si->socket()->m_pos);
 
         //	QPointF socketScenePos2(socketScenePos);
         socketScenePos -= scenePos;
         double d = socketScenePos.manhattanLength();
-        if (d < Globals::GridSpacing/2) { // half grid spacing snapping tolerance
+        if (d < VICUS::BMGlobals::GridSpacing/2) { // half grid spacing snapping tolerance
             //			qDebug() << d << scenePos << socketScenePos2;
             return si;
         }
@@ -78,18 +77,18 @@ SocketItem * BlockItem::inletSocketAcceptingConnection(const QPointF & scenePos)
 }
 
 
-bool BlockItem::isInvisible() const {
-    return m_block->m_name == Globals::InvisibleLabel;
+bool SVBMBlockItem::isInvisible() const {
+    return m_block->m_name == VICUS::BMGlobals::InvisibleLabel;
 }
 
 
-void BlockItem::resize(int newWidth, int newHeight) {
+void SVBMBlockItem::resize(int newWidth, int newHeight) {
     // adjust size of associated block
     m_block->m_size = QSizeF(newWidth, newHeight);
     setRect(0, 0, newWidth, newHeight);
 
     // adjust positions of sockets
-    for (Socket & s : m_block->m_sockets) {
+    for (VICUS::BMSocket & s : m_block->m_sockets) {
         if (s.m_orientation == Qt::Horizontal) {
             if (s.m_pos.x() != 0.0)
                 s.m_pos.setX(newWidth);
@@ -103,7 +102,7 @@ void BlockItem::resize(int newWidth, int newHeight) {
 
     // tell all sockest to update
     for (QGraphicsItem * item : childItems()) {
-        SocketItem * sitem = (SocketItem*)(item);
+        SVBMSocketItem * sitem = (SVBMSocketItem*)(item);
         sitem->updateSocketItem();
         item->update();
     }
@@ -112,7 +111,7 @@ void BlockItem::resize(int newWidth, int newHeight) {
 }
 
 
-QRectF BlockItem::boundingRect() const {
+QRectF SVBMBlockItem::boundingRect() const {
     QRectF r = QGraphicsRectItem::boundingRect();
     /// \todo Later, if we draw text annotations outside the rectangle, adjust the bounding rect here
     return r;
@@ -122,14 +121,14 @@ QRectF BlockItem::boundingRect() const {
 // *** protected functions ***
 
 
-void BlockItem::createSocketItems() {
+void SVBMBlockItem::createSocketItems() {
     Q_ASSERT(m_socketItems.isEmpty());
 
     // the socket items are children of the block item and are added/removed together with the
     // parent block item
-    for (Socket & s : m_block->m_sockets) {
+    for (VICUS::BMSocket & s : m_block->m_sockets) {
         // create a socket item
-        SocketItem * item = new SocketItem(this, &s);
+        SVBMSocketItem * item = new SVBMSocketItem(this, &s);
         // enable hover-highlight on outlet nodes
         if (!s.m_inlet) {
             item->setZValue(20); // outlet nodes are drawn over lines
@@ -139,7 +138,7 @@ void BlockItem::createSocketItems() {
 }
 
 
-void BlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget */*widget*/) {
+void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget */*widget*/) {
     // special handling for invisible blocks
     if (isInvisible())
         return; // nothing to be drawn
@@ -196,7 +195,7 @@ void BlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * optio
 }
 
 
-void BlockItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+void SVBMBlockItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::LeftButton && event->modifiers().testFlag(Qt::ControlModifier)) {
         setSelected(true);
         event->accept();
@@ -210,17 +209,17 @@ void BlockItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 
-QVariant BlockItem::itemChange(GraphicsItemChange change, const QVariant & value) {
+QVariant SVBMBlockItem::itemChange(GraphicsItemChange change, const QVariant & value) {
     switch (change) {
     case QGraphicsItem::ItemPositionChange : {
-        SceneManager * sceneManager = qobject_cast<SceneManager *>(scene());
+        SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
 
         // snap to grid
         QPointF pos = value.toPointF();
 
         // apply true rounding
-        pos.setX( std::floor((pos.x()+0.5*Globals::GridSpacing) / Globals::GridSpacing) * Globals::GridSpacing);
-        pos.setY( std::floor((pos.y()+0.5*Globals::GridSpacing) / Globals::GridSpacing) * Globals::GridSpacing);
+        pos.setX( std::floor((pos.x()+0.5*VICUS::BMGlobals::GridSpacing) / VICUS::BMGlobals::GridSpacing) * VICUS::BMGlobals::GridSpacing);
+        pos.setY( std::floor((pos.y()+0.5*VICUS::BMGlobals::GridSpacing) / VICUS::BMGlobals::GridSpacing) * VICUS::BMGlobals::GridSpacing);
         if (m_block->m_pos != pos.toPoint()) {
             m_moved = true;
             QPointF oldPos = m_block->m_pos;
@@ -243,7 +242,7 @@ QVariant BlockItem::itemChange(GraphicsItemChange change, const QVariant & value
     }
 
     case QGraphicsItem::ItemSelectedHasChanged : {
-        SceneManager * sceneManager = qobject_cast<SceneManager *>(scene());
+        SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
         if (value.toBool())
             sceneManager->blockSelected(m_block);
     } break;
@@ -253,19 +252,19 @@ QVariant BlockItem::itemChange(GraphicsItemChange change, const QVariant & value
 }
 
 
-void BlockItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
-    SceneManager * sceneManager = qobject_cast<SceneManager *>(scene());
+void SVBMBlockItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
     if (sceneManager != nullptr) // protect against double click when inside block editor
         sceneManager->blockDoubleClicked(this);
     QGraphicsRectItem::mouseDoubleClickEvent(event);
 }
 
 
-QPainterPath BlockItem::shape() const
+QPainterPath SVBMBlockItem::shape() const
 {
     QPainterPath path;
-    path.addRect(BlockItem::boundingRect());
+    path.addRect(SVBMBlockItem::boundingRect());
     return path;
 }
 
-} // namespace BLOCKMOD
+

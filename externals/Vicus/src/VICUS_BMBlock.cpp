@@ -31,7 +31,7 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "BM_Block.h"
+#include "VICUS_BMBlock.h"
 
 #include <QXmlStreamWriter>
 #include <QStringList>
@@ -43,28 +43,28 @@
 #include <cmath>
 
 #include "BM_XMLHelpers.h"
-#include "BM_Globals.h"
-#include "BM_Constants.h"
+#include "VICUS_BMGlobals.h"
+#include "VICUS_BMConstants.h"
 #include "VICUS_NetworkComponent.h"
 
-namespace BLOCKMOD {
+namespace VICUS {
 
-Block::Block(const QString & name) :
+BMBlock::BMBlock(const QString & name) :
     m_name(name),
     m_pos(0,0),
     m_connectionHelperBlock(false)
 {
 }
 
-Block::Block(const QString & name, double x, double y) :
+BMBlock::BMBlock(const QString & name, double x, double y) :
     m_name(name),
     m_pos(x,y),
     m_connectionHelperBlock(false)
 {
 }
 
-void Block::readXML(QXmlStreamReader & reader) {
-    qDebug() << "Block::readXML()";
+void BMBlock::readXML(QXmlStreamReader & reader) {
+/*    qDebug() << "Block::readXML()";
     Q_ASSERT(reader.isStartElement());
     // read attributes of Block element
     m_name = reader.attributes().value("name").toString();
@@ -233,12 +233,12 @@ void Block::readXML(QXmlStreamReader & reader) {
                 }
             }
         }
-    }
+    } */
 }
 
 
-void Block::writeXML(QXmlStreamWriter & writer) const {
-    qDebug() << "writing block: " << m_name;
+void BMBlock::writeXML(QXmlStreamWriter & writer) const {
+/*    qDebug() << "writing block: " << m_name;
     writer.writeStartElement("Block");
     bool isInteger;
     m_name.toInt(&isInteger);
@@ -258,14 +258,14 @@ void Block::writeXML(QXmlStreamWriter & writer) const {
         writer.writeAttribute("Position", encodePoint(m_pos));
     }
 
-    writer.writeEndElement(); // Block
+    writer.writeEndElement(); // Block */
 }
 
 
-QLineF Block::socketStartLine(const Socket * socket) const {
+QLineF BMBlock::socketStartLine(const BMSocket * socket) const {
     // special handling for "invisible" blocks
 
-    if (m_name == Globals::InvisibleLabel) {
+    if (m_name == BMGlobals::InvisibleLabel) {
         QPointF startPoint(socket->m_pos);
         startPoint += m_pos;
         return QLineF(startPoint, startPoint);
@@ -273,10 +273,10 @@ QLineF Block::socketStartLine(const Socket * socket) const {
     // first determine the direction: top, left, right, bottom
     QPointF otherPoint = socket->m_pos;
     switch (socket->direction()) {
-        case Socket::Left	: otherPoint += QPointF(-2*Globals::GridSpacing, 0); break;
-        case Socket::Right	: otherPoint += QPointF(+2*Globals::GridSpacing, 0); break;
-        case Socket::Top	: otherPoint += QPointF(0, -2*Globals::GridSpacing); break;
-        case Socket::Bottom	: otherPoint += QPointF(0, +2*Globals::GridSpacing); break;
+        case BMSocket::Left	: otherPoint += QPointF(-2*BMGlobals::GridSpacing, 0); break;
+        case BMSocket::Right	: otherPoint += QPointF(+2*BMGlobals::GridSpacing, 0); break;
+        case BMSocket::Top	: otherPoint += QPointF(0, -2*BMGlobals::GridSpacing); break;
+        case BMSocket::Bottom	: otherPoint += QPointF(0, +2*BMGlobals::GridSpacing); break;
     }
     QPointF startPoint(socket->m_pos);
     // shift both points by block position
@@ -286,27 +286,27 @@ QLineF Block::socketStartLine(const Socket * socket) const {
 }
 
 
-void Block::findSocketInsertPosition(bool inletSocket, int & x, int & y) const {
+void BMBlock::findSocketInsertPosition(bool inletSocket, int & x, int & y) const {
     // create list of socket positions
-    unsigned int rowCount = (unsigned int)std::floor(m_size.height() / (double)Globals::GridSpacing + 0.5);
-    unsigned int colCount = (unsigned int)std::floor(m_size.width() / (double)Globals::GridSpacing + 0.5);
+    unsigned int rowCount = (unsigned int)std::floor(m_size.height() / (double)BMGlobals::GridSpacing + 0.5);
+    unsigned int colCount = (unsigned int)std::floor(m_size.width() / (double)BMGlobals::GridSpacing + 0.5);
 
     std::vector<int> verticalSockets(rowCount-1, 0);
     std::vector<int> horizontalSockets(colCount-1, 0);
 
-    QList<const Socket*> inletSockets = filterSockets(true);
+    QList<const BMSocket*> inletSockets = filterSockets(true);
     if (inletSocket) {
-        for (const Socket* s : inletSockets) {
+        for (const BMSocket* s : inletSockets) {
             // determine position of the socket, and mark slot as taken
             if (s->m_pos.y() == 0.0) {
                 // located at top
-                unsigned int colrowIdx = (unsigned int)(std::floor(s->m_pos.x() / (double)Globals::GridSpacing + 0.5));
+                unsigned int colrowIdx = (unsigned int)(std::floor(s->m_pos.x() / (double)BMGlobals::GridSpacing + 0.5));
                 // if 0 or > colCount-1, ignore
                 if (colrowIdx > 0 && colrowIdx < colCount-1)
                     horizontalSockets[colrowIdx] = 1;
             }
             else {
-                unsigned int rowIdx = (unsigned int)(std::floor(s->m_pos.y() / (double)Globals::GridSpacing + 0.5));
+                unsigned int rowIdx = (unsigned int)(std::floor(s->m_pos.y() / (double)BMGlobals::GridSpacing + 0.5));
                 if (rowIdx > 0 && rowIdx < rowCount-1)
                     verticalSockets[rowIdx] = 1;
             }
@@ -334,10 +334,10 @@ void Block::findSocketInsertPosition(bool inletSocket, int & x, int & y) const {
 }
 
 
-void Block::unusedSocketSpots(QList<int> & leftSockets, QList<int> & topSockets, QList<int> & rightSockets, QList<int> & bottomSockets) {
+void BMBlock::unusedSocketSpots(QList<int> & leftSockets, QList<int> & topSockets, QList<int> & rightSockets, QList<int> & bottomSockets) {
     // create list of socket positions
-    int rowCount = (int)std::floor(m_size.height() / (double)Globals::GridSpacing + 0.5);
-    int colCount = (int)std::floor(m_size.width() / (double)Globals::GridSpacing + 0.5);
+    int rowCount = (int)std::floor(m_size.height() / (double)BMGlobals::GridSpacing + 0.5);
+    int colCount = (int)std::floor(m_size.width() / (double)BMGlobals::GridSpacing + 0.5);
 
     leftSockets.clear();
     rightSockets.clear();
@@ -354,9 +354,9 @@ void Block::unusedSocketSpots(QList<int> & leftSockets, QList<int> & topSockets,
     }
 
     // now process all sockets
-    for (const Socket & s : m_sockets) {
-        int colIdx = (int)std::floor(s.m_pos.x() / (double)Globals::GridSpacing + 0.5);
-        int rowIdx = (int)std::floor(s.m_pos.y() / (double)Globals::GridSpacing + 0.5);
+    for (const BMSocket & s : m_sockets) {
+        int colIdx = (int)std::floor(s.m_pos.x() / (double)BMGlobals::GridSpacing + 0.5);
+        int rowIdx = (int)std::floor(s.m_pos.y() / (double)BMGlobals::GridSpacing + 0.5);
 
         // left side?
         if ((int)s.m_pos.x() == 0) {
@@ -385,13 +385,13 @@ void Block::unusedSocketSpots(QList<int> & leftSockets, QList<int> & topSockets,
 }
 
 
-void Block::autoUpdateSockets(const QStringList & inletSockets, const QStringList & outletSockets) {
+void BMBlock::autoUpdateSockets(const QStringList & inletSockets, const QStringList & outletSockets) {
     // now remove no-longer existing sockets and add and position new sockets
 
     // first remove all sockets from block that are not in the list of inlet/outlet sockets
     // this ensures that afterwards we only have valid
-    QList<BLOCKMOD::Socket> remainingSockets;
-    for (const BLOCKMOD::Socket & s : m_sockets) {
+    QList<VICUS::BMSocket> remainingSockets;
+    for (const VICUS::BMSocket & s : m_sockets) {
         if (s.m_inlet) {
             if (inletSockets.contains(s.m_name)) {
                 remainingSockets.append(s);
@@ -426,7 +426,7 @@ void Block::autoUpdateSockets(const QStringList & inletSockets, const QStringLis
         if (socketIdx != m_sockets.count())
             continue;
         // create and position a new socket
-        Socket newSocket;
+        BMSocket newSocket;
         newSocket.m_name = s;
         bool inlet = sidx < inletSockets.count();
         newSocket.m_inlet = inlet;
@@ -438,7 +438,7 @@ void Block::autoUpdateSockets(const QStringList & inletSockets, const QStringLis
                     // take this spot
                     leftSockets[i] = 1;
                     newSocket.m_pos.setX(0);
-                    newSocket.m_pos.setY(i*Globals::GridSpacing);
+                    newSocket.m_pos.setY(i*BMGlobals::GridSpacing);
                     found = true;
                     break;
                 }
@@ -448,7 +448,7 @@ void Block::autoUpdateSockets(const QStringList & inletSockets, const QStringLis
                     // take this spot
                     rightSockets[i] = 1;
                     newSocket.m_pos.setX(m_size.width());
-                    newSocket.m_pos.setY(i*Globals::GridSpacing);
+                    newSocket.m_pos.setY(i*BMGlobals::GridSpacing);
                     found = true;
                     break;
                 }
@@ -463,7 +463,7 @@ void Block::autoUpdateSockets(const QStringList & inletSockets, const QStringLis
                         topSockets[i] = 1;
                         newSocket.m_orientation = Qt::Vertical;
                         newSocket.m_pos.setY(0);
-                        newSocket.m_pos.setX(i*Globals::GridSpacing);
+                        newSocket.m_pos.setX(i*BMGlobals::GridSpacing);
                         found = true;
                         break;
                     }
@@ -474,7 +474,7 @@ void Block::autoUpdateSockets(const QStringList & inletSockets, const QStringLis
                         bottomSockets[i] = 1;
                         newSocket.m_orientation = Qt::Vertical;
                         newSocket.m_pos.setY(m_size.height());
-                        newSocket.m_pos.setX(i*Globals::GridSpacing);
+                        newSocket.m_pos.setX(i*BMGlobals::GridSpacing);
                         found = true;
                         break;
                     }
@@ -485,11 +485,11 @@ void Block::autoUpdateSockets(const QStringList & inletSockets, const QStringLis
         if (!found) {
             if (inlet) {
                 newSocket.m_pos.setY(0);
-                newSocket.m_pos.setX(m_size.width() - Globals::GridSpacing);
+                newSocket.m_pos.setX(m_size.width() - BMGlobals::GridSpacing);
             }
             else {
                 newSocket.m_pos.setY(m_size.height());
-                newSocket.m_pos.setX(m_size.width() - Globals::GridSpacing);
+                newSocket.m_pos.setX(m_size.width() - BMGlobals::GridSpacing);
             }
         }
         // finally, add new socket
@@ -499,9 +499,9 @@ void Block::autoUpdateSockets(const QStringList & inletSockets, const QStringLis
 }
 
 
-QList<const Socket*> Block::filterSockets(bool inletSocket) const {
-    QList<const Socket*> socketList;
-    for (const Socket & s : m_sockets) {
+QList<const BMSocket*> BMBlock::filterSockets(bool inletSocket) const {
+    QList<const BMSocket*> socketList;
+    for (const BMSocket & s : m_sockets) {
         if (inletSocket && s.m_inlet)
             socketList.append(&s);
         else if (!inletSocket && !s.m_inlet)
@@ -510,7 +510,7 @@ QList<const Socket*> Block::filterSockets(bool inletSocket) const {
     return socketList;
 }
 
-} // namespace BLOCKMOD
+} // namespace VICUS
 
 
 

@@ -31,7 +31,7 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "BM_SocketItem.h"
+#include "SVBMSocketItem.h"
 
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
@@ -42,15 +42,14 @@
 #include <QGraphicsView>
 #include <QApplication>
 
-#include "BM_Socket.h"
-#include "BM_BlockItem.h"
-#include "BM_Block.h"
-#include "BM_Globals.h"
-#include "BM_SceneManager.h"
+#include "VICUS_BMSocket.h"
+#include "SVBMBlockItem.h"
+#include "VICUS_BMBlock.h"
+#include "VICUS_BMGlobals.h"
+#include "SVBMSceneManager.h"
 
-namespace BLOCKMOD {
 
-SocketItem::SocketItem(BlockItem * parent, Socket * socket) :
+SVBMSocketItem::SVBMSocketItem(SVBMBlockItem * parent, VICUS::BMSocket * socket) :
     QGraphicsItem (parent),
     m_block(parent->block()),
     m_socket(socket),
@@ -62,64 +61,64 @@ SocketItem::SocketItem(BlockItem * parent, Socket * socket) :
 }
 
 
-void SocketItem::updateSocketItem() {
+void SVBMSocketItem::updateSocketItem() {
     if (m_socket->m_inlet) {
         switch (m_socket->direction()) {
-            case Socket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()-4, 8, 8); break;
-            case Socket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y()-4, 8, 8); break;
-            case Socket::Top		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, -4, 8, 8); break;
-            case Socket::Bottom		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y()-4, 8, 8); break;
+            case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()-4, 8, 8); break;
+            case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y()-4, 8, 8); break;
+            case VICUS::BMSocket::Top		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, -4, 8, 8); break;
+            case VICUS::BMSocket::Bottom		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y()-4, 8, 8); break;
         }
     }
     else {
         switch (m_socket->direction()) {
-            case Socket::Left		: m_symbolRect = QRectF(-8, m_socket->m_pos.y()-4, 8, 8); break;
-            case Socket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()-4, 8, 8); break;
-            case Socket::Top		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, -8, 8, 8); break;
-            case Socket::Bottom		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y(), 8, 8); break;
+            case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-8, m_socket->m_pos.y()-4, 8, 8); break;
+            case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()-4, 8, 8); break;
+            case VICUS::BMSocket::Top		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, -8, 8, 8); break;
+            case VICUS::BMSocket::Bottom		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y(), 8, 8); break;
         }
     }
 }
 
 
-QRectF SocketItem::boundingRect() const {
+QRectF SVBMSocketItem::boundingRect() const {
     QRectF r = m_symbolRect;
     // add space for text
     QFont f;
-    f.setPointSizeF(Globals::LabelFontSize);
+    f.setPointSizeF(VICUS::BMGlobals::LabelFontSize);
     QFontMetricsF metrics(f);
     QRectF textBoundingRect = metrics.boundingRect(m_socket->m_name);
     textBoundingRect.setWidth(textBoundingRect.width()+6); // add some space to avoid clipping of italic fonts to the right
 
     switch (m_socket->direction()) {
-        case Socket::Left		:
+        case VICUS::BMSocket::Left		:
             // left side - expand rect to left
             r.moveLeft(r.left()-textBoundingRect.width()-6);
         break;
-        case Socket::Right		:
+        case VICUS::BMSocket::Right		:
             // right side - expand rect to right
             r.setWidth(r.width()+textBoundingRect.width()+6);
         break;
-        case Socket::Top		:
+        case VICUS::BMSocket::Top		:
             // top side - move top
             r.moveTop(r.top()-textBoundingRect.width()-6);
         break;
-        case Socket::Bottom		:
+        case VICUS::BMSocket::Bottom		:
             r.setHeight(r.height() + textBoundingRect.width()+6);
         break;
     }
     return r;
 }
 
-QPointF SocketItem::pos(){
+QPointF SVBMSocketItem::pos(){
     return QPointF(m_block->m_pos.x() + m_socket->m_pos.x(),m_block->m_pos.y() + m_socket->m_pos.y());
 }
 
 
 // *** protected functions ***
 
-void SocketItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event) {
-    SceneManager * sceneManager = qobject_cast<SceneManager *>(scene());
+void SVBMSocketItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event) {
+    SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
     // for outlet sockets, we allow hovering if:
     // - scene is not currently in connecting mode
 
@@ -151,7 +150,7 @@ void SocketItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event) {
 }
 
 
-void SocketItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event) {
+void SVBMSocketItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event) {
     if (m_hovered)
         QApplication::restoreOverrideCursor();
     m_hovered = false;
@@ -159,11 +158,11 @@ void SocketItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event) {
 }
 
 
-void SocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/ ) {
+void SVBMSocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/ ) {
     if(m_socket->m_connectorSocket) return;
     // special handling for invisible blocks
-    BlockItem * bi = dynamic_cast<BlockItem*>(parentItem());
-    if (bi->block()->m_name == Globals::InvisibleLabel)
+    SVBMBlockItem * bi = dynamic_cast<SVBMBlockItem*>(parentItem());
+    if (bi->block()->m_name == VICUS::BMGlobals::InvisibleLabel)
         return; // nothing to be drawn
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing, true);
@@ -176,28 +175,28 @@ void SocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*opt
     if (m_socket->m_inlet) {
         painter->setBrush(Qt::white);
         switch (m_socket->direction()) {
-            case Socket::Left		:
+            case VICUS::BMSocket::Left		:
                 // left side
                 painter->setPen(Qt::white);
                 painter->drawPie(r, 90*16, -180*16);
                 painter->setPen(Qt::black);
                 painter->drawArc(r, 90*16, -180*16);
             break;
-            case Socket::Right		:
+            case VICUS::BMSocket::Right		:
                 // right side
                 painter->setPen(Qt::white);
                 painter->drawPie(r, 90*16, 180*16);
                 painter->setPen(Qt::black);
                 painter->drawArc(r, 90*16, 180*16);
             break;
-            case Socket::Top		:
+            case VICUS::BMSocket::Top		:
                 // top side
                 painter->setPen(Qt::white);
                 painter->drawPie(r, 0*16, -180*16);
                 painter->setPen(Qt::black);
                 painter->drawArc(r, 0*16, -180*16);
             break;
-            case Socket::Bottom		:
+            case VICUS::BMSocket::Bottom		:
                 // bottom side
                 painter->setPen(Qt::white);
                 painter->drawPie(r, 0*16, 180*16);
@@ -206,8 +205,8 @@ void SocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*opt
             break;
         }
         // if socket is connected, paint a circle
-        SceneManager * sceneManager = qobject_cast<SceneManager *>(scene());
-        BlockItem * blockItem = dynamic_cast<BlockItem *>(parentItem());
+        SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
+        SVBMBlockItem * blockItem = dynamic_cast<SVBMBlockItem *>(parentItem());
         if (sceneManager != nullptr && blockItem != nullptr && sceneManager->isConnectedSocket(blockItem->block(), m_socket)) {
             painter->save();
             painter->setPen(Qt::NoPen);
@@ -230,25 +229,25 @@ void SocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*opt
     else {
         QPainterPath p;
         switch (m_socket->direction()) {
-            case Socket::Left		:
+            case VICUS::BMSocket::Left		:
                 // left side
                 p.moveTo(m_symbolRect.right(), m_symbolRect.y());
                 p.lineTo(m_symbolRect.left(), 0.5*(m_symbolRect.top() + m_symbolRect.bottom()));
                 p.lineTo(m_symbolRect.right(), m_symbolRect.bottom());
             break;
-            case Socket::Right		:
+            case VICUS::BMSocket::Right		:
                 // right side
                 p.moveTo(m_symbolRect.left(), m_symbolRect.y());
                 p.lineTo(m_symbolRect.right(), 0.5*(m_symbolRect.top() + m_symbolRect.bottom()));
                 p.lineTo(m_symbolRect.left(), m_symbolRect.bottom());
             break;
-            case Socket::Top		:
+            case VICUS::BMSocket::Top		:
                 // top side
                 p.moveTo(m_symbolRect.left(), m_symbolRect.bottom());
                 p.lineTo(0.5*(m_symbolRect.left() + m_symbolRect.right()), m_symbolRect.top());
                 p.lineTo(m_symbolRect.right(), m_symbolRect.bottom());
             break;
-            case Socket::Bottom		:
+            case VICUS::BMSocket::Bottom		:
                 // bottom side
                 p.moveTo(m_symbolRect.left(), m_symbolRect.top());
                 p.lineTo(0.5*(m_symbolRect.left() + m_symbolRect.right()), m_symbolRect.bottom());
@@ -309,12 +308,12 @@ void SocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*opt
 }
 
 
-void SocketItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+void SVBMSocketItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     // starting a connection?
     // ignore clicks on inlet sockets
     if (!m_socket->m_inlet) {
         if (event->button() == Qt::LeftButton && event->modifiers() == Qt::NoModifier) {
-            SceneManager * sceneManager = qobject_cast<SceneManager *>(scene());
+            SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
             if (sceneManager) {
                 QPointF p = event->pos(); // this is the position of the socket relative to the parent block
                 p = mapToScene(p); // this is the global scene coordinate
@@ -326,6 +325,4 @@ void SocketItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 
-
-} // namespace BLOCKMOD
 
