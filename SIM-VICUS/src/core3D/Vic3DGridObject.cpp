@@ -330,5 +330,9 @@ void GridObject::render() {
 	m_vao.release();
 }
 
+void GridObject::setPlaneTransformationMatrix(const std::vector<QMatrix4x4> &newPlaneTransformationMatrix) {
+	m_planeTransformationMatrix = newPlaneTransformationMatrix;
+}
+
 
 } // namespace Vic3D

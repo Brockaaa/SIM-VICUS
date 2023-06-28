@@ -83,6 +83,9 @@ public:
 	/*! Set to false if no grid is visible - speeds up rendering a little. */
 	bool						m_anyGridVisible = true;
 
+	/*! Sets plane transformation matrix. */
+	void setPlaneTransformationMatrix(const std::vector<QMatrix4x4> &newPlaneTransformationMatrix);
+
 private:
 	// local copy of grid planes, needed for rending
 	std::vector<bool>			m_gridPlaneVisible;

@@ -98,6 +98,10 @@ public:
 		*/
 		OM_ThreePointRotation,
 		/*! The scene is in passive mode - user can navigate and click on object to change selection. */
+
+		/*! In this Mode trimming of polygons will be performed. */
+		OM_PolygonTrimming,
+
 		NUM_OM
 	};
 

@@ -1244,3 +1244,15 @@ void SVPropEditGeometry::on_pushButtonCopyBuilding_clicked() {
 				m_selBuildings, std::vector<const VICUS::Surface*>(), localCopyTranslationVector());
 	undo->push();
 }
+
+void SVPropEditGeometry::on_pushButtonTrimmGridXY_clicked() {
+	std::vector<VICUS::GridPlane> &gridPlanes = SVProjectHandler::instance().viewSettings().m_gridPlanes;
+	VICUS::GridPlane gridPlane;
+	gridPlane.m_offset = QVector2IBKVector(m_lcsTransform.translation());
+	gridPlane.m_localX = IBKMK::Vector3D(1, 0, 0 );
+	gridPlane.m_normal = IBKMK::Vector3D(0, 1, 0 );
+	gridPlanes.push_back(gridPlane);
+
+	SVProjectHandler::instance().setModified( SVProjectHandler::AllModified);
+}
+

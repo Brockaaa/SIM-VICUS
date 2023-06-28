@@ -30,6 +30,7 @@
 
 #include <IBKMK_Vector3D.h>
 
+#include <Vic3DGridObject.h>
 #include <Vic3DTransform3D.h>
 
 namespace VICUS {
@@ -116,7 +117,6 @@ public:
 	*/
 	void finishTransformation();
 
-
 public slots:
 
 	/*! Connected to SVProjectHandler::modified() */
@@ -186,6 +186,9 @@ private slots:
 
 	void on_pushButtonCancel_clicked();
 	void on_pushButtonApply_clicked();
+
+
+	void on_pushButtonTrimmGridXY_clicked();
 
 private:
 	/*! Updates the property widget regarding to all geometry data.
@@ -274,7 +277,6 @@ private:
 	std::set<QString>					m_roomNames;
 	std::set<QString>					m_buildingLevelNames;
 	std::set<QString>					m_buildingNames;
-
 
 	/*! Pointer to UI */
 	Ui::SVPropEditGeometry				*m_ui;

@@ -251,6 +251,7 @@ private:
 
 	/*! The grid draw object. */
 	GridObject				m_gridObject;
+
 	/*! A geometry drawing object (transparency only for windows) for building (room) surfaces.*/
 	OpaqueGeometryObject	m_buildingGeometryObject;
 	/*! A geometry drawing object (no transparency) for network elements.*/

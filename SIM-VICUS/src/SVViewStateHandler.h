@@ -112,7 +112,7 @@ public:
 	SVPropEditGeometry					*m_propEditGeometryWidget = nullptr;
 
 	/*! Pointer to network edit widget. */
-	SVPropNetworkGeometryWidget					*m_propEditNetworkWidget = nullptr;
+	SVPropNetworkGeometryWidget			*m_propEditNetworkWidget = nullptr;
 
 	/*! Pointer to local coordinate system view widget (shown in tool bar), only visible when local coordinate system is shown. */
 	SVLocalCoordinateView				*m_localCoordinateViewWidget = nullptr;
