@@ -245,6 +245,9 @@ private:
 	/*! If Trimming is selected, we create a trimming grid, otherwise delete if necessary. */
 	void updateTrimmingGrid();
 
+	/*! Update Trimming Grid position if LCS changed */
+	void updateTrimmingGridLcs();
+
 	/*! Computes the local translation vector from current LCS rotation and m_copyTranslationVector. */
 	IBKMK::Vector3D localCopyTranslationVector() const;
 

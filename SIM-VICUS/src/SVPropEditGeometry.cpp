@@ -215,6 +215,7 @@ void SVPropEditGeometry::setCoordinates(const Vic3D::Transform3D &t) {
 
 	m_normal = QVector2IBKVector(cso->localZAxis());
 	updateInputs();
+	updateTrimmingGridLcs();
 }
 
 
@@ -319,7 +320,6 @@ bool SVPropEditGeometry::eventFilter(QObject * target, QEvent * event) {
 	}
 	return false;
 }
-
 
 // *** PRIVATE SLOTS***
 
@@ -1006,6 +1006,14 @@ void SVPropEditGeometry::updateTrimmingGrid() {
 		gridPlanes.erase(std::remove(gridPlanes.begin(), gridPlanes.end(), *m_trimGrid), gridPlanes.end());
 		m_trimGrid = nullptr;
 
+		SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
+	}
+}
+
+void SVPropEditGeometry::updateTrimmingGridLcs() {
+	if (m_trimGrid != nullptr) {
+		m_trimGrid->m_offset = QVector2IBKVector(m_lcsTransform.translation());
+		m_trimGrid->updateLocalY();
 		SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
 	}
 }
