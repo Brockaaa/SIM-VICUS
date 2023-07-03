@@ -995,6 +995,7 @@ void SVPropEditGeometry::updateTrimmingGrid() {
 		gridPlane.m_offset = QVector2IBKVector(m_lcsTransform.translation());
 		gridPlane.m_localX = IBKMK::Vector3D(1, 0, 0 );
 		gridPlane.m_normal = IBKMK::Vector3D(0, 1, 0 );
+		gridPlane.updateLocalY();
 		gridPlanes.push_back(gridPlane);
 		m_trimGrid = &gridPlanes.back();
 
@@ -1273,7 +1274,29 @@ void SVPropEditGeometry::on_pushButtonCopyBuilding_clicked() {
 	undo->push();
 }
 
-void SVPropEditGeometry::on_pushButtonTrimmGridXY_clicked() {
+void SVPropEditGeometry::on_pushButtonTrimGridXY_clicked()
+{
+	m_trimGrid->m_localX = IBKMK::Vector3D(1, 0, 0 );
+	m_trimGrid->m_normal = IBKMK::Vector3D(0, 0, 1 );
+	m_trimGrid->updateLocalY();
+	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
+}
 
+
+void SVPropEditGeometry::on_pushButtonTrimGridYZ_clicked()
+{
+	m_trimGrid->m_localX = IBKMK::Vector3D(0, 1, 0 );
+	m_trimGrid->m_normal = IBKMK::Vector3D(1, 0, 0 );
+	m_trimGrid->updateLocalY();
+	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
+}
+
+
+void SVPropEditGeometry::on_pushButtonTrimGridXZ_clicked()
+{
+	m_trimGrid->m_localX = IBKMK::Vector3D(1, 0, 0 );
+	m_trimGrid->m_normal = IBKMK::Vector3D(0, 1, 0 );
+	m_trimGrid->updateLocalY();
+	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
 }
 

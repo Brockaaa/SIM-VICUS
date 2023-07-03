@@ -692,21 +692,21 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_9">
                 <item>
-                 <widget class="QPushButton" name="pushButtonTrimmGridXY">
+                 <widget class="QPushButton" name="pushButtonTrimGridXY">
                   <property name="text">
                    <string>x-y</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="pushButton">
+                 <widget class="QPushButton" name="pushButtonTrimGridYZ">
                   <property name="text">
                    <string>y-z</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="pushButton_3">
+                 <widget class="QPushButton" name="pushButtonTrimGridXZ">
                   <property name="text">
                    <string>x-z</string>
                   </property>

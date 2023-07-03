@@ -189,8 +189,11 @@ private slots:
 	void on_pushButtonCancel_clicked();
 	void on_pushButtonApply_clicked();
 
+	void on_pushButtonTrimGridXY_clicked();
 
-	void on_pushButtonTrimmGridXY_clicked();
+	void on_pushButtonTrimGridYZ_clicked();
+
+	void on_pushButtonTrimGridXZ_clicked();
 
 private:
 	/*! Updates the property widget regarding to all geometry data.
