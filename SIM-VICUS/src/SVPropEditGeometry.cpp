@@ -191,6 +191,7 @@ void SVPropEditGeometry::setModificationType(ModificationType modType) {
 		// Note: setting new coordinates to the local coordinate system object will in turn call setCoordinates()
 		//       and indirectly also updateInputs()
 		updateCoordinateSystemLook();
+		updateTrimmingGrid();
 		adjustLocalCoordinateSystemForRotateToAngle();
 	}
 }
@@ -975,11 +976,38 @@ void SVPropEditGeometry::updateCoordinateSystemLook() {
 				}
 				break;
 
+			case MT_Trim:
+				if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_None) {
+					cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_None;
+					SVViewStateHandler::instance().m_geometryView->refreshSceneView();
+				}
+				break;
+
 			case NUM_MT : ; // just to make compiler happy
 		}
 	}
 }
 
+void SVPropEditGeometry::updateTrimmingGrid() {
+	if (m_ui->stackedWidget->currentIndex() == MT_Trim && m_trimGrid == nullptr) { //if no trimmingGrid is shown yet
+		std::vector<VICUS::GridPlane> &gridPlanes = SVProjectHandler::instance().viewSettings().m_gridPlanes;
+		VICUS::GridPlane gridPlane;
+		gridPlane.m_offset = QVector2IBKVector(m_lcsTransform.translation());
+		gridPlane.m_localX = IBKMK::Vector3D(1, 0, 0 );
+		gridPlane.m_normal = IBKMK::Vector3D(0, 1, 0 );
+		gridPlanes.push_back(gridPlane);
+		m_trimGrid = &gridPlanes.back();
+
+		SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
+
+	} else if (m_ui->stackedWidget->currentIndex() != MT_Trim && m_trimGrid != nullptr) {
+		std::vector<VICUS::GridPlane> &gridPlanes = SVProjectHandler::instance().viewSettings().m_gridPlanes;
+		gridPlanes.erase(std::remove(gridPlanes.begin(), gridPlanes.end(), *m_trimGrid), gridPlanes.end());
+		m_trimGrid = nullptr;
+
+		SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
+	}
+}
 
 IBKMK::Vector3D SVPropEditGeometry::localCopyTranslationVector() const {
 	QQuaternion q = SVViewStateHandler::instance().m_coordinateSystemObject->transform().rotation();
@@ -1246,13 +1274,6 @@ void SVPropEditGeometry::on_pushButtonCopyBuilding_clicked() {
 }
 
 void SVPropEditGeometry::on_pushButtonTrimmGridXY_clicked() {
-	std::vector<VICUS::GridPlane> &gridPlanes = SVProjectHandler::instance().viewSettings().m_gridPlanes;
-	VICUS::GridPlane gridPlane;
-	gridPlane.m_offset = QVector2IBKVector(m_lcsTransform.translation());
-	gridPlane.m_localX = IBKMK::Vector3D(1, 0, 0 );
-	gridPlane.m_normal = IBKMK::Vector3D(0, 1, 0 );
-	gridPlanes.push_back(gridPlane);
 
-	SVProjectHandler::instance().setModified( SVProjectHandler::AllModified);
 }
 

@@ -253,6 +253,7 @@ void SVGeometryView::uncheckAllActionsInButtonBar() {
 	m_ui->actionScaleGeometry->setChecked(false);
 	m_ui->actionSiteParametrization->setChecked(false);
 	m_ui->actionTranslateGeometry->setChecked(false);
+	m_ui->actionTrimGeometry->setChecked(false);
 }
 
 
@@ -308,6 +309,7 @@ void SVGeometryView::onModified(int modificationType, ModificationInfo *) {
 			m_ui->actionRotateGeometry->setEnabled(haveSurface);
 			m_ui->actionScaleGeometry->setEnabled(haveSurface);
 			m_ui->actionAlignGeometry->setEnabled(haveSurface);
+			m_ui->actionTrimGeometry->setEnabled(haveSurface);
 			m_ui->actionCopyGeometry->setEnabled(haveSurface || haveSubSurface || haveRoom || haveBuildingLevel || haveBuilding);
 		} break;
 
@@ -660,6 +662,29 @@ void SVGeometryView::on_actionCopyGeometry_triggered() {
 	SVViewStateHandler::instance().m_propEditGeometryWidget->setModificationType(SVPropEditGeometry::MT_Copy);
 }
 
+void SVGeometryView::on_actionTrimGeometry_triggered() {
+	uncheckAllActionsInButtonBar();
+	m_ui->actionTrimGeometry->setChecked(true);
+
+	SVViewState vs = SVViewStateHandler::instance().viewState();
+	// switch to geometry mode, show addGeometry property widget
+	if (vs.m_propertyWidgetMode != SVViewState::PM_EditGeometry ||
+		vs.inPropertyEditingMode())
+	{
+		vs.m_propertyWidgetMode = SVViewState::PM_EditGeometry;
+		vs.m_objectColorMode = SVViewState::OCM_None;
+		// we choose the operation based on the selection state
+		std::set<const VICUS::Object *> sel;
+		project().selectObjects(sel, VICUS::Project::SG_All, true, true);
+		if (sel.empty())
+			vs.m_sceneOperationMode = SVViewState::NUM_OM;
+		else
+			vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;
+		SVViewStateHandler::instance().setViewState(vs);
+	}
+	Q_ASSERT(SVViewStateHandler::instance().m_propEditGeometryWidget != nullptr);
+	SVViewStateHandler::instance().m_propEditGeometryWidget->setModificationType(SVPropEditGeometry::MT_Trim);
+}
 
 void SVGeometryView::on_actionNetworkParametrization_triggered() {
 	uncheckAllActionsInButtonBar();

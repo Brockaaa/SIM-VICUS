@@ -126,6 +126,7 @@
          <addaction name="separator"/>
          <addaction name="actionAlignGeometry"/>
          <addaction name="actionCopyGeometry"/>
+         <addaction name="actionTrimGeometry"/>
          <addaction name="separator"/>
          <addaction name="actionBuildingParametrization"/>
          <addaction name="actionNetworkParametrization"/>
@@ -329,6 +330,21 @@
    </property>
    <property name="toolTip">
     <string>Edit Site Parametrization</string>
+   </property>
+  </action>
+  <action name="actionTrimGeometry">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources/SIM-VICUS.qrc">
+     <normaloff>:/gfx/actions/layers.png</normaloff>:/gfx/actions/layers.png</iconset>
+   </property>
+   <property name="text">
+    <string>Trim Geometry</string>
+   </property>
+   <property name="toolTip">
+    <string>Interactive Trimming Mode</string>
    </property>
   </action>
  </widget>

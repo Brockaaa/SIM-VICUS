@@ -32,6 +32,7 @@
 
 #include <Vic3DGridObject.h>
 #include <Vic3DTransform3D.h>
+#include "VICUS_GridPlane.h"
 
 namespace VICUS {
 	class Project;
@@ -79,6 +80,7 @@ public:
 		MT_Rotate,
 		MT_Scale,
 		MT_Align,
+		MT_Trim,
 		MT_Copy,
 		NUM_MT
 	};
@@ -235,6 +237,9 @@ private:
 	/*! Depending on the selected operation, we change the look of the local coordinate system object. */
 	void updateCoordinateSystemLook();
 
+	/*! If Trimming is selected, we create a trimming grid, otherwise delete if necessary. */
+	void updateTrimmingGrid();
+
 	/*! Computes the local translation vector from current LCS rotation and m_copyTranslationVector. */
 	IBKMK::Vector3D localCopyTranslationVector() const;
 
@@ -280,6 +285,9 @@ private:
 
 	/*! Pointer to UI */
 	Ui::SVPropEditGeometry				*m_ui;
+
+	/*! Grid for trimming */
+	VICUS::GridPlane					*m_trimGrid = nullptr;
 };
 
 #endif // SVPropEditGeometryH
