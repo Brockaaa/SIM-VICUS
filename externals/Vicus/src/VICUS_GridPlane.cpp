@@ -186,5 +186,9 @@ void GridPlane::closestSnapPoint(const IBKMK::Vector3D & intersectionPoint, IBKM
 	snapPoint = m_offset + i*m_localX + j*m_localY;
 }
 
+const IBKMK::Vector3D & GridPlane::localY() const {
+	return m_localY;
+}
+
 
 } // namespace VICUS

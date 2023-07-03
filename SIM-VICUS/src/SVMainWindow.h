@@ -352,12 +352,6 @@ private slots:
 
 	void on_actionExportNetworkAsGeoJSON_triggered();
 
-	void on_actionpolygon_test_triggered();
-
-	void on_actiontest_triggered();
-
-	void on_actionTRIM_triggered();
-
 private:
 	/*! Sets up all dock widgets with definition lists. */
 	void setupDockWidgets();

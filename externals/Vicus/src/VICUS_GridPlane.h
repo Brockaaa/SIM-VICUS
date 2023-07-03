@@ -108,6 +108,8 @@ public:
 	/*! Major grid spacing in [m]. */
 	double			m_spacing = 10;		// XML:A
 
+	const IBKMK::Vector3D &localY() const;
+
 private:
 
 	// *** RUNTIME VARIABLES ***

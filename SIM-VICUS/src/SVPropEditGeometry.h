@@ -195,6 +195,8 @@ private slots:
 
 	void on_pushButtonTrimGridXZ_clicked();
 
+	void on_pushButtonTrimPolygons_clicked();
+
 private:
 	/*! Updates the property widget regarding to all geometry data.
 		This function is called whenever the selection has changed, and when surface geometry (of selected surfaces)

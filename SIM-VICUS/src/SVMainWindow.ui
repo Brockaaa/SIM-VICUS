@@ -185,8 +185,6 @@
     <addaction name="actionSimulationExportFMI"/>
     <addaction name="separator"/>
     <addaction name="menuCoSimulation"/>
-    <addaction name="actiontest"/>
-    <addaction name="actionTRIM"/>
    </widget>
    <widget class="QMenu" name="menuBuildings">
     <property name="title">

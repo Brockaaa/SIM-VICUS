@@ -202,7 +202,7 @@ void polyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsInput, const 
 /*! Trims a polygon along the plane of another support polygon.
  *  The intersection line is calculated, and the first polygon is trimmed along.
  *  Returns true after success, returns false if planes are coplanar or intersection line does not intersect with polygon.
- */
+ *	Last polygon in vertsA is trimmed against vertsB, and replaced with resulting polygons */
 bool polyTrim(std::vector<std::vector<IBKMK::Vector3D>> & vertsA, const std::vector<IBKMK::Vector3D> & vertsB);
 
 

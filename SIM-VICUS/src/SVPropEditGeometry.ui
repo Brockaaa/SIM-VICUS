@@ -672,7 +672,7 @@
            </widget>
           </item>
           <item row="5" column="0" colspan="3">
-           <widget class="QPushButton" name="pushButton_4">
+           <widget class="QPushButton" name="pushButtonTrimPolygons">
             <property name="text">
              <string>Trim polygons</string>
             </property>

@@ -1274,8 +1274,7 @@ void SVPropEditGeometry::on_pushButtonCopyBuilding_clicked() {
 	undo->push();
 }
 
-void SVPropEditGeometry::on_pushButtonTrimGridXY_clicked()
-{
+void SVPropEditGeometry::on_pushButtonTrimGridXY_clicked() {
 	m_trimGrid->m_localX = IBKMK::Vector3D(1, 0, 0 );
 	m_trimGrid->m_normal = IBKMK::Vector3D(0, 0, 1 );
 	m_trimGrid->updateLocalY();
@@ -1283,8 +1282,7 @@ void SVPropEditGeometry::on_pushButtonTrimGridXY_clicked()
 }
 
 
-void SVPropEditGeometry::on_pushButtonTrimGridYZ_clicked()
-{
+void SVPropEditGeometry::on_pushButtonTrimGridYZ_clicked() {
 	m_trimGrid->m_localX = IBKMK::Vector3D(0, 1, 0 );
 	m_trimGrid->m_normal = IBKMK::Vector3D(1, 0, 0 );
 	m_trimGrid->updateLocalY();
@@ -1292,11 +1290,62 @@ void SVPropEditGeometry::on_pushButtonTrimGridYZ_clicked()
 }
 
 
-void SVPropEditGeometry::on_pushButtonTrimGridXZ_clicked()
-{
+void SVPropEditGeometry::on_pushButtonTrimGridXZ_clicked() {
 	m_trimGrid->m_localX = IBKMK::Vector3D(1, 0, 0 );
 	m_trimGrid->m_normal = IBKMK::Vector3D(0, 1, 0 );
 	m_trimGrid->updateLocalY();
 	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
+}
+
+
+void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
+	if (m_trimGrid != nullptr) {
+
+		std::vector<IBKMK::Vector3D> trimGridPoly;
+		trimGridPoly.push_back(m_trimGrid->m_offset);
+		trimGridPoly.push_back(m_trimGrid->m_offset + m_trimGrid->m_localX);
+		trimGridPoly.push_back(m_trimGrid->m_offset + m_trimGrid->localY());
+
+		std::set<const VICUS::Object*> sel;
+		project().selectObjects(sel, VICUS::Project::SelectionGroups(0x005), true, true);
+		for (const VICUS::Object* o : sel) {
+			if (dynamic_cast<const VICUS::Surface*>(o) != nullptr) {
+
+
+				std::vector<IBKMK::Vector3D> polyOne = dynamic_cast<const VICUS::Surface*>(o)->polygon3D().vertexes();
+				std::vector<IBKMK::Vector3D> polyTwo = trimGridPoly;
+
+				std::vector<std::vector<IBKMK::Vector3D>> polyInput;
+				polyInput.push_back(polyOne);
+
+				bool t = IBKMK::polyTrim(polyInput, polyTwo);
+
+
+				VICUS::Surface s;
+				for (std::vector<IBKMK::Vector3D> entry : polyInput) {
+
+					unsigned int nextId = project().nextUnusedID();
+					s.m_id = nextId;
+					s.m_displayName = "test";
+					s.setPolygon3D(IBKMK::Polygon3D(entry));
+
+					s.m_displayColor = s.m_color = QColor("#206000");
+					// modify project
+					SVUndoAddSurface * undo = new SVUndoAddSurface(tr("Added surface '%1'").arg(s.m_displayName), s, 0);
+					undo->push();
+				}
+				qInfo() << (t ? "trueTrim7" : "falseTrim");
+
+
+
+				continue;
+			}
+		}
+
+
+
+
+
+	} else IBK::IBK_Message("Invalid mode to perform trimming!", IBK::MSG_ERROR);
 }
 
