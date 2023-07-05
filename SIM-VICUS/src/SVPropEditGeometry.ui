@@ -712,6 +712,27 @@
                   </property>
                  </widget>
                 </item>
+                <item>
+                 <widget class="QPushButton" name="pushButtonTrimGridLocalXY">
+                  <property name="text">
+                   <string>local x-y</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="pushButtonTrimGridLocalYZ">
+                  <property name="text">
+                   <string>local y-z</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="pushButtonTrimGridLocalXZ">
+                  <property name="text">
+                   <string>local x-z</string>
+                  </property>
+                 </widget>
+                </item>
                </layout>
               </item>
              </layout>

@@ -993,8 +993,8 @@ void SVPropEditGeometry::updateTrimmingGrid() {
 		std::vector<VICUS::GridPlane> &gridPlanes = SVProjectHandler::instance().viewSettings().m_gridPlanes;
 		VICUS::GridPlane gridPlane;
 		gridPlane.m_offset = QVector2IBKVector(m_lcsTransform.translation());
-		gridPlane.m_localX = IBKMK::Vector3D(1, 0, 0 );
-		gridPlane.m_normal = IBKMK::Vector3D(0, 1, 0 );
+		gridPlane.m_localX = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(1, 0, 0 )))).normalized();
+		gridPlane.m_normal = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(0, 1, 0 )))).normalized();
 		gridPlane.updateLocalY();
 		gridPlanes.push_back(gridPlane);
 		m_trimGrid = &gridPlanes.back();
@@ -1301,6 +1301,29 @@ void SVPropEditGeometry::on_pushButtonTrimGridYZ_clicked() {
 void SVPropEditGeometry::on_pushButtonTrimGridXZ_clicked() {
 	m_trimGrid->m_localX = IBKMK::Vector3D(1, 0, 0 );
 	m_trimGrid->m_normal = IBKMK::Vector3D(0, 1, 0 );
+	m_trimGrid->updateLocalY();
+	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
+}
+
+void SVPropEditGeometry::on_pushButtonTrimGridLocalXY_clicked() {
+	m_trimGrid->m_localX = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(1, 0, 0 )))).normalized();
+	m_trimGrid->m_normal = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(0, 0, 1 )))).normalized();
+	m_trimGrid->updateLocalY();
+	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
+}
+
+
+void SVPropEditGeometry::on_pushButtonTrimGridLocalYZ_clicked() {
+	m_trimGrid->m_localX = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(0, 1, 0 )))).normalized();
+	m_trimGrid->m_normal = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(1, 0, 0 )))).normalized();
+	m_trimGrid->updateLocalY();
+	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
+}
+
+
+void SVPropEditGeometry::on_pushButtonTrimGridLocalXZ_clicked() {
+	m_trimGrid->m_localX = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(1, 0, 0 )))).normalized();
+	m_trimGrid->m_normal = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(0, 1, 0 )))).normalized();
 	m_trimGrid->updateLocalY();
 	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
 }
