@@ -134,6 +134,13 @@ SVPropEditGeometry::SVPropEditGeometry(QWidget *parent) :
 	m_ui->lineEditScaleY->setup(0, 1E5, tr("A positive value is required here."), false, true);
 	m_ui->lineEditScaleZ->setup(0, 1E5, tr("A positive value is required here."), false, true);
 
+	m_ui->lineEditRotateX_2->setFormatter(new LineEditFormater);
+	m_ui->lineEditRotateY_2->setFormatter(new LineEditFormater);
+	m_ui->lineEditRotateZ_2->setFormatter(new LineEditFormater);
+	m_ui->lineEditRotateX_2->installEventFilter(this);
+	m_ui->lineEditRotateY_2->installEventFilter(this);
+	m_ui->lineEditRotateZ_2->installEventFilter(this);
+
 	m_ui->lineEditScaleX->setFormatter(new LineEditFormater);
 	m_ui->lineEditScaleY->setFormatter(new LineEditFormater);
 	m_ui->lineEditScaleZ->setFormatter(new LineEditFormater);
@@ -161,6 +168,10 @@ SVPropEditGeometry::SVPropEditGeometry(QWidget *parent) :
 	connect(m_ui->lineEditRotateY, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditRotateZ, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 
+	connect(m_ui->lineEditRotateX_2, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
+	connect(m_ui->lineEditRotateY_2, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
+	connect(m_ui->lineEditRotateZ_2, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
+
 	connect(m_ui->lineEditScaleX, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditScaleY, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditScaleZ, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
@@ -168,7 +179,6 @@ SVPropEditGeometry::SVPropEditGeometry(QWidget *parent) :
 	connect(m_ui->lineEditTranslateX, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditTranslateY, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditTranslateZ, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
-
 }
 
 
@@ -297,6 +307,9 @@ bool SVPropEditGeometry::eventFilter(QObject * target, QEvent * event) {
 				target == m_ui->lineEditRotateX ||
 				target == m_ui->lineEditRotateY ||
 				target == m_ui->lineEditRotateZ ||
+				target == m_ui->lineEditRotateX_2 ||
+				target == m_ui->lineEditRotateY_2 ||
+				target == m_ui->lineEditRotateZ_2 ||
 				target == m_ui->lineEditScaleX ||
 				target == m_ui->lineEditScaleY ||
 				target == m_ui->lineEditScaleZ ||
@@ -379,6 +392,26 @@ void SVPropEditGeometry::on_lineEditRotateZ_editingFinishedSuccessfully() {
 	m_ui->lineEditRotateX->setValue(0);
 	m_ui->lineEditRotateY->setValue(0);
 	updateRotationPreview();
+}
+
+void SVPropEditGeometry::on_lineEditRotateX_2_editingFinishedSuccessfully() {
+	m_ui->lineEditRotateY_2->setValue(0);
+	m_ui->lineEditRotateZ_2->setValue(0);
+	updateTrimGridRotationPreview();
+}
+
+
+void SVPropEditGeometry::on_lineEditRotateY_2_editingFinishedSuccessfully() {
+	m_ui->lineEditRotateX_2->setValue(0);
+	m_ui->lineEditRotateZ_2->setValue(0);
+	updateTrimGridRotationPreview();
+}
+
+
+void SVPropEditGeometry::on_lineEditRotateZ_2_editingFinishedSuccessfully() {
+	m_ui->lineEditRotateY_2->setValue(0);
+	m_ui->lineEditRotateX_2->setValue(0);
+	updateTrimGridRotationPreview();
 }
 
 void SVPropEditGeometry::on_pushButtonThreePointRotation_clicked() {
@@ -670,6 +703,32 @@ void SVPropEditGeometry::updateRotationPreview() {
 	enableTransformation();
 }
 
+void SVPropEditGeometry::updateTrimGridRotationPreview() {
+	if (m_trimGrid != nullptr) {
+		Vic3D::Transform3D rot;
+		Vic3D::CoordinateSystemObject *cso = SVViewStateHandler::instance().m_coordinateSystemObject;
+		Q_ASSERT(cso != nullptr);
+
+		if (m_ui->lineEditRotateX_2->isValid() && m_ui->lineEditRotateX_2->value() != 0.)
+			rot.setRotation((float)m_ui->lineEditRotateX_2->value(), cso->localXAxis());
+		if (m_ui->lineEditRotateY_2->isValid() && m_ui->lineEditRotateY_2->value() != 0.)
+			rot.setRotation((float)m_ui->lineEditRotateY_2->value(), cso->localYAxis());
+		if (m_ui->lineEditRotateZ_2->isValid() && m_ui->lineEditRotateZ_2->value() != 0.)
+			rot.setRotation((float)m_ui->lineEditRotateZ_2->value(), cso->localZAxis());
+
+		//reset to old values before rotation
+		m_trimGrid->m_localX = m_previousRotation.m_localX;
+		m_trimGrid->m_normal = m_previousRotation.m_normal;
+		m_trimGrid->updateLocalY();
+
+		m_trimGrid->m_localX = QVector2IBKVector(rot.rotation().rotatedVector(IBKVector2QVector(m_trimGrid->m_localX))).normalized();
+		m_trimGrid->m_normal = QVector2IBKVector(rot.rotation().rotatedVector(IBKVector2QVector(m_trimGrid->m_normal))).normalized();
+
+		m_trimGrid->updateLocalY();
+		SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
+	}
+}
+
 
 void SVPropEditGeometry::updateScalePreview(int aspectRatioSourceEdit) {
 	QVector3D scaleFactors;
@@ -793,6 +852,12 @@ void SVPropEditGeometry::onLineEditTextChanged(QtExt::ValidatingLineEdit * lineE
 		on_lineEditScaleY_editingFinishedSuccessfully();
 	else if (lineEdit == m_ui->lineEditScaleZ)
 		on_lineEditScaleZ_editingFinishedSuccessfully();
+	else if (lineEdit == m_ui->lineEditRotateX_2)
+		on_lineEditRotateX_2_editingFinishedSuccessfully();
+	else if (lineEdit == m_ui->lineEditRotateY_2)
+		on_lineEditRotateY_2_editingFinishedSuccessfully();
+	else if (lineEdit == m_ui->lineEditRotateZ_2)
+		on_lineEditRotateZ_2_editingFinishedSuccessfully();
 }
 
 
@@ -990,6 +1055,10 @@ void SVPropEditGeometry::updateCoordinateSystemLook() {
 
 void SVPropEditGeometry::updateTrimmingGrid() {
 	if (m_ui->stackedWidget->currentIndex() == MT_Trim && m_trimGrid == nullptr) { //if no trimmingGrid is shown yet
+		m_ui->lineEditRotateX_2->setValue(0);
+		m_ui->lineEditRotateY_2->setValue(0);
+		m_ui->lineEditRotateZ_2->setValue(0);
+
 		std::vector<VICUS::GridPlane> &gridPlanes = SVProjectHandler::instance().viewSettings().m_gridPlanes;
 		VICUS::GridPlane gridPlane;
 		gridPlane.m_offset = QVector2IBKVector(m_lcsTransform.translation());
@@ -998,6 +1067,7 @@ void SVPropEditGeometry::updateTrimmingGrid() {
 		gridPlane.updateLocalY();
 		gridPlanes.push_back(gridPlane);
 		m_trimGrid = &gridPlanes.back();
+		m_previousRotation = VICUS::GridPlane(*m_trimGrid);
 
 		SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
 
@@ -1306,25 +1376,37 @@ void SVPropEditGeometry::on_pushButtonTrimGridXZ_clicked() {
 }
 
 void SVPropEditGeometry::on_pushButtonTrimGridLocalXY_clicked() {
+	m_ui->lineEditRotateX_2->setValue(0);
+	m_ui->lineEditRotateY_2->setValue(0);
+	m_ui->lineEditRotateZ_2->setValue(0);
 	m_trimGrid->m_localX = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(1, 0, 0 )))).normalized();
 	m_trimGrid->m_normal = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(0, 0, 1 )))).normalized();
 	m_trimGrid->updateLocalY();
+	m_previousRotation = VICUS::GridPlane(*m_trimGrid);
 	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
 }
 
 
 void SVPropEditGeometry::on_pushButtonTrimGridLocalYZ_clicked() {
+	m_ui->lineEditRotateX_2->setValue(0);
+	m_ui->lineEditRotateY_2->setValue(0);
+	m_ui->lineEditRotateZ_2->setValue(0);
 	m_trimGrid->m_localX = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(0, 1, 0 )))).normalized();
 	m_trimGrid->m_normal = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(1, 0, 0 )))).normalized();
 	m_trimGrid->updateLocalY();
+	m_previousRotation = VICUS::GridPlane(*m_trimGrid);
 	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
 }
 
 
 void SVPropEditGeometry::on_pushButtonTrimGridLocalXZ_clicked() {
+	m_ui->lineEditRotateX_2->setValue(0);
+	m_ui->lineEditRotateY_2->setValue(0);
+	m_ui->lineEditRotateZ_2->setValue(0);
 	m_trimGrid->m_localX = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(1, 0, 0 )))).normalized();
 	m_trimGrid->m_normal = QVector2IBKVector(m_lcsTransform.rotation().rotatedVector(IBKVector2QVector(IBKMK::Vector3D(0, 1, 0 )))).normalized();
 	m_trimGrid->updateLocalY();
+	m_previousRotation = VICUS::GridPlane(*m_trimGrid);
 	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
 }
 
@@ -1378,5 +1460,13 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 
 	} else IBK::IBK_Message("Invalid mode to perform trimming!", IBK::MSG_ERROR);
+}
+
+
+void SVPropEditGeometry::on_pushButtonApplyRotation_clicked() {
+	m_previousRotation = VICUS::GridPlane(*m_trimGrid);
+	m_ui->lineEditRotateX_2->setValue(0);
+	m_ui->lineEditRotateY_2->setValue(0);
+	m_ui->lineEditRotateZ_2->setValue(0);
 }
 

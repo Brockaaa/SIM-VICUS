@@ -203,6 +203,14 @@ private slots:
 
 	void on_pushButtonTrimGridLocalXZ_clicked();
 
+	void on_lineEditRotateX_2_editingFinishedSuccessfully();
+
+	void on_lineEditRotateY_2_editingFinishedSuccessfully();
+
+	void on_lineEditRotateZ_2_editingFinishedSuccessfully();
+
+	void on_pushButtonApplyRotation_clicked();
+
 private:
 	/*! Updates the property widget regarding to all geometry data.
 		This function is called whenever the selection has changed, and when surface geometry (of selected surfaces)
@@ -232,6 +240,9 @@ private:
 
 	/*! Updates the transformation matrix for rotating geometry. */
 	void updateRotationPreview();
+
+	/*! Updates the transformation matrix for rotating the trim grid. */
+	void updateTrimGridRotationPreview();
 
 	/*! Updates the transformation matrix for local scaling.
 		The parameter aspectRatioSourceEdit, if not -1, indicates which
@@ -302,6 +313,8 @@ private:
 
 	/*! Grid for trimming */
 	VICUS::GridPlane					*m_trimGrid = nullptr;
+	/*! Previous TrimGrid Transformation Matrix to calculate change */
+	VICUS::GridPlane					m_previousRotation;
 };
 
 #endif // SVPropEditGeometryH
