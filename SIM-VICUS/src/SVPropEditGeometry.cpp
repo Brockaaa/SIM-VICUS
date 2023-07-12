@@ -1424,40 +1424,36 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 		for (const VICUS::Object* o : sel) {
 			if (dynamic_cast<const VICUS::Surface*>(o) != nullptr) {
 
-
 				std::vector<IBKMK::Vector3D> polyOne = dynamic_cast<const VICUS::Surface*>(o)->polygon3D().vertexes();
 				std::vector<IBKMK::Vector3D> polyTwo = trimGridPoly;
 
 				std::vector<std::vector<IBKMK::Vector3D>> polyInput;
 				polyInput.push_back(polyOne);
 
-				bool t = IBKMK::polyTrim(polyInput, polyTwo);
+				bool trimSuccessful = IBKMK::polyTrim(polyInput, polyTwo);
 
+				if (trimSuccessful) {
 
-				VICUS::Surface s;
-				for (std::vector<IBKMK::Vector3D> entry : polyInput) {
+					VICUS::Surface s;
+					for (std::vector<IBKMK::Vector3D> entry : polyInput) {
 
-					unsigned int nextId = project().nextUnusedID();
-					s.m_id = nextId;
-					s.m_displayName = "test";
-					s.setPolygon3D(IBKMK::Polygon3D(entry));
+						unsigned int nextId = project().nextUnusedID();
+						s.m_id = nextId;
+						s.m_displayName = "test";
+						s.setPolygon3D(IBKMK::Polygon3D(entry));
 
-					s.m_displayColor = s.m_color = QColor("#206000");
-					// modify project
-					SVUndoAddSurface * undo = new SVUndoAddSurface(tr("Added surface '%1'").arg(s.m_displayName), s, 0);
-					undo->push();
+						s.m_displayColor = s.m_color = QColor("#206000");
+						// modify project
+						SVUndoAddSurface * undo = new SVUndoAddSurface(tr("Added surface '%1'").arg(s.m_displayName), s, 0);
+						undo->push();
+					}
+
+					qDebug() << "Trimming successful.";
+				} else {
+					QMessageBox::information(this, QString(), "No valid trimming intersections found!");
 				}
-				qInfo() << (t ? "trueTrim7" : "falseTrim");
-
-
-
-				continue;
 			}
 		}
-
-
-
-
 
 	} else IBK::IBK_Message("Invalid mode to perform trimming!", IBK::MSG_ERROR);
 }
