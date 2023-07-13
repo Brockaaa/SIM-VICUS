@@ -1353,25 +1353,37 @@ void SVPropEditGeometry::on_pushButtonCopyBuilding_clicked() {
 }
 
 void SVPropEditGeometry::on_pushButtonTrimGridXY_clicked() {
+	m_ui->lineEditRotateX_2->setValue(0);
+	m_ui->lineEditRotateY_2->setValue(0);
+	m_ui->lineEditRotateZ_2->setValue(0);
 	m_trimGrid->m_localX = IBKMK::Vector3D(1, 0, 0 );
 	m_trimGrid->m_normal = IBKMK::Vector3D(0, 0, 1 );
 	m_trimGrid->updateLocalY();
+	m_previousRotation = VICUS::GridPlane(*m_trimGrid);
 	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
 }
 
 
 void SVPropEditGeometry::on_pushButtonTrimGridYZ_clicked() {
+	m_ui->lineEditRotateX_2->setValue(0);
+	m_ui->lineEditRotateY_2->setValue(0);
+	m_ui->lineEditRotateZ_2->setValue(0);
 	m_trimGrid->m_localX = IBKMK::Vector3D(0, 1, 0 );
 	m_trimGrid->m_normal = IBKMK::Vector3D(1, 0, 0 );
 	m_trimGrid->updateLocalY();
+	m_previousRotation = VICUS::GridPlane(*m_trimGrid);
 	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
 }
 
 
 void SVPropEditGeometry::on_pushButtonTrimGridXZ_clicked() {
+	m_ui->lineEditRotateX_2->setValue(0);
+	m_ui->lineEditRotateY_2->setValue(0);
+	m_ui->lineEditRotateZ_2->setValue(0);
 	m_trimGrid->m_localX = IBKMK::Vector3D(1, 0, 0 );
 	m_trimGrid->m_normal = IBKMK::Vector3D(0, 1, 0 );
 	m_trimGrid->updateLocalY();
+	m_previousRotation = VICUS::GridPlane(*m_trimGrid);
 	SVProjectHandler::instance().setModified(SVProjectHandler::GridModified);
 }
 
