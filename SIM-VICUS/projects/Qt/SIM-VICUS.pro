@@ -149,6 +149,7 @@ SOURCES += \
 	../../src/actions/SVUndoModifySubSurfaceComponentInstances.cpp \
 	../../src/actions/SVUndoModifySurfaceGeometry.cpp \
 	../../src/actions/SVUndoTreeNodeState.cpp \
+	../../src/actions/SVUndoTrimObjects.cpp \
 	../../src/core3D/Vic3DCoordinateSystemObject.cpp \
 	../../src/core3D/Vic3DGeometryHelpers.cpp \
 	../../src/core3D/Vic3DGridObject.cpp \
@@ -345,6 +346,7 @@ HEADERS  += \
 	../../src/actions/SVUndoModifySubSurfaceComponentInstances.h \
 	../../src/actions/SVUndoModifySurfaceGeometry.h \
 	../../src/actions/SVUndoTreeNodeState.h \
+	../../src/actions/SVUndoTrimObjects.h \
 	../../src/core3D/Vic3DCamera.h \
 	../../src/core3D/Vic3DConstants.h \
 	../../src/core3D/Vic3DCoordinateSystemObject.h \
