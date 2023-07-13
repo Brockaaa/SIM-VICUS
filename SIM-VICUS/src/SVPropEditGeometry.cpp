@@ -1440,6 +1440,8 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 		std::string failedTrims = "";
 		int successfulTrims = 0;
 
+		unsigned int nextId = trimProject.nextUnusedID();
+
 		for (const VICUS::Object* o : sel) {
 			const VICUS::Surface * surf = dynamic_cast<const VICUS::Surface*>(o);
 			if (surf != nullptr) {
@@ -1460,9 +1462,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 						VICUS::Surface s;
 						unsigned int trimResultId = 0;
 						for (std::vector<IBKMK::Vector3D> entry : polyInput) {
-
-							unsigned int nextId = trimProject.nextUnusedID();
-							s.m_id = nextId;
+							s.m_id = nextId++;
 							s.m_displayName = surf->m_displayName + "[" + QString(trimResultId) + "]";
 							s.setPolygon3D(IBKMK::Polygon3D(entry));
 							s.m_displayColor = surf->m_displayColor;
