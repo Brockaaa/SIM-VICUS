@@ -42,7 +42,7 @@ public:
 		Mind: surfaces must be triangulated already, if they contain new sub-surfaces.
 	*/
 	SVUndoTrimObjects(const QString & label, const std::vector<VICUS::Surface> & surfaces,
-								const std::vector<VICUS::SubSurfaceComponentInstance> * subSurfaceComponentInstances = nullptr);
+								const std::vector<VICUS::ComponentInstance> * subSurfaceComponentInstances = nullptr);
 
 	virtual void undo();
 	virtual void redo();

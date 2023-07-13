@@ -35,7 +35,7 @@
 
 SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
 														 const std::vector<VICUS::Surface> & surfaces,
-														 const std::vector<VICUS::SurfaceComponentInstance> *subSurfaceComponentInstances)
+														 const std::vector<VICUS::ComponentInstance> *subSurfaceComponentInstances)
 	: m_surfaces(surfaces)
 {
 	setText( label );
@@ -48,18 +48,15 @@ SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
 
 void SVUndoTrimObjects::undo() {
 
-	/// Im project selber
 
+}
+
+
+void SVUndoTrimObjects::redo() {
+	/// Im project selber
 
 	// process all of our stored surfaces in the project
 	for (unsigned int i=0; i<m_surfaces.size(); ++i) {
-		// find surface by ID in current project
-//		VICUS::Object * o = theProject().objectById(m_surfaces[i].m_id);
-//		IBK_ASSERT(o != nullptr);
-//		VICUS::Surface * s = dynamic_cast<VICUS::Surface *>(o);
-//		Q_ASSERT(s != nullptr);
-//		// exchange data between surfaces
-//		std::swap(m_surfaces[i], *s);
 
 		/// Füge hinzu neue surfaces
 		/// Dabei checke ob parent ein raum sonst plain
@@ -87,10 +84,5 @@ void SVUndoTrimObjects::undo() {
 	// tell project that geometry has changed
 	// NOTE: this may be slow for larger geometries...
 	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingGeometryChanged );
-}
-
-
-void SVUndoTrimObjects::redo() {
-	undo();
 }
 
