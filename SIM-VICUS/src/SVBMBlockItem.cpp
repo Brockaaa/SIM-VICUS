@@ -37,6 +37,7 @@
 #include <iostream>
 
 #include <QPainter>
+#include <QPainterPath>
 #include <QLinearGradient>
 #include <QStyleOptionGraphicsItem>
 #include <QGraphicsSceneMouseEvent>
@@ -44,8 +45,13 @@
 #include <QDebug>
 #include <QFontMetrics>
 
+#include "NANDRAD_HydraulicNetworkControlElement.h"
+#include "NANDRAD_HydraulicNetworkComponent.h"
+
 #include "VICUS_BMBlock.h"
 #include "VICUS_BMGlobals.h"
+#include "VICUS_NetworkComponent.h"
+#include "VICUS_KeywordListQt.h"
 #include "SVBMSocketItem.h"
 #include "SVBMSceneManager.h"
 
@@ -146,20 +152,72 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
     painter->setRenderHint(QPainter::Antialiasing, true);
     painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
     bool selected = option->state & QStyle::State_Selected;
-    if (m_block->m_properties.contains("ShowPixmap") &&
-        m_block->m_properties["ShowPixmap"].toBool() &&
-        m_block->m_properties.contains("Pixmap"))
-    {
-        // fill entire background with white
-        QRectF r = rect();
-        painter->setBrush(Qt::white);
-        painter->fillRect(r, QBrush(Qt::white));
 
-        QPixmap p = m_block->m_properties["Pixmap"].value<QPixmap>();
-        painter->drawPixmap(r, p, p.rect());
-        painter->setBrush(Qt::NoBrush);
+    bool modelTypeBlock = false;
+    m_block->m_name.toInt(&modelTypeBlock);
+
+    QPen p;
+    if(modelTypeBlock)
+    {
+        if (m_block->m_properties.contains("ShowPixmap") &&
+            m_block->m_properties["ShowPixmap"].toBool() &&
+            m_block->m_properties.contains("Pixmap"))
+        {
+            // fill entire background with white
+            QRectF r = rect();
+            painter->setBrush(Qt::white);
+            painter->fillRect(r, QBrush(Qt::white));
+
+            QPixmap p = m_block->m_properties["Pixmap"].value<QPixmap>();
+            painter->drawPixmap(r, p, p.rect());
+            painter->setBrush(Qt::NoBrush);
+        }
+        else {
+            QLinearGradient grad(QPointF(0,0), QPointF(rect().width(),0));
+            if (selected) {
+                painter->setPen(QPen(QBrush(QColor(0,128,0)), 1.5));
+                grad.setColorAt(0, QColor(230,255,230));
+                grad.setColorAt(1, QColor(200,240,180));
+            }
+            else {
+                grad.setColorAt(0, QColor(196,196,255));
+                grad.setColorAt(1, QColor(220,220,255));
+            }
+            painter->setBrush(grad);
+            painter->fillRect(rect(), grad);
+        }
+
+        if(!selected){
+            p.setStyle(Qt::SolidLine);
+            p.setColor(Qt::black);
+            painter->setPen( p );
+        } else
+        {
+            p.setColor(QColor(192,0,0));
+            p.setStyle(Qt::DashLine);
+            painter->setPen(p);
+        }
+        painter->drawRect(rect());
     }
     else {
+        QPainterPath bigPath;
+        QPainterPath smallPath;
+
+        if(m_block->m_name.contains(VICUS::EXIT_NAME)){
+            QRectF bigEllipse(-7, 0, 50, 50);
+            QRectF smallEllipse(-25, (50-33)/2, 33, 33);
+            bigPath.addEllipse(bigEllipse);
+            smallPath.addEllipse(smallEllipse);
+        } else {
+            QRectF bigEllipse(7, 0, 50, 50);
+            QRectF smallEllipse(43, (50-33)/2, 33, 33);
+            bigPath.addEllipse(bigEllipse);
+            smallPath.addEllipse(smallEllipse);
+        }
+
+        // Subtract the smaller ellipse from the bigger one to form the crescent shape
+        QPainterPath crescentPath = bigPath.subtracted(smallPath);
+
         QLinearGradient grad(QPointF(0,0), QPointF(rect().width(),0));
         if (selected) {
             painter->setPen(QPen(QBrush(QColor(0,128,0)), 1.5));
@@ -170,27 +228,55 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
             grad.setColorAt(0, QColor(196,196,255));
             grad.setColorAt(1, QColor(220,220,255));
         }
-        painter->setBrush(grad);
-        painter->fillRect(rect(), grad);
 
+        painter->fillPath(crescentPath, grad);
 
+        if(!selected){
+            p.setStyle(Qt::SolidLine);
+            p.setColor(Qt::black);
+            painter->setPen( p );
+        } else
+        {
+            p.setColor(QColor(192,0,0));
+            p.setStyle(Qt::DashLine);
+            painter->setPen(p);
+        }
+        painter->drawPath(crescentPath);
     }
-    QPen p;
-    if(!selected){
-        p.setStyle(Qt::SolidLine);
-        p.setColor(Qt::black);
-        painter->setPen( p );
-    } else
-    {
-        p.setColor(QColor(192,0,0));
-        p.setStyle(Qt::DashLine);
-        painter->setPen(p);
-    }
-    painter->drawRect(rect());
     QFontMetrics fm(painter->font());
     QRectF r = fm.boundingRect(m_block->m_displayName);
     r.moveTo((m_block->m_size.width() - r.width())/2, r.top() - 15);
     painter->drawText(r, Qt::AlignCenter | Qt::AlignHCenter, m_block->m_displayName);
+
+    if(!m_controllerName.isEmpty()){
+        QFontMetrics fm(painter->font());
+
+        // Check length and insert line break if necessary
+        int maxTextWidth = 200; // max width before we need to break the line
+        QString elidedText = fm.elidedText(m_controllerName, Qt::ElideRight, maxTextWidth);
+
+        // Calculate text rectangle
+        QRectF textRect = fm.boundingRect(elidedText);
+        //textRect.setWidth(std::max((int)textRect.width(), maxTextWidth)); // ensure at least maxTextWidth
+
+        // Compute position of the second rectangle
+        QRectF secondRect(-(textRect.width() - rect().height()) / 2, rect().height(), textRect.width(), textRect.height());
+
+        // Set color and draw the second rectangle
+        QLinearGradient grad2(QPointF(0, 0), QPointF(secondRect.width(), 0));
+        grad2.setColorAt(0, QColor(255,255,255));
+        grad2.setColorAt(1, QColor(255,255,255));
+        painter->setBrush(grad2);
+        painter->fillRect(secondRect, grad2);
+        painter->setPen(p);
+        painter->drawRect(secondRect);
+
+        // Draw the text centered
+        textRect.moveTo(-(textRect.width() - rect().height()) / 2, rect().height());
+        painter->drawText(textRect, Qt::AlignCenter | Qt::AlignHCenter, elidedText);
+    }
+
+
     painter->restore();
 }
 
@@ -257,6 +343,8 @@ void SVBMBlockItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     if (sceneManager != nullptr) // protect against double click when inside block editor
         sceneManager->blockDoubleClicked(this);
     QGraphicsRectItem::mouseDoubleClickEvent(event);
+
+    //setController(0);
 }
 
 
@@ -265,6 +353,13 @@ QPainterPath SVBMBlockItem::shape() const
     QPainterPath path;
     path.addRect(SVBMBlockItem::boundingRect());
     return path;
+}
+
+void SVBMBlockItem::setController(int controllerID, QString controllerName)
+{
+    m_block->m_controllerID = controllerID;
+    m_controllerName = controllerName;
+
 }
 
 

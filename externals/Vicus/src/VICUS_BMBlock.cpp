@@ -42,9 +42,9 @@
 
 #include <cmath>
 
-#include "BM_XMLHelpers.h"
+#include "tinyxml.h"
+
 #include "VICUS_BMGlobals.h"
-#include "VICUS_BMConstants.h"
 #include "VICUS_NetworkComponent.h"
 
 namespace VICUS {
@@ -61,204 +61,6 @@ BMBlock::BMBlock(const QString & name, double x, double y) :
     m_pos(x,y),
     m_connectionHelperBlock(false)
 {
-}
-
-void BMBlock::readXML(QXmlStreamReader & reader) {
-/*    qDebug() << "Block::readXML()";
-    Q_ASSERT(reader.isStartElement());
-    // read attributes of Block element
-    m_name = reader.attributes().value("name").toString();
-    qDebug() << m_name;
-    // read child tags
-    if(m_name.contains("connector")){
-        m_size = QSizeF(20,20);
-        while (!reader.atEnd() && !reader.hasError()) {
-            reader.readNext();
-            if (reader.isStartElement()) {
-                QString ename = reader.name().toString();
-                if (ename == "Position"){
-                    QString pos = readTextElement(reader);
-                    m_pos = decodePoint(pos);
-                }
-                else if (ename == "Socket"){
-                    Socket inlet = Socket();
-                    Socket outlet = Socket();
-                    QString socketIDs = readTextElement(reader);
-                    QStringList splitSocket = socketIDs.split(" ");
-                    QRegularExpression regex("\\d+");
-                    QRegularExpressionMatch match = regex.match(splitSocket[0]);
-                    if(match.hasMatch()){
-                        inlet.m_id = match.captured(0).toInt();
-                    }
-                    match = regex.match(splitSocket[1]);
-                    if(match.hasMatch()){
-                        outlet.m_id = match.captured(0).toInt();
-                    }
-                    inlet.m_name = "inlet";
-                    outlet.m_name = "outlet";
-                    inlet.m_pos = QPointF(0,m_size.height() / 2);
-                    outlet.m_pos = QPointF(m_size.width(),m_size.height() / 2);
-                    inlet.m_orientation = Qt::Horizontal;
-                    outlet.m_orientation = Qt::Horizontal;
-                    inlet.m_inlet = true;
-                    outlet.m_inlet = false;
-                    m_sockets.append(inlet);
-                    m_sockets.append(outlet);
-                }
-            }
-            if (reader.isEndElement()) {
-                QString ename = reader.name().toString();
-                if (ename == "Block"){
-                    break;
-                }
-            }
-        }
-    }
-    if(m_name.contains("block")){
-        m_size = QSizeF(64,64);
-        while (!reader.atEnd() && !reader.hasError()) {
-            reader.readNext();
-            if (reader.isStartElement()) {
-                QString ename = reader.name().toString();
-                if (ename == "Position"){
-                    QString pos = readTextElement(reader);
-                    m_pos = decodePoint(pos);
-                }
-                else if (ename == "TypeID"){
-                    m_elementID = readTextElement(reader).toInt();
-                    m_properties["ShowPixmap"] = true;
-                    m_properties["Pixmap"] = QPixmap(VICUS::ModelTypeAttributes[VICUS::ModelTypeLookup(m_elementID)].fileName);
-                    m_properties["Blockname"] = VICUS::ModelTypeAttributes[VICUS::ModelTypeLookup(m_elementID)].typeName;
-                }
-                else if (ename == "Socket"){
-                    Socket inlet = Socket();
-                    Socket outlet = Socket();
-                    QString socketIDs = readTextElement(reader);
-                    QStringList splitSocket = socketIDs.split(" ");
-                    QRegularExpression regex("\\d+");
-                    QRegularExpressionMatch match = regex.match(splitSocket[0]);
-                    if(match.hasMatch()){
-                        inlet.m_id = match.captured(0).toInt();
-                    }
-                    match = regex.match(splitSocket[1]);
-                    if(match.hasMatch()){
-                        outlet.m_id = match.captured(0).toInt();
-                    }
-                    inlet.m_name = "inlet";
-                    outlet.m_name = "outlet";
-                    inlet.m_pos = QPointF(0,m_size.height() / 2);
-                    outlet.m_pos = QPointF(m_size.width(),m_size.height() / 2);
-                    inlet.m_orientation = Qt::Horizontal;
-                    outlet.m_orientation = Qt::Horizontal;
-                    inlet.m_inlet = true;
-                    outlet.m_inlet = false;
-                    m_sockets.append(inlet);
-                    qDebug() << "inlet added";
-                    m_sockets.append(outlet);
-                    qDebug() << "outlet added";
-                }
-            }
-            if (reader.isEndElement()) {
-                QString ename = reader.name().toString();
-                if (ename == "Block"){
-                    break;
-                }
-            }
-        }
-    }
-    if(m_name == ENTRANCE_NAME){
-        m_size = QSizeF(50,50);
-        while (!reader.atEnd() && !reader.hasError()) {
-            reader.readNext();
-            if (reader.isStartElement()) {
-                QString ename = reader.name().toString();
-                if (ename == "Position"){
-                    QString pos = readTextElement(reader);
-                    m_pos = decodePoint(pos);
-                }
-                else if (ename == "Socket"){
-                    Socket outlet = Socket();
-                    QString socketIDs = readTextElement(reader);
-                    QStringList splitSocket = socketIDs.split(" ");
-                    QRegularExpression regex("\\d+");
-                    QRegularExpressionMatch match = regex.match(splitSocket[0]);
-                    if(match.hasMatch()){
-                        outlet.m_id = match.captured(0).toInt();
-                    }
-                    outlet.m_name = "Entry";
-                    outlet.m_pos = QPointF(m_size.width(),m_size.height() / 2);
-                    outlet.m_orientation = Qt::Horizontal;
-                    outlet.m_inlet = false;
-                    m_sockets.append(outlet);
-                }
-            }
-            if (reader.isEndElement()) {
-                QString ename = reader.name().toString();
-                if (ename == "Block"){
-                    break;
-                }
-            }
-        }
-    }
-    if(m_name == "Exit"){
-        m_size = QSizeF(50,50);
-        while (!reader.atEnd() && !reader.hasError()) {
-            reader.readNext();
-            if (reader.isStartElement()) {
-                QString ename = reader.name().toString();
-                if (ename == "Position"){
-                    QString pos = readTextElement(reader);
-                    m_pos = decodePoint(pos);
-                }
-                else if (ename == "Socket"){
-                    Socket inlet = Socket();
-                    QString socketIDs = readTextElement(reader);
-                    QStringList splitSocket = socketIDs.split(" ");
-                    QRegularExpression regex("\\d+");
-                    QRegularExpressionMatch match = regex.match(splitSocket[0]);
-                    if(match.hasMatch()){
-                        inlet.m_id = match.captured(0).toInt();
-                    }
-                    inlet.m_name = "Exit";
-                    inlet.m_pos = QPointF(0,m_size.height() / 2);
-                    inlet.m_orientation = Qt::Horizontal;
-                    inlet.m_inlet = true;
-                    m_sockets.append(inlet);
-                }
-            }
-            if (reader.isEndElement()) {
-                QString ename = reader.name().toString();
-                if (ename == "Block"){
-                    break;
-                }
-            }
-        }
-    } */
-}
-
-
-void BMBlock::writeXML(QXmlStreamWriter & writer) const {
-/*    qDebug() << "writing block: " << m_name;
-    writer.writeStartElement("Block");
-    bool isInteger;
-    m_name.toInt(&isInteger);
-    if(isInteger){
-        writer.writeAttribute("NetworkElementid", m_name);
-        writer.writeAttribute("Position", encodePoint(m_pos));
-    }
-    else if(m_name.contains("connector")){
-        writer.writeAttribute("NetworkElementid", QString::number(-1));
-        writer.writeAttribute("name", m_name);
-        writer.writeAttribute("Position", encodePoint(m_pos));
-        writer.writeAttribute("NodeId", QString::number(m_sockets[0].m_id));
-    }
-    else{
-        writer.writeAttribute("NetworkElementid", QString::number(-1));
-        writer.writeAttribute("name", m_name);
-        writer.writeAttribute("Position", encodePoint(m_pos));
-    }
-
-    writer.writeEndElement(); // Block */
 }
 
 
@@ -496,6 +298,40 @@ void BMBlock::autoUpdateSockets(const QStringList & inletSockets, const QStringL
         m_sockets.append(newSocket);
     }
 
+}
+
+TiXmlElement * BMBlock::writeXML(TiXmlElement *parent) const
+{
+    TiXmlElement * e = new TiXmlElement("Block");
+    parent->LinkEndChild(e);
+    bool ok = false;
+    m_name.toInt(&ok);
+    if (ok){
+        e->SetAttribute("networkElementid", std::to_string(m_name.toInt()));
+    }
+    else{
+        e->SetAttribute("networkElementid", std::to_string(-1));
+        e->SetAttribute("name", m_name.toStdString());
+    }
+    int x = (int)m_pos.x();
+    int y = (int)m_pos.y();
+    e->SetAttribute("position", std::to_string(x) + ", " +std::to_string(y));
+    return e;
+}
+
+void BMBlock::readXML(const TiXmlElement * element)
+{
+    m_displayName = INVALIDXMLREAD;
+    m_name = QString(element->Attribute("networkElementid"));
+    if (m_name == "-1"){
+        m_name = QString(element->Attribute("name"));
+    }
+    QString pos = QString(element->Attribute("position"));
+    QStringList posList = pos.split(", ");
+    if (posList.count() == 2) {
+        m_pos.setX(posList[0].toInt());
+        m_pos.setY(posList[1].toInt());
+    }
 }
 
 

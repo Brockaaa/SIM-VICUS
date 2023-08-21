@@ -66,8 +66,13 @@ public:
 
     /*! Returns bounding rect including bounding rects of sockets. */
     QRectF boundingRect() const override;
+
     /* needed for hovering support*/
     QPainterPath shape() const;
+
+    /* Sets name of Controller, will be displayed in the Scene */
+    void setController(int controllerID, QString controllerName);
+
 
 protected:
     /*! This function is called from the constructor and creates child socket items.
@@ -88,16 +93,20 @@ protected:
         Implements the snap-to-grid functionality, and updates attached connectors. */
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant & value) override;
 
-
-private:
     /*! Pointer to associated block. */
     VICUS::BMBlock				*m_block;
 
     /*! Indicates, that the block has been moved. */
-    bool				m_moved;
+    bool            			m_moved;
 
     /*! Our socket items, childs of this block item. */
-    QList<SVBMSocketItem*>	m_socketItems;
+    QList<SVBMSocketItem*>      m_socketItems;
+
+private:
+
+    /*! Name of Controller from VICUS::KeywordListQt */
+    QString                     m_controllerName;
+
 
     friend class SVBMSceneManager;
 };

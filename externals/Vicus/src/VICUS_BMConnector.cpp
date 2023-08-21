@@ -36,101 +36,41 @@
 #include <QXmlStreamWriter>
 #include <QStringList>
 #include <QDebug>
+#include "tinyxml.h"
 
-#include <BM_XMLHelpers.h>
 
 namespace VICUS {
 
-void BMConnector::readXML(QXmlStreamReader & reader) {
-    Q_ASSERT(reader.isStartElement());
-    m_sourceSocket = reader.attributes().value("source").toString();
-    m_targetSocket = reader.attributes().value("target").toString();
-    qDebug() << "  sourceSocket:" << m_sourceSocket;
-    QString ename = reader.name().toString();
-    // read child tags
-    while (!reader.atEnd() && !reader.hasError()) {
-        reader.readNext();
-        ename = reader.name().toString();
-        if (ename == "Segment" && reader.isStartElement()) {
-            Segment newSegment = Segment();
-            newSegment.readXML(reader);
-            m_segments.append(newSegment);
-        }
+TiXmlElement *BMConnector::writeXML(TiXmlElement *parent) const
+{
+    TiXmlElement * e = new TiXmlElement("Connector");
+    parent->LinkEndChild(e);
+    e->SetAttribute("source", m_sourceSocket.toStdString());
+    e->SetAttribute("target", m_targetSocket.toStdString());
+    for(auto Segment : m_segments){
+        TiXmlElement * e2 = new TiXmlElement("Segment");
+        e->LinkEndChild(e2);
+        e2->SetAttribute("orientation", Segment.m_direction == Qt::Horizontal ? "Horizontal" : "Vertical");
+        e2->SetAttribute("offset", Segment.m_offset);
+    }
+    return e;
+}
 
-        if (reader.isEndElement() && ename == "Connector")
-            break;// done with XML tag
+void BMConnector::readXML(const TiXmlElement *element)
+{
+    m_sourceSocket = QString::fromStdString(element->Attribute("source"));
+    m_targetSocket = QString::fromStdString(element->Attribute("target"));
+    m_segments.clear();
+    for(const TiXmlElement * e = element->FirstChildElement("Segment"); e; e = e->NextSiblingElement("Segment")) {
+        Segment s;
+        if (e->Attribute("orientation") == std::string("Horizontal"))
+            s.m_direction = Qt::Horizontal;
+        else
+            s.m_direction = Qt::Vertical;
+        e->Attribute("offset", &s.m_offset);
+        m_segments.push_back(s);
     }
 }
-
-
-void BMConnector::writeXML(QXmlStreamWriter & writer) const {
-    writer.writeStartElement("Connector");
-    writer.writeAttribute("source", m_sourceSocket);
-    writer.writeAttribute("target", m_targetSocket);
-    if (!m_segments.isEmpty()) {
-        for (int i=0; i<m_segments.count(); i++)
-            m_segments[i].writeXML(writer);
-    }
-    writer.writeEndElement();
-}
-
-
-void BMConnector::Segment::readXML(QXmlStreamReader & reader) {
-    Q_ASSERT(reader.isStartElement());
-    // read attributes of Segment element
-    // read child tags
-    /* while (!reader.atEnd() && !reader.hasError()) {
-        reader.readNext();
-        if (reader.isStartElement()) {
-            QString ename = reader.name().toString();
-            if (ename == "Orientation") {
-                QString orient = readTextElement(reader);
-                if (orient == "Horizontal")
-                    m_direction = Qt::Horizontal;
-                else
-                    m_direction = Qt::Vertical;
-            }
-            else if (ename == "Offset") {
-                QString offsetStr = readTextElement(reader);
-                bool ok;
-                m_offset = offsetStr.toDouble(&ok);
-                if (!ok) {
-                    // unknown element, skip it and all its child elements
-                    reader.raiseError(QString("Invalid offset value '%1' in Segment element.").arg(offsetStr));
-                    return;
-                }
-            }
-            else {
-                // unknown element, skip it and all its child elements
-                reader.raiseError(QString("Found unknown element '%1' in Segment element.").arg(ename));
-                return;
-            }
-        }
-        else if (reader.isEndElement()) {
-            QString ename = reader.name().toString();
-            if (ename == "Segment")
-                break;// done with XML tag
-        }
-    } */
-    QString orient = reader.attributes().value("Orientation").toString();
-    if(orient == "Horizontal")
-        m_direction = Qt::Horizontal;
-    else
-        m_direction = Qt::Vertical;
-
-    double offset = reader.attributes().value("Offset").toDouble();
-    m_offset = offset;
-    qDebug() << "  Segment::readXML() offset" << offset;
-}
-
-
-void BMConnector::Segment::writeXML(QXmlStreamWriter & writer) const {
-    writer.writeStartElement("Segment");
-    writer.writeAttribute("Orientation", m_direction == Qt::Horizontal ? "Horizontal" : "Vertical");
-    writer.writeAttribute("Offset", QString("%1").arg(m_offset));
-    writer.writeEndElement();
-}
-
 
 } // namespace VICUS
 

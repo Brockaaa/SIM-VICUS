@@ -175,6 +175,10 @@ KeywordListQt::KeywordListQt() {
 	tr("Length of pipe");
 	tr("Number of parallel pipes in ground heat exchanger");
 	tr("Number of parallel elements");
+	tr("Pipes");
+	tr("Pumps");
+	tr("Heatpumps");
+	tr("Other");
 	tr("Set points are given as constant parameters");
 	tr("Scheduled set point values");
 	tr("Control temperature difference of this element");

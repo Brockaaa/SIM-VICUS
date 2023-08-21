@@ -37,8 +37,9 @@
 #include <QVector>
 #include <QPointF>
 #include <QColor>
-#include <QXmlStreamReader>
-#include <QXmlStreamWriter>
+
+#include "VICUS_Constants.h"
+#include "VICUS_CodeGenMacros.h"
 
 namespace VICUS {
 
@@ -60,21 +61,10 @@ public:
             m_offset(offset)
         {}
 
-        /*! Reads content of the segment from XML stream. */
-        void readXML(QXmlStreamReader & reader);
-
-        /*! Dumps out content of segment to stream writer. */
-        void writeXML(QXmlStreamWriter & writer) const;
-
         Qt::Orientation m_direction;
         double m_offset;
     };
 
-    /*! Reads content of the block from XML stream. */
-    void readXML(QXmlStreamReader & reader);
-
-    /*! Dumps out content of block to stream writer. */
-    void writeXML(QXmlStreamWriter & writer) const;
 
     /*! Unique identification name of this connector instance. */
     QString						m_name;
@@ -86,14 +76,15 @@ public:
         outside the block), which is defined by the socket's position and
         orientation with respect to the parent block.
     */
-    QList<Segment> m_segments;
+    QList<Segment> m_segments;                          //XML:A:tag=Segment
+
 
     /*! ID of socket that polygon originates from, empty if not assigned.
         Format <block-name>.<socket-name>
     */
-    QString			m_sourceSocket;
+    QString			m_sourceSocket;                     //XML:E:tag=source
     /*! ID of socket that polygon ends in, empty if not assigned. */
-    QString			m_targetSocket;
+    QString			m_targetSocket;                     //XML:E:tag=target
 
     /*! Stores text that is displayed along with connector */
     QString			m_text;
@@ -103,6 +94,11 @@ public:
 
     /*! Color of drawn line */
     QColor			m_color = Qt::black;
+
+    TiXmlElement * writeXML(TiXmlElement * parent) const;
+
+    void readXML(const TiXmlElement * element);
+
 
 };
 

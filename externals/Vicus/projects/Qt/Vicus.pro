@@ -40,7 +40,6 @@ HEADERS += \
 	../../src/VICUS_ArgsParser.h \
 	../../src/VICUS_BMBlock.h \
 	../../src/VICUS_BMConnector.h \
-	../../src/VICUS_BMConstants.h \
 	../../src/VICUS_BMGlobals.h \
 	../../src/VICUS_BMNetwork.h \
 	../../src/VICUS_BMSocket.h \
@@ -172,6 +171,7 @@ SOURCES += \
 	../../src/VICUS_utilities.cpp \
 	../../src/ncg/ncg_VICUS_AcousticTemplate.cpp \
 	../../src/ncg/ncg_VICUS_BoundaryCondition.cpp \
+	../../src/ncg/ncg_VICUS_BMNetwork.cpp \
 	../../src/ncg/ncg_VICUS_Building.cpp \
 	../../src/ncg/ncg_VICUS_BuildingLevel.cpp \
 	../../src/ncg/ncg_VICUS_Component.cpp \

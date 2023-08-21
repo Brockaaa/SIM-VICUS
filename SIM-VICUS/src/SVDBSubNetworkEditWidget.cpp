@@ -291,7 +291,8 @@ void SVDBSubNetworkEditWidget::on_toolButtonEditController_clicked()
     Q_ASSERT((unsigned int)m_currentElementIdx < m_currentSubNet->m_elements.size());
 
     unsigned int ctrId = m_currentSubNet->m_elements[(unsigned int)m_currentElementIdx].m_controlElementId;
-    unsigned int newId = SVMainWindow::instance().dbNetworkControllerEditDialog()->select(ctrId);
+    //unsigned int newId = SVMainWindow::instance().dbNetworkControllerEditDialog()->select(ctrId);
+    unsigned int newId = 0;
 
     // if dialog was canceled do nothing
     if (newId == VICUS::INVALID_ID)
@@ -339,8 +340,11 @@ void SVDBSubNetworkEditWidget::on_tableWidgetElements_itemChanged(QTableWidgetIt
 
 void SVDBSubNetworkEditWidget::on_editSubNetworkButton_clicked()
 {
-    qDebug() << "Edit Subnetwork Button";
-    SVSubNetworkEditDialog* editDialog = new SVSubNetworkEditDialog(this);
-    editDialog->show();
+    if(m_editDialog == nullptr){
+        m_editDialog = new SVSubNetworkEditDialog(this, m_currentSubNet, m_db);
+    } else {
+        m_editDialog->setupSubNetwork(m_currentSubNet);
+    }
+    m_editDialog->show();
 }
 

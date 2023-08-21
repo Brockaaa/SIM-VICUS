@@ -34,6 +34,8 @@
 #ifndef BM_GlobalsH
 #define BM_GlobalsH
 
+#include <QString>
+
 namespace VICUS{
 
 class BMGlobals {
@@ -53,6 +55,30 @@ public:
     /*! Constant to identify hidden block used during connection operation. */
     static const char * const InvisibleLabel;
 };
+
+const int BLOCK_WIDTH = 64;
+const int BLOCK_HEIGHT = 64;
+
+const int CONNECTORBLOCK_WIDTH = 13;
+const int CONNECTORBLOCK_HEIGHT = 13;
+
+const int ENTRANCEEXITBLOCK_WIDTH = 50;
+const int ENTRANCEEXITBLOCK_HEIGHT = 50;
+
+const int ENTRANCE_ID = 333333;
+const int EXIT_ID = 666666;
+
+const int MINIMUMDIALOGWIDTH = 1500;
+const int MINIMUMDIALOGHEIGHT = 950;
+
+const QString INLET_NAME = "inlet";
+const QString OUTLET_NAME = "outlet";
+const QString ENTRANCE_NAME = "Entrance";
+const QString EXIT_NAME = "Exit";
+const QString CONNECTORBLOCK_NAME = "connector";
+const QString CONNECTOR_NAME = "con";
+
+const QString INVALIDXMLREAD = "Invalid XML read";
 
 } // namespace VICUS
 

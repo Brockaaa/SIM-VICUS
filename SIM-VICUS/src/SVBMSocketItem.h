@@ -87,6 +87,7 @@ private:
     bool	m_hovered;
 
     friend class SVBMSceneManager;
+    friend class SVBMConnectorBlockItem;
 };
 
 

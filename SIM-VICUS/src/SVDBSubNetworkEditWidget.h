@@ -13,6 +13,7 @@ class SVDBSubNetworkEditWidget;
 
 class SVDatabase;
 class SVDBSubNetworkTableModel;
+class SVSubNetworkEditDialog;
 
 namespace VICUS {
     class SubNetwork;
@@ -32,6 +33,12 @@ public:
 
     /*! Update widget with this. */
     void updateInput(int id) override;
+
+    /*! Pointer to currently edited subsurface-component.
+        The pointer is updated whenever updateInput() is called.
+        A nullptr pointer means that there is no subsurface to edit.
+    */
+    VICUS::SubNetwork						*m_currentSubNet;
 
 
 private slots:
@@ -77,13 +84,9 @@ private:
     /*! Pointer to the database model, to modify items when data has changed in the widget. */
     SVDBSubNetworkTableModel				*m_dbModel;
 
-    /*! Pointer to currently edited subsurface-component.
-        The pointer is updated whenever updateInput() is called.
-        A nullptr pointer means that there is no subsurface to edit.
-    */
-    VICUS::SubNetwork						*m_currentSubNet;
-
     int										m_currentElementIdx = -1;
+
+    SVSubNetworkEditDialog*                 m_editDialog = nullptr;
 
 };
 

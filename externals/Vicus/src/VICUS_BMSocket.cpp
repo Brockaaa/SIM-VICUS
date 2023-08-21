@@ -43,7 +43,6 @@ namespace VICUS {
 
 
 void BMSocket::readXML(QXmlStreamReader & reader) {
-    qDebug() << "Socket::readXML()";
     Q_ASSERT(reader.isStartElement());
     // read attributes of Block element
     m_name = reader.attributes().value("name").toString();

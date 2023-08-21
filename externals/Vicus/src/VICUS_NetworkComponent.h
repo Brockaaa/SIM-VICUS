@@ -197,10 +197,11 @@ public:
 
 /*! Categories in SubnetworkEditDialog */
 enum NetComCategory{
-    Pipes,
-    Pumps,
-    Heatpumps,
-    Other
+    Pipes,                                      // Keyword: Pipes
+    Pumps,                                      // Keyword: Pumps
+    Heatpumps,                                  // Keyword: Heatpumps
+    Other,                                      // Keyword: Other
+    NUM_NC
 };
 
 /*! Struct for easier lookup in map ModelTypeAttributes */

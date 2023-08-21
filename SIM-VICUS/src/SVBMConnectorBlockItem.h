@@ -12,7 +12,6 @@ public:
     SVBMConnectorBlockItem(VICUS::BMBlock *b);
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-    bool m_isHighlighted = false;
 
     SVBMSceneManager* m_sceneManager;
 
@@ -21,6 +20,10 @@ protected:
     virtual void hoverEnterEvent (QGraphicsSceneHoverEvent *event) override;
     /*! Re-implemented to turn off highlighting of the entire connectorBlock + connectorlines when hovered. */
     virtual void hoverLeaveEvent (QGraphicsSceneHoverEvent *event) override;
+
+private:
+
+    bool m_isHighlighted = false;
 
 };
 

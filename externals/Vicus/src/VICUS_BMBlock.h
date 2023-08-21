@@ -42,10 +42,11 @@
 #include <QVariant>
 #include <QMap>
 
-#include <QXmlStreamReader>
-#include <QXmlStreamWriter>
-
 #include "VICUS_BMSocket.h"
+#include "VICUS_CodeGenMacros.h"
+#include "VICUS_Constants.h"
+
+class TiXmlElement;
 
 namespace VICUS {
 
@@ -57,16 +58,17 @@ namespace VICUS {
 */
 class BMBlock {
 public:
+
     BMBlock() : m_connectionHelperBlock(false) {}
 
     BMBlock(const QString & name);
     BMBlock(const QString & name, double x, double y);
 
     /*! Reads content of the block from XML stream. */
-    void readXML(QXmlStreamReader & reader);
+    /*void readXML(QXmlStreamReader & reader);*/
 
     /*! Dumps out content of block to stream writer. */
-    void writeXML(QXmlStreamWriter & writer) const;
+    /*void writeXML(QXmlStreamWriter & writer) const;*/
 
     /*! Generate connection line between socket and point, where first connector segment starts.
         Returned coordinates are in scene-coordinates.
@@ -103,14 +105,24 @@ public:
     */
     void autoUpdateSockets(const QStringList & inletSockets, const QStringList & outletSockets);
 
+    TiXmlElement * writeXML(TiXmlElement * parent) const;
+
+    void readXML(const TiXmlElement * element);
+
+
     /*! Returns a list of socket pointers with either inlet or outlet sockets. */
     QList<const BMSocket*>	filterSockets(bool inletSocket) const;
 
     /*! Unique identification name of this block instance. */
     QString						m_name;
 
+    /* Name to be displayed in Scene */
+    QString                     m_displayName;
+
+
     /*! Position (top left corner) of block. */
     QPointF						m_pos;
+
 
     /*! Sockets that belong to this block. */
     QList<BMSocket>				m_sockets;
@@ -122,15 +134,18 @@ public:
     QMap<QString, QVariant>		m_properties;
 
     /*! VICUS::NetworkComponent::ModelType of Block */
-    int							m_elementID;
+    unsigned int							m_elementID;
 
-    /* Name to be displayed in Scene */
-    QString                     m_displayName;
 
     /*! If true, this block is only a virtual block with a single socket, that is invisible (not painted)
         and only exists, until the connected has been attached to a socket of another block.
     */
     bool						m_connectionHelperBlock;
+
+    /* VICUS::NetworkController ID */
+    unsigned int                m_controllerID = VICUS::INVALID_ID;
+
+
 };
 
 } // namespace VICUS

@@ -118,6 +118,7 @@ QPointF SVBMSocketItem::pos(){
 // *** protected functions ***
 
 void SVBMSocketItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event) {
+    if(m_socket->m_connectorSocket) return;
     SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
     // for outlet sockets, we allow hovering if:
     // - scene is not currently in connecting mode
@@ -151,6 +152,7 @@ void SVBMSocketItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event) {
 
 
 void SVBMSocketItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event) {
+    if(m_socket->m_connectorSocket) return;
     if (m_hovered)
         QApplication::restoreOverrideCursor();
     m_hovered = false;
@@ -234,25 +236,32 @@ void SVBMSocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /
                 p.moveTo(m_symbolRect.right(), m_symbolRect.y());
                 p.lineTo(m_symbolRect.left(), 0.5*(m_symbolRect.top() + m_symbolRect.bottom()));
                 p.lineTo(m_symbolRect.right(), m_symbolRect.bottom());
-            break;
+                p.lineTo(m_symbolRect.right(), m_symbolRect.y()); // Close the triangle
+                break;
+
             case VICUS::BMSocket::Right		:
                 // right side
                 p.moveTo(m_symbolRect.left(), m_symbolRect.y());
                 p.lineTo(m_symbolRect.right(), 0.5*(m_symbolRect.top() + m_symbolRect.bottom()));
                 p.lineTo(m_symbolRect.left(), m_symbolRect.bottom());
-            break;
+                p.lineTo(m_symbolRect.left(), m_symbolRect.y()); // Close the triangle
+                break;
+
             case VICUS::BMSocket::Top		:
                 // top side
                 p.moveTo(m_symbolRect.left(), m_symbolRect.bottom());
                 p.lineTo(0.5*(m_symbolRect.left() + m_symbolRect.right()), m_symbolRect.top());
                 p.lineTo(m_symbolRect.right(), m_symbolRect.bottom());
-            break;
+                p.lineTo(m_symbolRect.left(), m_symbolRect.bottom()); // Close the triangle
+                break;
+
             case VICUS::BMSocket::Bottom		:
                 // bottom side
                 p.moveTo(m_symbolRect.left(), m_symbolRect.top());
                 p.lineTo(0.5*(m_symbolRect.left() + m_symbolRect.right()), m_symbolRect.bottom());
                 p.lineTo(m_symbolRect.right(), m_symbolRect.top());
-            break;
+                p.lineTo(m_symbolRect.left(), m_symbolRect.top()); // Close the triangle
+                break;
         }
         QPen pen(Qt::black);
         pen.setCapStyle(Qt::RoundCap);
@@ -264,11 +273,10 @@ void SVBMSocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /
         painter->drawPath(p);
     }
 
-
-    // now draw the label on the socket
     /*
+    // now draw the label on the socket
     QFont f(painter->font());
-    f.setPointSizeF(Globals::LabelFontSize);
+    f.setPointSizeF(VICUS::BMGlobals::LabelFontSize);
     QFontMetricsF metrics(f);
     painter->setFont(f);
     QString name = QString::number(m_socket->m_id);
@@ -276,24 +284,24 @@ void SVBMSocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /
     textBoundingRect.setWidth(textBoundingRect.width()+6); // add some space to avoid clipping of italic fonts to the right
 
     switch (m_socket->direction()) {
-        case Socket::Left		:
+    case VICUS::BMSocket::Left		:
             // left side
-        textBoundingRect.moveTo(0, r.top()-textBoundingRect.height() / 2 + Globals::LabelFontSize / 2);
+        textBoundingRect.moveTo(0, r.top()-textBoundingRect.height() / 2 + VICUS::BMGlobals::LabelFontSize / 2);
             painter->drawText(textBoundingRect, Qt::AlignRight | Qt::AlignTop, name);
         break;
-        case Socket::Right		:
+        case VICUS::BMSocket::Right		:
             // right side
-        textBoundingRect.moveTo(r.right() - Globals::LabelFontSize * 2.5, r.top()-textBoundingRect.height() / 2 + Globals::LabelFontSize / 2);
+        textBoundingRect.moveTo(r.right() - VICUS::BMGlobals::LabelFontSize * 2.5, r.top()-textBoundingRect.height() / 2 + VICUS::BMGlobals::LabelFontSize / 2);
             painter->drawText(textBoundingRect, Qt::AlignLeft | Qt::AlignTop, name);
         break;
-        case Socket::Top		:
+        case VICUS::BMSocket::Top		:
             // top side
             painter->translate(r.left(), r.top());
             painter->rotate(-90);
             textBoundingRect.moveTo(0, -textBoundingRect.height());
             painter->drawText(textBoundingRect, Qt::AlignLeft | Qt::AlignTop, m_socket->m_name);
         break;
-        case Socket::Bottom		:
+        case VICUS::BMSocket::Bottom		:
             // bottom side
             painter->translate(r.left(), r.bottom());
             painter->rotate(-90);
@@ -309,6 +317,7 @@ void SVBMSocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /
 
 
 void SVBMSocketItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    if(m_socket->m_connectorSocket) return;
     // starting a connection?
     // ignore clicks on inlet sockets
     if (!m_socket->m_inlet) {

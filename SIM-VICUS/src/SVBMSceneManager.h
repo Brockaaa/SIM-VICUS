@@ -36,10 +36,10 @@
 
 #include <QGraphicsScene>
 #include <QMap>
-#include "SVBMSocketItem.h"
 #include "VICUS_NetworkComponent.h"
 
 class QGraphicsItem;
+
 namespace VICUS{
 class BMNetwork;
 class BMBlock;
@@ -51,6 +51,7 @@ class SVBMBlockItem;
 class SVBMConnectorBlockItem;
 class SVBMSocketItem;
 class SVBMConnectorSegmentItem;
+class SVBMSocketItem;
 
 /*! The graphics scene that visualizes the network. */
 class SVBMSceneManager : public QGraphicsScene {
@@ -64,10 +65,7 @@ public:
     /*! Set a new network (a local copy is made of the network object).
         This will recreate the entire scene.
     */
-    void setNetwork(const VICUS::BMNetwork & network);
-
-    /*! opens network from XML file */
-    void openNetwork(QString fname);
+    void setNetwork(VICUS::BMNetwork & network);
 
     /*! Provide read-only access to the network data structure.
         \note This data structure is internally used and modified by user actions.
@@ -83,10 +81,6 @@ public:
     QPixmap generatePixmap(QSize targetSize);
 
     // query functions
-
-    /*! Looks up the block item with a block that has the given name. */
-    const SVBMBlockItem * blockItemByName(const QString & blockName) const;
-
 
     // Functions called from blocks/items to adjust the network due to user interaction
 
@@ -154,7 +148,6 @@ public:
     */
     void finishConnection();
 
-
     // functions to query current selection
 
     /*! There can be several currently selected blocks.
@@ -174,7 +167,10 @@ public:
         The block is copied into the network and shown at the given coordinates.
     */
     void addBlock(const VICUS::BMBlock & block);
-    void addBlock(VICUS::NetworkComponent::ModelType type, QPoint point);
+    /*! creates a new Block based on the given type and adds it to the network.
+        The block is shown at the given coordinates. Used for drag and dropping Blocks from the Toolbox
+    */
+    void addBlock(VICUS::NetworkComponent::ModelType type, QPoint point, unsigned int componentID = VICUS::INVALID_ID);
 
     /*! Adds a new ConnectorBlock to the network.
         The ConnectorBlock is copied into the network and shown at the given coordinates.
@@ -182,11 +178,23 @@ public:
     void addConnectorBlock(const VICUS::BMBlock & block);
     void addConnectorBlock(SVBMConnectorBlockItem blockItem);
 
+    /*! Adds ConnectorBlock to a given Start- and EndBlock, connects startBlock, connectorBlock, targetBlock */
+    void addConnectorBlockAndSocket(VICUS::BMBlock *startBlock, VICUS::BMBlock *targetBlock, VICUS::BMSocket *startSocket, VICUS::BMSocket *targetSocket, int id);
+
+    /*! Removes previous connection and creates ConnectorBlock between three Blocks */
+    void convertConnectionToConnectorBlock(VICUS::BMBlock *connectedBlock, VICUS::BMSocket *connectedSocket, VICUS::BMBlock *newBlock, VICUS::BMSocket *newSocket, VICUS::BMConnector *oldCon);
+
+    // sets controllerID of Block and it's BlockItem
+    void setControllerID(VICUS::BMBlock* block, unsigned int id, QString controllerName);
+
     /*! Adds a new connector.
         The source and target sockets must match existing blocks/sockets in the network.
         Otherwise an exception is thrown.
     */
     void addConnector(const  VICUS::BMConnector & con);
+
+    /*! Creates new Connector between two Blocks and Sockets */
+    void createConnection(VICUS::BMBlock *startBlock, VICUS::BMBlock *targetBlock, VICUS::BMSocket *startSocket, VICUS::BMSocket *targetSocket);
 
     /*! Removes the block by giving a pointer to the block.
         Block must be stored in the network's block list.
@@ -213,6 +221,8 @@ public:
     */
     void removeConnector(unsigned int connectorIndex);
 
+    void removeSelectedConnector();
+
     /*! Removes the ConnectorBlock at the given index in the network's block list.
         Index must be a valid, otherwise an exception is thrown.
         Also removes any connections made to this block.
@@ -223,8 +233,6 @@ public:
     */
     void setHighlightallConnectorsOfBlock(const VICUS::BMBlock * block, bool highlighted);
 
-
-    VICUS::BMSocket*					m_connectingSocket = nullptr;
 signals:
     /*! Emitted when a new connection was made and a connector was added.
         The new connector is added to the end of the connectors in the network.
@@ -246,6 +254,9 @@ signals:
     /*! Emitted when the selection was cleared (by click on empty space in view). */
     void selectionCleared();
 
+    /* Emitted when new block is added. Used to check for component validity in SVSubNetwordEditDialog */
+    void newBlockAdded(VICUS::BMBlock *block, int componentID = -1);
+
 protected:
     /*! Listens for right-mouse-button clicks that turn off connection mode. */
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
@@ -266,9 +277,6 @@ protected:
 
     /*! Helper Function to initialise a network at startup */
     void setupNetwork();
-
-    /*! Helper function to create ConnectorBlock and Sockets*/
-    void addConnectorBlockAndSocket(VICUS::BMBlock *startBlock, VICUS::BMBlock *targetBlock, VICUS::BMSocket *startSocket, VICUS::BMSocket *targetSocket, int id);
 
     /*! Create the graphics item for a single connector line segment.
         You can override this method and create your own graphics items, derived from
@@ -296,31 +304,49 @@ private:
     */
     void updateConnectorSegmentItems(const  VICUS::BMConnector & con, SVBMConnectorSegmentItem * currentItem);
 
+    /*!Helper Function to get new valid NodeId */
+    unsigned int getNewNodeId();
+
+    /*! Helper Function to get new valid Block ID */
+    unsigned int getNewBlockId();
+
+    /*! Function to retrieve Blocks and Sockets of a Connection */
+    void getBlocksOfConnection(const VICUS::BMConnector & con, VICUS::BMBlock *&sourceBlock, VICUS::BMBlock *&targetBlock, VICUS::BMSocket *&sourceSocket, VICUS::BMSocket *&targetSocket);
+
+    /*! Helper Function to check if a Block and Connection is connected to a ConnectorBlock */
+    bool isConnectedToConnectorBlock(VICUS::BMSocket *evaluatedSocket, VICUS::BMConnector *con);
+
+    /*! Function to retrieve Connector of a ModelTypeBlock */
+    VICUS::BMConnector* getConnectorOfModelTypeBlock(const VICUS::BMBlock *block, const VICUS::BMSocket *socket);
+
+    /*! Helper Function to evaluate attempted new Connection */
+    bool evaluateNewConnection(QString startSocketName, QString targetSocketName);
+
+    bool checkOneConnectionPerSocket(const VICUS::BMBlock *block);
+
     /*! The network that we own and manage. */
-    VICUS::BMNetwork							*m_network;
+    VICUS::BMNetwork                            *m_network = nullptr;
 
     /*! The block-graphics items that we show on the scene. */
-    QList<SVBMBlockItem*>				m_blockItems;
+    QList<SVBMBlockItem*>                       m_blockItems;
 
     /*! The connector-graphics items that we show on the scene. */
-    QList<SVBMConnectorSegmentItem*>	m_connectorSegmentItems;
+    QList<SVBMConnectorSegmentItem*>            m_connectorSegmentItems;
 
     /*! The List of ConnectorBlocks */
-    QList<SVBMConnectorBlockItem*>      m_connectorBlockItems;
+    QList<SVBMConnectorBlockItem*>              m_connectorBlockItems;
 
     /*! Map to speed up lookup of connectors connected to a block.
         This map is initialized in createConnectorItems() and updated, whenever a connection is
         made/removed.
     */
-    QMap<const VICUS::BMBlock*, QSet< VICUS::BMConnector*> >	m_blockConnectorMap;
+    QMap<const VICUS::BMBlock*, QSet< VICUS::BMConnector*>>	m_blockConnectorMap;
 
-    /*! If true, the we are currently dragging a connection line. */
-    bool							m_currentlyConnecting;
-    /*! nodeID of Sockets. If two Sockets have the same NodeID, they are connected */
-    int								m_nodeIdCounter = 0;
-    /*! Simple counter to count the number of ModelType Blocks */
-    int                             m_blockCounter = 0;
+    /*! If true, then we are currently dragging a connection line. */
+    bool                                        m_currentlyConnecting;
 
+    /*! used to store the Socket that is currently in the process of being connected */
+    VICUS::BMSocket*                            m_connectingSocket = nullptr;
 };
 
 

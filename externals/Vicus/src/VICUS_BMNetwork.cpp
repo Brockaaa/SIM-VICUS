@@ -33,8 +33,8 @@
 
 #include "VICUS_BMNetwork.h"
 
-#include <QXmlStreamReader>
-#include <QXmlStreamWriter>
+/*#include <QXmlStreamReader>
+#include <QXmlStreamWriter>*/
 #include <QFile>
 #include <QSet>
 #include <QDebug>
@@ -46,9 +46,9 @@
 
 #include "VICUS_BMBlock.h"
 #include "VICUS_BMConnector.h"
-#include "BM_XMLHelpers.h"
+#include "VICUS_AbstractDBElement.h"
 #include "VICUS_BMGlobals.h"
-#include "VICUS_BMConstants.h"
+#include "VICUS_BMGlobals.h"
 
 #include "IBK_Exception.h"
 
@@ -57,268 +57,77 @@
 
 namespace VICUS {
 
-BMNetwork::BMNetwork()
-{
-}
-
 
 void BMNetwork::swap(BMNetwork & other) {
     other.m_blocks.swap(m_blocks);
     other.m_connectors.swap(m_connectors);
 }
 
-
-void BMNetwork::readXML(const QString & fname) {
-    qDebug() << "Reading network from file " << fname;
-    QFile xmlFile(fname);
-    if (!xmlFile.open(QIODevice::ReadOnly | QFile::Text))
-        throw std::runtime_error("Cannot read file.");
-
-    struct networkElementData{
-        int inletNodeId;
-        int outletNodeId;
-        int componentId;
-        QString displayName;
-    };
-
-    QXmlStreamReader reader(&xmlFile);
-    QMap<int, networkElementData> networkElementMap;
-
-    while(!reader.atEnd() && !reader.hasError()) {
-        reader.readNext();
-
-        if(reader.isStartElement()) {
-            QString ename = reader.name().toString();
-
-            if (ename == "Network") {
-                while(!reader.atEnd() && !reader.hasError()){
-                    reader.readNext();
-                    if(reader.isStartElement()){
-                        ename = reader.name().toString();
-                        if(ename == "Elements"){
-                            while(!reader.atEnd() && !reader.hasError()){
-                                reader.readNext();
-                                if(reader.isStartElement()){
-                                    int id = reader.attributes().value("id").toInt();
-                                    networkElementData data;
-                                    data.inletNodeId = reader.attributes().value("inletNodeId").toInt();
-                                    data.outletNodeId = reader.attributes().value("outletNodeId").toInt();
-                                    data.componentId = reader.attributes().value("componentId").toInt();
-                                    data.displayName = reader.attributes().value("displayName").toString();
-                                    networkElementMap[id] = data;
-                                }
-                                ename = reader.name().toString();
-                                if(ename == "Elements"){
-                                    break;
-                                }
-                            }
-                        }
-
-                        // Process 'Connections' section
-                        else if (ename == "Connections") {
-                            while(!reader.atEnd() && !reader.hasError()) {
-                                reader.readNext();
-                                if (reader.isStartElement()) {
-                                    ename = reader.name().toString();
-                                    if(ename == "Blocks"){
-                                        reader.readNext();
-                                        while(!reader.atEnd() && !reader.hasError()){
-                                            reader.readNext();
-                                            ename = reader.name().toString();
-                                            if (reader.isStartElement()){
-                                                    int id = reader.attributes().value("NetworkElementid").toInt();
-                                                    BMBlock block;
-                                                    // if regular block
-                                                    if(id != -1){
-                                                        BMSocket inlet = BMSocket();
-                                                        BMSocket outlet = BMSocket();
-                                                        if (networkElementMap.find(id) == networkElementMap.end())
-                                                            throw IBK::Exception("todo Maik","[Network::readXML]");
-                                                        inlet.m_id = networkElementMap[id].inletNodeId;
-                                                        outlet.m_id = networkElementMap[id].outletNodeId;
-                                                        inlet.m_name = INLET_NAME;
-                                                        outlet.m_name = OUTLET_NAME;
-                                                        inlet.m_orientation = Qt::Horizontal;
-                                                        outlet.m_orientation = Qt::Horizontal;
-                                                        inlet.m_pos = QPointF(0, BLOCK_HEIGHT / 2);
-                                                        outlet.m_pos = QPointF(BLOCK_WIDTH, BLOCK_HEIGHT / 2);
-                                                        inlet.m_inlet = true;
-                                                        outlet.m_inlet = false;
-
-                                                        block.m_sockets.append(inlet);
-                                                        block.m_sockets.append(outlet);
-                                                        block.m_name = QString::number(id);
-                                                        block.m_elementID = networkElementMap[id].componentId;
-                                                        block.m_size = QSize(BLOCK_WIDTH, BLOCK_HEIGHT);
-                                                        block.m_properties["ShowPixmap"] = true;
-                                                        // todo throw exception if not found
-                                                        block.m_properties["Pixmap"] = QPixmap(VICUS::ModelTypeAttributes[VICUS::ModelTypeLookup(block.m_elementID)].fileName);
-                                                        block.m_displayName = networkElementMap[id].displayName;
-                                                    }
-                                                    // if either Entrance, Exit or Connectorblock
-                                                    else{
-                                                        block = BMBlock( reader.attributes().value("name").toString() );
-                                                        // if Entrance block
-                                                        if(block.m_name == ENTRANCE_NAME){
-                                                            BMSocket outlet = BMSocket();
-                                                            outlet.m_id = ENTRANCE_ID;
-                                                            outlet.m_name = OUTLET_NAME;
-                                                            outlet.m_orientation = Qt::Horizontal;
-                                                            outlet.m_pos = QPointF(ENTRANCEEXITBLOCK_WIDTH, ENTRANCEEXITBLOCK_WIDTH / 2);
-                                                            outlet.m_inlet = false;
-                                                            block.m_sockets.append(outlet);
-                                                            block.m_size = QSize(ENTRANCEEXITBLOCK_WIDTH, ENTRANCEEXITBLOCK_HEIGHT);
-                                                            block.m_displayName = ENTRANCE_NAME;
-
-                                                        }
-                                                        // if Exit block
-                                                        else if(block.m_name == EXIT_NAME){
-                                                            BMSocket inlet = BMSocket();
-                                                            inlet.m_id = EXIT_ID;
-                                                            inlet.m_name = INLET_NAME;
-                                                            inlet.m_orientation = Qt::Horizontal;
-                                                            inlet.m_pos = QPointF(0, ENTRANCEEXITBLOCK_HEIGHT / 2);
-                                                            inlet.m_inlet = true;
-                                                            block.m_sockets.append(inlet);
-                                                            block.m_size = QSize(ENTRANCEEXITBLOCK_WIDTH, ENTRANCEEXITBLOCK_WIDTH);
-                                                            block.m_displayName = EXIT_NAME;
-                                                        }
-                                                        // if ConnectorBlock
-                                                        else{
-                                                            int nodeId = reader.attributes().value("NodeId").toInt();
-                                                            BMSocket inlet = BMSocket();
-                                                            BMSocket outlet = BMSocket();
-                                                            inlet.m_id = nodeId;
-                                                            outlet.m_id = nodeId;
-                                                            inlet.m_name = INLET_NAME;
-                                                            outlet.m_name = OUTLET_NAME;
-                                                            inlet.m_orientation = Qt::Horizontal;
-                                                            outlet.m_orientation = Qt::Horizontal;
-                                                            inlet.m_pos = QPointF(0, CONNECTORBLOCK_HEIGHT / 2);
-                                                            outlet.m_pos = QPointF(CONNECTORBLOCK_WIDTH, CONNECTORBLOCK_HEIGHT / 2);
-                                                            inlet.m_inlet = true;
-                                                            outlet.m_inlet = false;
-                                                            inlet.m_connectorSocket = true;
-                                                            outlet.m_connectorSocket = true;
-                                                            block.m_sockets.append(inlet);
-                                                            block.m_sockets.append(outlet);
-                                                            block.m_size = QSize(CONNECTORBLOCK_WIDTH, CONNECTORBLOCK_HEIGHT);
-                                                        }
-                                                    }
-                                                    QStringRef pos = reader.attributes().value("Position");
-                                                    QVector<QStringRef> posValues = pos.split(", ");
-                                                    block.m_pos = QPointF(posValues[0].toFloat(), posValues[1].toFloat());
-                                                    m_blocks.push_back(block);
-                                            }
-                                            else if(ename == "Blocks"){
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    else if(ename == "Connectors"){
-                                        reader.readNext();
-                                        while(!reader.atEnd() && !reader.hasError()){
-                                            reader.readNext();
-                                            ename = reader.name().toString();
-                                            if (reader.isStartElement()){
-
-                                                if(ename == "Connector"){
-                                                    BMConnector conn = BMConnector();
-                                                    conn.m_name = CONNECTOR_NAME;
-                                                    conn.readXML(reader);
-                                                    qDebug() << "Connector: " << reader.attributes().value("source").toString() << " " << reader.attributes().value("target").toString();
-                                                    m_connectors.push_back(conn);
-                                                }
-                                            }
-                                            else if(ename == "Connectors"){
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    else {
-                                        reader.raiseError( QString("Unexpected XML tag '%1'.").arg(ename));
-                                        break;
-                                    }
-                                }
-                                else if (reader.isEndElement()) {
-                                    QString sectionName = reader.name().toString();
-                                }
-                            }
-                        }
-
-                        else {
-                            reader.raiseError( QString("Unexpected XML tag '%1'.").arg(ename));
-                            break;
-                        }
+void VICUS::BMNetwork::BMNetwork::readXML(const TiXmlElement *element) {
+    FUNCID(BMNetwork::readXML);
+    try {
+        // search for mandatory elements
+        // reading elements
+        const TiXmlElement * c = element->FirstChildElement();
+        while (c) {
+            const std::string & cName = c->ValueStr();
+            if (cName == "Blocks"){
+                qDebug() << "Blocks found!";
+                const TiXmlElement * b = c->FirstChildElement();
+                while (b) {
+                    const std::string & bName = b->ValueStr();
+                    if (bName == "Block"){
+                        qDebug() << "Block found!";
+                        BMBlock * block = new BMBlock();
+                        block->readXML(b);
+                        m_blocks.push_back(*block);
                     }
+                    b = b->NextSiblingElement();
                 }
             }
+            else if(cName == "Connectors"){
+                qDebug() << "Connectors found!";
+                const TiXmlElement * con = c->FirstChildElement();
+                while (con) {
+                    const std::string & conName = con->ValueStr();
+                    if (conName == "Connector"){
+                        qDebug() << "Connector found!";
+                        BMConnector * connector = new BMConnector();
+                        connector->readXML(con);
+                        m_connectors.push_back(*connector);
+                    }
+                    con = con->NextSiblingElement();
+                }
+            }
+            else {
+                IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(cName).arg(c->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+            }
+            c = c->NextSiblingElement();
         }
-
-        if (reader.hasError()) {
-            throw std::runtime_error( reader.errorString().toStdString() );
-        }
+    }
+    catch (IBK::Exception & ex) {
+        throw IBK::Exception( ex, IBK::FormatString("Error reading 'BMNetwork' element."), FUNC_ID);
+    }
+    catch (std::exception & ex2) {
+        throw IBK::Exception( IBK::FormatString("%1\nError reading 'BMNetwork' element.").arg(ex2.what()), FUNC_ID);
     }
 }
 
-
-
-
-void BMNetwork::writeXML(const QString & fname) const {
-
-    QFile xmlFile(fname);
-    if (!xmlFile.open(QIODevice::WriteOnly | QFile::Truncate | QFile::Text))
-        throw std::runtime_error("Cannot create output file.");
-    QXmlStreamWriter stream(&xmlFile);
-    stream.setAutoFormatting(true);
-    stream.setAutoFormattingIndent(-1);
-    stream.writeStartDocument();
-    stream.writeStartElement("Network");
-    stream.writeStartElement("Elements");
-    int networkElementId = 1;
-    auto iterator = m_blocks.begin();
-    for(unsigned int i = 0; i < m_blocks.size(); i++){
-        // Skip Connector Blocks
-
-        BMBlock block = *iterator;
-        if(block.m_name.contains(CONNECTORBLOCK_NAME) || block.m_name == ENTRANCE_NAME || block.m_name == EXIT_NAME){
-            iterator++;
-            continue;
-        }
-        stream.writeStartElement("NetworkElement");
-        stream.writeAttribute("id", block.m_name);
-        stream.writeAttribute("inletNodeId", QString::number(block.m_sockets[0].m_id));
-        stream.writeAttribute("outletNodeId", QString::number(block.m_sockets[1].m_id));
-        stream.writeAttribute("componentId", QString::number(block.m_elementID));
-        stream.writeAttribute("displayName", block.m_displayName);
-        stream.writeEndElement();
-        iterator++;
-        networkElementId++;
+TiXmlElement *VICUS::BMNetwork::BMNetwork::writeXML(TiXmlElement *parent) const {
+    TiXmlElement * e = new TiXmlElement("Connectors");
+    parent->LinkEndChild(e);
+    TiXmlElement * blockE = new TiXmlElement("Blocks");
+    e->LinkEndChild(blockE);
+    for(auto block : m_blocks) {
+        block.writeXML(blockE);
     }
-    stream.writeEndElement(); // Elements
-
-    stream.writeStartElement("Connections");
-    stream.writeStartElement("Blocks");
-    if (!m_blocks.empty()) {
-        for (const BMBlock & b : m_blocks)
-            b.writeXML(stream);
+    TiXmlElement * connectorE = new TiXmlElement("Connectors");
+    e->LinkEndChild(connectorE);
+    for(auto connector : m_connectors) {
+        connector.writeXML(connectorE);
     }
-    stream.writeEndElement(); // Blocks
-
-    stream.writeStartElement("Connectors");
-    if (!m_connectors.empty()) {
-        for (const BMConnector & c : m_connectors)
-            c.writeXML(stream);
-    }
-    stream.writeEndElement(); // Connectors
-
-    stream.writeEndElement(); // Connections
-    stream.writeEndElement(); //Network
-
-    stream.writeEndDocument();
+    return e;
 }
-
-
 
 void BMNetwork::checkNames(bool printNames) const {
     QSet<QString> blockNames;

@@ -13,40 +13,36 @@ SVBMConnectorBlockItem::SVBMConnectorBlockItem(VICUS::BMBlock *b) : SVBMBlockIte
     setRect(0,0,b->m_size.width(), b->m_size.height());
     setPos(b->m_pos);
 }
-
-void SVBMConnectorBlockItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget){
+void SVBMConnectorBlockItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget */*widget*/){
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing, true);
-    QLinearGradient grad(QPointF(0,0), QPointF(rect().width(),0));
+
     bool selected = (option->state & QStyle::State_Selected);
-    if (selected) {
-        painter->setPen(QPen(QBrush(QColor(0,128,0)), 1.5));
-        grad.setColorAt(0, QColor(230,255,230));
-        grad.setColorAt(1, QColor(200,240,180));
-    }
-    else {
-        grad.setColorAt(0, QColor(196,196,255));
-        grad.setColorAt(1, QColor(220,220,255));
-    }
-    painter->setBrush(grad);
 
     QPen p;
 
-    if(!selected){
-        p.setStyle(Qt::SolidLine);
-        p.setColor(Qt::black);
-    } else
-    {
+    if(selected) {
+        painter->setPen(QPen(QBrush(QColor(0,128,0)), 1.5));
         p.setColor(QColor(192,0,0));
         p.setStyle(Qt::DashLine);
     }
-    if(m_isHighlighted){
+    else {
+        p.setStyle(Qt::SolidLine);
+        p.setColor(Qt::black);
+    }
+
+    if(m_isHighlighted) {
         p.setWidthF(1.6);
     }
+
+    // Set brush to solid black
+    painter->setBrush(QColor(Qt::black));
+
     painter->setPen(p);
     painter->drawEllipse(rect());
     painter->restore();
 }
+
 
 void SVBMConnectorBlockItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event){
     QGraphicsItem::hoverEnterEvent(event);
@@ -61,3 +57,4 @@ void SVBMConnectorBlockItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event){
     sceneManager->setHighlightallConnectorsOfBlock(block(), false);
     m_isHighlighted = false;
 }
+

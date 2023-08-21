@@ -39,6 +39,7 @@
 #include <QString>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
+#include <VICUS_Constants.h>
 
 namespace VICUS {
 
@@ -123,10 +124,9 @@ public:
     bool			m_inlet;
 
     /* ID of Socket, set automatically when connecting */
-    int				m_id = -1;
+    unsigned int				m_id = VICUS::INVALID_ID;
 
-
-    bool                    m_connectorSocket = false;
+    bool            m_connectorSocket = false;
 };
 
 } // namespace VICUS

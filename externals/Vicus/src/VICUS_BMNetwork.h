@@ -39,8 +39,12 @@
 #include "VICUS_BMBlock.h"
 #include "VICUS_BMSocket.h"
 #include "VICUS_BMConnector.h"
+#include "VICUS_utilities.h"
+#include "VICUS_Constants.h"
+#include "VICUS_CodeGenMacros.h"
 
-class QXmlStreamReader;
+#include "VICUS_AbstractDBElement.h"
+
 
 namespace VICUS {
 
@@ -52,16 +56,15 @@ namespace VICUS {
 class BMNetwork {
 public:
     /*! Default C'tor. */
-    BMNetwork();
+    BMNetwork() = default;
 
     /*! Efficient swap function. */
     void swap(BMNetwork & other);
 
-    /*! Reads network from file. */
-    void readXML(const QString & fname);
-    /*! Writes network to file. */
-    void writeXML(const QString & fname) const;
-    /*! Flattens all ID names of sockets and blocks and checks for duplicates. */
+    void readXML(const TiXmlElement * element);
+
+    TiXmlElement * writeXML(TiXmlElement * parent) const;
+
     void checkNames(bool printNames=false) const;
 
     /*! Tests, if the network has a block with a socket, both identified by socketVariableName in format
@@ -100,25 +103,20 @@ public:
             We must use a list here, so that when we add a block during the socket-connect operation
             (the invisible block) the existing nodes are not invalidated.
     */
-    std::list<BMBlock>		m_blocks;
+    std::list<BMBlock>		m_blocks;    //XML:E:tag=Blocks
 
     /*! List of all connectors in the network.
         Connectors are always associated with sockets (referenced via
         block-id and socket-id).
     */
-    std::list<BMConnector>	m_connectors;
+    std::list<BMConnector>	m_connectors; //XML:E:tag=Connectors
 
-
-    // *** static functions ***
 
     /*! Takes a flat name of format <block-name>.<socket-name> and extracts both parts.
         Throws an exception if . is missing or either name is an empty string.
     */
     static void splitFlatName(const QString & flatVariableName, QString & blockName, QString & socketName);
 
-private:
-
-    void readBlocks(QXmlStreamReader & reader);
 };
 
 } // namespace VICUS

@@ -3,16 +3,18 @@
 
 #include <QWidget>
 #include <QTableWidget>
-#include <QListWidget>
 
-#include <VICUS_BMConstants.h>
-
+#include <VICUS_BMGlobals.h>
 #include "VICUS_NetworkComponent.h"
 
 class SVBMZoomMeshGraphicsView;
 
 namespace Ui {
 class SVSubNetworkEditDialogTable;
+}
+
+namespace VICUS{
+class NetworkController;
 }
 
 class SVSubNetworkEditDialogTable : public QTableWidget
@@ -24,21 +26,24 @@ public:
     ~SVSubNetworkEditDialogTable();
     int rowSize() const;
     void addElement(VICUS::NetworkComponent::ModelType type);
+    void addElement(VICUS::NetworkComponent &controller);
+    void clear();
+    std::vector<QString> m_elementList;
 
 private:
     Ui::SVSubNetworkEditDialogTable *ui;
 
-    std::vector<VICUS::NetworkComponent::ModelType> elementList = std::vector<VICUS::NetworkComponent::ModelType>();
-
     int m_rowSize = 0;
-    int m_defaultRowHeight = BLOCK_HEIGHT;
-
-    SVBMZoomMeshGraphicsView *BM_GraphicsView = nullptr;
+    int m_defaultRowHeight = VICUS::BLOCK_HEIGHT;
 
     void startDrag(Qt::DropActions supportedActions) override;
+    void focusOutEvent(QFocusEvent *event) override;
 
     bool dragging = false;
     QPoint dragStartPosition;
+
+    SVBMZoomMeshGraphicsView *                      BM_GraphicsView = nullptr;
+
 
 };
 

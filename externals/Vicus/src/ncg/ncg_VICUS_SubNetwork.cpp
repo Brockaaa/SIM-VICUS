@@ -75,6 +75,32 @@ void SubNetwork::readXML(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
+			else if (cName == "Components") {
+				const TiXmlElement * c2 = c->FirstChildElement();
+				while (c2) {
+					const std::string & c2Name = c2->ValueStr();
+					if (c2Name != "NetworkComponent")
+						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+					NetworkComponent obj;
+					obj.readXML(c2);
+					m_components.push_back(obj);
+					c2 = c2->NextSiblingElement();
+				}
+			}
+			else if (cName == "Controllers") {
+				const TiXmlElement * c2 = c->FirstChildElement();
+				while (c2) {
+					const std::string & c2Name = c2->ValueStr();
+					if (c2Name != "NetworkController")
+						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+					NetworkController obj;
+					obj.readXML(c2);
+					m_controllers.push_back(obj);
+					c2 = c2->NextSiblingElement();
+				}
+			}
+			else if (cName == "GraphicalNetwork")
+				m_graphicalNetwork.readXML(c);
 			else {
 				IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(cName).arg(c->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 			}
@@ -114,6 +140,36 @@ TiXmlElement * SubNetwork::writeXML(TiXmlElement * parent) const {
 		}
 	}
 
+
+	if (!m_components.empty()) {
+		TiXmlElement * child = new TiXmlElement("Components");
+		e->LinkEndChild(child);
+
+		for (std::vector<NetworkComponent>::const_iterator it = m_components.begin();
+			it != m_components.end(); ++it)
+		{
+			it->writeXML(child);
+		}
+	}
+
+
+	if (!m_controllers.empty()) {
+		TiXmlElement * child = new TiXmlElement("Controllers");
+		e->LinkEndChild(child);
+
+		for (std::vector<NetworkController>::const_iterator it = m_controllers.begin();
+			it != m_controllers.end(); ++it)
+		{
+			it->writeXML(child);
+		}
+	}
+
+
+	{
+		TiXmlElement * customElement = m_graphicalNetwork.writeXML(e);
+		if (customElement != nullptr)
+			customElement->ToElement()->SetValue("GraphicalNetwork");
+	}
 	return e;
 }
 

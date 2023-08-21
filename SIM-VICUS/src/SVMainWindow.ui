@@ -238,7 +238,7 @@
   </widget>
   <action name="actionFileNew">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/32x32/filenew_32x32.png</normaloff>:/gfx/actions/32x32/filenew_32x32.png</iconset>
    </property>
    <property name="text">
@@ -250,7 +250,7 @@
   </action>
   <action name="actionFileOpen">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/32x32/fileopen_32x32.png</normaloff>:/gfx/actions/32x32/fileopen_32x32.png</iconset>
    </property>
    <property name="text">
@@ -262,7 +262,7 @@
   </action>
   <action name="actionFileSave">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/32x32/filesave_32x32.png</normaloff>:/gfx/actions/32x32/filesave_32x32.png</iconset>
    </property>
    <property name="text">
@@ -301,7 +301,7 @@
   </action>
   <action name="actionFileQuit">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/32x32/exit_32x32.png</normaloff>:/gfx/actions/32x32/exit_32x32.png</iconset>
    </property>
    <property name="text">
@@ -326,7 +326,7 @@
   </action>
   <action name="actionFileReload">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/24x24/reload.png</normaloff>:/gfx/actions/24x24/reload.png</iconset>
    </property>
    <property name="text">
@@ -346,7 +346,7 @@
   </action>
   <action name="actionEditTextEditProject">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/24x24/edit.png</normaloff>:/gfx/actions/24x24/edit.png</iconset>
    </property>
    <property name="text">
@@ -358,7 +358,7 @@
   </action>
   <action name="actionEditPreferences">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/64x64/projectProperties.png</normaloff>:/gfx/actions/64x64/projectProperties.png</iconset>
    </property>
    <property name="text">
@@ -378,7 +378,7 @@
   </action>
   <action name="actionToolsExternalPostProcessing">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/32x32/PostProcApp_32x32.png</normaloff>:/gfx/actions/32x32/PostProcApp_32x32.png</iconset>
    </property>
    <property name="text">
@@ -390,7 +390,7 @@
   </action>
   <action name="actionToolsCCMeditor">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/32x32/CCMEditor_32.png</normaloff>:/gfx/actions/32x32/CCMEditor_32.png</iconset>
    </property>
    <property name="text">
@@ -496,7 +496,7 @@
   </action>
   <action name="actionHelpAbout">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/32x32/info_32x32.png</normaloff>:/gfx/actions/32x32/info_32x32.png</iconset>
    </property>
    <property name="text">
@@ -620,7 +620,7 @@
   </action>
   <action name="actionSimulationExportFMI">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/32x32/FMU_32x32.png</normaloff>:/gfx/actions/32x32/FMU_32x32.png</iconset>
    </property>
    <property name="text">
@@ -795,7 +795,7 @@
   </action>
   <action name="actionEditApplicationLog">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/24x24/edit.png</normaloff>:/gfx/actions/24x24/edit.png</iconset>
    </property>
    <property name="text">
@@ -867,8 +867,6 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources>
-  <include location="../resources/SIM-VICUS.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

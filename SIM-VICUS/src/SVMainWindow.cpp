@@ -319,12 +319,12 @@ SVDatabaseEditDialog *SVMainWindow::dbFluidEditDialog()
 	return m_dbFluidEditDialog;
 }
 
-SVDatabaseEditDialog *SVMainWindow::dbNetworkControllerEditDialog()
+/*SVDatabaseEditDialog *SVMainWindow::dbNetworkControllerEditDialog()
 {
 	if (m_dbNetworkControllerEditDialog == nullptr)
 		m_dbNetworkControllerEditDialog = SVDatabaseEditDialog::createNetworkControllerEditDialog(this);
 	return m_dbNetworkControllerEditDialog;
-}
+}*/
 
 SVDatabaseEditDialog *SVMainWindow::dbSubNetworkEditDialog()
 {
@@ -517,7 +517,8 @@ void SVMainWindow::on_actionDBHydraulicComponents_triggered() {
 }
 
 void SVMainWindow::on_actionDBControllers_triggered() {
-	dbNetworkControllerEditDialog()->edit();
+	//dbNetworkControllerEditDialog()->edit();
+	;
 }
 
 void SVMainWindow::on_actionDBSubNetworks_triggered() {

@@ -65,15 +65,14 @@ public:
     /*! forwards request to SceneManager */
     void addBlock(VICUS::BMBlock* block);
     /*! forwards request to SceneManager */
-    void addBlock(VICUS::NetworkComponent::ModelType type, QPoint point);
+    void addBlock(VICUS::NetworkComponent::ModelType type, QPoint point, int controllerID = -1);
     /*! forwards request to SceneManager */
     void removeBlock();
-    /*! forwards request to SceneManager */
-    void saveNetwork(QString filename);
-    /*! forwards request to SceneManager */
-    void openNetwork(QString filename);
 
+    /*! returns scaling factor for x axis */
     double getScaleX();
+
+    /*! returns scaling factor for y axis */
     double getScaleY();
 
 public slots:
