@@ -22,91 +22,91 @@ class SVSubNetworkEditDialogTable;
 
 class SVSubNetworkEditDialog : public QDialog
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit SVSubNetworkEditDialog(QWidget *parent = nullptr, VICUS::SubNetwork * subNetwork = nullptr, SVDatabase * db = nullptr);
-    /*! D-tor */
-    ~SVSubNetworkEditDialog();
-    /*! Getter for private member ZoomMeshGraphicsView */
-    SVBMZoomMeshGraphicsView *zoomMeshGraphicsView();
-    /*! sets up Subnetwork and calls setNetwork)= */
-    void setupSubNetwork(VICUS::SubNetwork * subNetwork);
-    /*! opens window, sets appropriate height and weight values for the Splitter and the Scene */
-    void show();
-    /*! Gets called whenever the QDialog Window is resized, sets appropriate height values for a wrapper Widget of a QtExtToolBox */
-    void resize(int w, int h);
+	explicit SVSubNetworkEditDialog(QWidget *parent = nullptr, VICUS::SubNetwork * subNetwork = nullptr, SVDatabase * db = nullptr);
+	/*! D-tor */
+	~SVSubNetworkEditDialog();
+	/*! Getter for private member ZoomMeshGraphicsView */
+	SVBMZoomMeshGraphicsView *zoomMeshGraphicsView();
+	/*! sets up Subnetwork and calls setNetwork)= */
+	void setupSubNetwork(VICUS::SubNetwork * subNetwork);
+	/*! opens window, sets appropriate height and weight values for the Splitter and the Scene */
+	void show();
+	/*! Gets called whenever the QDialog Window is resized, sets appropriate height values for a wrapper Widget of a QtExtToolBox */
+	void resize(int w, int h);
 
 protected:
-    /*! Connected to slot newBlockSelected() in SVBMSceneManager, updates the widgets displaying informations of selected Block.
-        if connectorBlock or Entrance/Exits blocks are selected, reset all widgets displaying informations  */
-    void blockSelectedEvent();
-    /*! Connected to slot newConnectorSelected(). Evaluates if Connector is deletable, if yes, activate removeButton */
-    void connectorSelectedEvent(const QString & sourceSocketName, const QString & targetSocketName);
-    /*/ Connected to selectionCleared() in SVBMSceneManager, resets all widgets and buttons that were activated when selcting Blocks or Connectors */
-    void selectionClearedEvent();
+	/*! Connected to slot newBlockSelected() in SVBMSceneManager, updates the widgets displaying informations of selected Block.
+		if connectorBlock or Entrance/Exits blocks are selected, reset all widgets displaying informations  */
+	void blockSelectedEvent();
+	/*! Connected to slot newConnectorSelected(). Evaluates if Connector is deletable, if yes, activate removeButton */
+	void connectorSelectedEvent(const QString & sourceSocketName, const QString & targetSocketName);
+	/*/ Connected to selectionCleared() in SVBMSceneManager, resets all widgets and buttons that were activated when selcting Blocks or Connectors */
+	void selectionClearedEvent();
 
 private slots:
-    /*! gets called when removeBlockOrConnectorButton is clicked, checks if Block or Connector is selected, then forwards request to SVBMSceneManager */
-    void on_removeBlockOrConnectorButton_clicked();
-    /*! gets called when the ControllerEditWidgetButton is clicked. Creates new Widget when previously not existed. Also creates new Controller
-     *  when selectedBlock does not previously have one */
-    void on_openControllerWidgetButton_clicked();
-    /*! get called when removeControllerButton is clicked,
-     *  checks if there is a Controller and afterwards deletes it from the block and vektor */
-    void on_removeControllerButton_clicked();
-    /*! gets called when copyBlockButton is clicked,
-     * checks if there is a Block selected and calls copyBlock, copied relevant Controller and Component
-     * and adds the vectors. Calls setController to ensure that name of Controller is visible in the view*/
-    void on_copyBlockButton_clicked();
-    /*! gets called when a Component is selected in the QtExtToolBox. Is connected to SVSubNetworkEditTable
-     *  activates or deactivates the removeControllerFromDBButton */
-    void on_componentSelected();
-    /*! gets called when addToDBButton is clicked,
-     *  adds component of Block to DB */
-    void on_addToDBButton_clicked();
-    /*! gets called when removeFromDBButton is clicked,
-     *  removes selected Component from DB if it is not builtIn */
-    void on_removeFromUserDBButton_clicked();
+	/*! gets called when removeBlockOrConnectorButton is clicked, checks if Block or Connector is selected, then forwards request to SVBMSceneManager */
+	void on_removeBlockOrConnectorButton_clicked();
+	/*! gets called when the ControllerEditWidgetButton is clicked. Creates new Widget when previously not existed. Also creates new Controller
+	 *  when selectedBlock does not previously have one */
+	void on_openControllerWidgetButton_clicked();
+	/*! get called when removeControllerButton is clicked,
+	 *  checks if there is a Controller and afterwards deletes it from the block and vektor */
+	void on_removeControllerButton_clicked();
+	/*! gets called when copyBlockButton is clicked,
+	 * checks if there is a Block selected and calls copyBlock, copied relevant Controller and Component
+	 * and adds the vectors. Calls setController to ensure that name of Controller is visible in the view*/
+	void on_copyBlockButton_clicked();
+	/*! gets called when a Component is selected in the QtExtToolBox. Is connected to SVSubNetworkEditTable
+	 *  activates or deactivates the removeControllerFromDBButton */
+	void on_componentSelected();
+	/*! gets called when addToDBButton is clicked,
+	 *  adds component of Block to DB */
+	void on_addToDBButton_clicked();
+	/*! gets called when removeFromDBButton is clicked,
+	 *  removes selected Component from DB if it is not builtIn */
+	void on_removeFromUserDBButton_clicked();
 
 private:
-    Ui::SVSubNetworkEditDialog *ui;
-    /*! Creates the ToolBox, also used to update the ToolBox */
-    void createToolBox();
-    /*! sets Network of the SVBMSceneManager. Checks if network already filled, if already filled add the the missing values of BMBlock that were not directly saved in the XML from networkElements
-     *   if not filled, create new Block by iterating over all NetworkElements in m_subNetwork, positions the Blocks
-     *   so that each Block following block has the same distance from the previous block*/
-    void setNetwork();
-    /*! gets called when the Dialog is accepted and closed. Deletes all unused components from the vector,
-     * updates networkElements in the SubNetwork and copies all components and controllers into the SubNetwork */
-    void on_buttonBox_accepted();
-    /*! gets called when the Dialog is rejected and closed. Closes the Dialog. Any changes will be lost */
-    void on_buttonBox_rejected();
-    /*! gets called in the controllerDialog window. The updated controller is copied into the Block
-     * and the name of the controller is set in the view */
-    void on_controllerDialog_accepted(VICUS::BMBlock *block, VICUS::NetworkController controller);
-    /*! gets called when the name of a Block is changed. Sets the name in the displayName attribute of the BMBlock,
-     *  updates view immediately */
-    void on_NameTextChanged(const QString &text);
-    /*! gets called when a new Block is dragged from the ToolBox into the scene */
-    void on_newBlockAdded(VICUS::BMBlock *block, unsigned int componentID);
-    /*! Takes the componentID of a component and returns the index in the component Vector */
-    unsigned int getComponentIndex(unsigned int componentID);
-    /*! Generates new unique ComponentID */
-    unsigned int getNewComponentID();
-    /*! Takes tje controllerID of a controller and returns the index in the controller Vector */
-    unsigned int getControllerIndex(unsigned int controllerID);
-    /*! Generates new unique ControllerID */
-    unsigned int getNewControllerID();
+	Ui::SVSubNetworkEditDialog *ui;
+	/*! Creates the ToolBox, also used to update the ToolBox */
+	void createToolBox();
+	/*! sets Network of the SVBMSceneManager. Checks if network already filled, if already filled add the the missing values of BMBlock that were not directly saved in the XML from networkElements
+	 *   if not filled, create new Block by iterating over all NetworkElements in m_subNetwork, positions the Blocks
+	 *   so that each Block following block has the same distance from the previous block*/
+	void setNetwork();
+	/*! gets called when the Dialog is accepted and closed. Deletes all unused components from the vector,
+	 * updates networkElements in the SubNetwork and copies all components and controllers into the SubNetwork */
+	void on_buttonBox_accepted();
+	/*! gets called when the Dialog is rejected and closed. Closes the Dialog. Any changes will be lost */
+	void on_buttonBox_rejected();
+	/*! gets called in the controllerDialog window. The updated controller is copied into the Block
+	 * and the name of the controller is set in the view */
+	void on_controllerDialog_accepted(VICUS::BMBlock *block, VICUS::NetworkController controller);
+	/*! gets called when the name of a Block is changed. Sets the name in the displayName attribute of the BMBlock,
+	 *  updates view immediately */
+	void on_NameTextChanged(const QString &text);
+	/*! gets called when a new Block is dragged from the ToolBox into the scene */
+	void on_newBlockAdded(VICUS::BMBlock *block, unsigned int componentID);
+	/*! Takes the componentID of a component and returns the index in the component Vector */
+	unsigned int componentIndex(unsigned int componentID);
+	/*! Generates new unique ComponentID */
+	unsigned int createNewComponentID();
+	/*! Takes tje controllerID of a controller and returns the index in the controller Vector */
+	unsigned int controllerIndex(unsigned int controllerID);
+	/*! Generates new unique ControllerID */
+	unsigned int getNewControllerID();
 
-    SVBMSceneManager                                            *m_sceneManager = nullptr;
-    SVDBNetworkControllerEditWidget                             *m_controllerEditWidget = nullptr;
-    SVDatabase                                                  *m_db = nullptr;
-    VICUS::SubNetwork                                           *m_subNetwork = nullptr;
-    std::vector<VICUS::NetworkComponent>                        m_networkComponents;
-    std::vector<VICUS::NetworkController>                       m_networkControllers;
-    SVSubNetworkEditDialogTable*                                m_senderTable = nullptr;
-    std::vector<SVSubNetworkEditDialogTable*>                   tables;
+	SVBMSceneManager                                            *m_sceneManager = nullptr;
+	SVDBNetworkControllerEditWidget                             *m_controllerEditWidget = nullptr;
+	SVDatabase                                                  *m_db = nullptr;
+	VICUS::SubNetwork                                           *m_subNetwork = nullptr;
+	std::vector<VICUS::NetworkComponent>                        m_networkComponents;
+	std::vector<VICUS::NetworkController>                       m_networkControllers;
+	SVSubNetworkEditDialogTable*                                m_senderTable = nullptr;
+	std::vector<SVSubNetworkEditDialogTable*>                   tables;
 };
 
 #endif // SVSUBNETWORKEDITDIALOG_H

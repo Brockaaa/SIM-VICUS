@@ -118,7 +118,7 @@ QPointF SVBMSocketItem::pos(){
 // *** protected functions ***
 
 void SVBMSocketItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event) {
-    if(m_socket->m_connectorSocket) return;
+    if(m_socket->m_isSocketOfConnector) return;
     SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
     // for outlet sockets, we allow hovering if:
     // - scene is not currently in connecting mode
@@ -152,7 +152,7 @@ void SVBMSocketItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event) {
 
 
 void SVBMSocketItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event) {
-    if(m_socket->m_connectorSocket) return;
+    if(m_socket->m_isSocketOfConnector) return;
     if (m_hovered)
         QApplication::restoreOverrideCursor();
     m_hovered = false;
@@ -161,7 +161,7 @@ void SVBMSocketItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event) {
 
 
 void SVBMSocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*option*/, QWidget * /*widget*/ ) {
-    if(m_socket->m_connectorSocket) return;
+    if(m_socket->m_isSocketOfConnector) return;
     // special handling for invisible blocks
     SVBMBlockItem * bi = dynamic_cast<SVBMBlockItem*>(parentItem());
     if (bi->block()->m_name == VICUS::BMGlobals::InvisibleLabel)
@@ -317,7 +317,7 @@ void SVBMSocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /
 
 
 void SVBMSocketItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    if(m_socket->m_connectorSocket) return;
+    if(m_socket->m_isSocketOfConnector) return;
     // starting a connection?
     // ignore clicks on inlet sockets
     if (!m_socket->m_inlet) {

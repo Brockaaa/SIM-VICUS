@@ -1,34 +1,34 @@
 /*	BSD 3-Clause License
 
-    This file is part of the BlockMod Library.
+	This file is part of the BlockMod Library.
 
-    Copyright (c) 2019, Andreas Nicolai
-    All rights reserved.
+	Copyright (c) 2019, Andreas Nicolai
+	All rights reserved.
 
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions are met:
 
-    1. Redistributions of source code must retain the above copyright notice, this
-       list of conditions and the following disclaimer.
+	1. Redistributions of source code must retain the above copyright notice, this
+	   list of conditions and the following disclaimer.
 
-    2. Redistributions in binary form must reproduce the above copyright notice,
-       this list of conditions and the following disclaimer in the documentation
-       and/or other materials provided with the distribution.
+	2. Redistributions in binary form must reproduce the above copyright notice,
+	   this list of conditions and the following disclaimer in the documentation
+	   and/or other materials provided with the distribution.
 
-    3. Neither the name of the copyright holder nor the names of its
-       contributors may be used to endorse or promote products derived from
-       this software without specific prior written permission.
+	3. Neither the name of the copyright holder nor the names of its
+	   contributors may be used to endorse or promote products derived from
+	   this software without specific prior written permission.
 
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+	DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+	FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+	DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+	SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+	CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "SVBMBlockItem.h"
@@ -57,70 +57,70 @@
 
 
 SVBMBlockItem::SVBMBlockItem(VICUS::BMBlock * b) :
-    QGraphicsRectItem(),
-    m_block(b)
+	QGraphicsRectItem(),
+	m_block(b)
 {
-    setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemSendsGeometryChanges);
-    setZValue(10);
-    setAcceptHoverEvents(true);
-    createSocketItems();
+	setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemSendsGeometryChanges);
+	setZValue(10);
+	setAcceptHoverEvents(true);
+	createSocketItems();
 }
 
 
 SVBMSocketItem * SVBMBlockItem::inletSocketAcceptingConnection(const QPointF & scenePos) {
-    for (SVBMSocketItem * si : m_socketItems) {
-        QPointF socketScenePos = si->mapToScene(si->socket()->m_pos);
+	for (SVBMSocketItem * si : m_socketItems) {
+		QPointF socketScenePos = si->mapToScene(si->socket()->m_pos);
 
-        //	QPointF socketScenePos2(socketScenePos);
-        socketScenePos -= scenePos;
-        double d = socketScenePos.manhattanLength();
-        if (d < VICUS::BMGlobals::GridSpacing/2) { // half grid spacing snapping tolerance
-            //			qDebug() << d << scenePos << socketScenePos2;
-            return si;
-        }
-    }
-    return nullptr;
+		//	QPointF socketScenePos2(socketScenePos);
+		socketScenePos -= scenePos;
+		double d = socketScenePos.manhattanLength();
+		if (d < VICUS::BMGlobals::GridSpacing/2) { // half grid spacing snapping tolerance
+			//			qDebug() << d << scenePos << socketScenePos2;
+			return si;
+		}
+	}
+	return nullptr;
 }
 
 
 bool SVBMBlockItem::isInvisible() const {
-    return m_block->m_name == VICUS::BMGlobals::InvisibleLabel;
+	return m_block->m_name == VICUS::BMGlobals::InvisibleLabel;
 }
 
 
 void SVBMBlockItem::resize(int newWidth, int newHeight) {
-    // adjust size of associated block
-    m_block->m_size = QSizeF(newWidth, newHeight);
-    setRect(0, 0, newWidth, newHeight);
+	// adjust size of associated block
+	m_block->m_size = QSizeF(newWidth, newHeight);
+	setRect(0, 0, newWidth, newHeight);
 
-    // adjust positions of sockets
-    for (VICUS::BMSocket & s : m_block->m_sockets) {
-        if (s.m_orientation == Qt::Horizontal) {
-            if (s.m_pos.x() != 0.0)
-                s.m_pos.setX(newWidth);
-        }
-        else {
-            if (s.m_pos.y() != 0.0)
-                s.m_pos.setY(newHeight);
-        }
+	// adjust positions of sockets
+	for (VICUS::BMSocket & s : m_block->m_sockets) {
+		if (s.m_orientation == Qt::Horizontal) {
+			if (s.m_pos.x() != 0.0)
+				s.m_pos.setX(newWidth);
+		}
+		else {
+			if (s.m_pos.y() != 0.0)
+				s.m_pos.setY(newHeight);
+		}
 
-    }
+	}
 
-    // tell all sockest to update
-    for (QGraphicsItem * item : childItems()) {
-        SVBMSocketItem * sitem = (SVBMSocketItem*)(item);
-        sitem->updateSocketItem();
-        item->update();
-    }
-    update();
+	// tell all sockest to update
+	for (QGraphicsItem * item : childItems()) {
+		SVBMSocketItem * sitem = (SVBMSocketItem*)(item);
+		sitem->updateSocketItem();
+		item->update();
+	}
+	update();
 
 }
 
 
 QRectF SVBMBlockItem::boundingRect() const {
-    QRectF r = QGraphicsRectItem::boundingRect();
-    /// \todo Later, if we draw text annotations outside the rectangle, adjust the bounding rect here
-    return r;
+	QRectF r = QGraphicsRectItem::boundingRect();
+	/// \todo Later, if we draw text annotations outside the rectangle, adjust the bounding rect here
+	return r;
 }
 
 
@@ -128,237 +128,237 @@ QRectF SVBMBlockItem::boundingRect() const {
 
 
 void SVBMBlockItem::createSocketItems() {
-    Q_ASSERT(m_socketItems.isEmpty());
+	Q_ASSERT(m_socketItems.isEmpty());
 
-    // the socket items are children of the block item and are added/removed together with the
-    // parent block item
-    for (VICUS::BMSocket & s : m_block->m_sockets) {
-        // create a socket item
-        SVBMSocketItem * item = new SVBMSocketItem(this, &s);
-        // enable hover-highlight on outlet nodes
-        if (!s.m_inlet) {
-            item->setZValue(20); // outlet nodes are drawn over lines
-        }
-        m_socketItems.append(item);
-    }
+	// the socket items are children of the block item and are added/removed together with the
+	// parent block item
+	for (VICUS::BMSocket & s : m_block->m_sockets) {
+		// create a socket item
+		SVBMSocketItem * item = new SVBMSocketItem(this, &s);
+		// enable hover-highlight on outlet nodes
+		if (!s.m_inlet) {
+			item->setZValue(20); // outlet nodes are drawn over lines
+		}
+		m_socketItems.append(item);
+	}
 }
 
 
 void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget */*widget*/) {
-    // special handling for invisible blocks
-    if (isInvisible())
-        return; // nothing to be drawn
-    painter->save();
-    painter->setRenderHint(QPainter::Antialiasing, true);
-    painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
-    bool selected = option->state & QStyle::State_Selected;
+	// special handling for invisible blocks
+	if (isInvisible())
+		return; // nothing to be drawn
+	painter->save();
+	painter->setRenderHint(QPainter::Antialiasing, true);
+	painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+	bool selected = option->state & QStyle::State_Selected;
 
-    bool modelTypeBlock = false;
-    m_block->m_name.toInt(&modelTypeBlock);
+	bool modelTypeBlock = false;
+	m_block->m_name.toInt(&modelTypeBlock);
 
-    QPen p;
-    if(modelTypeBlock)
-    {
-        if (m_block->m_properties.contains("ShowPixmap") &&
-            m_block->m_properties["ShowPixmap"].toBool() &&
-            m_block->m_properties.contains("Pixmap"))
-        {
-            // fill entire background with white
-            QRectF r = rect();
-            painter->setBrush(Qt::white);
-            painter->fillRect(r, QBrush(Qt::white));
+	QPen p;
+	if(modelTypeBlock)
+	{
+		if (m_block->m_properties.contains("ShowPixmap") &&
+			m_block->m_properties["ShowPixmap"].toBool() &&
+			m_block->m_properties.contains("Pixmap"))
+		{
+			// fill entire background with white
+			QRectF r = rect();
+			painter->setBrush(Qt::white);
+			painter->fillRect(r, QBrush(Qt::white));
 
-            QPixmap p = m_block->m_properties["Pixmap"].value<QPixmap>();
-            painter->drawPixmap(r, p, p.rect());
-            painter->setBrush(Qt::NoBrush);
-        }
-        else {
-            QLinearGradient grad(QPointF(0,0), QPointF(rect().width(),0));
-            if (selected) {
-                painter->setPen(QPen(QBrush(QColor(0,128,0)), 1.5));
-                grad.setColorAt(0, QColor(230,255,230));
-                grad.setColorAt(1, QColor(200,240,180));
-            }
-            else {
-                grad.setColorAt(0, QColor(196,196,255));
-                grad.setColorAt(1, QColor(220,220,255));
-            }
-            painter->setBrush(grad);
-            painter->fillRect(rect(), grad);
-        }
+			QPixmap p = m_block->m_properties["Pixmap"].value<QPixmap>();
+			painter->drawPixmap(r, p, p.rect());
+			painter->setBrush(Qt::NoBrush);
+		}
+		else {
+			QLinearGradient grad(QPointF(0,0), QPointF(rect().width(),0));
+			if (selected) {
+				painter->setPen(QPen(QBrush(QColor(0,128,0)), 1.5));
+				grad.setColorAt(0, QColor(230,255,230));
+				grad.setColorAt(1, QColor(200,240,180));
+			}
+			else {
+				grad.setColorAt(0, QColor(196,196,255));
+				grad.setColorAt(1, QColor(220,220,255));
+			}
+			painter->setBrush(grad);
+			painter->fillRect(rect(), grad);
+		}
 
-        if(!selected){
-            p.setStyle(Qt::SolidLine);
-            p.setColor(Qt::black);
-            painter->setPen( p );
-        } else
-        {
-            p.setColor(QColor(192,0,0));
-            p.setStyle(Qt::DashLine);
-            painter->setPen(p);
-        }
-        painter->drawRect(rect());
-    }
-    else {
-        QPainterPath bigPath;
-        QPainterPath smallPath;
+		if(!selected){
+			p.setStyle(Qt::SolidLine);
+			p.setColor(Qt::black);
+			painter->setPen( p );
+		} else
+		{
+			p.setColor(QColor(192,0,0));
+			p.setStyle(Qt::DashLine);
+			painter->setPen(p);
+		}
+		painter->drawRect(rect());
+	}
+	else {
+		QPainterPath bigPath;
+		QPainterPath smallPath;
 
-        if(m_block->m_name.contains(VICUS::EXIT_NAME)){
-            QRectF bigEllipse(-7, 0, 50, 50);
-            QRectF smallEllipse(-25, (50-33)/2, 33, 33);
-            bigPath.addEllipse(bigEllipse);
-            smallPath.addEllipse(smallEllipse);
-        } else {
-            QRectF bigEllipse(7, 0, 50, 50);
-            QRectF smallEllipse(43, (50-33)/2, 33, 33);
-            bigPath.addEllipse(bigEllipse);
-            smallPath.addEllipse(smallEllipse);
-        }
+		if(m_block->m_name.contains(VICUS::SUBNETWORK_OUTLET_NAME)){
+			QRectF bigEllipse(-7, 0, 50, 50);
+			QRectF smallEllipse(-25, (50-33)/2, 33, 33);
+			bigPath.addEllipse(bigEllipse);
+			smallPath.addEllipse(smallEllipse);
+		} else {
+			QRectF bigEllipse(7, 0, 50, 50);
+			QRectF smallEllipse(43, (50-33)/2, 33, 33);
+			bigPath.addEllipse(bigEllipse);
+			smallPath.addEllipse(smallEllipse);
+		}
 
-        // Subtract the smaller ellipse from the bigger one to form the crescent shape
-        QPainterPath crescentPath = bigPath.subtracted(smallPath);
+		// Subtract the smaller ellipse from the bigger one to form the crescent shape
+		QPainterPath crescentPath = bigPath.subtracted(smallPath);
 
-        QLinearGradient grad(QPointF(0,0), QPointF(rect().width(),0));
-        if (selected) {
-            painter->setPen(QPen(QBrush(QColor(0,128,0)), 1.5));
-            grad.setColorAt(0, QColor(230,255,230));
-            grad.setColorAt(1, QColor(200,240,180));
-        }
-        else {
-            grad.setColorAt(0, QColor(196,196,255));
-            grad.setColorAt(1, QColor(220,220,255));
-        }
+		QLinearGradient grad(QPointF(0,0), QPointF(rect().width(),0));
+		if (selected) {
+			painter->setPen(QPen(QBrush(QColor(0,128,0)), 1.5));
+			grad.setColorAt(0, QColor(230,255,230));
+			grad.setColorAt(1, QColor(200,240,180));
+		}
+		else {
+			grad.setColorAt(0, QColor(196,196,255));
+			grad.setColorAt(1, QColor(220,220,255));
+		}
 
-        painter->fillPath(crescentPath, grad);
+		painter->fillPath(crescentPath, grad);
 
-        if(!selected){
-            p.setStyle(Qt::SolidLine);
-            p.setColor(Qt::black);
-            painter->setPen( p );
-        } else
-        {
-            p.setColor(QColor(192,0,0));
-            p.setStyle(Qt::DashLine);
-            painter->setPen(p);
-        }
-        painter->drawPath(crescentPath);
-    }
-    QFontMetrics fm(painter->font());
-    QRectF r = fm.boundingRect(m_block->m_displayName);
-    r.moveTo((m_block->m_size.width() - r.width())/2, r.top() - 15);
-    painter->drawText(r, Qt::AlignCenter | Qt::AlignHCenter, m_block->m_displayName);
+		if(!selected){
+			p.setStyle(Qt::SolidLine);
+			p.setColor(Qt::black);
+			painter->setPen( p );
+		} else
+		{
+			p.setColor(QColor(192,0,0));
+			p.setStyle(Qt::DashLine);
+			painter->setPen(p);
+		}
+		painter->drawPath(crescentPath);
+	}
+	QFontMetrics fm(painter->font());
+	QRectF r = fm.boundingRect(m_block->m_displayName);
+	r.moveTo((m_block->m_size.width() - r.width())/2, r.top() - 15);
+	painter->drawText(r, Qt::AlignCenter | Qt::AlignHCenter, m_block->m_displayName);
 
-    if(!m_controllerName.isEmpty()){
-        QFontMetrics fm(painter->font());
+	if(!m_controllerName.isEmpty()){
+		QFontMetrics fm(painter->font());
 
-        // Check length and insert line break if necessary
-        int maxTextWidth = 200; // max width before we need to break the line
-        QString elidedText = fm.elidedText(m_controllerName, Qt::ElideRight, maxTextWidth);
+		// Check length and insert line break if necessary
+		int maxTextWidth = 200; // max width before we need to break the line
+		QString elidedText = fm.elidedText(m_controllerName, Qt::ElideRight, maxTextWidth);
 
-        // Calculate text rectangle
-        QRectF textRect = fm.boundingRect(elidedText);
-        //textRect.setWidth(std::max((int)textRect.width(), maxTextWidth)); // ensure at least maxTextWidth
+		// Calculate text rectangle
+		QRectF textRect = fm.boundingRect(elidedText);
+		//textRect.setWidth(std::max((int)textRect.width(), maxTextWidth)); // ensure at least maxTextWidth
 
-        // Compute position of the second rectangle
-        QRectF secondRect(-(textRect.width() - rect().height()) / 2, rect().height(), textRect.width(), textRect.height());
+		// Compute position of the second rectangle
+		QRectF secondRect(-(textRect.width() - rect().height()) / 2, rect().height(), textRect.width(), textRect.height());
 
-        // Set color and draw the second rectangle
-        QLinearGradient grad2(QPointF(0, 0), QPointF(secondRect.width(), 0));
-        grad2.setColorAt(0, QColor(255,255,255));
-        grad2.setColorAt(1, QColor(255,255,255));
-        painter->setBrush(grad2);
-        painter->fillRect(secondRect, grad2);
-        painter->setPen(p);
-        painter->drawRect(secondRect);
+		// Set color and draw the second rectangle
+		QLinearGradient grad2(QPointF(0, 0), QPointF(secondRect.width(), 0));
+		grad2.setColorAt(0, QColor(255,255,255));
+		grad2.setColorAt(1, QColor(255,255,255));
+		painter->setBrush(grad2);
+		painter->fillRect(secondRect, grad2);
+		painter->setPen(p);
+		painter->drawRect(secondRect);
 
-        // Draw the text centered
-        textRect.moveTo(-(textRect.width() - rect().height()) / 2, rect().height());
-        painter->drawText(textRect, Qt::AlignCenter | Qt::AlignHCenter, elidedText);
-    }
+		// Draw the text centered
+		textRect.moveTo(-(textRect.width() - rect().height()) / 2, rect().height());
+		painter->drawText(textRect, Qt::AlignCenter | Qt::AlignHCenter, elidedText);
+	}
 
 
-    painter->restore();
+	painter->restore();
 }
 
 
 void SVBMBlockItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-    if (event->button() == Qt::LeftButton && event->modifiers().testFlag(Qt::ControlModifier)) {
-        setSelected(true);
-        event->accept();
-        return;
-    }
-    if (event->button() == Qt::LeftButton && !m_moved) {
-        // TODO : signal that a block selection has been made and optionally de-select other blocks
-    }
-    QGraphicsRectItem::mouseReleaseEvent(event);
-    m_moved = false;
+	if (event->button() == Qt::LeftButton && event->modifiers().testFlag(Qt::ControlModifier)) {
+		setSelected(true);
+		event->accept();
+		return;
+	}
+	if (event->button() == Qt::LeftButton && !m_moved) {
+		// TODO : signal that a block selection has been made and optionally de-select other blocks
+	}
+	QGraphicsRectItem::mouseReleaseEvent(event);
+	m_moved = false;
 }
 
 
 QVariant SVBMBlockItem::itemChange(GraphicsItemChange change, const QVariant & value) {
-    switch (change) {
-    case QGraphicsItem::ItemPositionChange : {
-        SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
+	switch (change) {
+	case QGraphicsItem::ItemPositionChange : {
+		SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
 
-        // snap to grid
-        QPointF pos = value.toPointF();
+		// snap to grid
+		QPointF pos = value.toPointF();
 
-        // apply true rounding
-        pos.setX( std::floor((pos.x()+0.5*VICUS::BMGlobals::GridSpacing) / VICUS::BMGlobals::GridSpacing) * VICUS::BMGlobals::GridSpacing);
-        pos.setY( std::floor((pos.y()+0.5*VICUS::BMGlobals::GridSpacing) / VICUS::BMGlobals::GridSpacing) * VICUS::BMGlobals::GridSpacing);
-        if (m_block->m_pos != pos.toPoint()) {
-            m_moved = true;
-            QPointF oldPos = m_block->m_pos;
-            m_block->m_pos = pos.toPoint();
-            // inform network to update connectors
-            if (sceneManager != nullptr)
-                sceneManager->blockMoved(m_block, oldPos);
-        }
-        // notify scene of changed scene rect
-        if (sceneManager == nullptr)
-            return pos;
-        QRectF srect = sceneManager->sceneRect();
-        if (pos.x() < srect.left() || pos.y() < srect.top() ||
-            (pos.x() + rect().width()) > srect.right() ||
-            (pos.y() + rect().height()) > srect.bottom())
-        {
-            sceneManager->setSceneRect( QRectF()); // tell scene to recompute scene rect
-        }
-        return pos;
-    }
+		// apply true rounding
+		pos.setX( std::floor((pos.x()+0.5*VICUS::BMGlobals::GridSpacing) / VICUS::BMGlobals::GridSpacing) * VICUS::BMGlobals::GridSpacing);
+		pos.setY( std::floor((pos.y()+0.5*VICUS::BMGlobals::GridSpacing) / VICUS::BMGlobals::GridSpacing) * VICUS::BMGlobals::GridSpacing);
+		if (m_block->m_pos != pos.toPoint()) {
+			m_moved = true;
+			QPointF oldPos = m_block->m_pos;
+			m_block->m_pos = pos.toPoint();
+			// inform network to update connectors
+			if (sceneManager != nullptr)
+				sceneManager->blockMoved(m_block, oldPos);
+		}
+		// notify scene of changed scene rect
+		if (sceneManager == nullptr)
+			return pos;
+		QRectF srect = sceneManager->sceneRect();
+		if (pos.x() < srect.left() || pos.y() < srect.top() ||
+			(pos.x() + rect().width()) > srect.right() ||
+			(pos.y() + rect().height()) > srect.bottom())
+		{
+			sceneManager->setSceneRect( QRectF()); // tell scene to recompute scene rect
+		}
+		return pos;
+	}
 
-    case QGraphicsItem::ItemSelectedHasChanged : {
-        SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
-        if (value.toBool())
-            sceneManager->blockSelected(m_block);
-    } break;
-    default :;
-    }
-    return QGraphicsRectItem::itemChange(change, value);
+	case QGraphicsItem::ItemSelectedHasChanged : {
+		SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
+		if (value.toBool())
+			sceneManager->blockSelected(m_block);
+	} break;
+	default :;
+	}
+	return QGraphicsRectItem::itemChange(change, value);
 }
 
 
 void SVBMBlockItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
-    SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
-    if (sceneManager != nullptr) // protect against double click when inside block editor
-        sceneManager->blockDoubleClicked(this);
-    QGraphicsRectItem::mouseDoubleClickEvent(event);
+	SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
+	if (sceneManager != nullptr) // protect against double click when inside block editor
+		sceneManager->blockDoubleClicked(this);
+	QGraphicsRectItem::mouseDoubleClickEvent(event);
 
-    //setController(0);
+	//setController(0);
 }
 
 
 QPainterPath SVBMBlockItem::shape() const
 {
-    QPainterPath path;
-    path.addRect(SVBMBlockItem::boundingRect());
-    return path;
+	QPainterPath path;
+	path.addRect(SVBMBlockItem::boundingRect());
+	return path;
 }
 
-void SVBMBlockItem::setController(int controllerID, QString controllerName)
+void SVBMBlockItem::setController(unsigned int controllerID, QString controllerName)
 {
-    m_block->m_controllerID = controllerID;
-    m_controllerName = controllerName;
+	m_block->m_controllerID = controllerID;
+	m_controllerName = controllerName;
 
 }
 
