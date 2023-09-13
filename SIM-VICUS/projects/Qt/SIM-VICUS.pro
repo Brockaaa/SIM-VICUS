@@ -84,7 +84,6 @@ SOURCES += \
 	../../src/SVAboutDialog.cpp \
 	../../src/SVAbstractDatabaseEditWidget.cpp \
 	../../src/SVBMBlockItem.cpp \
-	../../src/SVBMConnectorBlockItem.cpp \
 	../../src/SVBMConnectorSegmentItem.cpp \
 	../../src/SVBMSocketItem.cpp \
 	../../src/SVBMSceneManager.cpp \
@@ -295,7 +294,6 @@ HEADERS  += \
 	../../src/SVAboutDialog.h \
 	../../src/SVAbstractDatabaseEditWidget.h \
 	../../src/SVBMBlockItem.h \
-	../../src/SVBMConnectorBlockItem.h \
 	../../src/SVBMConnectorSegmentItem.h \
 	../../src/SVBMSocketItem.h \
 	../../src/SVBMSceneManager.h \

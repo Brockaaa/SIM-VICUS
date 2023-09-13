@@ -204,40 +204,47 @@ enum NetComCategory{
 	NUM_NC
 };
 
-// TODO Maik: remove struct
-/*! Struct for easier lookup in map ModelTypeAttributes */
-struct BMNetComData{
-	int uniqueID;
-	QString fileName;
-	QString typeName;
-	QString toolTip;
-	NetComCategory category;
+static std::map<VICUS::NetworkComponent::ModelType, QString> ModelTypeIconAttributes {
+	{ VICUS::NetworkComponent::ModelType::MT_SimplePipe, ":/gfx/modeltypeicons/pipe.png"},
+	{ VICUS::NetworkComponent::ModelType::MT_DynamicPipe, ":/gfx/modeltypeicons/pipe.png"},
+	{ VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_ControlledPump, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_VariablePressurePump, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_HeatExchanger, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_ControlledValve, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler, ""},
+	{ VICUS::NetworkComponent::ModelType::MT_PressureLossElement,""}
 };
 
-
-// TODO Maik: remove id (501...), Description etc. only Category and icon are left
-// stattdessen 2 access functionen, 1 für icon, 1 für category
-static std::map<NetworkComponent::ModelType, BMNetComData> ModelTypeAttributes {
-	{ VICUS::NetworkComponent::ModelType::MT_SimplePipe, {500, ":/gfx/modeltypeicons/pipe.png", "SimplePipe", "Pipe with a single fluid volume", Pipes}},
-	{ VICUS::NetworkComponent::ModelType::MT_DynamicPipe, {501, ":/gfx/modeltypeicons/pipe.png", "DynamicPipe", "Pipe with discretized fluid volume", Pipes}},
-	{ VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump, {502, ":/gfx/modeltypeicons/pump.png", "ConstantPressurePump", "Pump with defined pressure head", Pumps}},
-	{ VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump, {503, ":/gfx/modeltypeicons/pump.png", "ConstantMassFluxPump", "Pump with defined mass flux", Pumps}},
-	{ VICUS::NetworkComponent::ModelType::MT_ControlledPump, {504, ":/gfx/modeltypeicons/pump.png", "ControlledPump", "Pump with controlled pressure head", Pumps}},
-	{ VICUS::NetworkComponent::ModelType::MT_VariablePressurePump, {505, ":/gfx/modeltypeicons/pump.png", "VariablePressurePump", "Pump with linear pressure head curve", Pumps}},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatExchanger, {506, ":heatexchanger.png", "HeatExchanger", "Simple heat exchanger", Other}},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide, {507, ":/gfx/modeltypeicons/icon.png", "HeatPumpVariableIdealCarnotSourceSide", "Heat pump installed at source side, based on carnot efficiency", Heatpumps}},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide, {508, ":/gfx/modeltypeicons/icon.png", "HeatPumpVariableIdealCarnotSupplySide", "Heat pump installed at supply side, based on carnot efficiency", Heatpumps}},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide, {509, ":/gfx/modeltypeicons/icon.png", "HeatPumpVariableSourceSide", "Heat pump installed at source side, based on polynom for COP", Heatpumps}},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide, {510, ":/gfx/modeltypeicons/icon.png", "HeatPumpOnOffSourceSide", "Heat pump (on-off) at source side, based on polynoms for heating power and el. power", Heatpumps}},
-	{ VICUS::NetworkComponent::ModelType::MT_ControlledValve, {511, ":/gfx/modeltypeicons/icon.png", "ControlledValve", "Controlled Valve", Other}},
-	{ VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve, {512, ":/gfx/modeltypeicons/icon.png", "ConstantPressureLossValve", "Valve with constant pressure loss", Other}},
-	{ VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler, {513, ":/gfx/modeltypeicons/icon.png", "IdealHeaterCooler", "Ideal heater with predefined supply temperature", Other}},
-	{ VICUS::NetworkComponent::ModelType::MT_PressureLossElement, {514, ":/gfx/modeltypeicons/icon.png", "PressureLossElement", "Adiabatic element with pressure loss defined by zeta-value", Other}}
+static std::map<VICUS::NetworkComponent::ModelType, NetComCategory> ModelTypeNetComCategoryAttributes {
+	{ VICUS::NetworkComponent::ModelType::MT_SimplePipe, Pipes},
+	{ VICUS::NetworkComponent::ModelType::MT_DynamicPipe, Pipes},
+	{ VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump, Pumps},
+	{ VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump, Pumps},
+	{ VICUS::NetworkComponent::ModelType::MT_ControlledPump, Pumps},
+	{ VICUS::NetworkComponent::ModelType::MT_VariablePressurePump, Pumps},
+	{ VICUS::NetworkComponent::ModelType::MT_HeatExchanger, Other},
+	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide, Heatpumps},
+	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide, Heatpumps},
+	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide, Heatpumps},
+	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide, Heatpumps},
+	{ VICUS::NetworkComponent::ModelType::MT_ControlledValve, Other},
+	{ VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve, Other},
+	{ VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler, Other},
+	{ VICUS::NetworkComponent::ModelType::MT_PressureLossElement, Other}
 };
 
+// Helper function to get iconFile from ModelType
+QString getIconFileFromModelType(VICUS::NetworkComponent::ModelType modelType);
 
-/*! Helper Function to return enum ModelType given elementID */
-NetworkComponent::ModelType ModelTypeLookup(int elementID);
+// Helper function to get NetComCategory from ModelType
+NetComCategory getNetComCategoryFromModelType(VICUS::NetworkComponent::ModelType modelType);
 
 } // namespace VICUS
 

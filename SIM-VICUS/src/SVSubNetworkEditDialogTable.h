@@ -19,30 +19,31 @@ class NetworkController;
 
 class SVSubNetworkEditDialogTable : public QTableWidget
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit SVSubNetworkEditDialogTable(QWidget *parent = nullptr);
-    ~SVSubNetworkEditDialogTable();
-    int rowSize() const;
-    void addElement(VICUS::NetworkComponent::ModelType type);
-    void addElement(VICUS::NetworkComponent &controller);
-    void clear();
-    std::vector<QString> m_elementList;
+	explicit SVSubNetworkEditDialogTable(QWidget *parent = nullptr);
+	~SVSubNetworkEditDialogTable();
+	int rowSize() const;
+	/* adds Default Element to Table, includes QPixmap */
+	void addElement(VICUS::NetworkComponent::ModelType type);
+	/* adds Element to Table */
+	void addElement(VICUS::NetworkComponent &controller);
+	/* removes all Elements from Table */
+	void clear();
+	std::vector<QString> m_elementList;
 
 private:
-    Ui::SVSubNetworkEditDialogTable *ui;
+	Ui::SVSubNetworkEditDialogTable *ui;
 
-    int m_rowSize = 0;
-    int m_defaultRowHeight = VICUS::BLOCK_HEIGHT;
+	int m_rowSize = 0;
+	int m_defaultRowHeight = VICUS::BLOCK_HEIGHT;
 
-    void startDrag(Qt::DropActions supportedActions) override;
-    void focusOutEvent(QFocusEvent *event) override;
+	void startDrag(Qt::DropActions supportedActions) override;
+	void focusOutEvent(QFocusEvent *event) override;
 
-    bool dragging = false;
-    QPoint dragStartPosition;
-
-    SVBMZoomMeshGraphicsView *                      BM_GraphicsView = nullptr;
+	/* Pointer to ZoomMeshGraphicsView, needed to determine position of Dragged Element */
+	SVBMZoomMeshGraphicsView *                      m_zoomMeshGraphicsView = nullptr;
 
 
 };

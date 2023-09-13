@@ -80,6 +80,14 @@ const QString CONNECTOR_NAME = "connector";
 
 const QString INVALIDXMLREAD = "Invalid XML read";
 
+enum BMBlockType{
+	GlobalInlet,
+	GlobalOutlet,
+	NetworkComponentBlock,
+	ConnectorBlock,
+	InvisibleBlock
+};
+
 } // namespace VICUS
 
 

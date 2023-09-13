@@ -58,9 +58,6 @@ public:
 	*/
 	SVBMSocketItem * inletSocketAcceptingConnection(const QPointF & scenePos);
 
-	/*! Returns true, if this block is invisible (call this when re-implementing the paint() function). */
-	bool isInvisible() const;
-
 	/*! Changes size of a block item (and moves socket items accordingly). */
 	void resize(int newWidth, int newHeight);
 
@@ -83,11 +80,14 @@ protected:
 	/*! Re-implemented to draw the styled rectangle of the block. */
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-	/*! Re-implemented to trigger the editor. */
-	virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
-
 	/*! Re-implemented to reset the m_moved flag. */
 	virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+	/*! Re-implemented to highlight the entire connectorBlock + connectorlines when hovered. */
+	virtual void hoverEnterEvent (QGraphicsSceneHoverEvent *event) override;
+
+	/*! Re-implemented to turn off highlighting of the entire connectorBlock + connectorlines when hovered. */
+	virtual void hoverLeaveEvent (QGraphicsSceneHoverEvent *event) override;
 
 	/*! Overloaded to react on block move.
 		Implements the snap-to-grid functionality, and updates attached connectors. */
@@ -101,6 +101,8 @@ protected:
 
 	/*! Our socket items, childs of this block item. */
 	QList<SVBMSocketItem*>      m_socketItems;
+
+	bool m_isHighlighted = false;
 
 private:
 

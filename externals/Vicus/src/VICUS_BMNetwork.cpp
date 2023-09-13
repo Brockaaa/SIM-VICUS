@@ -33,8 +33,6 @@
 
 #include "VICUS_BMNetwork.h"
 
-/*#include <QXmlStreamReader>
-#include <QXmlStreamWriter>*/
 #include <QFile>
 #include <QSet>
 #include <QDebug>
@@ -49,10 +47,11 @@
 #include "VICUS_AbstractDBElement.h"
 #include "VICUS_BMGlobals.h"
 #include "VICUS_BMGlobals.h"
+#include <VICUS_NetworkComponent.h>
 
 #include "IBK_Exception.h"
 
-#include <VICUS_NetworkComponent.h>
+
 
 
 namespace VICUS {
@@ -277,7 +276,7 @@ void BMNetwork::adjustConnector(BMConnector & con) {
 }
 
 
-void BMNetwork::lookupBlockAndSocket(const QString & flatName, const BMBlock *& block, const BMSocket *& socket) const {
+void BMNetwork::lookupBlockAndSocket(const QString & flatName, const BMBlock *& block, const BMSocket * &socket) const {
 	QString blockName, socketName;
 	splitFlatName(flatName, blockName, socketName);
 	// search block by name

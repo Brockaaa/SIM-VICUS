@@ -76,7 +76,10 @@ private:
 	/*! sets Network of the SVBMSceneManager. Checks if network already filled, if already filled add the the missing values of BMBlock that were not directly saved in the XML from networkElements
 	 *   if not filled, create new Block by iterating over all NetworkElements in m_subNetwork, positions the Blocks
 	 *   so that each Block following block has the same distance from the previous block*/
-	void setNetwork();
+	void updateNetwork();
+	/*! Checks BMNetwork of m_sceneManager if it is valid. Iterates over all Blocks and checks if all Sockets are connected
+	 *  and checks if all blocks are reachable by the globalInlet and globalOutlet*/
+	bool checkAcceptedNetwork();
 	/*! gets called when the Dialog is accepted and closed. Deletes all unused components from the vector,
 	 * updates networkElements in the SubNetwork and copies all components and controllers into the SubNetwork */
 	void on_buttonBox_accepted();
@@ -106,7 +109,7 @@ private:
 	std::vector<VICUS::NetworkComponent>                        m_networkComponents;
 	std::vector<VICUS::NetworkController>                       m_networkControllers;
 	SVSubNetworkEditDialogTable*                                m_senderTable = nullptr;
-	std::vector<SVSubNetworkEditDialogTable*>                   tables;
+	std::vector<SVSubNetworkEditDialogTable*>                   m_tables;
 };
 
 #endif // SVSUBNETWORKEDITDIALOG_H

@@ -48,7 +48,6 @@ class BMSocket;
 }
 
 class SVBMBlockItem;
-class SVBMConnectorBlockItem;
 class SVBMSocketItem;
 class SVBMConnectorSegmentItem;
 class SVBMSocketItem;
@@ -65,7 +64,7 @@ public:
 	/*! Set a new network (a local copy is made of the network object).
 		This will recreate the entire scene.
 	*/
-	void setNetwork(VICUS::BMNetwork & network);
+	void updateNetwork(VICUS::BMNetwork & network);
 
 	/*! Provide read-only access to the network data structure.
 		\note This data structure is internally used and modified by user actions.
@@ -176,7 +175,6 @@ public:
 		The ConnectorBlock is copied into the network and shown at the given coordinates.
 	*/
 	void addConnectorBlock(VICUS::BMBlock & block);
-	void addConnectorBlock(SVBMConnectorBlockItem blockItem);
 
 	/*! Adds ConnectorBlock to a given Start- and EndBlock, connects startBlock, connectorBlock, targetBlock */
 	void addConnectorBlockAndSocket(VICUS::BMBlock *startBlock, VICUS::BMBlock *targetBlock, VICUS::BMSocket *startSocket, VICUS::BMSocket *targetSocket, int id);
@@ -270,9 +268,6 @@ protected:
 	*/
 	virtual SVBMBlockItem * createBlockItem(VICUS::BMBlock & b);
 
-	/*! Helper Function to initialise a network at startup */
-	void setupNetwork();
-
 	/*! Create the graphics item for a single connector line segment.
 		You can override this method and create your own graphics items, derived from
 		base class ConnectorSegmentItem (which contains all the move/selection logic).
@@ -305,6 +300,9 @@ private:
 	/*! Helper Function to get new valid Block ID */
 	unsigned int getNewBlockId();
 
+	/*! Helper Function to initialise a network at startup */
+	void setupNetwork();
+
 	/*! Function to retrieve Blocks and Sockets of a Connection */
 	void getBlocksOfConnection(const VICUS::BMConnector & con, VICUS::BMBlock *&sourceBlock, VICUS::BMBlock *&targetBlock, VICUS::BMSocket *&sourceSocket, VICUS::BMSocket *&targetSocket);
 
@@ -317,6 +315,7 @@ private:
 	/*! Helper Function to evaluate attempted new Connection */
 	bool evaluateNewConnection(QString startSocketName, QString targetSocketName);
 
+	/*! Helper Function to if each socket has exactly one connection */
 	bool checkOneConnectionPerSocket(const VICUS::BMBlock *block);
 
 	/*! The network that we own and manage. */
@@ -327,9 +326,6 @@ private:
 
 	/*! The connector-graphics items that we show on the scene. */
 	QList<SVBMConnectorSegmentItem*>            m_connectorSegmentItems;
-
-	/*! The List of ConnectorBlocks */
-	QList<SVBMConnectorBlockItem*>              m_connectorBlockItems;
 
 	/*! Map to speed up lookup of connectors connected to a block.
 		This map is initialized in createConnectorItems() and updated, whenever a connection is

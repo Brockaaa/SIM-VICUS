@@ -43,6 +43,7 @@
 #include <QMap>
 
 #include "VICUS_BMSocket.h"
+#include "VICUS_BMGlobals.h"
 #include "VICUS_CodeGenMacros.h"
 #include "VICUS_Constants.h"
 
@@ -64,46 +65,10 @@ public:
 	BMBlock(const QString & name);
 	BMBlock(const QString & name, double x, double y);
 
-	/*! Reads content of the block from XML stream. */
-	/*void readXML(QXmlStreamReader & reader);*/
-
-	/*! Dumps out content of block to stream writer. */
-	/*void writeXML(QXmlStreamWriter & writer) const;*/
-
 	/*! Generate connection line between socket and point, where first connector segment starts.
 		Returned coordinates are in scene-coordinates.
 	*/
 	QLineF socketStartLine(const BMSocket * socket) const;
-
-	/*! Utility function, that determines a free position for inserting a slot.
-		Inlet sockets are inserted first left (top to bottom), then on top (left to right).
-		Existing socket coordinates are first converted into grid lines.
-	*/
-	void findSocketInsertPosition(bool inletSocket, int & x, int & y) const;
-
-	/*! Finds unused socket locations, i.e. grid indexes where no socket is placed.
-		Assumes that sockets are aligned to grid, and uses rounded detection to adjust
-		socket coordinates to grid lines.
-		If a socket has an x-coordinate of 0, it is assumed to be on the left side, otherwise it
-		will be on the right side.
-		If a socket has a y-coordinate of 0, it is assumed to be on the top side, otherwise on
-		the bottom.
-		The vectors have the size of grid lines of the current block. If you resize the block, you
-		need to call this function again.
-	*/
-	void unusedSocketSpots(QList<int> & leftSockets, QList<int> & topSockets, QList<int> & rightSockets, QList<int> & bottomSockets);
-
-	/*! Utility function that adjust the block object and updates its sockets such, that they correspond to the
-		provided inlet and outlet socket lists.
-		- all sockets that are not in the lists inletSockets and outletSockets are removed
-		- new sockets (in the lists), that are not yet in the block are created
-		- newly created sockets are positioned in free 'slots' for sockets (inlets left/top, outlets right, bottom)
-		- if not enough socket slots are available, the sockets are positioned in the last slot (thus overlaying each other)
-
-		\param inletSockets Variable names for inlet variables (without blockname prefix)
-		\param outletSockets Variable names for output variables (without blockname prefix)
-	*/
-	void autoUpdateSockets(const QStringList & inletSockets, const QStringList & outletSockets);
 
 	TiXmlElement * writeXML(TiXmlElement * parent) const;
 
@@ -144,6 +109,8 @@ public:
 
 	/* VICUS::NetworkController ID */
 	unsigned int                m_controllerID = VICUS::INVALID_ID;
+
+	VICUS::BMBlockType			m_mode;
 
 
 };

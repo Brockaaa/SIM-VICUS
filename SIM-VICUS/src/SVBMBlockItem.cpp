@@ -71,20 +71,14 @@ SVBMSocketItem * SVBMBlockItem::inletSocketAcceptingConnection(const QPointF & s
 	for (SVBMSocketItem * si : m_socketItems) {
 		QPointF socketScenePos = si->mapToScene(si->socket()->m_pos);
 
-		//	QPointF socketScenePos2(socketScenePos);
 		socketScenePos -= scenePos;
 		double d = socketScenePos.manhattanLength();
 		if (d < VICUS::BMGlobals::GridSpacing/2) { // half grid spacing snapping tolerance
-			//			qDebug() << d << scenePos << socketScenePos2;
+
 			return si;
 		}
 	}
 	return nullptr;
-}
-
-
-bool SVBMBlockItem::isInvisible() const {
-	return m_block->m_name == VICUS::BMGlobals::InvisibleLabel;
 }
 
 
@@ -146,18 +140,49 @@ void SVBMBlockItem::createSocketItems() {
 
 void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget */*widget*/) {
 	// special handling for invisible blocks
-	if (isInvisible())
+	if (m_block->m_mode == VICUS::BMBlockType::InvisibleBlock)
 		return; // nothing to be drawn
+
+	// implemented drawing function for a ConnectorBlock
+	if(m_block->m_mode == VICUS::BMBlockType::ConnectorBlock){
+		painter->save();
+		painter->setRenderHint(QPainter::Antialiasing, true);
+
+		bool selected = (option->state & QStyle::State_Selected);
+
+		QPen p;
+
+		if(selected) {
+			painter->setPen(QPen(QBrush(QColor(0,128,0)), 1.5));
+			p.setColor(QColor(192,0,0));
+			p.setStyle(Qt::DashLine);
+		}
+		else {
+			p.setStyle(Qt::SolidLine);
+			p.setColor(Qt::black);
+		}
+
+		if(m_isHighlighted) {
+			p.setWidthF(1.6);
+		}
+
+		// Set brush to solid black
+		painter->setBrush(QColor(Qt::black));
+
+		painter->setPen(p);
+		painter->drawEllipse(rect());
+		painter->restore();
+		return;
+	}
+
+
 	painter->save();
 	painter->setRenderHint(QPainter::Antialiasing, true);
 	painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
 	bool selected = option->state & QStyle::State_Selected;
 
-	bool modelTypeBlock = false;
-	m_block->m_name.toInt(&modelTypeBlock);
-
 	QPen p;
-	if(modelTypeBlock)
+	if(m_block->m_mode == VICUS::BMBlockType::NetworkComponentBlock)
 	{
 		if (m_block->m_properties.contains("ShowPixmap") &&
 			m_block->m_properties["ShowPixmap"].toBool() &&
@@ -203,7 +228,7 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 		QPainterPath bigPath;
 		QPainterPath smallPath;
 
-		if(m_block->m_name.contains(VICUS::SUBNETWORK_OUTLET_NAME)){
+		if(m_block->m_mode == VICUS::BMBlockType::GlobalOutlet){
 			QRectF bigEllipse(-7, 0, 50, 50);
 			QRectF smallEllipse(-25, (50-33)/2, 33, 33);
 			bigPath.addEllipse(bigEllipse);
@@ -288,10 +313,27 @@ void SVBMBlockItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 		return;
 	}
 	if (event->button() == Qt::LeftButton && !m_moved) {
-		// TODO : signal that a block selection has been made and optionally de-select other blocks
 	}
 	QGraphicsRectItem::mouseReleaseEvent(event);
 	m_moved = false;
+}
+
+void SVBMBlockItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event){
+	QGraphicsItem::hoverEnterEvent(event);
+	if(m_block->m_mode == VICUS::BMBlockType::ConnectorBlock){
+		SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
+		sceneManager->setHighlightallConnectorsOfBlock(block(), true);
+		m_isHighlighted = true;
+	}
+}
+
+void SVBMBlockItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event){
+	QGraphicsItem::hoverLeaveEvent(event);
+	if(m_block->m_mode == VICUS::BMBlockType::ConnectorBlock){
+		SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
+		sceneManager->setHighlightallConnectorsOfBlock(block(), false);
+		m_isHighlighted = false;
+	}
 }
 
 
@@ -336,17 +378,6 @@ QVariant SVBMBlockItem::itemChange(GraphicsItemChange change, const QVariant & v
 	}
 	return QGraphicsRectItem::itemChange(change, value);
 }
-
-
-void SVBMBlockItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
-	SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
-	if (sceneManager != nullptr) // protect against double click when inside block editor
-		sceneManager->blockDoubleClicked(this);
-	QGraphicsRectItem::mouseDoubleClickEvent(event);
-
-	//setController(0);
-}
-
 
 QPainterPath SVBMBlockItem::shape() const
 {
