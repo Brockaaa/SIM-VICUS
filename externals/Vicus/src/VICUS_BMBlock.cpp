@@ -125,9 +125,9 @@ void BMBlock::readXML(const TiXmlElement * element)
 QList<const BMSocket*> BMBlock::filterSockets(bool inletSocket) const {
 	QList<const BMSocket*> socketList;
 	for (const BMSocket & s : m_sockets) {
-		if (inletSocket && s.m_inlet)
+		if (inletSocket && s.m_isInlet)
 			socketList.append(&s);
-		else if (!inletSocket && !s.m_inlet)
+		else if (!inletSocket && !s.m_isInlet)
 			socketList.append(&s);
 	}
 	return socketList;

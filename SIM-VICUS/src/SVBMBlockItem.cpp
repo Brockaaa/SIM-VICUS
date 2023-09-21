@@ -130,7 +130,7 @@ void SVBMBlockItem::createSocketItems() {
 		// create a socket item
 		SVBMSocketItem * item = new SVBMSocketItem(this, &s);
 		// enable hover-highlight on outlet nodes
-		if (!s.m_inlet) {
+		if (!s.m_isInlet) {
 			item->setZValue(20); // outlet nodes are drawn over lines
 		}
 		m_socketItems.append(item);

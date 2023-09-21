@@ -62,7 +62,7 @@ SVBMSocketItem::SVBMSocketItem(SVBMBlockItem * parent, VICUS::BMSocket * socket)
 
 
 void SVBMSocketItem::updateSocketItem() {
-	if (m_socket->m_inlet) {
+	if (m_socket->m_isInlet) {
 		switch (m_socket->direction()) {
 			case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()-4, 8, 8); break;
 			case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y()-4, 8, 8); break;
@@ -128,8 +128,8 @@ void SVBMSocketItem::hoverEnterEvent (QGraphicsSceneHoverEvent *event) {
 	// - socket is not yet occupied
 
 	if (sceneManager) {
-		if ( (!m_socket->m_inlet && !sceneManager->isCurrentlyConnecting()) ||
-			(m_socket->m_inlet && sceneManager->isCurrentlyConnecting() ))
+		if ( (!m_socket->m_isInlet && !sceneManager->isCurrentlyConnecting()) ||
+			(m_socket->m_isInlet && sceneManager->isCurrentlyConnecting() ))
 		{
 			if (QApplication::overrideCursor() == nullptr)
 				QApplication::setOverrideCursor(Qt::CrossCursor);
@@ -163,7 +163,7 @@ void SVBMSocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /
 
 	// distinguish between inlet and outlet sockets
 	QRectF r = m_symbolRect;
-	if (m_socket->m_inlet) {
+	if (m_socket->m_isInlet) {
 		painter->setBrush(Qt::white);
 		switch (m_socket->direction()) {
 			case VICUS::BMSocket::Left		:
@@ -270,7 +270,7 @@ void SVBMSocketItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 	if(m_socket->m_isSocketOfConnector) return;
 	// starting a connection?
 	// ignore clicks on inlet sockets
-	if (!m_socket->m_inlet) {
+	if (!m_socket->m_isInlet) {
 		if (event->button() == Qt::LeftButton && event->modifiers() == Qt::NoModifier) {
 			SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
 			if (sceneManager) {

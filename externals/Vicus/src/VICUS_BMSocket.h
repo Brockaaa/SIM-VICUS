@@ -56,7 +56,7 @@ public:
 	BMSocket() :
 		m_pos(0,0),
 		m_orientation(Qt::Horizontal),
-		m_inlet(false)
+		m_isInlet(false)
 	{
 	}
 
@@ -65,7 +65,7 @@ public:
 		m_name(name),
 		m_pos(0,0),
 		m_orientation(Qt::Horizontal),
-		m_inlet(false)
+		m_isInlet(false)
 	{
 	}
 
@@ -74,7 +74,7 @@ public:
 		m_name(name),
 		m_pos(pos),
 		m_orientation(orientation),
-		m_inlet(inlet)
+		m_isInlet(inlet)
 	{
 	}
 
@@ -121,7 +121,7 @@ public:
 	Qt::Orientation	m_orientation;
 
 	/*! If true, painted as a socket, if false, painted as an outgoing arrow. */
-	bool			m_inlet;
+	bool			m_isInlet;
 
 	/* ID of Socket, set automatically when connecting */
 	unsigned int				m_id = VICUS::INVALID_ID;

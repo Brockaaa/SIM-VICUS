@@ -161,7 +161,7 @@ void BMNetwork::checkNames(bool printNames) const {
 		for(BMBlock block : m_blocks) {
 			qDebug() << "block: " << block.m_name;
 			for(BMSocket socket : block.m_sockets) {
-				qDebug() << "   socket: " << socket.m_name << socket.m_inlet;
+				qDebug() << "   socket: " << socket.m_name << socket.m_isInlet;
 			}
 		}
 		qDebug() << "addConnector" << con.m_name << con.m_sourceSocket << con.m_targetSocket;
@@ -175,9 +175,9 @@ void BMNetwork::checkNames(bool printNames) const {
 		} catch (...) {
 			throw std::runtime_error("Invalid target socket identifyer '"+con.m_targetSocket.toStdString()+"'.");
 		}
-		if (s1->m_inlet)
+		if (s1->m_isInlet)
 			throw std::runtime_error("Invalid source socket '"+con.m_sourceSocket.toStdString()+"'(must be an outlet socket).");
-		if (!s2->m_inlet)
+		if (!s2->m_isInlet)
 			throw std::runtime_error("Invalid target socket '"+con.m_targetSocket.toStdString()+"' (must be an inlet socket).");
 		/*if (connectedSockets.contains(con.m_targetSocket))
 			throw std::runtime_error("Target socket '"+con.m_targetSocket.toStdString()+"' connected twice!");*/
@@ -192,7 +192,7 @@ bool BMNetwork::haveSocket(const QString & socketVariableName, bool inletSocket)
 	for (const VICUS::BMBlock & b : m_blocks) {
 		if (b.m_name == blockName) {
 			for (const VICUS::BMSocket & s : b.m_sockets) {
-				if (s.m_name == socketName && (s.m_inlet == inletSocket)) {
+				if (s.m_name == socketName && (s.m_isInlet == inletSocket)) {
 					return true;
 				}
 			}

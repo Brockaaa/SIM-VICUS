@@ -176,11 +176,11 @@ public:
 	*/
 	void addConnectorBlock(VICUS::BMBlock & block);
 
-	/*! Adds ConnectorBlock to a given Start- and EndBlock, connects startBlock, connectorBlock, targetBlock */
-	void addConnectorBlockAndSocket(VICUS::BMBlock *startBlock, VICUS::BMBlock *targetBlock, VICUS::BMSocket *startSocket, VICUS::BMSocket *targetSocket, int id);
+	/*! Adds ConnectorBlock to a given source and target block, connects source block, connectorBlock, target block */
+	void addConnectorBlockAndSocket(const VICUS::BMBlock * sourceBlock, const VICUS::BMBlock * targetBlock, VICUS::BMSocket *startSocket, VICUS::BMSocket *targetSocket, unsigned int id);
 
 	/*! Removes previous connection and creates ConnectorBlock between three Blocks */
-	void convertConnectionToConnectorBlock(VICUS::BMBlock *connectedBlock, VICUS::BMSocket *connectedSocket, VICUS::BMBlock *newBlock, VICUS::BMSocket *newSocket, VICUS::BMConnector *oldCon);
+	void convertConnectionToConnectorBlock(const VICUS::BMBlock * connectedBlock, const VICUS::BMSocket * connectedSocket, const VICUS::BMBlock * newBlock, const VICUS::BMSocket * newSocket, const VICUS::BMConnector * oldCon);
 
 	// sets controllerID of Block and it's BlockItem
 	void setControllerID(const VICUS::BMBlock * block, unsigned int id, QString controllerName);
@@ -294,28 +294,25 @@ private:
 	*/
 	void updateConnectorSegmentItems(const  VICUS::BMConnector & con, SVBMConnectorSegmentItem * currentItem);
 
-	/*!Helper Function to get new valid NodeId */
-	unsigned int getNewNodeId();
+	/*! Create new unique socket id */
+	unsigned int newSocketId() const;
 
 	/*! Helper Function to get new valid Block ID */
-	unsigned int getNewBlockId();
-
-	/*! Helper Function to initialise a network at startup */
-	void setupNetwork();
+	unsigned int newBlockId() const;
 
 	/*! Function to retrieve Blocks and Sockets of a Connection */
-	void getBlocksOfConnection(const VICUS::BMConnector & con, VICUS::BMBlock *&sourceBlock, VICUS::BMBlock *&targetBlock, VICUS::BMSocket *&sourceSocket, VICUS::BMSocket *&targetSocket);
+	void blocksFromConnection(const VICUS::BMConnector & con, VICUS::BMBlock *&sourceBlock, VICUS::BMBlock *&targetBlock, VICUS::BMSocket *&sourceSocket, VICUS::BMSocket *&targetSocket);
 
 	/*! Helper Function to check if a Block and Connection is connected to a ConnectorBlock */
-	bool isConnectedToConnectorBlock(VICUS::BMSocket *evaluatedSocket, VICUS::BMConnector *con);
+	bool isConnectedToConnectorBlock(const VICUS::BMSocket * evaluatedSocket, const VICUS::BMConnector * con);
 
-	/*! Function to retrieve Connector of a ModelTypeBlock */
-	VICUS::BMConnector* getConnectorOfModelTypeBlock(const VICUS::BMBlock *block, const VICUS::BMSocket *socket);
+	/*! Retrieve first connector of a block */
+	VICUS::BMConnector* firstConnectorOfBlock(const VICUS::BMBlock *block, const VICUS::BMSocket *socket);
 
 	/*! Helper Function to evaluate attempted new Connection */
 	bool evaluateNewConnection(QString startSocketName, QString targetSocketName);
 
-	/*! Helper Function to if each socket has exactly one connection */
+	/*! Checks if each socket has exactly one connection */
 	bool checkOneConnectionPerSocket(const VICUS::BMBlock *block);
 
 	/*! The network that we own and manage. */

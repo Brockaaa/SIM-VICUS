@@ -208,14 +208,14 @@ void SVSubNetworkEditDialog::updateNetwork()
 		VICUS::BMSocket outlet, inlet;
 
 		inlet.m_name = VICUS::INLET_NAME;
-		inlet.m_inlet = true;
+		inlet.m_isInlet = true;
 		inlet.m_id = VICUS::EXIT_ID;
 		inlet.m_orientation = Qt::Horizontal;
 		inlet.m_pos = QPointF(0,VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
 		bexit.m_sockets.append(inlet);
 
 		outlet.m_name = VICUS::OUTLET_NAME;
-		outlet.m_inlet = false;
+		outlet.m_isInlet = false;
 		outlet.m_id = VICUS::ENTRANCE_ID;
 		outlet.m_orientation = Qt::Horizontal;
 		outlet.m_pos = QPointF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
@@ -262,7 +262,7 @@ void SVSubNetworkEditDialog::updateNetwork()
 			block->m_properties["Pixmap"] = QPixmap(VICUS::getIconFileFromModelType(type)).scaled(256,256);
 
 			inlet.m_name = VICUS::INLET_NAME;
-			inlet.m_inlet = true;
+			inlet.m_isInlet = true;
 			inlet.m_id = element.m_inletNodeId;
 			inlet.m_orientation = Qt::Horizontal;
 			inlet.m_pos = QPointF(0, VICUS::BLOCK_HEIGHT / 2);
@@ -270,7 +270,7 @@ void SVSubNetworkEditDialog::updateNetwork()
 
 
 			outlet.m_name = VICUS::OUTLET_NAME;
-			outlet.m_inlet = false;
+			outlet.m_isInlet = false;
 			outlet.m_id = element.m_outletNodeId;
 			outlet.m_orientation = Qt::Horizontal;
 			outlet.m_pos = QPointF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT / 2);
@@ -318,14 +318,14 @@ void SVSubNetworkEditDialog::updateNetwork()
 				VICUS::BMSocket inlet, outlet;
 
 				inlet.m_name = VICUS::INLET_NAME;
-				inlet.m_inlet = true;
+				inlet.m_isInlet = true;
 				inlet.m_id = element.m_inletNodeId;
 				inlet.m_orientation = Qt::Horizontal;
 				inlet.m_pos = QPointF(0, VICUS::BLOCK_HEIGHT / 2);
 				block.m_sockets.append(inlet);
 
 				outlet.m_name = VICUS::OUTLET_NAME;
-				outlet.m_inlet = false;
+				outlet.m_isInlet = false;
 				outlet.m_id = element.m_outletNodeId;
 				outlet.m_orientation = Qt::Horizontal;
 				outlet.m_pos = QPointF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT / 2);
@@ -338,14 +338,14 @@ void SVSubNetworkEditDialog::updateNetwork()
 					VICUS::BMSocket inlet, outlet;
 
 					inlet.m_name = VICUS::INLET_NAME;
-					inlet.m_inlet = true;
+					inlet.m_isInlet = true;
 					inlet.m_id = outlet.m_id;
 					inlet.m_orientation = Qt::Horizontal;
 					inlet.m_pos = QPointF(0, VICUS::CONNECTORBLOCK_HEIGHT / 2);
 					block.m_sockets.append(inlet);
 
 					outlet.m_name = VICUS::OUTLET_NAME;
-					outlet.m_inlet = false;
+					outlet.m_isInlet = false;
 					outlet.m_id = block.m_name.split("r")[1].toInt();
 					outlet.m_orientation = Qt::Horizontal;
 					outlet.m_pos = QPointF(VICUS::CONNECTORBLOCK_WIDTH, VICUS::CONNECTORBLOCK_HEIGHT / 2);
@@ -356,7 +356,7 @@ void SVSubNetworkEditDialog::updateNetwork()
 					block.m_displayName.clear();
 					VICUS::BMSocket outlet;
 					outlet.m_name = VICUS::OUTLET_NAME;
-					outlet.m_inlet = false;
+					outlet.m_isInlet = false;
 					outlet.m_id = VICUS::ENTRANCE_ID;
 					outlet.m_orientation = Qt::Horizontal;
 					outlet.m_pos = QPointF(VICUS::ENTRANCEEXITBLOCK_WIDTH, VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
@@ -368,7 +368,7 @@ void SVSubNetworkEditDialog::updateNetwork()
 					block.m_displayName.clear();
 					VICUS::BMSocket inlet;
 					inlet.m_name = VICUS::INLET_NAME;
-					inlet.m_inlet = true;
+					inlet.m_isInlet = true;
 					inlet.m_id = VICUS::EXIT_ID;
 					inlet.m_orientation = Qt::Horizontal;
 					inlet.m_pos = QPointF(0, VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);

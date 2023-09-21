@@ -350,7 +350,7 @@ bool SVBMSceneManager::isConnectedSocket(const VICUS::BMBlock * b, const VICUS::
 
 
 void SVBMSceneManager::startSocketConnection(const SVBMSocketItem & outletSocketItem, const QPointF & mousePos) {
-	Q_ASSERT(!outletSocketItem.socket()->m_inlet);
+	Q_ASSERT(!outletSocketItem.socket()->m_isInlet);
 
 	m_connectingSocket = outletSocketItem.socket();
 	// deselect all blocks and connectors
@@ -375,7 +375,7 @@ void SVBMSceneManager::startSocketConnection(const SVBMSocketItem & outletSocket
 	dummyBlock.m_connectionHelperBlock = true;
 	VICUS::BMSocket dummySocket;
 	dummySocket.m_name = VICUS::BMGlobals::InvisibleLabel; // "Mich gibt's auch nicht";
-	dummySocket.m_inlet = true;
+	dummySocket.m_isInlet = true;
 	dummySocket.m_orientation = Qt::Horizontal;
 	dummySocket.m_pos = QPointF(0,0);
 	dummyBlock.m_sockets.append(dummySocket);
@@ -460,13 +460,13 @@ void SVBMSceneManager::addBlock(VICUS::NetworkComponent::ModelType type, QPoint 
 	VICUS::BMBlock b;
 
 	VICUS::BMSocket s1;
-	s1.m_inlet = true;
+	s1.m_isInlet = true;
 	s1.m_orientation = Qt::Horizontal;
 	s1.m_pos = QPointF(0, VICUS::BLOCK_HEIGHT / 2);
 	s1.m_name = VICUS::INLET_NAME;
 
 	VICUS::BMSocket s2;
-	s2.m_inlet = false;
+	s2.m_isInlet = false;
 	s2.m_orientation = Qt::Horizontal;
 	s2.m_pos = QPointF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT / 2);
 	s2.m_name = VICUS::OUTLET_NAME;
@@ -475,7 +475,7 @@ void SVBMSceneManager::addBlock(VICUS::NetworkComponent::ModelType type, QPoint 
 	QPointF pos = view->mapToScene(point - QPoint(VICUS::BLOCK_WIDTH * view->getScaleX() / 2, VICUS::BLOCK_HEIGHT * view->getScaleY() / 2));
 	b.m_size = QSizeF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT);
 	b.m_pos = pos;
-	b.m_name = QString::number(getNewBlockId());
+	b.m_name = QString::number(newBlockId());
 	b.m_mode = VICUS::BMBlockType::NetworkComponentBlock;
 	b.m_sockets.append(s1);
 	b.m_sockets.append(s2);
@@ -680,13 +680,13 @@ void SVBMSceneManager::removeSelectedBlocks()
 
 void SVBMSceneManager::removeConnectorBlock(const VICUS::BMBlock * block){
 
-	VICUS::BMBlock *blockToBeRemoved;
+	VICUS::BMBlock *blockToBeRemoved = nullptr;
 	std::list<VICUS::BMBlock>::iterator bit = m_network->m_blocks.begin();
 	for (; bit != m_network->m_blocks.end(); ++bit)
 		if (block == &(*bit))
 			blockToBeRemoved = &(*bit);
 
-	Q_ASSERT(blockToBeRemoved);
+	Q_ASSERT(blockToBeRemoved != nullptr);
 
 	// find connectors that connect to this block
 	QSet< VICUS::BMConnector*> connectors = m_blockConnectorMap[blockToBeRemoved];
@@ -810,8 +810,8 @@ void SVBMSceneManager::removeConnector(unsigned int connectorIndex) {
 	if(!isConnectedSocket(targetBlock, targetSocket) && !(targetBlock->m_mode == VICUS::BMBlockType::GlobalOutlet)){
 		targetSocket->m_id = VICUS::INVALID_ID;
 	}
-
 }
+
 
 void SVBMSceneManager::removeSelectedConnector()
 {
@@ -823,9 +823,6 @@ void SVBMSceneManager::removeSelectedConnector()
 
 
 void SVBMSceneManager::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
-//	if (mouseEvent->button() == Qt::RightButton) {
-//		disableConnectionMode();
-//	}
 	// in case of click on socket while in connection mode, the next call will
 	// result in a call to startSocketConnection(), which creates a new block and connection
 	// we need to detect this and fire a mouse event again afterwards, which will cause
@@ -957,18 +954,17 @@ bool SVBMSceneManager::evaluateNewConnection(QString startSocketName, QString ta
 		// if targetBlock is not a ConnectorBlock, find the appropriate connectorBlock and connect sourceBlock with the connectorBlock
 		} else {
 			if(targetBlock->m_mode == VICUS::BMBlockType::GlobalOutlet && m_blockConnectorMap[targetBlock].size() == 0){
-				startSocket->m_id = targetSocket->m_id;
 				createConnection(startBlock, targetBlock, startSocket, targetSocket);
 			} else {
-				VICUS::BMConnector *con = getConnectorOfModelTypeBlock(const_cast<const VICUS::BMBlock *&>(targetBlock), const_cast<const VICUS::BMSocket *&>(targetSocket));
+				VICUS::BMConnector *con = firstConnectorOfBlock(const_cast<const VICUS::BMBlock *&>(targetBlock), const_cast<const VICUS::BMSocket *&>(targetSocket));
 				if(isConnectedToConnectorBlock(targetSocket, con)){
-					SVBMBlockItem* conn = nullptr;
-					for(SVBMBlockItem* connSoc : m_blockItems){
-						if(connSoc->block()->m_name == VICUS::CONNECTORBLOCK_NAME + QString::number(targetSocket->m_id)){
-							conn = connSoc;
+					SVBMBlockItem *conBlock = nullptr;
+					for(SVBMBlockItem *bi : m_blockItems){
+						if(bi->block()->m_name == VICUS::CONNECTORBLOCK_NAME + QString::number(targetSocket->m_id)){
+							conBlock = bi;
 						}
 					}
-					createConnection(startBlock, const_cast<VICUS::BMBlock*>(conn->block()), startSocket, const_cast<VICUS::BMSocket*>(&(conn->block()->m_sockets[0])));
+					createConnection(startBlock, const_cast<VICUS::BMBlock*>(conBlock->block()), startSocket, const_cast<VICUS::BMSocket*>(&(conBlock->block()->m_sockets[0])));
 				} else {
 					convertConnectionToConnectorBlock(targetBlock, targetSocket, startBlock, startSocket, con);
 				}
@@ -983,19 +979,17 @@ bool SVBMSceneManager::evaluateNewConnection(QString startSocketName, QString ta
 			createConnection(startBlock, targetBlock, startSocket, targetSocket);
 		} else {
 			if(startBlock->m_mode == VICUS::BMBlockType::GlobalInlet && m_blockConnectorMap[startBlock].size() == 0){
-				targetSocket->m_id = startSocket->m_id;
 				createConnection(startBlock, targetBlock, startSocket, targetSocket);
 			} else {
-				VICUS::BMConnector *con = getConnectorOfModelTypeBlock(const_cast<const VICUS::BMBlock *&>(startBlock), const_cast<const VICUS::BMSocket *&>(startSocket));
-
+				VICUS::BMConnector *con = firstConnectorOfBlock(const_cast<const VICUS::BMBlock *&>(startBlock), const_cast<const VICUS::BMSocket *&>(startSocket));
 				if(isConnectedToConnectorBlock(startSocket, con)){
-					SVBMBlockItem* conn = nullptr;
-					for(SVBMBlockItem* connSoc : m_blockItems){
-						if(connSoc->block()->m_name == VICUS::CONNECTORBLOCK_NAME + QString::number(startSocket->m_id)){
-							conn = connSoc;
+					SVBMBlockItem *conBlock = nullptr;
+					for(SVBMBlockItem *bi : m_blockItems){
+						if(bi->block()->m_name == VICUS::CONNECTORBLOCK_NAME + QString::number(startSocket->m_id)){
+							conBlock = bi;
 						}
 					}
-					createConnection(const_cast<VICUS::BMBlock*>(conn->block()), targetBlock, const_cast<VICUS::BMSocket*>(&(conn->block()->m_sockets[1])), targetSocket);
+					createConnection(const_cast<VICUS::BMBlock*>(conBlock->block()), targetBlock, const_cast<VICUS::BMSocket*>(&(conBlock->block()->m_sockets[1])), targetSocket);
 				} else {
 					convertConnectionToConnectorBlock(startBlock, startSocket, targetBlock, targetSocket, con);
 				}
@@ -1010,12 +1004,14 @@ bool SVBMSceneManager::evaluateNewConnection(QString startSocketName, QString ta
 
 	// if no previous connection
 	else {
-		startSocket->m_id = targetSocket->m_id = getNewNodeId();
+		startSocket->m_id = newSocketId();
+		targetSocket->m_id = startSocket->m_id;
 		createConnection(startBlock, targetBlock, startSocket, targetSocket);
 	}
 
 	return true;
 }
+
 
 bool SVBMSceneManager::checkOneConnectionPerSocket(const VICUS::BMBlock *block)
 {
@@ -1131,14 +1127,12 @@ void SVBMSceneManager::onSelectionChanged() {
 
 	// if a connector segment was selected, de-select only the last connector and all segments of the same
 	if (!selectedCons.isEmpty()) {
-//		disconnect(this, &SceneManager::selectionChanged, this, &SceneManager::onSelectionChanged);
 		clearSelection();
 		// now select all items that belong to the connector
 		for (SVBMConnectorSegmentItem * item : m_connectorSegmentItems) {
 			if (item->m_connector == selectedCons.back())
 				item->setSelected(true);
 		}
-//		connect(this, &SceneManager::selectionChanged, this, &SceneManager::onSelectionChanged);
 		// signal that our connection was selected
 		emit newConnectorSelected(selectedCons[0]->m_sourceSocket, selectedCons[0]->m_targetSocket);
 	}
@@ -1256,10 +1250,11 @@ void SVBMSceneManager::updateConnectorSegmentItems(const VICUS::BMConnector & co
 	}
 }
 
-unsigned int SVBMSceneManager::getNewNodeId()
+
+unsigned int SVBMSceneManager::newSocketId() const
 {
 	unsigned int nodeID = 0;
-	for(auto &block : m_network->m_blocks) {
+	for(const auto &block : m_network->m_blocks) {
 		if(block.m_sockets.size() == 2){
 			if ((block.m_sockets[0].m_id > nodeID && block.m_sockets[0].m_id != VICUS::ENTRANCE_ID && block.m_sockets[0].m_id != VICUS::EXIT_ID && block.m_sockets[0].m_id != VICUS::INVALID_ID)) {
 				nodeID = block.m_sockets[0].m_id;
@@ -1272,20 +1267,23 @@ unsigned int SVBMSceneManager::getNewNodeId()
 	return nodeID + 1;
 }
 
-unsigned int SVBMSceneManager::getNewBlockId()
+
+unsigned int SVBMSceneManager::newBlockId() const
 {
 	unsigned int blockID = 0;
-	for(auto &block : m_network->m_blocks) {
+	for(const auto &block : m_network->m_blocks) {
 		bool isInt = false;
-		unsigned int id = block.m_name.toInt(&isInt);
-		if(id > blockID) {
+		unsigned int id = block.m_name.toUInt(&isInt); // returns "0" for strings that are convertable
+		if(isInt && id > blockID) {
 			blockID = id;
 		}
 	}
 	return blockID + 1;
 }
 
-void SVBMSceneManager::getBlocksOfConnection(const VICUS::BMConnector &con, VICUS::BMBlock *&sourceBlock, VICUS::BMBlock *&targetBlock, VICUS::BMSocket *&sourceSocket, VICUS::BMSocket *&targetSocket)
+
+void SVBMSceneManager::blocksFromConnection(const VICUS::BMConnector &con, VICUS::BMBlock *&sourceBlock,
+											VICUS::BMBlock *&targetBlock, VICUS::BMSocket *&sourceSocket, VICUS::BMSocket *&targetSocket)
 {
 	const VICUS::BMBlock* sourceBlockConst = const_cast<const VICUS::BMBlock*>(sourceBlock);
 	const VICUS::BMBlock* targetBlockConst = const_cast<const VICUS::BMBlock*>(targetBlock);
@@ -1299,9 +1297,10 @@ void SVBMSceneManager::getBlocksOfConnection(const VICUS::BMConnector &con, VICU
 	targetSocket = const_cast<VICUS::BMSocket*>(targetSocketConst);
 }
 
-bool SVBMSceneManager::isConnectedToConnectorBlock(VICUS::BMSocket *evaluatedSocket, VICUS::BMConnector *con)
+
+bool SVBMSceneManager::isConnectedToConnectorBlock(const VICUS::BMSocket *evaluatedSocket, const VICUS::BMConnector *con)
 {
-	if(evaluatedSocket->m_inlet){
+	if(evaluatedSocket->m_isInlet){
 		if(con->m_sourceSocket.contains(VICUS::CONNECTORBLOCK_NAME)){
 			return true;
 		}
@@ -1318,10 +1317,11 @@ bool SVBMSceneManager::isConnectedToConnectorBlock(VICUS::BMSocket *evaluatedSoc
 	}
 }
 
-VICUS::BMConnector *SVBMSceneManager::getConnectorOfModelTypeBlock(const VICUS::BMBlock *block, const VICUS::BMSocket *socket)
+
+VICUS::BMConnector *SVBMSceneManager::firstConnectorOfBlock(const VICUS::BMBlock *block, const VICUS::BMSocket *socket)
 {
 	if(block->m_mode == VICUS::BMBlockType::NetworkComponentBlock || block->m_mode == VICUS::BMBlockType::GlobalInlet || block->m_mode == VICUS::BMBlockType::GlobalOutlet){
-		if(socket->m_inlet){
+		if(socket->m_isInlet){
 			for(auto &connector : m_blockConnectorMap[block]){
 				if(connector->m_targetSocket == block->m_name + QString(".") + VICUS::INLET_NAME)
 					return connector;
@@ -1337,9 +1337,14 @@ VICUS::BMConnector *SVBMSceneManager::getConnectorOfModelTypeBlock(const VICUS::
 }
 
 
-void SVBMSceneManager::addConnectorBlockAndSocket(VICUS::BMBlock  *startBlock, VICUS::BMBlock *targetBlock, VICUS::BMSocket *startSocket, VICUS::BMSocket *targetSocket, int id){
-	//Create connector block and socket
-	VICUS::BMBlock connectorBlock(VICUS::CONNECTORBLOCK_NAME + QString::number(id), ((startBlock->m_pos.x() + startSocket->m_pos.x() + targetBlock->m_pos.x() + targetSocket->m_pos.x()) / 2) - 16, ((startBlock->m_pos.y() + startSocket->m_pos.y() + targetBlock->m_pos.y() + targetSocket->m_pos.y()) / 2) - 20);
+void SVBMSceneManager::addConnectorBlockAndSocket(const VICUS::BMBlock *sourceBlock, const VICUS::BMBlock *targetBlock,
+												  VICUS::BMSocket *startSocket, VICUS::BMSocket *targetSocket, unsigned int id){
+
+	// Create connector block and socket
+	// calculate position in the center between source and target block
+	VICUS::BMBlock connectorBlock(VICUS::CONNECTORBLOCK_NAME + QString::number(id),
+								  ((sourceBlock->m_pos.x() + startSocket->m_pos.x() + targetBlock->m_pos.x() + targetSocket->m_pos.x()) / 2) - 16,
+								  ((sourceBlock->m_pos.y() + startSocket->m_pos.y() + targetBlock->m_pos.y() + targetSocket->m_pos.y()) / 2) - 20);
 	connectorBlock.m_mode = VICUS::BMBlockType::ConnectorBlock;
 	connectorBlock.m_size = QSizeF(VICUS::CONNECTORBLOCK_WIDTH, VICUS::CONNECTORBLOCK_HEIGHT);
 	VICUS::BMSocket inlet(VICUS::INLET_NAME, QPointF(0, connectorBlock.m_size.height() / 2), Qt::Horizontal, true);
@@ -1355,7 +1360,7 @@ void SVBMSceneManager::addConnectorBlockAndSocket(VICUS::BMBlock  *startBlock, V
 	//Create connectors and connect them
 	VICUS::BMConnector consource;
 	consource.m_name = VICUS::CONNECTOR_NAME;
-	consource.m_sourceSocket = startBlock->m_name + "." + startSocket->m_name;
+	consource.m_sourceSocket = sourceBlock->m_name + "." + startSocket->m_name;
 	consource.m_targetSocket = connectorBlock.m_name + "." + inlet.m_name;
 	m_network->m_connectors.push_back(consource);
 	m_network->adjustConnector(m_network->m_connectors.back());
@@ -1368,18 +1373,21 @@ void SVBMSceneManager::addConnectorBlockAndSocket(VICUS::BMBlock  *startBlock, V
 	m_network->m_connectors.push_back(contarget);
 	m_network->adjustConnector(m_network->m_connectors.back());
 	updateConnectorSegmentItems(m_network->m_connectors.back(), nullptr);
-	startSocket->m_id = targetSocket->m_id = id;
+	startSocket->m_id = id;
+	targetSocket->m_id = startSocket->m_id;
 }
 
-void SVBMSceneManager::convertConnectionToConnectorBlock(VICUS::BMBlock *connectedBlock, VICUS::BMSocket *connectedSocket, VICUS::BMBlock *newBlock, VICUS::BMSocket *newSocket, VICUS::BMConnector* oldCon)
+
+void SVBMSceneManager::convertConnectionToConnectorBlock(const VICUS::BMBlock *connectedBlock, const VICUS::BMSocket *connectedSocket,
+														 const VICUS::BMBlock *newBlock, const VICUS::BMSocket *newSocket, const VICUS::BMConnector *oldCon)
 {
-	int connectionID = connectedSocket->m_id;
+	unsigned int connectionID = connectedSocket->m_id;
 	//remove existing Connection
 	const VICUS::BMBlock* startBlock;
 	const VICUS::BMBlock* targetBlock;
 	const VICUS::BMSocket* startSocket;
 	const VICUS::BMSocket* targetSocket;
-	if(connectedSocket->m_inlet){
+	if(connectedSocket->m_isInlet){
 		targetBlock = connectedBlock;
 		targetSocket = connectedSocket;
 		m_network->lookupBlockAndSocket(oldCon->m_sourceSocket, startBlock, startSocket);
@@ -1390,59 +1398,21 @@ void SVBMSceneManager::convertConnectionToConnectorBlock(VICUS::BMBlock *connect
 	}
 	removeConnector(oldCon);
 
-	addConnectorBlockAndSocket(const_cast<VICUS::BMBlock*>(startBlock), const_cast<VICUS::BMBlock*>(targetBlock), const_cast<VICUS::BMSocket*>(startSocket), const_cast<VICUS::BMSocket*>(targetSocket), connectionID);
+	addConnectorBlockAndSocket(const_cast<VICUS::BMBlock*>(startBlock), const_cast<VICUS::BMBlock*>(targetBlock),
+							   const_cast<VICUS::BMSocket*>(startSocket), const_cast<VICUS::BMSocket*>(targetSocket), connectionID);
 
 	VICUS::BMConnector con;
 	con.m_name = VICUS::CONNECTOR_NAME;
 
-	if(connectedSocket->m_inlet){
+	if(connectedSocket->m_isInlet){
 		con.m_sourceSocket = newBlock->m_name + "." + newSocket->m_name;
-		con.m_targetSocket = VICUS::CONNECTORBLOCK_NAME + QString::number(connectionID) + QString(".") + QString(VICUS::INLET_NAME);
+		con.m_targetSocket = VICUS::CONNECTORBLOCK_NAME + QString("%1.%2").arg(connectionID).arg(VICUS::INLET_NAME);
 	} else {
-		con.m_sourceSocket = VICUS::CONNECTORBLOCK_NAME + QString::number(connectionID) + QString(".") + QString(VICUS::OUTLET_NAME);
+		con.m_sourceSocket = VICUS::CONNECTORBLOCK_NAME + QString("%1.%2").arg(connectionID).arg(VICUS::OUTLET_NAME);
 		con.m_targetSocket = newBlock->m_name + "." + newSocket->m_name;
 	}
 	m_network->m_connectors.push_back(con);
 	m_network->adjustConnector(m_network->m_connectors.back());
 	updateConnectorSegmentItems(m_network->m_connectors.back(), nullptr);
-
-
 }
 
-void SVBMSceneManager::setupNetwork(){
-
-	VICUS::BMNetwork n = VICUS::BMNetwork();
-	updateNetwork(n);
-	setSceneRect(0,0,1152,828);
-
-	VICUS::BMBlock bentry, bexit;
-
-	bentry.m_name = VICUS::SUBNETWORK_INLET_NAME;
-	bentry.m_mode = VICUS::BMBlockType::GlobalInlet;
-	bentry.m_size = QSizeF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT);
-	bentry.m_pos = QPointF(0,400);
-
-	bexit.m_name = VICUS::SUBNETWORK_OUTLET_NAME;
-	bexit.m_mode = VICUS::BMBlockType::GlobalOutlet;
-	bexit.m_size = QSizeF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT);
-	bexit.m_pos = QPointF(1102,400);
-
-
-	VICUS::BMSocket outlet, inlet;
-	outlet.m_name = VICUS::OUTLET_NAME;
-	outlet.m_inlet = false;
-	outlet.m_id = VICUS::ENTRANCE_ID;
-	outlet.m_orientation = Qt::Horizontal;
-	outlet.m_pos = QPointF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
-	bentry.m_sockets.append(outlet);
-
-	inlet.m_name = VICUS::INLET_NAME;
-	inlet.m_inlet = true;
-	inlet.m_id = VICUS::EXIT_ID;
-	inlet.m_orientation = Qt::Horizontal;
-	inlet.m_pos = QPointF(0,VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
-	bexit.m_sockets.append(inlet);
-
-	addBlock(bentry);
-	addBlock(bexit);
-}

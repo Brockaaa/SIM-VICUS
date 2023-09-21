@@ -64,7 +64,7 @@ void BMSocket::readXML(QXmlStreamReader & reader) {
             }
             else if (ename == "Inlet") {
                 QString flag = BLOCKMOD::readTextElement(reader);
-                m_inlet = (flag == "true");
+                m_isInlet = (flag == "true");
             }
             else if(ename == "ID") {
                 QString readID = BLOCKMOD::readTextElement(reader);
@@ -90,7 +90,7 @@ void BMSocket::writeXML(QXmlStreamWriter & writer) const {
     writer.writeAttribute("name", m_name);
     writer.writeTextElement("Position", BLOCKMOD::encodePoint(m_pos));
     writer.writeTextElement("Orientation", m_orientation == Qt::Horizontal ? "Horizontal" : "Vertical");
-    writer.writeTextElement("Inlet", m_inlet ? "true" : "false");
+    writer.writeTextElement("Inlet", m_isInlet ? "true" : "false");
     writer.writeTextElement("ID", QString::number(m_id));
     writer.writeEndElement();
 }
