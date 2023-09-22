@@ -1,6 +1,9 @@
 #include "SVSubNetworkEditDialogTable.h"
 #include "ui_SVSubNetworkEditDialogTable.h"
 
+
+// TODO Maik: richtige Klammern
+
 #include "SVSubNetworkEditDialogTableItem.h"
 
 #include <QDebug>
@@ -20,11 +23,12 @@
 #include "SVConstants.h"
 #include "SVStyle.h"
 
+
 SVSubNetworkEditDialogTable::SVSubNetworkEditDialogTable(QWidget *parent) :
 	QTableWidget(parent),
-	ui(new Ui::SVSubNetworkEditDialogTable)
+	m_ui(new Ui::SVSubNetworkEditDialogTable)
 {
-	ui->setupUi(this);
+	m_ui->setupUi(this);
 	setFrameStyle(0);
 	setShowGrid(false);
 	setDragEnabled(true);
@@ -34,8 +38,7 @@ SVSubNetworkEditDialogTable::SVSubNetworkEditDialogTable(QWidget *parent) :
 	setSelectionBehavior(QAbstractItemView::SelectItems);
 	setColumnCount(1);
 
-	m_zoomMeshGraphicsView = (SVBMZoomMeshGraphicsView *)(dynamic_cast<SVSubNetworkEditDialog*>(parent)->zoomMeshGraphicsView());
-
+	m_zoomMeshGraphicsView = dynamic_cast<SVSubNetworkEditDialog*>(parent)->zoomMeshGraphicsView();
 
 	QPalette palette = this->palette();
 	palette.setColor(QPalette::Highlight, palette.color(QPalette::Base));
@@ -47,12 +50,11 @@ SVSubNetworkEditDialogTable::SVSubNetworkEditDialogTable(QWidget *parent) :
 	QHeaderView *hheader = horizontalHeader();
 	hheader->setSectionResizeMode(0, QHeaderView::Stretch);
 	hheader->setVisible(false);
-
 }
 
 SVSubNetworkEditDialogTable::~SVSubNetworkEditDialogTable()
 {
-	delete ui;
+	delete m_ui;
 }
 
 void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent::ModelType type){
@@ -93,35 +95,38 @@ void SVSubNetworkEditDialogTable::clear()
 void SVSubNetworkEditDialogTable::startDrag(Qt::DropActions supportedActions){
 
 	QModelIndexList selected = selectedIndexes();
-	if(selected.isEmpty()) return;
+	if(selected.isEmpty())
+		return;
 
 	int index = selected[0].row();
 
-	QMimeData *mimeData = new QMimeData();
-	mimeData->setText(m_elementList[index]);
-	QDrag *drag = new QDrag(this);
+//	QMimeData *mimeData = new QMimeData();
+//	mimeData->setText(m_elementList[index]);
 
-	double scaleX = m_zoomMeshGraphicsView->getScaleX();
-	double scaleY = m_zoomMeshGraphicsView->getScaleY();
+//	QDrag *drag = new QDrag(this);
 
-	VICUS::NetworkComponent::ModelType type;
+//	double scaleX = m_zoomMeshGraphicsView->getScaleX();
+//	double scaleY = m_zoomMeshGraphicsView->getScaleY();
 
-	if(m_elementList[index].startsWith("default:")){
-		type = static_cast<VICUS::NetworkComponent::ModelType>(m_elementList[index].split(":")[1].toInt());
-	}else if(m_elementList[index].startsWith("db:")){
-		for(int i = index; i >= 0; i--){
-			if(m_elementList[i].startsWith("default:")){
-				type = static_cast<VICUS::NetworkComponent::ModelType>(m_elementList[i].split(":")[1].toInt());
-				break;
-			}
-		}
-	}
+//	VICUS::NetworkComponent::ModelType type;
 
-	QPixmap pixmap = QPixmap(VICUS::getIconFileFromModelType(type));
-	drag->setPixmap(pixmap.scaled(m_defaultRowHeight * scaleX, m_defaultRowHeight * scaleY));
-	drag->setHotSpot(QPoint(m_defaultRowHeight * scaleX / 2, m_defaultRowHeight * scaleY / 2));
-	drag->setMimeData(mimeData);
-	drag->exec(supportedActions, Qt::CopyAction);
+//	if(m_elementList[index].startsWith("default:")){
+//		type = static_cast<VICUS::NetworkComponent::ModelType>(m_elementList[index].split(":")[1].toInt());
+//	}
+//	else if (m_elementList[index].startsWith("db:")){
+//		for(int i = index; i >= 0; i--){
+//			if(m_elementList[i].startsWith("default:")){
+//				type = static_cast<VICUS::NetworkComponent::ModelType>(m_elementList[i].split(":")[1].toInt());
+//				break;
+//			}
+//		}
+//	}
+
+//	QPixmap pixmap = QPixmap(VICUS::getIconFileFromModelType(type));
+//	drag->setPixmap(pixmap.scaled(m_defaultRowHeight * scaleX, m_defaultRowHeight * scaleY));
+//	drag->setHotSpot(QPoint(m_defaultRowHeight * scaleX / 2, m_defaultRowHeight * scaleY / 2));
+//	drag->setMimeData(mimeData);
+//	drag->exec(supportedActions, Qt::CopyAction);
 }
 
 void SVSubNetworkEditDialogTable::focusOutEvent(QFocusEvent */*event*/)
@@ -130,7 +135,3 @@ void SVSubNetworkEditDialogTable::focusOutEvent(QFocusEvent */*event*/)
 }
 
 
-int SVSubNetworkEditDialogTable::rowSize() const
-{
-	return m_rowSize;
-}

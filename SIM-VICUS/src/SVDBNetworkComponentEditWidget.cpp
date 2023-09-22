@@ -49,9 +49,7 @@
 #include <QtExt_Locale.h>
 
 
-
 SVDBNetworkComponentEditWidget::SVDBNetworkComponentEditWidget(QWidget *parent) :
-	SVAbstractDatabaseEditWidget(parent),
 	m_ui(new Ui::SVDBNetworkComponentEditWidget)
 {
 	m_ui->setupUi(this);
@@ -89,14 +87,9 @@ SVDBNetworkComponentEditWidget::~SVDBNetworkComponentEditWidget() {
 }
 
 
-void SVDBNetworkComponentEditWidget::setup(SVDatabase * db, SVAbstractDatabaseTableModel * dbModel) {
-	m_db = db;
-	m_dbModel = dynamic_cast<SVDBNetworkComponentTableModel*>(dbModel);
-}
-
-void SVDBNetworkComponentEditWidget::setup(std::vector<VICUS::NetworkComponent> & components, SVDatabase * db) {
+void SVDBNetworkComponentEditWidget::setComponents(std::vector<VICUS::NetworkComponent> & components) {
 	m_components = &components;
-	m_db = db;
+	m_db = SVSettings::instance().m_db;
 }
 
 
@@ -129,7 +122,7 @@ void SVDBNetworkComponentEditWidget::updateInput(int id) {
 	setEnabled(true);
 
 	if(m_components == nullptr){
-		m_current = const_cast<VICUS::NetworkComponent*>(m_db->m_networkComponents[(unsigned int)id]);
+		m_current = const_cast<VICUS::NetworkComponent*>(m_db.m_networkComponents[(unsigned int)id]);
 	} else {
 		m_current = &(*m_components)[id];
 	}
@@ -168,19 +161,19 @@ void SVDBNetworkComponentEditWidget::update()
 	// update Schedule names (based on existing schedules)
 	if (m_current->m_scheduleIds.size()>0){
 		m_ui->lineEditSchedule1->setEnabled(true);
-		if (m_db->m_schedules[m_current->m_scheduleIds[0]] == nullptr)
+		if (m_db.m_schedules[m_current->m_scheduleIds[0]] == nullptr)
 			m_ui->lineEditSchedule1->setText(tr("Invalid Schedule"));
 		else
 			m_ui->lineEditSchedule1->setText(QtExt::MultiLangString2QString(
-				m_db->m_schedules[m_current->m_scheduleIds[0]]->m_displayName));
+				m_db.m_schedules[m_current->m_scheduleIds[0]]->m_displayName));
 	}
 	if (m_current->m_scheduleIds.size()>1){
 		m_ui->lineEditSchedule2->setEnabled(true);
-		if (m_db->m_schedules[m_current->m_scheduleIds[1]] == nullptr)
+		if (m_db.m_schedules[m_current->m_scheduleIds[1]] == nullptr)
 			m_ui->lineEditSchedule2->setText(tr("Invalid Schedule"));
 		else
 			m_ui->lineEditSchedule2->setText(QtExt::MultiLangString2QString(
-				m_db->m_schedules[m_current->m_scheduleIds[1]]->m_displayName));
+				m_db.m_schedules[m_current->m_scheduleIds[1]]->m_displayName));
 	}
 
 	// update pipe properties
@@ -188,7 +181,7 @@ void SVDBNetworkComponentEditWidget::update()
 	m_ui->groupBoxPipeProperties->setEnabled(false);
 	if (VICUS::NetworkComponent::hasPipeProperties(m_current->m_modelType)){
 		m_ui->groupBoxPipeProperties->setEnabled(true);
-		const VICUS::NetworkPipe *pipe = m_db->m_pipes[m_current->m_pipePropertiesId];
+		const VICUS::NetworkPipe *pipe = m_db.m_pipes[m_current->m_pipePropertiesId];
 		if(pipe != nullptr)
 			m_ui->lineEditPipeProperties->setText(QtExt::MultiLangString2QString(pipe->m_displayName));
 	}
@@ -848,7 +841,7 @@ void SVDBNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int ro
 void SVDBNetworkComponentEditWidget::modelModify() {
 	if(m_components == nullptr)
 	{
-		m_db->m_networkComponents.m_modified = true;
+		m_db.m_networkComponents.m_modified = true;
 		m_dbModel->setItemModified(m_current->m_id);
 	}
 	updateParameterTableWidget(m_current->m_builtIn);

@@ -1,5 +1,5 @@
-#ifndef SVSUBNETWORKEDITDIALOG_H
-#define SVSUBNETWORKEDITDIALOG_H
+#ifndef SVSUBNETWORKEDITDIALOGH
+#define SVSUBNETWORKEDITDIALOGH
 
 #include <QDialog>
 
@@ -37,14 +37,6 @@ public:
 	/*! Gets called whenever the QDialog Window is resized, sets appropriate height values for a wrapper Widget of a QtExtToolBox */
 	void resize(int w, int h);
 
-protected:
-	/*! Connected to slot newBlockSelected() in SVBMSceneManager, updates the widgets displaying informations of selected Block.
-		if connectorBlock or Entrance/Exits blocks are selected, reset all widgets displaying informations  */
-	void blockSelectedEvent();
-	/*! Connected to slot newConnectorSelected(). Evaluates if Connector is deletable, if yes, activate removeButton */
-	void connectorSelectedEvent(const QString & sourceSocketName, const QString & targetSocketName);
-	/*/ Connected to selectionCleared() in SVBMSceneManager, resets all widgets and buttons that were activated when selcting Blocks or Connectors */
-	void selectionClearedEvent();
 
 private slots:
 	/*! gets called when removeBlockOrConnectorButton is clicked, checks if Block or Connector is selected, then forwards request to SVBMSceneManager */
@@ -70,9 +62,16 @@ private slots:
 	void on_removeFromUserDBButton_clicked();
 
 private:
-	Ui::SVSubNetworkEditDialog *ui;
+	/*! Connected to slot newBlockSelected() in SVBMSceneManager, updates the widgets displaying informations of selected Block.
+		if connectorBlock or Entrance/Exits blocks are selected, reset all widgets displaying informations  */
+	void blockSelectedEvent();
+	/*! Connected to slot newConnectorSelected(). Evaluates if Connector is deletable, if yes, activate removeButton */
+	void connectorSelectedEvent(const QString & sourceSocketName, const QString & targetSocketName);
+	/*/ Connected to selectionCleared() in SVBMSceneManager, resets all widgets and buttons that were activated when selcting Blocks or Connectors */
+	void selectionClearedEvent();
+
 	/*! Creates the ToolBox, also used to update the ToolBox */
-	void createToolBox();
+	void updateToolBoxPages();
 	/*! sets Network of the SVBMSceneManager. Checks if network already filled, if already filled add the the missing values of BMBlock that were not directly saved in the XML from networkElements
 	 *   if not filled, create new Block by iterating over all NetworkElements in m_subNetwork, positions the Blocks
 	 *   so that each Block following block has the same distance from the previous block*/
@@ -102,14 +101,18 @@ private:
 	/*! Generates new unique ControllerID */
 	unsigned int getNewControllerID();
 
+
+	// TODO Maik: docustrings
+	Ui::SVSubNetworkEditDialog									*m_ui;
+
 	SVBMSceneManager                                            *m_sceneManager = nullptr;
 	SVDBNetworkControllerEditWidget                             *m_controllerEditWidget = nullptr;
 	SVDatabase                                                  *m_db = nullptr;
 	VICUS::SubNetwork                                           *m_subNetwork = nullptr;
 	std::vector<VICUS::NetworkComponent>                        m_networkComponents;
 	std::vector<VICUS::NetworkController>                       m_networkControllers;
-	SVSubNetworkEditDialogTable*                                m_senderTable = nullptr;
+	SVSubNetworkEditDialogTable									*m_senderTable = nullptr;
 	std::vector<SVSubNetworkEditDialogTable*>                   m_tables;
 };
 
-#endif // SVSUBNETWORKEDITDIALOG_H
+#endif // SVSUBNETWORKEDITDIALOGH

@@ -49,7 +49,7 @@ class QwtPlotCurve;
 	is no longer valid or you want to resize the container (through adding new items)
 	call updateInput() with an invalid index and/or nullptr pointer to the model.
 */
-class SVDBNetworkComponentEditWidget : public SVAbstractDatabaseEditWidget {
+class SVDBNetworkComponentEditWidget: public QWidget {
 	Q_OBJECT
 
 public:
@@ -63,14 +63,13 @@ public:
 	};
 
 	explicit SVDBNetworkComponentEditWidget(QWidget *parent = nullptr);
-	~SVDBNetworkComponentEditWidget() override;
+	~SVDBNetworkComponentEditWidget() ;
 
 	/*! Needs to be called once, before the widget is being used. */
-	void setup(SVDatabase * db, SVAbstractDatabaseTableModel * dbModel) override;
-	void setup(std::vector<VICUS::NetworkComponent> &components, SVDatabase *db);
+	void setComponents(std::vector<VICUS::NetworkComponent> &components);
 
 	/*! set current Component with this. */
-	void updateInput(int id) override;
+	void updateInput(int id);
 
 	/*! updates the Widget */
 	void update();
@@ -106,7 +105,7 @@ private:
 	Ui::SVDBNetworkComponentEditWidget *m_ui;
 
 	/*! Cached pointer to database object. */
-	SVDatabase							*m_db;
+	SVDatabase								m_db;
 
 	/*! Pointer to Vector of all components currently used in this Subnetwork. */
 	std::vector<VICUS::NetworkComponent>	*m_components = nullptr;

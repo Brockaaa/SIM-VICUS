@@ -5,7 +5,8 @@
 #include <QTableWidget>
 
 #include <VICUS_BMGlobals.h>
-#include "VICUS_NetworkComponent.h"
+#include <VICUS_NetworkComponent.h>
+#include <VICUS_KeywordListQt.h>
 
 class SVBMZoomMeshGraphicsView;
 
@@ -21,6 +22,23 @@ class SVSubNetworkEditDialogTable : public QTableWidget
 {
 	Q_OBJECT
 
+	struct SubNetworkEditDialogTableEntry {
+		SubNetworkEditDialogTableEntry(QString &text) {
+			QString modelType = text.split(":")[0];
+			m_modelType = VICUS::NetworkComponent::ModelType( VICUS::KeywordList::Enumeration("NetworkComponent::ModelType", modelType.toStdString()) );
+			m_id = text.split(":")[1].toUInt();
+		}
+		/*! id of database element, INVALID_ID means it is a new component */
+		unsigned int							m_id;
+		VICUS::NetworkComponent::ModelType		m_modelType;
+
+		QString toText() {
+			return QString("%1:%2")
+					.arg( VICUS::KeywordList::Keyword("NetworkComponent::ModelType", m_modelType) )
+					.arg(m_id);
+		}
+	};
+
 public:
 	explicit SVSubNetworkEditDialogTable(QWidget *parent = nullptr);
 	~SVSubNetworkEditDialogTable();
@@ -31,20 +49,25 @@ public:
 	void addElement(VICUS::NetworkComponent &controller);
 	/* removes all Elements from Table */
 	void clear();
-	std::vector<QString> m_elementList;
 
 private:
-	Ui::SVSubNetworkEditDialogTable *ui;
-
-	int m_rowSize = 0;
-	int m_defaultRowHeight = VICUS::BLOCK_HEIGHT;
 
 	void startDrag(Qt::DropActions supportedActions) override;
 	void focusOutEvent(QFocusEvent *event) override;
 
-	/* Pointer to ZoomMeshGraphicsView, needed to determine position of Dragged Element */
-	SVBMZoomMeshGraphicsView *                      m_zoomMeshGraphicsView = nullptr;
+public:
 
+	Ui::SVSubNetworkEditDialogTable		*m_ui;
+
+	/*! */
+	std::vector<SubNetworkEditDialogTableEntry>			m_elementList;
+
+	int													m_rowSize = 0;
+
+	int													m_defaultRowHeight = VICUS::BLOCK_HEIGHT;
+
+	/* Pointer to ZoomMeshGraphicsView, needed to determine position of Dragged Element */
+	SVBMZoomMeshGraphicsView							*m_zoomMeshGraphicsView = nullptr;
 
 };
 

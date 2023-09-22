@@ -196,7 +196,7 @@ public:
 };
 
 /*! Categories in SubnetworkEditDialog */
-enum NetComCategory{
+enum ComponentCategory{
 	Pipes,                                      // Keyword: Pipes
 	Pumps,                                      // Keyword: Pumps
 	Heatpumps,                                  // Keyword: Heatpumps
@@ -222,7 +222,7 @@ static std::map<VICUS::NetworkComponent::ModelType, QString> ModelTypeIconAttrib
 	{ VICUS::NetworkComponent::ModelType::MT_PressureLossElement,""}
 };
 
-static std::map<VICUS::NetworkComponent::ModelType, NetComCategory> ModelTypeNetComCategoryAttributes {
+static std::map<VICUS::NetworkComponent::ModelType, ComponentCategory> ModelTypeNetComCategoryAttributes {
 	{ VICUS::NetworkComponent::ModelType::MT_SimplePipe, Pipes},
 	{ VICUS::NetworkComponent::ModelType::MT_DynamicPipe, Pipes},
 	{ VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump, Pumps},
@@ -240,11 +240,13 @@ static std::map<VICUS::NetworkComponent::ModelType, NetComCategory> ModelTypeNet
 	{ VICUS::NetworkComponent::ModelType::MT_PressureLossElement, Other}
 };
 
+// TODO Maik : keine maps, stattdessen nur die funktionen mit switchs
+
 // Helper function to get iconFile from ModelType
 QString getIconFileFromModelType(VICUS::NetworkComponent::ModelType modelType);
 
 // Helper function to get NetComCategory from ModelType
-NetComCategory getNetComCategoryFromModelType(VICUS::NetworkComponent::ModelType modelType);
+ComponentCategory getNetComCategoryFromModelType(VICUS::NetworkComponent::ModelType modelType);
 
 } // namespace VICUS
 

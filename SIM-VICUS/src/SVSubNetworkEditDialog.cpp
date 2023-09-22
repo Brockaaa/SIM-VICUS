@@ -1,8 +1,17 @@
 #include "SVSubNetworkEditDialog.h"
 #include "ui_SVSubNetworkEditDialog.h"
 
-#include "QHBoxLayout"
-#include "QPushButton"
+#include "SVBMZoomMeshGraphicsView.h"
+#include "SVBMSceneManager.h"
+#include "SVSubNetworkEditDialogTable.h"
+#include "SVDBSubNetworkEditWidget.h"
+#include "SVDBNetworkControllerEditWidget.h"
+#include "SVDatabase.h"
+#include "SVSettings.h"
+
+// TODO Maik: includes prüfen
+#include <QHBoxLayout>
+#include <QPushButton>
 #include <QRandomGenerator>
 #include <QTextEdit>
 #include <QDebug>
@@ -12,23 +21,13 @@
 #include <QList>
 #include <QString>
 #include <QFileDialog>
-#include <map>
 #include <QMessageBox>
 #include <QScreen>
 
-#include "NANDRAD_HydraulicNetworkControlElement.h"
-#include "NANDRAD_HydraulicNetworkComponent.h"
+#include <NANDRAD_HydraulicNetworkControlElement.h>
+#include <NANDRAD_HydraulicNetworkComponent.h>
 
-#include "IBK_MultiLanguageString.h"
-
-
-#include <SVBMZoomMeshGraphicsView.h>
-#include <SVBMSceneManager.h>
-#include "SVSubNetworkEditDialogTable.h"
-#include "SVDBSubNetworkEditWidget.h"
-#include "SVDBNetworkControllerEditWidget.h"
-#include "SVDatabase.h"
-#include "SVSettings.h"
+#include <IBK_MultiLanguageString.h>
 
 #include <VICUS_BMNetwork.h>
 #include <VICUS_BMBlock.h>
@@ -42,65 +41,78 @@
 #include <VICUS_Database.h>
 
 
+const int MINIMUMDIALOGWIDTH = 1500;
+const int MINIMUMDIALOGHEIGHT = 950;
+
 SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwork * subNetwork, SVDatabase * db) :
 	QDialog(parent),
-	ui(new Ui::SVSubNetworkEditDialog)
+	m_ui(new Ui::SVSubNetworkEditDialog)
 {
-	ui->setupUi(this);
+	m_ui->setupUi(this);
 
+	m_db = db;
+
+	// resize window
 	QScreen *screen = QGuiApplication::primaryScreen();
 	Q_ASSERT(screen!=nullptr);
 	QRect rect = screen->geometry();
-	int width = rect.width()* 0.95;
-	int height =  0.8*rect.height();
+	int width = int(rect.width()* 0.95);
+	int height = int(0.8*rect.height());
 
-	if(width < VICUS::MINIMUMDIALOGWIDTH){
-		width = VICUS::MINIMUMDIALOGWIDTH;
+	if(width < MINIMUMDIALOGWIDTH){
+		width = MINIMUMDIALOGWIDTH;
 	}
-	if(height < VICUS::MINIMUMDIALOGHEIGHT){
-		height = VICUS::MINIMUMDIALOGHEIGHT;
+	if(height < MINIMUMDIALOGHEIGHT){
+		height = MINIMUMDIALOGHEIGHT;
 	}
 
-	resize(width,height);
-	ui->scrollArea->setMaximumHeight(height-20);
+	resize(width, height);
+	m_ui->scrollArea->setMaximumHeight(height-20);
 
 
-	m_db = db;
-	SVSubNetworkEditDialog::createToolBox();
-	ui->tbox->addPage(tr("Pipes"), m_tables[0]);
-	ui->tbox->addPage(tr("Pumps"), m_tables[1]);
-	ui->tbox->addPage(tr("Heatpumps"), m_tables[2]);
-	ui->tbox->addPage(tr("Other"), m_tables[3]);
-	ui->tbox->blockSignals(false);
-	ui->tbox->setCurrentIndex(0);
-	ui->viewWidget->setDragMode(QGraphicsView::ScrollHandDrag);
-	ui->viewWidget->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
-	ui->viewWidget->setResolution(1);
+	// populate tool box
+	m_ui->tbox->blockSignals(true);
+	m_ui->tbox->m_enableOpenMultiplePages = true;
+	m_ui->tbox->layout()->setMargin(0);
 
-	ui->controllerLineEdit->setDisabled(true);
-	m_sceneManager = qobject_cast<SVBMSceneManager*>(ui->viewWidget->scene());
+	updateToolBoxPages();
+
+	m_ui->tbox->addPage(tr("Pipes"), m_tables[0]);
+	m_ui->tbox->addPage(tr("Pumps"), m_tables[1]);
+	m_ui->tbox->addPage(tr("Heatpumps"), m_tables[2]);
+	m_ui->tbox->addPage(tr("Other"), m_tables[3]);
+	m_ui->tbox->blockSignals(false);
+	m_ui->tbox->setCurrentIndex(0);
+	m_ui->viewWidget->setDragMode(QGraphicsView::ScrollHandDrag);
+	m_ui->viewWidget->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+	m_ui->viewWidget->setResolution(1);
+
+	m_ui->controllerLineEdit->setDisabled(true);
+
 	setupSubNetwork(subNetwork);
 
-	connect(m_sceneManager, &SVBMSceneManager::newBlockSelected,this, &SVSubNetworkEditDialog::blockSelectedEvent);
-	connect(m_sceneManager, &SVBMSceneManager::newConnectorSelected,this, &SVSubNetworkEditDialog::connectorSelectedEvent);
-	connect(m_sceneManager, &SVBMSceneManager::selectionCleared,this, &SVSubNetworkEditDialog::selectionClearedEvent);
+	m_sceneManager = qobject_cast<SVBMSceneManager*>(m_ui->viewWidget->scene());
+
+	connect(m_sceneManager, &SVBMSceneManager::newBlockSelected, this, &SVSubNetworkEditDialog::blockSelectedEvent);
+	connect(m_sceneManager, &SVBMSceneManager::newConnectorSelected, this, &SVSubNetworkEditDialog::connectorSelectedEvent);
+	connect(m_sceneManager, &SVBMSceneManager::selectionCleared, this, &SVSubNetworkEditDialog::selectionClearedEvent);
 	connect(m_sceneManager, &SVBMSceneManager::newBlockAdded, this, &SVSubNetworkEditDialog::on_newBlockAdded);
-	connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &SVSubNetworkEditDialog::on_buttonBox_accepted);
-	connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &SVSubNetworkEditDialog::on_buttonBox_rejected);
-	connect(ui->nameLineEdit, &QLineEdit::textChanged, this, &SVSubNetworkEditDialog::on_NameTextChanged);
+	connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &SVSubNetworkEditDialog::on_buttonBox_accepted);
+	connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &SVSubNetworkEditDialog::on_buttonBox_rejected);
+	connect(m_ui->nameLineEdit, &QLineEdit::textChanged, this, &SVSubNetworkEditDialog::on_NameTextChanged);
 }
 
 SVSubNetworkEditDialog::~SVSubNetworkEditDialog()
 {
-	delete ui;
+	delete m_ui;
 }
 
 void SVSubNetworkEditDialog::setupSubNetwork(VICUS::SubNetwork *subNetwork)
 {
 	m_subNetwork = subNetwork;
 	updateNetwork();
-	ui->networkComponentEditWidget->setup(m_networkComponents, m_db);
-	ui->networkComponentEditWidget->setFixedWidth(491);
+	m_ui->networkComponentEditWidget->setComponents(m_networkComponents);
+	m_ui->networkComponentEditWidget->setFixedWidth(491);
 }
 
 void SVSubNetworkEditDialog::show()
@@ -108,46 +120,44 @@ void SVSubNetworkEditDialog::show()
 	QDialog::show();
 
 	QList<int> ratio;
-	ratio << 300 << ui->splitter->width()-300;
-	ui->splitter->setSizes(ratio);
+	ratio << 300 << m_ui->splitter->width()-300;
+	m_ui->splitter->setSizes(ratio);
 
-	int viewWidth = ui->viewWidget->size().width();
-	int viewHeight = ui->viewWidget->size().height();
+	int viewWidth = m_ui->viewWidget->size().width();
+	int viewHeight = m_ui->viewWidget->size().height();
 	double aspectRatio = double(viewWidth)/double(viewHeight);
 	int sceneWidth = 1151;
 	int sceneHeight = int(sceneWidth/aspectRatio);
 	m_sceneManager->setSceneRect(0,450-sceneHeight/2,sceneWidth,450+sceneHeight/2);
-	ui->viewWidget->fitInView(m_sceneManager->sceneRect(), Qt::KeepAspectRatio);
-	ui->networkComponentEditWidget->updateInput(-1);
+	m_ui->viewWidget->fitInView(m_sceneManager->sceneRect(), Qt::KeepAspectRatio);
+	m_ui->networkComponentEditWidget->updateInput(-1);
 	m_sceneManager->update();
 }
 
 void SVSubNetworkEditDialog::resize(int w, int h)
 {
 	QDialog::resize(QSize(w,h));
-	ui->scrollArea->setMaximumHeight(h-20);
+	m_ui->scrollArea->setMaximumHeight(h-20);
 }
 
-void SVSubNetworkEditDialog::createToolBox(){
-
-	ui->tbox->m_mode = true;
-	ui->tbox->layout()->setMargin(0);
-	ui->tbox->blockSignals(true);
+void SVSubNetworkEditDialog::updateToolBoxPages(){
 
 	if(m_tables.size() == 0){
-		for(int i = 0; i < static_cast<int>(VICUS::NetComCategory::NUM_NC); i++){
+		for(int i = 0; i < static_cast<int>(VICUS::ComponentCategory::NUM_NC); i++){
 			m_tables.push_back(new SVSubNetworkEditDialogTable(this));
 			connect(m_tables[i], &SVSubNetworkEditDialogTable::itemSelectionChanged, this, &SVSubNetworkEditDialog::on_componentSelected);
 		}
 	} else {
-		for(auto& table : m_tables){
+		for (SVSubNetworkEditDialogTable *table : m_tables){
 			table->clearSelection();
 			table->clear();
 		}
 	}
 
+	// TODO Maik: keine lambda Funktion
+
 	//Lambda function to add further elements of type NetworkComponent::ModelType to the toolbox
-	auto addElement = [&](VICUS::NetworkComponent::ModelType type, VICUS::NetComCategory category){
+	auto addElement = [&](VICUS::NetworkComponent::ModelType type, VICUS::ComponentCategory category){
 		qDebug() << "addElement" << type << category;
 		auto networkComponents = m_db->m_networkComponents.begin();
 		do{
@@ -161,26 +171,26 @@ void SVSubNetworkEditDialog::createToolBox(){
 	for(const auto& pair : VICUS::ModelTypeNetComCategoryAttributes){
 		switch(pair.second){
 		case VICUS::Pipes:
-			m_tables[static_cast<int>(VICUS::NetComCategory::Pipes)]->addElement(pair.first);
+			m_tables[static_cast<int>(VICUS::ComponentCategory::Pipes)]->addElement(pair.first);
 			addElement(pair.first, pair.second);
 			break;
 		case VICUS::Pumps:
-			m_tables[static_cast<int>(VICUS::NetComCategory::Pumps)]->addElement(pair.first);
+			m_tables[static_cast<int>(VICUS::ComponentCategory::Pumps)]->addElement(pair.first);
 			addElement(pair.first, pair.second);
 			break;
 		case VICUS::Heatpumps:
-			m_tables[static_cast<int>(VICUS::NetComCategory::Heatpumps)]->addElement(pair.first);
+			m_tables[static_cast<int>(VICUS::ComponentCategory::Heatpumps)]->addElement(pair.first);
 			addElement(pair.first, pair.second);
 			break;
 		case VICUS::Other:
-			m_tables[static_cast<int>(VICUS::NetComCategory::Other)]->addElement(pair.first);
+			m_tables[static_cast<int>(VICUS::ComponentCategory::Other)]->addElement(pair.first);
 			addElement(pair.first, pair.second);
 			break;
 		default:
 			qDebug() << "no entry for VICUS::NetworkComponent::ModelType " << pair.first;
 		}
 	}
-	ui->tbox->update();
+	m_ui->tbox->update();
 
 }
 
@@ -521,13 +531,13 @@ void SVSubNetworkEditDialog::on_buttonBox_rejected()
 }
 
 SVBMZoomMeshGraphicsView *SVSubNetworkEditDialog::zoomMeshGraphicsView(){
-	return ui->viewWidget;
+	return m_ui->viewWidget;
 }
 
 
 void SVSubNetworkEditDialog::blockSelectedEvent()
 {
-	ui->controllerLineEdit->clear();
+	m_ui->controllerLineEdit->clear();
 	bool ok = false;
 	VICUS::BMBlock  *blockToDisplay = nullptr;
 	// retrieve list of selected Blocks
@@ -538,56 +548,56 @@ void SVSubNetworkEditDialog::blockSelectedEvent()
 		// if Block is a networkComponentBlock, fill data in the right widget
 		if(blockToDisplay->m_mode == VICUS::BMBlockType::NetworkComponentBlock){
 			//activate ControllerGroupBox
-			ui->controllerGroupBox->setEnabled(true);
-			ui->controllerLabel->setEnabled(true);
-			ui->controllerLineEdit->setEnabled(true);
-			ui->nameLineEdit->setEnabled(true);
-			ui->nameLabel->setEnabled(true);
-			ui->removeControllerButton->setEnabled(true);
-			ui->removeBlockOrConnectorButton->setEnabled(true);
-			ui->copyBlockButton->setEnabled(true);
-			ui->addToDBButton->setEnabled(true);
-			ui->nameLineEdit->setText(blockToDisplay->m_displayName);
+			m_ui->controllerGroupBox->setEnabled(true);
+			m_ui->controllerLabel->setEnabled(true);
+			m_ui->controllerLineEdit->setEnabled(true);
+			m_ui->nameLineEdit->setEnabled(true);
+			m_ui->nameLabel->setEnabled(true);
+			m_ui->removeControllerButton->setEnabled(true);
+			m_ui->removeBlockOrConnectorButton->setEnabled(true);
+			m_ui->copyBlockButton->setEnabled(true);
+			m_ui->addToDBButton->setEnabled(true);
+			m_ui->nameLineEdit->setText(blockToDisplay->m_displayName);
 
 			std::vector<NANDRAD::HydraulicNetworkControlElement::ControlledProperty> availableCtrProps;
 			NANDRAD::HydraulicNetworkComponent::ModelType nandradModelType;
 			nandradModelType = VICUS::NetworkComponent::nandradNetworkComponentModelType(m_networkComponents[componentIndex(blockToDisplay->m_componentId)].m_modelType);
 			availableCtrProps = NANDRAD::HydraulicNetworkControlElement::availableControlledProperties(nandradModelType);
 			if(availableCtrProps.size() > 0){
-							ui->openControllerWidgetButton->setEnabled(true);
+							m_ui->openControllerWidgetButton->setEnabled(true);
 			} else {
 							if(blockToDisplay->m_componentId != VICUS::INVALID_ID){
-								ui->openControllerWidgetButton->setEnabled(true);
+								m_ui->openControllerWidgetButton->setEnabled(true);
 							}
-							ui->openControllerWidgetButton->setEnabled(false);
+							m_ui->openControllerWidgetButton->setEnabled(false);
 			}
 
 			if(blockToDisplay->m_controllerID != VICUS::INVALID_ID){
 				const VICUS::NetworkController *ctr = VICUS::element(m_networkControllers, blockToDisplay->m_controllerID);
-				ui->controllerLineEdit->setText(QString::fromLatin1(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", ctr->m_controlledProperty)));
-				ui->removeControllerButton->setEnabled(true);
+				m_ui->controllerLineEdit->setText(QString::fromLatin1(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", ctr->m_controlledProperty)));
+				m_ui->removeControllerButton->setEnabled(true);
 			}
 			else{
-				ui->controllerLineEdit->setText(QString(" -"));
-				ui->removeControllerButton->setEnabled(false);
+				m_ui->controllerLineEdit->setText(QString(" -"));
+				m_ui->removeControllerButton->setEnabled(false);
 			}
 
 			// Fill NetworkComponent ComboBox
 			int index = componentIndex(blockToDisplay->m_componentId);
-			ui->networkComponentEditWidget->updateInput(index);
+			m_ui->networkComponentEditWidget->updateInput(index);
 
 		} else if(blockToDisplay->m_mode == VICUS::BMBlockType::ConnectorBlock){
-			ui->controllerGroupBox->setEnabled(true);
-			ui->controllerLineEdit->setDisabled(true);
-			ui->controllerLabel->setDisabled(true);
-			ui->nameLineEdit->setDisabled(true);
-			ui->nameLabel->setDisabled(true);
-			ui->removeControllerButton->setDisabled(true);
-			ui->openControllerWidgetButton->setDisabled(true);
-			ui->networkComponentEditWidget->updateInput(-1);
-			ui->removeBlockOrConnectorButton->setEnabled(true);
-			ui->copyBlockButton->setEnabled(true);
-			ui->addToDBButton->setEnabled(false);
+			m_ui->controllerGroupBox->setEnabled(true);
+			m_ui->controllerLineEdit->setDisabled(true);
+			m_ui->controllerLabel->setDisabled(true);
+			m_ui->nameLineEdit->setDisabled(true);
+			m_ui->nameLabel->setDisabled(true);
+			m_ui->removeControllerButton->setDisabled(true);
+			m_ui->openControllerWidgetButton->setDisabled(true);
+			m_ui->networkComponentEditWidget->updateInput(-1);
+			m_ui->removeBlockOrConnectorButton->setEnabled(true);
+			m_ui->copyBlockButton->setEnabled(true);
+			m_ui->addToDBButton->setEnabled(false);
 		} else {
 			selectionClearedEvent();
 		}
@@ -600,24 +610,24 @@ void SVSubNetworkEditDialog::connectorSelectedEvent(const QString & sourceSocket
 {
 	// if a connector is selected, check if it is connected to a ConnectorBlock, if not, enable deletion of connector
 	if(sourceSocketName.contains(VICUS::CONNECTORBLOCK_NAME) || targetSocketName.contains(VICUS::CONNECTORBLOCK_NAME)){
-		ui->removeBlockOrConnectorButton->setEnabled(false);
+		m_ui->removeBlockOrConnectorButton->setEnabled(false);
 	} else{
-		ui->removeBlockOrConnectorButton->setEnabled(true);
+		m_ui->removeBlockOrConnectorButton->setEnabled(true);
 	}
 }
 
 void SVSubNetworkEditDialog::selectionClearedEvent(){
-	ui->controllerLineEdit->clear();
-	ui->controllerLineEdit->setDisabled(true);
-	ui->controllerGroupBox->setDisabled(true);
-	ui->nameLineEdit->setDisabled(true);
-	ui->removeControllerButton->setDisabled(true);
-	ui->openControllerWidgetButton->setDisabled(true);
-	ui->networkComponentEditWidget->updateInput(-1);
-	ui->removeBlockOrConnectorButton->setDisabled(true);
-	ui->copyBlockButton->setDisabled(true);
-	ui->addToDBButton->setEnabled(false);
-	ui->nameLineEdit->clear();
+	m_ui->controllerLineEdit->clear();
+	m_ui->controllerLineEdit->setDisabled(true);
+	m_ui->controllerGroupBox->setDisabled(true);
+	m_ui->nameLineEdit->setDisabled(true);
+	m_ui->removeControllerButton->setDisabled(true);
+	m_ui->openControllerWidgetButton->setDisabled(true);
+	m_ui->networkComponentEditWidget->updateInput(-1);
+	m_ui->removeBlockOrConnectorButton->setDisabled(true);
+	m_ui->copyBlockButton->setDisabled(true);
+	m_ui->addToDBButton->setEnabled(false);
+	m_ui->nameLineEdit->clear();
 }
 
 
@@ -629,7 +639,7 @@ void SVSubNetworkEditDialog::on_controllerDialog_accepted(VICUS::BMBlock *block,
 	} else {
 		m_networkControllers[controllerIndex(block->m_controllerID)] = controller;
 	}
-	ui->controllerLineEdit->setText(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(controller.m_controlledProperty)));
+	m_ui->controllerLineEdit->setText(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(controller.m_controlledProperty)));
 	m_sceneManager->setControllerID(block, block->m_controllerID, VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", controller.m_controlledProperty));
 	m_sceneManager->update();
 }
@@ -760,7 +770,7 @@ void SVSubNetworkEditDialog::on_removeControllerButton_clicked()
 	Q_ASSERT(selectedBlock != nullptr);
 	if(selectedBlock->m_controllerID == VICUS::INVALID_ID) return;
 	m_networkControllers.erase(m_networkControllers.begin() + controllerIndex(selectedBlock->m_controllerID));
-	ui->controllerLineEdit->setText(" -");
+	m_ui->controllerLineEdit->setText(" -");
 	m_sceneManager->setControllerID(selectedBlock, VICUS::INVALID_ID, "");
 	m_sceneManager->update();
 }
@@ -807,15 +817,15 @@ void SVSubNetworkEditDialog::on_componentSelected()
 	int row = m_senderTable->currentRow();
 
 	if(row == -1){
-		ui->removeFromUserDBButton->setEnabled(false);
+		m_ui->removeFromUserDBButton->setEnabled(false);
 		return;
 	}
-	if(m_senderTable->m_elementList[row].contains("db")){
-		int index = m_senderTable->m_elementList[row].split(":")[2].toInt();
-		ui->removeFromUserDBButton->setEnabled(!m_db->m_networkComponents[index]->m_builtIn);
-	} else {
-		ui->removeFromUserDBButton->setEnabled(false);
-	}
+//	if(m_senderTable->m_elementList[row].contains("db")){
+//		int index = m_senderTable->m_elementList[row].split(":")[2].toInt();
+//		m_ui->removeFromUserDBButton->setEnabled(!m_db->m_networkComponents[index]->m_builtIn);
+//	} else {
+//		m_ui->removeFromUserDBButton->setEnabled(false);
+//	}
 }
 
 
@@ -827,18 +837,20 @@ void SVSubNetworkEditDialog::on_addToDBButton_clicked()
 	if(selectedBlock->m_mode == VICUS::BMBlockType::GlobalInlet || selectedBlock->m_mode == VICUS::BMBlockType::GlobalOutlet || selectedBlock->m_mode == VICUS::BMBlockType::ConnectorBlock) return;
 	VICUS::NetworkComponent component = m_networkComponents[componentIndex(selectedBlock->m_componentId)];
 	qDebug() << m_db->m_networkComponents.add(component) << "new ID";
-	createToolBox();
+	updateToolBoxPages();
 }
 
 
 void SVSubNetworkEditDialog::on_removeFromUserDBButton_clicked()
 {
-	if(m_senderTable == nullptr) return;
+	if(m_senderTable == nullptr)
+		return;
 	int row = m_senderTable->currentRow();
-	if(row == -1) return;
-	unsigned int idToDelete = m_senderTable->m_elementList[row].split(":")[2].toInt();
-	m_senderTable->clearSelection();
-	m_db->m_networkComponents.remove(idToDelete);
-	createToolBox();
+	if(row == -1)
+		return;
+//	unsigned int idToDelete = m_senderTable->m_elementList[row].split(":")[2].toInt();
+//	m_senderTable->clearSelection();
+//	m_db->m_networkComponents.remove(idToDelete);
+//	createToolBox();
 }
 

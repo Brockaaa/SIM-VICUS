@@ -298,7 +298,7 @@ QString getIconFileFromModelType(NetworkComponent::ModelType modelType) {
 	return "";
 }
 
-NetComCategory getNetComCategoryFromModelType(NetworkComponent::ModelType modelType) {
+ComponentCategory getNetComCategoryFromModelType(NetworkComponent::ModelType modelType) {
 	auto it = ModelTypeNetComCategoryAttributes.find(modelType);
 	if (it != ModelTypeNetComCategoryAttributes.end()) {
 			return it->second;

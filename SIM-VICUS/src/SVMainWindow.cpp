@@ -306,11 +306,6 @@ SVDatabaseEditDialog *SVMainWindow::dbSupplySystemEditDialog() {
 	return m_dbSupplySystemEditDialog;
 }
 
-SVDatabaseEditDialog *SVMainWindow::dbNetworkComponentEditDialog() {
-	if (m_dbNetworkComponentEditDialog == nullptr)
-		m_dbNetworkComponentEditDialog = SVDatabaseEditDialog::createNetworkComponentEditDialog(this);
-	return m_dbNetworkComponentEditDialog;
-}
 
 SVDatabaseEditDialog *SVMainWindow::dbFluidEditDialog()
 {
@@ -319,12 +314,6 @@ SVDatabaseEditDialog *SVMainWindow::dbFluidEditDialog()
 	return m_dbFluidEditDialog;
 }
 
-/*SVDatabaseEditDialog *SVMainWindow::dbNetworkControllerEditDialog()
-{
-	if (m_dbNetworkControllerEditDialog == nullptr)
-		m_dbNetworkControllerEditDialog = SVDatabaseEditDialog::createNetworkControllerEditDialog(this);
-	return m_dbNetworkControllerEditDialog;
-}*/
 
 SVDatabaseEditDialog *SVMainWindow::dbSubNetworkEditDialog()
 {
@@ -510,15 +499,6 @@ void SVMainWindow::on_actionDBNetworkPipes_triggered() {
 
 void SVMainWindow::on_actionDBFluids_triggered() {
 	dbFluidEditDialog()->edit();
-}
-
-void SVMainWindow::on_actionDBHydraulicComponents_triggered() {
-	dbNetworkComponentEditDialog()->edit();
-}
-
-void SVMainWindow::on_actionDBControllers_triggered() {
-	//dbNetworkControllerEditDialog()->edit();
-	;
 }
 
 void SVMainWindow::on_actionDBSubNetworks_triggered() {

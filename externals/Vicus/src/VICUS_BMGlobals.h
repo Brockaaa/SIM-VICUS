@@ -68,9 +68,6 @@ const int ENTRANCEEXITBLOCK_HEIGHT = 50;
 const int ENTRANCE_ID = 333333;
 const int EXIT_ID = 666666;
 
-const int MINIMUMDIALOGWIDTH = 1500;
-const int MINIMUMDIALOGHEIGHT = 950;
-
 const QString INLET_NAME = "inlet";
 const QString OUTLET_NAME = "outlet";
 const QString SUBNETWORK_INLET_NAME = "globalInlet";
