@@ -300,9 +300,6 @@ private:
 	/*! Helper Function to get new valid Block ID */
 	unsigned int newBlockId() const;
 
-	/*! Function to retrieve Blocks and Sockets of a Connection */
-	void blocksFromConnection(const VICUS::BMConnector & con, VICUS::BMBlock *&sourceBlock, VICUS::BMBlock *&targetBlock, VICUS::BMSocket *&sourceSocket, VICUS::BMSocket *&targetSocket);
-
 	/*! Helper Function to check if a Block and Connection is connected to a ConnectorBlock */
 	bool isConnectedToConnectorBlock(const VICUS::BMSocket * evaluatedSocket, const VICUS::BMConnector * con);
 

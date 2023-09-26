@@ -1,11 +1,13 @@
 #include "SVSubNetworkEditDialogTableItem.h"
 #include "ui_SVSubNetworkEditDialogTableItem.h"
+
+#include "SVConstants.h"
+#include "SVStyle.h"
+
 #include <QPixmap>
 #include <QLabel>
 #include <QHBoxLayout>
 
-#include "SVConstants.h"
-#include "SVStyle.h"
 
 SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filename, QString text, QString tooltip, int height, QWidget *parent, bool subCategory) :
 	QWidget(parent),

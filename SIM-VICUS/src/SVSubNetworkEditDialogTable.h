@@ -22,7 +22,11 @@ class SVSubNetworkEditDialogTable : public QTableWidget
 {
 	Q_OBJECT
 
+public:
 	struct SubNetworkEditDialogTableEntry {
+
+		SubNetworkEditDialogTableEntry(){}
+
 		SubNetworkEditDialogTableEntry(QString &text) {
 			QString modelType = text.split(":")[0];
 			m_modelType = VICUS::NetworkComponent::ModelType( VICUS::KeywordList::Enumeration("NetworkComponent::ModelType", modelType.toStdString()) );
@@ -39,7 +43,6 @@ class SVSubNetworkEditDialogTable : public QTableWidget
 		}
 	};
 
-public:
 	explicit SVSubNetworkEditDialogTable(QWidget *parent = nullptr);
 	~SVSubNetworkEditDialogTable();
 	int rowSize() const;

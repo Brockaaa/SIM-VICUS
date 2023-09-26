@@ -43,6 +43,7 @@
 #include <cmath>
 
 #include "SVBMSceneManager.h"
+#include "SVSubNetworkEditDialogTable.h"
 #include "VICUS_BMNetwork.h"
 #include "VICUS_BMGlobals.h"
 
@@ -300,13 +301,13 @@ void SVBMZoomMeshGraphicsView::dropEvent(QDropEvent *event){
 	QString sentText = event->mimeData()->text();
 	QPoint point = event->pos();
 	qDebug() << "dropEvent " << sentText << " x: " << QString::number(point.x()) << " y: " << QString::number(point.y());
-	if(sentText.startsWith("default")){
-		int type = sentText.split(":")[1].toInt();
-		addBlock(static_cast<VICUS::NetworkComponent::ModelType>(type), point);
-	} else if(sentText.startsWith("db")){
-		int type = sentText.split(":")[1].toInt();
-		int controllerID = sentText.split(":")[2].toInt();
-		addBlock(static_cast<VICUS::NetworkComponent::ModelType>(type), point, controllerID);
+
+	SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry entry(sentText);
+
+	if(entry.m_id == -1){
+		addBlock(entry.m_modelType, point);
+	} else {
+		addBlock(entry.m_modelType, point, entry.m_id);
 	}
 }
 
@@ -316,11 +317,11 @@ void SVBMZoomMeshGraphicsView::addBlock(VICUS::BMBlock *block){
 	m_sceneManager->addBlock((*block));
 }
 
-void SVBMZoomMeshGraphicsView::addBlock(VICUS::NetworkComponent::ModelType type, QPoint point, int controllerID){
-	if(controllerID == -1)
+void SVBMZoomMeshGraphicsView::addBlock(VICUS::NetworkComponent::ModelType type, QPoint point, int componentID){
+	if(componentID == -1)
 		m_sceneManager->addBlock(type, point);
 	else
-		m_sceneManager->addBlock(type, point, controllerID);
+		m_sceneManager->addBlock(type, point, componentID);
 }
 
 void SVBMZoomMeshGraphicsView::removeBlock(){

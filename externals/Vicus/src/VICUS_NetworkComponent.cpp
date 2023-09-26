@@ -290,21 +290,66 @@ bool NetworkComponent::hasPipeProperties(const NetworkComponent::ModelType model
 }
 
 QString getIconFileFromModelType(NetworkComponent::ModelType modelType) {
-	auto it = ModelTypeIconAttributes.find(modelType);
-		if (it != ModelTypeIconAttributes.end()) {
-			return it->second;
+	switch (modelType) {
+	case VICUS::NetworkComponent::ModelType::MT_SimplePipe:
+			return ":/gfx/modeltypeicons/pipe.png";
+	case VICUS::NetworkComponent::ModelType::MT_DynamicPipe:
+			return ":/gfx/modeltypeicons/pipe.png";
+	case VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_ControlledPump:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_VariablePressurePump:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_HeatExchanger:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_ControlledValve:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler:
+			return "";
+	case VICUS::NetworkComponent::ModelType::MT_PressureLossElement:
+			return "";
+	default:
+			throw std::invalid_argument("Unknown modelType");
 	}
-	// return a default icon or empty QString if not found
-	return "";
 }
 
-ComponentCategory getNetComCategoryFromModelType(NetworkComponent::ModelType modelType) {
-	auto it = ModelTypeNetComCategoryAttributes.find(modelType);
-	if (it != ModelTypeNetComCategoryAttributes.end()) {
-			return it->second;
+ComponentCategory getComponentCategoryFromModelType(NetworkComponent::ModelType modelType) {
+	switch (modelType) {
+	case VICUS::NetworkComponent::ModelType::MT_SimplePipe:
+	case VICUS::NetworkComponent::ModelType::MT_DynamicPipe:
+			return Pipes;
+	case VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump:
+	case VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump:
+	case VICUS::NetworkComponent::ModelType::MT_ControlledPump:
+	case VICUS::NetworkComponent::ModelType::MT_VariablePressurePump:
+			return Pumps;
+	case VICUS::NetworkComponent::ModelType::MT_HeatExchanger:
+	case VICUS::NetworkComponent::ModelType::MT_ControlledValve:
+	case VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve:
+	case VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler:
+	case VICUS::NetworkComponent::ModelType::MT_PressureLossElement:
+			return Other;
+	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide:
+	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide:
+	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide:
+	case VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide:
+			return Heatpumps;
+	default:
+			throw std::invalid_argument("Unknown modelType");
 	}
-	// return a default category or throw an exception if not found
-	return Other; // Default category
 }
 
 } // namespace VICUS

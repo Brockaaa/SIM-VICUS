@@ -204,50 +204,12 @@ enum ComponentCategory{
 	NUM_NC
 };
 
-static std::map<VICUS::NetworkComponent::ModelType, QString> ModelTypeIconAttributes {
-	{ VICUS::NetworkComponent::ModelType::MT_SimplePipe, ":/gfx/modeltypeicons/pipe.png"},
-	{ VICUS::NetworkComponent::ModelType::MT_DynamicPipe, ":/gfx/modeltypeicons/pipe.png"},
-	{ VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_ControlledPump, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_VariablePressurePump, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatExchanger, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_ControlledValve, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler, ""},
-	{ VICUS::NetworkComponent::ModelType::MT_PressureLossElement,""}
-};
-
-static std::map<VICUS::NetworkComponent::ModelType, ComponentCategory> ModelTypeNetComCategoryAttributes {
-	{ VICUS::NetworkComponent::ModelType::MT_SimplePipe, Pipes},
-	{ VICUS::NetworkComponent::ModelType::MT_DynamicPipe, Pipes},
-	{ VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump, Pumps},
-	{ VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump, Pumps},
-	{ VICUS::NetworkComponent::ModelType::MT_ControlledPump, Pumps},
-	{ VICUS::NetworkComponent::ModelType::MT_VariablePressurePump, Pumps},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatExchanger, Other},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide, Heatpumps},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide, Heatpumps},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide, Heatpumps},
-	{ VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide, Heatpumps},
-	{ VICUS::NetworkComponent::ModelType::MT_ControlledValve, Other},
-	{ VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve, Other},
-	{ VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler, Other},
-	{ VICUS::NetworkComponent::ModelType::MT_PressureLossElement, Other}
-};
-
-// TODO Maik : keine maps, stattdessen nur die funktionen mit switchs
-
 // Helper function to get iconFile from ModelType
 QString getIconFileFromModelType(VICUS::NetworkComponent::ModelType modelType);
 
-// Helper function to get NetComCategory from ModelType
-ComponentCategory getNetComCategoryFromModelType(VICUS::NetworkComponent::ModelType modelType);
 
+// Helper function to get NetComCategory from ModelType
+ComponentCategory getComponentCategoryFromModelType(VICUS::NetworkComponent::ModelType modelType);
 } // namespace VICUS
 
 

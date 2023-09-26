@@ -101,17 +101,23 @@ private:
 	/*! Generates new unique ControllerID */
 	unsigned int getNewControllerID();
 
-
-	// TODO Maik: docustrings
+	/*! The UI class. */
 	Ui::SVSubNetworkEditDialog									*m_ui;
-
+	/*! SceneManager, handles the objects in the Scene */
 	SVBMSceneManager                                            *m_sceneManager = nullptr;
-	SVDBNetworkControllerEditWidget                             *m_controllerEditWidget = nullptr;
+	/*! Dialog to create and edit Controller */
+	SVDBNetworkControllerEditWidget                             *m_controllerEditDialog = nullptr;
+	/*! The database */
 	SVDatabase                                                  *m_db = nullptr;
+	/*! The Subnetwork that is currently edited */
 	VICUS::SubNetwork                                           *m_subNetwork = nullptr;
+	/*! Holds all Components of blocks in the Scene */
 	std::vector<VICUS::NetworkComponent>                        m_networkComponents;
+	/*! Holds all Controllers of blocks in the Scene */
 	std::vector<VICUS::NetworkController>                       m_networkControllers;
+	/*! Reference to a table in the Toolbox that currently has a component selected */
 	SVSubNetworkEditDialogTable									*m_senderTable = nullptr;
+	/*! Holds all Tables in the Toolbox */
 	std::vector<SVSubNetworkEditDialogTable*>                   m_tables;
 };
 

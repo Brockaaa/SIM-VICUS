@@ -9,19 +9,7 @@
 #include "SVDatabase.h"
 #include "SVSettings.h"
 
-// TODO Maik: includes prüfen
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QRandomGenerator>
-#include <QTextEdit>
-#include <QDebug>
 #include <queue>
-#include <QLabel>
-#include <QPixmap>
-#include <QList>
-#include <QString>
-#include <QFileDialog>
-#include <QMessageBox>
 #include <QScreen>
 
 #include <NANDRAD_HydraulicNetworkControlElement.h>
@@ -89,9 +77,8 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 
 	m_ui->controllerLineEdit->setDisabled(true);
 
-	setupSubNetwork(subNetwork);
-
 	m_sceneManager = qobject_cast<SVBMSceneManager*>(m_ui->viewWidget->scene());
+	setupSubNetwork(subNetwork);
 
 	connect(m_sceneManager, &SVBMSceneManager::newBlockSelected, this, &SVSubNetworkEditDialog::blockSelectedEvent);
 	connect(m_sceneManager, &SVBMSceneManager::newConnectorSelected, this, &SVSubNetworkEditDialog::connectorSelectedEvent);
@@ -154,40 +141,65 @@ void SVSubNetworkEditDialog::updateToolBoxPages(){
 		}
 	}
 
-	// TODO Maik: keine lambda Funktion
+	for(int i = 0; i < VICUS::NetworkComponent::ModelType::NUM_MT; ++i) {
+		VICUS::NetworkComponent::ModelType modelType = static_cast<VICUS::NetworkComponent::ModelType>(i);
+		VICUS::ComponentCategory category = VICUS::getComponentCategoryFromModelType(modelType);
 
-	//Lambda function to add further elements of type NetworkComponent::ModelType to the toolbox
-	auto addElement = [&](VICUS::NetworkComponent::ModelType type, VICUS::ComponentCategory category){
-		qDebug() << "addElement" << type << category;
-		auto networkComponents = m_db->m_networkComponents.begin();
-		do{
-			if(networkComponents->second.m_modelType == type){
-				m_tables[static_cast<int>(category)]->addElement(networkComponents->second);
-			}
-			networkComponents++;
-		}while(networkComponents != m_db->m_networkComponents.end());
-	};
-
-	for(const auto& pair : VICUS::ModelTypeNetComCategoryAttributes){
-		switch(pair.second){
+		switch(category){
 		case VICUS::Pipes:
-			m_tables[static_cast<int>(VICUS::ComponentCategory::Pipes)]->addElement(pair.first);
-			addElement(pair.first, pair.second);
+			m_tables[static_cast<int>(VICUS::ComponentCategory::Pipes)]->addElement(modelType);
+			qDebug() << "addElement" << modelType << category;
+			{
+				auto networkComponents = m_db->m_networkComponents.begin();
+				do{
+					if(networkComponents->second.m_modelType == modelType){
+						m_tables[static_cast<int>(category)]->addElement(networkComponents->second);
+					}
+					networkComponents++;
+				}while(networkComponents != m_db->m_networkComponents.end());
+			}
 			break;
 		case VICUS::Pumps:
-			m_tables[static_cast<int>(VICUS::ComponentCategory::Pumps)]->addElement(pair.first);
-			addElement(pair.first, pair.second);
+			m_tables[static_cast<int>(VICUS::ComponentCategory::Pumps)]->addElement(modelType);
+			qDebug() << "addElement" << modelType << category;
+			{
+				auto networkComponents = m_db->m_networkComponents.begin();
+				do{
+					if(networkComponents->second.m_modelType == modelType){
+						m_tables[static_cast<int>(category)]->addElement(networkComponents->second);
+					}
+					networkComponents++;
+				}while(networkComponents != m_db->m_networkComponents.end());
+			}
 			break;
 		case VICUS::Heatpumps:
-			m_tables[static_cast<int>(VICUS::ComponentCategory::Heatpumps)]->addElement(pair.first);
-			addElement(pair.first, pair.second);
+			m_tables[static_cast<int>(VICUS::ComponentCategory::Heatpumps)]->addElement(modelType);
+			qDebug() << "addElement" << modelType << category;
+			{
+				auto networkComponents = m_db->m_networkComponents.begin();
+				do{
+					if(networkComponents->second.m_modelType == modelType){
+						m_tables[static_cast<int>(category)]->addElement(networkComponents->second);
+					}
+					networkComponents++;
+				}while(networkComponents != m_db->m_networkComponents.end());
+			}
 			break;
 		case VICUS::Other:
-			m_tables[static_cast<int>(VICUS::ComponentCategory::Other)]->addElement(pair.first);
-			addElement(pair.first, pair.second);
+			m_tables[static_cast<int>(VICUS::ComponentCategory::Other)]->addElement(modelType);
+			qDebug() << "addElement" << modelType << category;
+			{
+				auto networkComponents = m_db->m_networkComponents.begin();
+				do{
+					if(networkComponents->second.m_modelType == modelType){
+						m_tables[static_cast<int>(category)]->addElement(networkComponents->second);
+					}
+					networkComponents++;
+				}while(networkComponents != m_db->m_networkComponents.end());
+			}
 			break;
 		default:
-			qDebug() << "no entry for VICUS::NetworkComponent::ModelType " << pair.first;
+			qDebug() << "no entry for VICUS::NetworkComponent::ModelType " << modelType;
 		}
 	}
 	m_ui->tbox->update();
@@ -744,23 +756,23 @@ void SVSubNetworkEditDialog::on_removeBlockOrConnectorButton_clicked()
 
 void SVSubNetworkEditDialog::on_openControllerWidgetButton_clicked()
 {
-	if(m_controllerEditWidget == nullptr){
-		m_controllerEditWidget = new SVDBNetworkControllerEditWidget(this, m_db);
-		connect(m_controllerEditWidget, &SVDBNetworkControllerEditWidget::controllerAccepted, this, &SVSubNetworkEditDialog::on_controllerDialog_accepted);
+	if(m_controllerEditDialog == nullptr){
+		m_controllerEditDialog = new SVDBNetworkControllerEditWidget(this, m_db);
+		connect(m_controllerEditDialog, &SVDBNetworkControllerEditWidget::controllerAccepted, this, &SVSubNetworkEditDialog::on_controllerDialog_accepted);
 	}
 
 	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().takeFirst());
 	Q_ASSERT(selectedBlock != nullptr);
 	if(selectedBlock->m_controllerID == VICUS::INVALID_ID){
 		VICUS::NetworkController *controller = new VICUS::NetworkController();
-		m_controllerEditWidget->setup(selectedBlock, *controller, &(m_networkComponents[componentIndex(selectedBlock->m_componentId)]));
+		m_controllerEditDialog->setup(selectedBlock, *controller, &(m_networkComponents[componentIndex(selectedBlock->m_componentId)]));
 	} else {
 		VICUS::NetworkComponent* component = &(m_networkComponents[componentIndex(selectedBlock->m_componentId)]);
 		unsigned int idx = controllerIndex(selectedBlock->m_controllerID);
-		m_controllerEditWidget->setup(selectedBlock, (m_networkControllers[idx]), component);
+		m_controllerEditDialog->setup(selectedBlock, (m_networkControllers[idx]), component);
 	}
 
-	m_controllerEditWidget->show();
+	m_controllerEditDialog->show();
 }
 
 
@@ -820,12 +832,12 @@ void SVSubNetworkEditDialog::on_componentSelected()
 		m_ui->removeFromUserDBButton->setEnabled(false);
 		return;
 	}
-//	if(m_senderTable->m_elementList[row].contains("db")){
-//		int index = m_senderTable->m_elementList[row].split(":")[2].toInt();
-//		m_ui->removeFromUserDBButton->setEnabled(!m_db->m_networkComponents[index]->m_builtIn);
-//	} else {
-//		m_ui->removeFromUserDBButton->setEnabled(false);
-//	}
+	SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry entry = SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry(m_senderTable->m_elementList[row]);
+	if(entry.m_id != VICUS::INVALID_ID){
+		m_ui->removeFromUserDBButton->setEnabled(!m_db->m_networkComponents[entry.m_id]->m_builtIn);
+	} else {
+		m_ui->removeFromUserDBButton->setEnabled(false);
+	}
 }
 
 
@@ -848,9 +860,10 @@ void SVSubNetworkEditDialog::on_removeFromUserDBButton_clicked()
 	int row = m_senderTable->currentRow();
 	if(row == -1)
 		return;
-//	unsigned int idToDelete = m_senderTable->m_elementList[row].split(":")[2].toInt();
-//	m_senderTable->clearSelection();
-//	m_db->m_networkComponents.remove(idToDelete);
-//	createToolBox();
+
+	SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry entry = SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry(m_senderTable->m_elementList[row]);
+	m_senderTable->clearSelection();
+	m_db->m_networkComponents.remove(entry.m_id);
+	updateToolBoxPages();
 }
 

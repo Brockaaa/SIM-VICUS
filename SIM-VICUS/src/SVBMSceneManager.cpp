@@ -1282,22 +1282,6 @@ unsigned int SVBMSceneManager::newBlockId() const
 }
 
 
-void SVBMSceneManager::blocksFromConnection(const VICUS::BMConnector &con, VICUS::BMBlock *&sourceBlock,
-											VICUS::BMBlock *&targetBlock, VICUS::BMSocket *&sourceSocket, VICUS::BMSocket *&targetSocket)
-{
-	const VICUS::BMBlock* sourceBlockConst = const_cast<const VICUS::BMBlock*>(sourceBlock);
-	const VICUS::BMBlock* targetBlockConst = const_cast<const VICUS::BMBlock*>(targetBlock);
-	const VICUS::BMSocket* sourceSocketConst = const_cast<const VICUS::BMSocket*>(sourceSocket);
-	const VICUS::BMSocket* targetSocketConst = const_cast<const VICUS::BMSocket*>(targetSocket);
-	m_network->lookupBlockAndSocket(con.m_sourceSocket, sourceBlockConst, sourceSocketConst);
-	m_network->lookupBlockAndSocket(con.m_targetSocket, targetBlockConst, targetSocketConst);
-	sourceBlock = const_cast<VICUS::BMBlock*>(sourceBlockConst);
-	targetBlock = const_cast<VICUS::BMBlock*>(targetBlockConst);
-	sourceSocket = const_cast<VICUS::BMSocket*>(sourceSocketConst);
-	targetSocket = const_cast<VICUS::BMSocket*>(targetSocketConst);
-}
-
-
 bool SVBMSceneManager::isConnectedToConnectorBlock(const VICUS::BMSocket *evaluatedSocket, const VICUS::BMConnector *con)
 {
 	if(evaluatedSocket->m_isInlet){
