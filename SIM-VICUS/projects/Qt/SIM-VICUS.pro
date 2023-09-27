@@ -116,9 +116,7 @@ SOURCES += \
 	../../src/SVDBMaterialEditWidget.cpp \
 	../../src/SVDBMaterialTableModel.cpp \
 	../../src/SVDBModelDelegate.cpp \
-	../../src/SVDBNetworkComponentEditWidget.cpp \
 	../../src/SVDBNetworkComponentTableModel.cpp \
-	../../src/SVDBNetworkControllerEditWidget.cpp \
 	../../src/SVDBNetworkControllerTableModel.cpp \
 	../../src/SVDBNetworkFluidEditWidget.cpp \
 	../../src/SVDBNetworkFluidTableModel.cpp \
@@ -167,6 +165,8 @@ SOURCES += \
 	../../src/SVMessageHandler.cpp \
 	../../src/SVNavigationTreeItemDelegate.cpp \
 	../../src/SVNavigationTreeWidget.cpp \
+	../../src/SVNetworkComponentEditWidget.cpp \
+	../../src/SVNetworkControllerEditDialog.cpp \
 	../../src/SVNetworkDialogSelectPipes.cpp \
 	../../src/SVNetworkExportDialog.cpp \
 	../../src/SVNetworkImportDialog.cpp \
@@ -326,9 +326,7 @@ HEADERS  += \
 	../../src/SVDBMaterialEditWidget.h \
 	../../src/SVDBMaterialTableModel.h \
 	../../src/SVDBModelDelegate.h \
-	../../src/SVDBNetworkComponentEditWidget.h \
 	../../src/SVDBNetworkComponentTableModel.h \
-	../../src/SVDBNetworkControllerEditWidget.h \
 	../../src/SVDBNetworkControllerTableModel.h \
 	../../src/SVDBNetworkFluidEditWidget.h \
 	../../src/SVDBNetworkFluidTableModel.h \
@@ -377,6 +375,8 @@ HEADERS  += \
 	../../src/SVMessageHandler.h \
 	../../src/SVNavigationTreeItemDelegate.h \
 	../../src/SVNavigationTreeWidget.h \
+	../../src/SVNetworkComponentEditWidget.h \
+	../../src/SVNetworkControllerEditDialog.h \
 	../../src/SVNetworkDialogSelectPipes.h \
 	../../src/SVNetworkExportDialog.h \
 	../../src/SVNetworkImportDialog.h \
@@ -522,8 +522,6 @@ FORMS    += \
 	../../src/SVDBInternalLoadsOtherEditWidget.ui \
 	../../src/SVDBInternalLoadsPersonEditWidget.ui \
 	../../src/SVDBMaterialEditWidget.ui \
-	../../src/SVDBNetworkComponentEditWidget.ui \
-	../../src/SVDBNetworkControllerEditWidget.ui \
 	../../src/SVDBNetworkFluidEditWidget.ui \
 	../../src/SVDBPipeEditWidget.ui \
 	../../src/SVDBScheduleAddDialog.ui \
@@ -550,6 +548,8 @@ FORMS    += \
 	../../src/SVMainWindow.ui \
 	../../src/SVMeasurementWidget.ui \
 	../../src/SVNavigationTreeWidget.ui \
+    ../../src/SVNetworkComponentEditWidget.ui \
+    ../../src/SVNetworkControllerEditDialog.ui \
 	../../src/SVNetworkDialogSelectPipes.ui \
 	../../src/SVNetworkExportDialog.ui \
 	../../src/SVNetworkImportDialog.ui \

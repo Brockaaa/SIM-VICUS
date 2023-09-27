@@ -94,7 +94,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>283</width>
+            <width>293</width>
             <height>832</height>
            </rect>
           </property>
@@ -406,7 +406,7 @@
       </layout>
      </item>
      <item>
-      <widget class="SVDBNetworkComponentEditWidget" name="networkComponentEditWidget" native="true">
+      <widget class="SVNetworkComponentEditWidget" name="networkComponentEditWidget" native="true">
        <property name="maximumSize">
         <size>
          <width>476</width>
@@ -467,9 +467,9 @@
    <header>SVBMZoomMeshGraphicsView.h</header>
   </customwidget>
   <customwidget>
-   <class>SVDBNetworkComponentEditWidget</class>
+   <class>SVNetworkComponentEditWidget</class>
    <extends>QWidget</extends>
-   <header>SVDBNetworkComponentEditWidget.h</header>
+   <header>SVNetworkComponentEditWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

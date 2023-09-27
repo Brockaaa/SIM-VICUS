@@ -5,7 +5,7 @@
 #include "SVBMSceneManager.h"
 #include "SVSubNetworkEditDialogTable.h"
 #include "SVDBSubNetworkEditWidget.h"
-#include "SVDBNetworkControllerEditWidget.h"
+#include "SVNetworkControllerEditDialog.h"
 #include "SVDatabase.h"
 #include "SVSettings.h"
 
@@ -79,6 +79,9 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 
 	m_sceneManager = qobject_cast<SVBMSceneManager*>(m_ui->viewWidget->scene());
 	setupSubNetwork(subNetwork);
+
+
+	// TODO Maik: entf Taste Signal verbinden zu delete
 
 	connect(m_sceneManager, &SVBMSceneManager::newBlockSelected, this, &SVSubNetworkEditDialog::blockSelectedEvent);
 	connect(m_sceneManager, &SVBMSceneManager::newConnectorSelected, this, &SVSubNetworkEditDialog::connectorSelectedEvent);
@@ -420,35 +423,35 @@ void SVSubNetworkEditDialog::updateNetwork() {
 
 bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 {
-	/* checks if every block has atleast one inlet and one outlet connection, if not,
+	/* checks if every block has at least one inlet and one outlet connection, if not,
 	throw warning and decline to close the window */
 	for(const VICUS::BMBlock &block : m_sceneManager->network().m_blocks){
 		if (block.m_mode == VICUS::BMBlockType::NetworkComponentBlock){
 			if(!(m_sceneManager->isConnectedSocket(&block, &(block.m_sockets[0])) && m_sceneManager->isConnectedSocket(&block, &(block.m_sockets[1])))){
-				QMessageBox::warning(this, tr("Warning"), tr("Not all Blocks are properly connected"));
+				QMessageBox::warning(this, tr("Invalid Network"), tr("Not all blocks are properly connected. Invalid networks can not be saved."));
 				return false;
 			}
 		}
 	}
 
 	// Existing block connectivity setup
-	std::map<int, std::vector<int>> connections;
-	std::map<int, std::vector<int>> reverseConnections;
-	for(const VICUS::BMBlock &block : m_sceneManager->network().m_blocks){
+	std::map<unsigned int, std::vector<unsigned int>> connections;
+	std::map<unsigned int, std::vector<unsigned int>> reverseConnections;
+	for (auto& block : m_sceneManager->network().m_blocks){
 		if (block.m_mode == VICUS::BMBlockType::GlobalInlet || block.m_mode == VICUS::BMBlockType::GlobalOutlet || block.m_mode == VICUS::BMBlockType::ConnectorBlock)
 			continue;
-		int inletID = block.m_sockets[0].m_id;
-		int outletID = block.m_sockets[1].m_id;
+		unsigned int inletID = block.m_sockets[0].m_id;
+		unsigned int outletID = block.m_sockets[1].m_id;
 		connections[inletID].push_back(outletID);
 		reverseConnections[outletID].push_back(inletID);  // Reverse mapping for outlet traversal
 	}
 
 	// Traversal from global inlet
-	std::set<int> visitedFromInlet;
-	std::queue<int> queue;
+	std::set<unsigned int> visitedFromInlet;
+	std::queue<unsigned int> queue;
 	queue.push(VICUS::ENTRANCE_ID);
 	while(!queue.empty()){
-		int node = queue.front();
+		unsigned int node = queue.front();
 		queue.pop();
 		visitedFromInlet.insert(node);
 
@@ -462,10 +465,10 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 	}
 
 	// Traversal from global outlet using reversed graph
-	std::set<int> visitedFromOutlet;
+	std::set<unsigned int> visitedFromOutlet;
 	queue.push(VICUS::EXIT_ID);
 	while(!queue.empty()){
-		int node = queue.front();
+		unsigned int node = queue.front();
 		queue.pop();
 		visitedFromOutlet.insert(node);
 
@@ -481,9 +484,10 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 	// Check for unreachable blocks
 	bool allReachable = true;
 	for(auto& block : m_sceneManager->network().m_blocks){
-		if(block.m_mode == VICUS::BMBlockType::GlobalInlet || block.m_mode == VICUS::BMBlockType::GlobalOutlet|| block.m_mode == VICUS::BMBlockType::ConnectorBlock) continue;
-		int inletID = block.m_sockets[0].m_id;
-		int outletID = block.m_sockets[1].m_id;
+		if (block.m_mode == VICUS::BMBlockType::GlobalInlet || block.m_mode == VICUS::BMBlockType::GlobalOutlet|| block.m_mode == VICUS::BMBlockType::ConnectorBlock)
+			continue;
+		unsigned int inletID = block.m_sockets[0].m_id;
+		unsigned int outletID = block.m_sockets[1].m_id;
 
 		if (visitedFromInlet.find(inletID) == visitedFromInlet.end() || visitedFromOutlet.find(outletID) == visitedFromOutlet.end()) {
 			// Block is not fully reachable
@@ -493,7 +497,7 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 	}
 
 	if(!allReachable) {
-		QMessageBox::warning(this, tr("Warning"), tr("Not all Blocks are reachable from globalInlet and globalOutlet"));
+		QMessageBox::warning(this, tr("Invalid Network"), tr("Not all Blocks are reachable from globalInlet and globalOutlet. Invalid networks can not be saved."));
 		return false;
 	}
 
@@ -502,31 +506,28 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 
 void SVSubNetworkEditDialog::on_buttonBox_accepted()
 {
-	if(!checkAcceptedNetwork())
+	// if the network is invalid we do nothing
+	if (!checkAcceptedNetwork())
 		return;
 
+	// else: we transfer the edited network
 	m_subNetwork->m_graphicalNetwork = m_sceneManager->network();
 	m_subNetwork->m_elements.clear();
 
-	/* checks if there are any unused Components, if yes, delete them */
-	for(unsigned int i = 0; i < m_subNetwork->m_components.size(); i++){
-		bool toDelete = true;
-		for(auto& block : m_subNetwork->m_graphicalNetwork.m_blocks){
-			if(m_subNetwork->m_components[i].m_id == block.m_componentId){
-				toDelete = false;
-				break;
-			}
-		}
-		if(toDelete){
-			m_subNetwork->m_components.erase(m_subNetwork->m_components.begin() + i);
-			i--;
-		}
+	/* Copy all used components */
+	std::set<unsigned int> usedComponentIds;
+	for (auto& block : m_subNetwork->m_graphicalNetwork.m_blocks) {
+		usedComponentIds.insert(block.m_componentId);
+	}
+	for (unsigned int id: usedComponentIds) {
+		m_subNetwork->m_components.push_back( m_networkComponents[componentIndex(id)] );
 	}
 
+
 	/* creates the appropriate Network Elements for the Subnetwork */
-	for(auto& block : m_subNetwork->m_graphicalNetwork.m_blocks){
-		if(block.m_mode == VICUS::BMBlockType::NetworkComponentBlock){
-			VICUS::NetworkElement networkElement(block.m_name.toInt(), block.m_sockets[1].m_id, block.m_sockets[0].m_id, block.m_componentId);
+	for (auto& block : m_subNetwork->m_graphicalNetwork.m_blocks){
+		if (block.m_mode == VICUS::BMBlockType::NetworkComponentBlock){
+			VICUS::NetworkElement networkElement(block.m_name.toUInt(), block.m_sockets[1].m_id, block.m_sockets[0].m_id, block.m_componentId);
 			networkElement.m_controlElementId = block.m_controllerID;
 			networkElement.m_displayName = block.m_displayName;
 			networkElement.m_inletNodeId = block.m_sockets[0].m_id;
@@ -535,8 +536,7 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 		}
 	}
 
-	/* fills subnetwork with Components and Controllers */
-	m_subNetwork->m_components = m_networkComponents;
+	/* copy controllers */
 	m_subNetwork->m_controllers = m_networkControllers;
 
 	this->close();
@@ -554,13 +554,13 @@ SVBMZoomMeshGraphicsView *SVSubNetworkEditDialog::zoomMeshGraphicsView(){
 
 void SVSubNetworkEditDialog::blockSelectedEvent()
 {
-	m_ui->controllerLineEdit->clear();
-	bool ok = false;
+	// TODO Maik: stacked widget einbauen, leere Seite zeigen wenn ungültige Auswahl
+
 	VICUS::BMBlock  *blockToDisplay = nullptr;
 	// retrieve list of selected Blocks
 	QList<const VICUS::BMBlock*> blocks = m_sceneManager->selectedBlocks();
 	// only fill in right widget if exactly one block is selected
-	if(blocks.size() == 1){
+	if (blocks.size() == 1){
 		blockToDisplay = const_cast<VICUS::BMBlock*>(blocks.first());
 		// if Block is a networkComponentBlock, fill data in the right widget
 		if(blockToDisplay->m_mode == VICUS::BMBlockType::NetworkComponentBlock){
@@ -595,33 +595,28 @@ void SVSubNetworkEditDialog::blockSelectedEvent()
 				m_ui->removeControllerButton->setEnabled(true);
 			}
 			else{
-				m_ui->controllerLineEdit->setText(QString(" -"));
+				m_ui->controllerLineEdit->clear();
 				m_ui->removeControllerButton->setEnabled(false);
 			}
 
 			// Fill NetworkComponent ComboBox
-			int index = componentIndex(blockToDisplay->m_componentId);
-			m_ui->networkComponentEditWidget->updateInput(index);
+			unsigned int index = componentIndex(blockToDisplay->m_componentId);
+			m_ui->networkComponentEditWidget->updateInput((int)index);
 
-		} else if(blockToDisplay->m_mode == VICUS::BMBlockType::ConnectorBlock){
-			m_ui->controllerGroupBox->setEnabled(true);
-			m_ui->controllerLineEdit->setDisabled(true);
-			m_ui->controllerLabel->setDisabled(true);
-			m_ui->nameLineEdit->setDisabled(true);
-			m_ui->nameLabel->setDisabled(true);
-			m_ui->removeControllerButton->setDisabled(true);
-			m_ui->openControllerWidgetButton->setDisabled(true);
-			m_ui->networkComponentEditWidget->updateInput(-1);
+		// connector block
+		} else if (blockToDisplay->m_mode == VICUS::BMBlockType::ConnectorBlock){
+			selectionClearedEvent();
 			m_ui->removeBlockOrConnectorButton->setEnabled(true);
-			m_ui->copyBlockButton->setEnabled(true);
-			m_ui->addToDBButton->setEnabled(false);
+		// global inlet / outlet
 		} else {
 			selectionClearedEvent();
 		}
+	// more than on block selected
 	} else {
 		selectionClearedEvent();
 	}
 }
+
 
 void SVSubNetworkEditDialog::connectorSelectedEvent(const QString & sourceSocketName, const QString & targetSocketName)
 {
@@ -633,6 +628,7 @@ void SVSubNetworkEditDialog::connectorSelectedEvent(const QString & sourceSocket
 	}
 }
 
+
 void SVSubNetworkEditDialog::selectionClearedEvent(){
 	m_ui->controllerLineEdit->clear();
 	m_ui->controllerLineEdit->setDisabled(true);
@@ -641,9 +637,9 @@ void SVSubNetworkEditDialog::selectionClearedEvent(){
 	m_ui->removeControllerButton->setDisabled(true);
 	m_ui->openControllerWidgetButton->setDisabled(true);
 	m_ui->networkComponentEditWidget->updateInput(-1);
-	m_ui->removeBlockOrConnectorButton->setDisabled(true);
 	m_ui->copyBlockButton->setDisabled(true);
 	m_ui->addToDBButton->setEnabled(false);
+	m_ui->removeBlockOrConnectorButton->setDisabled(true);
 	m_ui->nameLineEdit->clear();
 }
 
@@ -651,7 +647,8 @@ void SVSubNetworkEditDialog::selectionClearedEvent(){
 void SVSubNetworkEditDialog::on_controllerDialog_accepted(VICUS::BMBlock *block, VICUS::NetworkController controller)
 {
 	if(block->m_controllerID == VICUS::INVALID_ID){
-		block->m_controllerID = controller.m_id = newControllerID();
+		controller.m_id = newControllerID();
+		block->m_controllerID = controller.m_id;
 		m_networkControllers.push_back(controller);
 	} else {
 		m_networkControllers[controllerIndex(block->m_controllerID)] = controller;
@@ -661,21 +658,23 @@ void SVSubNetworkEditDialog::on_controllerDialog_accepted(VICUS::BMBlock *block,
 	m_sceneManager->update();
 }
 
+
 void SVSubNetworkEditDialog::on_NameTextChanged(const QString& text){
-	qDebug() << "Changed Name to " << text;
-	if(m_sceneManager->selectedBlocks().size() == 0) return;
-	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().takeFirst());
+	if(m_sceneManager->selectedBlocks().size() == 0)
+		return;
+	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().first());
 	selectedBlock->m_displayName = text;
 	m_sceneManager->update();
 }
 
-void SVSubNetworkEditDialog::on_newBlockAdded(VICUS::BMBlock *block, unsigned int componentID){
-	if(componentID == VICUS::INVALID_ID){
-		int newComponentID = createNewComponentID();
+
+void SVSubNetworkEditDialog::on_newBlockAdded(VICUS::BMBlock *block, unsigned int componentID) {
+	if (componentID == VICUS::INVALID_ID){
+		unsigned int newComponentID = createNewComponentID();
 		m_networkComponents.push_back(VICUS::NetworkComponent());
 		m_networkComponents.back().m_modelType = static_cast<VICUS::NetworkComponent::ModelType>(block->m_componentId);
 		QString name = QString("New ") + VICUS::KeywordListQt::Keyword("NetworkComponent::ModelType", m_networkComponents.back().m_modelType);
-		m_networkComponents.back().m_displayName = IBK::MultiLanguageString("en:" + name.toStdString());
+		m_networkComponents.back().m_displayName = IBK::MultiLanguageString(name.toStdString());
 		block->m_componentId = newComponentID;
 		m_networkComponents.back().m_id = newComponentID;
 	} else {
@@ -701,6 +700,8 @@ unsigned int SVSubNetworkEditDialog::componentIndex(unsigned int componentID)
 			return i;
 		}
 	}
+	// this should never happen
+	Q_ASSERT(false);
 	return -1;
 }
 
@@ -722,6 +723,8 @@ unsigned int SVSubNetworkEditDialog::controllerIndex(unsigned int controllerID)
 			return i;
 		}
 	}
+	// this should never happen
+	Q_ASSERT(false);
 	return VICUS::INVALID_ID;
 }
 
@@ -762,8 +765,8 @@ void SVSubNetworkEditDialog::on_removeBlockOrConnectorButton_clicked()
 void SVSubNetworkEditDialog::on_openControllerWidgetButton_clicked()
 {
 	if(m_controllerEditDialog == nullptr){
-		m_controllerEditDialog = new SVDBNetworkControllerEditWidget(this, m_db);
-		connect(m_controllerEditDialog, &SVDBNetworkControllerEditWidget::controllerAccepted, this, &SVSubNetworkEditDialog::on_controllerDialog_accepted);
+		m_controllerEditDialog = new SVNetworkControllerEditDialog(this, m_db);
+		connect(m_controllerEditDialog, &SVNetworkControllerEditDialog::controllerAccepted, this, &SVSubNetworkEditDialog::on_controllerDialog_accepted);
 	}
 
 	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().takeFirst());
@@ -777,7 +780,7 @@ void SVSubNetworkEditDialog::on_openControllerWidgetButton_clicked()
 		m_controllerEditDialog->setup(selectedBlock, (m_networkControllers[idx]), component);
 	}
 
-	m_controllerEditDialog->show();
+	m_controllerEditDialog->open();
 }
 
 

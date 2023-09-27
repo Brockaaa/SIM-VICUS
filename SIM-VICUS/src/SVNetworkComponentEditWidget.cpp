@@ -23,7 +23,7 @@
 	GNU General Public License for more details.
 */
 
-#include "SVDBNetworkComponentEditWidget.h"
+#include "SVNetworkComponentEditWidget.h"
 #include "ui_SVDBNetworkComponentEditWidget.h"
 
 #include "SVSettings.h"
@@ -49,7 +49,7 @@
 #include <QtExt_Locale.h>
 
 
-SVDBNetworkComponentEditWidget::SVDBNetworkComponentEditWidget(QWidget *parent) :
+SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 	m_ui(new Ui::SVDBNetworkComponentEditWidget)
 {
 	m_ui->setupUi(this);
@@ -82,18 +82,18 @@ SVDBNetworkComponentEditWidget::SVDBNetworkComponentEditWidget(QWidget *parent) 
 }
 
 
-SVDBNetworkComponentEditWidget::~SVDBNetworkComponentEditWidget() {
+SVNetworkComponentEditWidget::~SVNetworkComponentEditWidget() {
 	delete m_ui;
 }
 
 
-void SVDBNetworkComponentEditWidget::setComponents(std::vector<VICUS::NetworkComponent> & components) {
+void SVNetworkComponentEditWidget::setComponents(std::vector<VICUS::NetworkComponent> & components) {
 	m_components = &components;
 	m_db = SVSettings::instance().m_db;
 }
 
 
-void SVDBNetworkComponentEditWidget::updateInput(int id) {
+void SVNetworkComponentEditWidget::updateInput(int id) {
 //	FUNCID(SVDBNetworkComponentEditWidget::updateInput);
 
 	m_current = nullptr; // disable edit triggers
@@ -131,7 +131,7 @@ void SVDBNetworkComponentEditWidget::updateInput(int id) {
 
 }
 
-void SVDBNetworkComponentEditWidget::update()
+void SVNetworkComponentEditWidget::update()
 {
 
 	// now update the GUI controls
@@ -209,8 +209,8 @@ void SVDBNetworkComponentEditWidget::update()
 
 
 
-void SVDBNetworkComponentEditWidget::updateParameterTableWidget(bool readOnly) const{
-	FUNCID(SVDBNetworkComponentEditWidget::updateParameterTableWidget);
+void SVNetworkComponentEditWidget::updateParameterTableWidget(bool readOnly) const{
+	FUNCID(SVNetworkComponentEditWidget::updateParameterTableWidget);
 
 	NANDRAD::HydraulicNetworkComponent::ModelType nandradModelType =
 			VICUS::NetworkComponent::nandradNetworkComponentModelType(m_current->m_modelType);
@@ -347,7 +347,7 @@ void SVDBNetworkComponentEditWidget::updateParameterTableWidget(bool readOnly) c
 }
 
 
-void SVDBNetworkComponentEditWidget::updatePolynomCoeffTableWidget(bool readOnly) const {
+void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget(bool readOnly) const {
 
 	m_ui->groupBoxPolynom->setEnabled(false);
 	m_ui->tableWidgetPolynomCoefficients->blockSignals(true);
@@ -420,7 +420,7 @@ void SVDBNetworkComponentEditWidget::updatePolynomCoeffTableWidget(bool readOnly
 }
 
 
-void SVDBNetworkComponentEditWidget::updatePolynomPlot() {
+void SVNetworkComponentEditWidget::updatePolynomPlot() {
 
 	m_ui->widgetPlot1->detachItems( QwtPlotItem::Rtti_PlotCurve );
 	m_ui->widgetPlot1->detachItems( QwtPlotItem::Rtti_PlotMarker );
@@ -636,7 +636,7 @@ void SVDBNetworkComponentEditWidget::updatePolynomPlot() {
 
 }
 
-unsigned int SVDBNetworkComponentEditWidget::getComponentIndex(unsigned int componentID)
+unsigned int SVNetworkComponentEditWidget::getComponentIndex(unsigned int componentID)
 {
 	Q_ASSERT(m_components != nullptr);
 	for(unsigned int i = 0; i < m_components->size(); i++){
@@ -648,7 +648,7 @@ unsigned int SVDBNetworkComponentEditWidget::getComponentIndex(unsigned int comp
 }
 
 
-void SVDBNetworkComponentEditWidget::on_lineEditName_editingFinished(){
+void SVNetworkComponentEditWidget::on_lineEditName_editingFinished(){
 	Q_ASSERT(m_current != nullptr);
 
 	if (m_current->m_displayName != m_ui->lineEditName->string()) {
@@ -658,7 +658,7 @@ void SVDBNetworkComponentEditWidget::on_lineEditName_editingFinished(){
 }
 
 
-void SVDBNetworkComponentEditWidget::on_pushButtonColor_colorChanged() {
+void SVNetworkComponentEditWidget::on_pushButtonColor_colorChanged() {
 	Q_ASSERT(m_current != nullptr);
 
 	if (m_current->m_color != m_ui->pushButtonColor->color()) {
@@ -668,7 +668,7 @@ void SVDBNetworkComponentEditWidget::on_pushButtonColor_colorChanged() {
 }
 
 
-void SVDBNetworkComponentEditWidget::on_toolButtonSchedule1_clicked()
+void SVNetworkComponentEditWidget::on_toolButtonSchedule1_clicked()
 {
 	Q_ASSERT(m_current != nullptr);
 
@@ -695,7 +695,7 @@ void SVDBNetworkComponentEditWidget::on_toolButtonSchedule1_clicked()
 }
 
 
-void SVDBNetworkComponentEditWidget::on_toolButtonSchedule2_clicked()
+void SVNetworkComponentEditWidget::on_toolButtonSchedule2_clicked()
 {
 	Q_ASSERT(m_current != nullptr);
 
@@ -721,7 +721,7 @@ void SVDBNetworkComponentEditWidget::on_toolButtonSchedule2_clicked()
 }
 
 
-void SVDBNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row, int column) {
+void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row, int column) {
 
 	Q_ASSERT(column==1); // only values can be edited
 
@@ -838,7 +838,7 @@ void SVDBNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int ro
 
 
 
-void SVDBNetworkComponentEditWidget::modelModify() {
+void SVNetworkComponentEditWidget::modelModify() {
 	if(m_components == nullptr)
 	{
 		m_db.m_networkComponents.m_modified = true;
@@ -849,7 +849,7 @@ void SVDBNetworkComponentEditWidget::modelModify() {
 }
 
 
-void SVDBNetworkComponentEditWidget::on_toolButtonPipeProperties_clicked()
+void SVNetworkComponentEditWidget::on_toolButtonPipeProperties_clicked()
 {
 	Q_ASSERT(m_current != nullptr);
 
@@ -873,7 +873,7 @@ void SVDBNetworkComponentEditWidget::on_toolButtonPipeProperties_clicked()
 }
 
 
-void SVDBNetworkComponentEditWidget::on_tableWidgetPolynomCoefficients_cellChanged(int row, int /*column*/) {
+void SVNetworkComponentEditWidget::on_tableWidgetPolynomCoefficients_cellChanged(int row, int /*column*/) {
 
 	std::string header = m_ui->tableWidgetPolynomCoefficients->verticalHeaderItem(row)->text().toStdString();
 

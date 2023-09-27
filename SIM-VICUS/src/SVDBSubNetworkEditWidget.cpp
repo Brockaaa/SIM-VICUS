@@ -345,6 +345,7 @@ void SVDBSubNetworkEditWidget::on_editSubNetworkButton_clicked()
 	} else {
 		m_editDialog->setupSubNetwork(m_currentSubNet);
 	}
-	m_editDialog->show();
+	// open() is the recommended QT function. The dialog decides wether the edited sub network shall be saved or not.
+	m_editDialog->open();
 }
 

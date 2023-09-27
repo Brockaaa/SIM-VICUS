@@ -17,7 +17,7 @@ class BMBlock;
 class SVBMSceneManager;
 class SVBMZoomMeshGraphicsView;
 class SVDatabase;
-class SVDBNetworkControllerEditWidget;
+class SVNetworkControllerEditDialog;
 class SVSubNetworkEditDialogTable;
 
 class SVSubNetworkEditDialog : public QDialog
@@ -108,7 +108,7 @@ private:
 	/*! SceneManager, handles the objects in the Scene */
 	SVBMSceneManager                                            *m_sceneManager = nullptr;
 	/*! Dialog to create and edit Controller */
-	SVDBNetworkControllerEditWidget                             *m_controllerEditDialog = nullptr;
+	SVNetworkControllerEditDialog                             *m_controllerEditDialog = nullptr;
 	/*! The database */
 	SVDatabase                                                  *m_db = nullptr;
 	/*! The Subnetwork that is currently edited */

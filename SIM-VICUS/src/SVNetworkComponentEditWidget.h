@@ -49,7 +49,7 @@ class QwtPlotCurve;
 	is no longer valid or you want to resize the container (through adding new items)
 	call updateInput() with an invalid index and/or nullptr pointer to the model.
 */
-class SVDBNetworkComponentEditWidget: public QWidget {
+class SVNetworkComponentEditWidget: public QWidget {
 	Q_OBJECT
 
 public:
@@ -62,8 +62,8 @@ public:
 		NUM_DT
 	};
 
-	explicit SVDBNetworkComponentEditWidget(QWidget *parent = nullptr);
-	~SVDBNetworkComponentEditWidget() ;
+	explicit SVNetworkComponentEditWidget(QWidget *parent = nullptr);
+	~SVNetworkComponentEditWidget() ;
 
 	/*! Needs to be called once, before the widget is being used. */
 	void setComponents(std::vector<VICUS::NetworkComponent> &components);
