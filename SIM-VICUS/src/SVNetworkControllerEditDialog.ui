@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SVDBNetworkControllerEditWidget</class>
- <widget class="QWidget" name="SVDBNetworkControllerEditWidget">
+ <class>SVNetworkControllerEditWidget</class>
+ <widget class="QDialog" name="SVNetworkControllerEditWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>470</width>
-    <height>559</height>
+    <height>343</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -189,19 +189,6 @@
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
-   </item>
-   <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
    </item>
   </layout>
  </widget>

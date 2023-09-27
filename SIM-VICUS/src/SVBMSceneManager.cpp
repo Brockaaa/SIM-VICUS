@@ -481,7 +481,7 @@ void SVBMSceneManager::addBlock(VICUS::NetworkComponent::ModelType type, QPoint 
 	b.m_sockets.append(s1);
 	b.m_sockets.append(s2);
 	b.m_properties["ShowPixmap"] = true;
-	b.m_properties["Pixmap"] = QPixmap(VICUS::getIconFileFromModelType(type)).scaled(256,256);
+	b.m_properties["Pixmap"] = QPixmap(VICUS::NetworkComponent::iconFileFromModelType(type)).scaled(256,256);
 	b.m_displayName = VICUS::KeywordListQt::Keyword("NetworkComponent::ModelType", type);
 
 	// do we have a component from db?
@@ -515,12 +515,12 @@ void SVBMSceneManager::setControllerID(const VICUS::BMBlock * block, unsigned in
 }
 
 
-void SVBMSceneManager::createConnection(const VICUS::BMBlock & startBlock, const VICUS::BMBlock & targetBlock,
-										const VICUS::BMSocket & startSocket, const VICUS::BMSocket & targetSocket) {
+void SVBMSceneManager::createConnection(const VICUS::BMBlock * startBlock, const VICUS::BMBlock * targetBlock,
+										const VICUS::BMSocket * startSocket, const VICUS::BMSocket * targetSocket) {
 	VICUS::BMConnector newConnector;
 	newConnector.m_name = VICUS::CONNECTOR_NAME;
-	newConnector.m_sourceSocket = startBlock.m_name + "." + startSocket.m_name;
-	newConnector.m_targetSocket = targetBlock.m_name + "." + targetSocket.m_name;
+	newConnector.m_sourceSocket = startBlock->m_name + "." + startSocket->m_name;
+	newConnector.m_targetSocket = targetBlock->m_name + "." + targetSocket->m_name;
 	m_network->m_connectors.push_back(newConnector);
 	m_network->adjustConnector(m_network->m_connectors.back());
 	updateConnectorSegmentItems(m_network->m_connectors.back(), nullptr);
@@ -929,10 +929,10 @@ void SVBMSceneManager::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 bool SVBMSceneManager::evaluateNewConnection(QString startSocketName, QString targetSocketName)
 {
 
-	VICUS::BMBlock* startBlock = nullptr;
-	VICUS::BMBlock* targetBlock = nullptr;
-	VICUS::BMSocket* startSocket = nullptr;
-	VICUS::BMSocket* targetSocket = nullptr;
+	VICUS::BMBlock *startBlock = nullptr;
+	VICUS::BMBlock *targetBlock = nullptr;
+	VICUS::BMSocket *startSocket = nullptr;
+	VICUS::BMSocket *targetSocket = nullptr;
 	m_network->lookupBlockAndSocket(startSocketName, const_cast<const VICUS::BMBlock *&>(startBlock), const_cast<const VICUS::BMSocket*&>(startSocket));
 	m_network->lookupBlockAndSocket(targetSocketName,const_cast<const VICUS::BMBlock *&>(targetBlock), const_cast<const VICUS::BMSocket*&>(targetSocket));
 

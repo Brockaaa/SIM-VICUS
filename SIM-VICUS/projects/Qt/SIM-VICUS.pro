@@ -116,8 +116,6 @@ SOURCES += \
 	../../src/SVDBMaterialEditWidget.cpp \
 	../../src/SVDBMaterialTableModel.cpp \
 	../../src/SVDBModelDelegate.cpp \
-	../../src/SVDBNetworkComponentTableModel.cpp \
-	../../src/SVDBNetworkControllerTableModel.cpp \
 	../../src/SVDBNetworkFluidEditWidget.cpp \
 	../../src/SVDBNetworkFluidTableModel.cpp \
 	../../src/SVDBPipeEditWidget.cpp \
@@ -326,8 +324,6 @@ HEADERS  += \
 	../../src/SVDBMaterialEditWidget.h \
 	../../src/SVDBMaterialTableModel.h \
 	../../src/SVDBModelDelegate.h \
-	../../src/SVDBNetworkComponentTableModel.h \
-	../../src/SVDBNetworkControllerTableModel.h \
 	../../src/SVDBNetworkFluidEditWidget.h \
 	../../src/SVDBNetworkFluidTableModel.h \
 	../../src/SVDBPipeEditWidget.h \

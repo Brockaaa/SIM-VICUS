@@ -49,7 +49,7 @@ SVSubNetworkEditDialogTable::~SVSubNetworkEditDialogTable()
 }
 
 void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent::ModelType type){
-	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(getIconFileFromModelType(type), VICUS::KeywordListQt::Keyword("NetworkComponent::ModelType", type), VICUS::KeywordListQt::Description("NetworkComponent::ModelType", type), m_defaultRowHeight, this);
+	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(type), VICUS::KeywordListQt::Keyword("NetworkComponent::ModelType", type), VICUS::KeywordListQt::Description("NetworkComponent::ModelType", type), m_defaultRowHeight, this);
 	setFixedHeight(height() + m_defaultRowHeight);
 	insertRow(m_rowSize);
 	setCellWidget(m_rowSize, 0, bmItem1);
@@ -64,7 +64,7 @@ void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent::ModelType 
 
 void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent &component){
 	const int rowHeight = 35;
-	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::getIconFileFromModelType(component.m_modelType),  QString::fromStdString(component.m_displayName.string("en")), VICUS::KeywordListQt::Description("NetworkComponent::ModelType", component.m_modelType), m_defaultRowHeight, this, true);
+	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(component.m_modelType),  QString::fromStdString(component.m_displayName.string("en")), VICUS::KeywordListQt::Description("NetworkComponent::ModelType", component.m_modelType), m_defaultRowHeight, this, true);
 	if(!component.m_builtIn){
 		bmItem1->setStyleSheet("background-color: #ADD8E6;");
 	}
@@ -122,7 +122,7 @@ void SVSubNetworkEditDialogTable::startDrag(Qt::DropActions supportedActions){
 //		}
 //	}
 
-	QPixmap pixmap = QPixmap(VICUS::getIconFileFromModelType(type));
+	QPixmap pixmap = QPixmap(VICUS::NetworkComponent::iconFileFromModelType(type));
 	drag->setPixmap(pixmap.scaled(m_defaultRowHeight * scaleX, m_defaultRowHeight * scaleY));
 	drag->setHotSpot(QPoint(m_defaultRowHeight * scaleX / 2, m_defaultRowHeight * scaleY / 2));
 	drag->setMimeData(mimeData);

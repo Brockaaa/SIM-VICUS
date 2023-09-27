@@ -86,14 +86,12 @@
 #include "SVDBSurfaceHeatingEditWidget.h"
 #include "SVDBSurfaceHeatingTableModel.h"
 
-#include "SVDBNetworkComponentTableModel.h"
 #include "SVNetworkComponentEditWidget.h"
 #include "SVDBPipeTableModel.h"
 #include "SVDBPipeEditWidget.h"
 #include "SVDBNetworkFluidTableModel.h"
 #include "SVDBNetworkFluidEditWidget.h"
 #include "SVNetworkControllerEditDialog.h"
-#include "SVDBNetworkControllerTableModel.h"
 #include "SVDBSubNetworkEditWidget.h"
 #include "SVDBSubNetworkTableModel.h"
 

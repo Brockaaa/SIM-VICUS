@@ -12,7 +12,7 @@ class BMBlock;
 }
 
 namespace Ui {
-class SVDBNetworkControllerEditWidget;
+class SVNetworkControllerEditWidget;
 }
 
 class SVNetworkControllerEditDialog :  public QDialog {
@@ -26,7 +26,7 @@ public:
 	/*! Needs to be called once, before the widget is being used. */
 	void setController(VICUS::NetworkController *controller);
 
-	void setup(VICUS::BMBlock *block, VICUS::NetworkController controller, VICUS::NetworkComponent *networkComponent);
+	void setup(VICUS::BMBlock * block, VICUS::NetworkController controller, const VICUS::NetworkComponent & networkComponent);
 
 signals:
 	void controllerAccepted(VICUS::BMBlock* block, VICUS::NetworkController controller);
@@ -58,7 +58,7 @@ private slots:
 	void on_buttonBox_rejected();
 
 private:
-	Ui::SVDBNetworkControllerEditWidget *m_ui;
+	Ui::SVNetworkControllerEditWidget *m_ui;
 
 	SVDatabase              *m_db = nullptr;
 

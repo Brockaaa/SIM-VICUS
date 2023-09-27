@@ -40,7 +40,7 @@ public:
 
 private slots:
 	/*! gets called when removeBlockOrConnectorButton is clicked, checks if Block or Connector is selected, then forwards request to SVBMSceneManager */
-	void on_removeBlockOrConnectorButton_clicked();
+	void on_removeButton_clicked();
 	/*! gets called when the ControllerEditWidgetButton is clicked. Creates new Widget when previously not existed. Also creates new Controller
 	 *  when selectedBlock does not previously have one */
 	void on_openControllerWidgetButton_clicked();
@@ -56,7 +56,7 @@ private slots:
 	void on_componentSelected();
 	/*! gets called when addToDBButton is clicked,
 	 *  adds component of Block to DB */
-	void on_addToDBButton_clicked();
+	void on_addToUserDBButton_clicked();
 	/*! gets called when removeFromDBButton is clicked,
 	 *  removes selected Component from DB if it is not builtIn */
 	void on_removeFromUserDBButton_clicked();
@@ -95,7 +95,7 @@ private:
 	/*! Takes the componentID of a component and returns the index in the component Vector */
 	unsigned int componentIndex(unsigned int componentID);
 	/*! Generates new unique ComponentID */
-	unsigned int createNewComponentID();
+	unsigned int newComponentID();
 	/*! Takes tje controllerID of a controller and returns the index in the controller Vector */
 	unsigned int controllerIndex(unsigned int controllerID);
 	/*! Generates new unique ControllerID */

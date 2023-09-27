@@ -1,7 +1,6 @@
 #include "SVNetworkControllerEditDialog.h"
-#include "ui_SVDBNetworkControllerEditWidget.h"
+#include "ui_SVNetworkControllerEditDialog.h"
 
-#include "SVDBNetworkControllerTableModel.h"
 #include "SVMainWindow.h"
 #include "SVDatabaseEditDialog.h"
 #include <SVConversions.h>
@@ -11,10 +10,11 @@
 #include <VICUS_BMBlock.h>
 
 
+// TODO Maik: alles löschen was "alt" ist, den gesamten code reviewn !
 
 SVNetworkControllerEditDialog::SVNetworkControllerEditDialog(QWidget *parent, SVDatabase * db) :
 	QDialog(parent),
-	m_ui(new Ui::SVDBNetworkControllerEditWidget),
+	m_ui(new Ui::SVNetworkControllerEditWidget),
 	m_db(db)
 {
 	m_ui->setupUi(this);
@@ -37,9 +37,7 @@ SVNetworkControllerEditDialog::~SVNetworkControllerEditDialog()
 	delete m_ui;
 }
 
-void SVNetworkControllerEditDialog::setup(VICUS::BMBlock *block, VICUS::NetworkController controller, VICUS::NetworkComponent *networkComponent){
-	Q_ASSERT(block != nullptr);
-	Q_ASSERT(networkComponent != nullptr);
+void SVNetworkControllerEditDialog::setup(VICUS::BMBlock *block, VICUS::NetworkController controller, const VICUS::NetworkComponent &networkComponent){
 
 	m_currentController = controller;
 	m_currentBlock = block;
@@ -49,7 +47,7 @@ void SVNetworkControllerEditDialog::setup(VICUS::BMBlock *block, VICUS::NetworkC
 
 	std::vector<NANDRAD::HydraulicNetworkControlElement::ControlledProperty> availableCtrProps;
 	NANDRAD::HydraulicNetworkComponent::ModelType nandradModelType;
-	nandradModelType = VICUS::NetworkComponent::nandradNetworkComponentModelType(networkComponent->m_modelType);
+	nandradModelType = VICUS::NetworkComponent::nandradNetworkComponentModelType(networkComponent.m_modelType);
 	availableCtrProps = NANDRAD::HydraulicNetworkControlElement::availableControlledProperties(nandradModelType);
 	for(const auto& prop : availableCtrProps){
 		m_ui->comboBoxProperty->addItem(QString("%1")
@@ -281,6 +279,7 @@ void SVNetworkControllerEditDialog::on_toolButtonRemoveSchedule_clicked()
 
 }
 
+// TODO Maik: ist default implementiert wenn es ein QDialog ist ...
 
 void SVNetworkControllerEditDialog::on_buttonBox_accepted()
 {

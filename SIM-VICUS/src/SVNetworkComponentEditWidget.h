@@ -29,7 +29,7 @@
 #include "SVAbstractDatabaseEditWidget.h"
 
 namespace Ui {
-	class SVDBNetworkComponentEditWidget;
+	class SVNetworkComponentEditWidget;
 }
 
 namespace VICUS {
@@ -102,7 +102,7 @@ private:
 
 	unsigned int getComponentIndex(unsigned int componentID);
 
-	Ui::SVDBNetworkComponentEditWidget *m_ui;
+	Ui::SVNetworkComponentEditWidget		*m_ui;
 
 	/*! Cached pointer to database object. */
 	SVDatabase								m_db;

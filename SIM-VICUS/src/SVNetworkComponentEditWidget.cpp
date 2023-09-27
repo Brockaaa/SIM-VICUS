@@ -24,10 +24,9 @@
 */
 
 #include "SVNetworkComponentEditWidget.h"
-#include "ui_SVDBNetworkComponentEditWidget.h"
+#include "ui_SVNetworkComponentEditWidget.h"
 
 #include "SVSettings.h"
-#include "SVDBNetworkComponentTableModel.h"
 #include "SVDatabaseEditDialog.h"
 #include "SVMainWindow.h"
 #include "SVStyle.h"
@@ -49,8 +48,11 @@
 #include <QtExt_Locale.h>
 
 
+// TODO Maik: alles löschen was "alt" ist, den gesamten code reviewn !
+
+
 SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
-	m_ui(new Ui::SVDBNetworkComponentEditWidget)
+	m_ui(new Ui::SVNetworkComponentEditWidget)
 {
 	m_ui->setupUi(this);
 
@@ -839,13 +841,13 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 
 
 void SVNetworkComponentEditWidget::modelModify() {
-	if(m_components == nullptr)
-	{
-		m_db.m_networkComponents.m_modified = true;
-		m_dbModel->setItemModified(m_current->m_id);
-	}
-	updateParameterTableWidget(m_current->m_builtIn);
-	updatePolynomPlot();
+//	if(m_components == nullptr)
+//	{
+//		m_db.m_networkComponents.m_modified = true;
+//		m_dbModel->setItemModified(m_current->m_id);
+//	}
+//	updateParameterTableWidget(m_current->m_builtIn);
+//	updatePolynomPlot();
 }
 
 

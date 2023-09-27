@@ -205,7 +205,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QToolButton" name="addToDBButton">
+            <widget class="QToolButton" name="addToUserDBButton">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -236,7 +236,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QToolButton" name="removeBlockOrConnectorButton">
+            <widget class="QToolButton" name="removeButton">
              <property name="icon">
               <iconset resource="../resources/SIM-VICUS.qrc">
                <normaloff>:/gfx/actions/24x24/minus.png</normaloff>:/gfx/actions/24x24/minus.png</iconset>
