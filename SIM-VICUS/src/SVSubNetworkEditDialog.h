@@ -99,7 +99,9 @@ private:
 	/*! Takes tje controllerID of a controller and returns the index in the controller Vector */
 	unsigned int controllerIndex(unsigned int controllerID);
 	/*! Generates new unique ControllerID */
-	unsigned int getNewControllerID();
+	unsigned int newControllerID();
+
+	// TODO Maik: transformations funktion: SubNetwork altes format mit db Referenz in neues Format umwandeln bei Aufruf der edit Funktion
 
 	/*! The UI class. */
 	Ui::SVSubNetworkEditDialog									*m_ui;
@@ -111,7 +113,7 @@ private:
 	SVDatabase                                                  *m_db = nullptr;
 	/*! The Subnetwork that is currently edited */
 	VICUS::SubNetwork                                           *m_subNetwork = nullptr;
-	/*! Holds all Components of blocks in the Scene */
+	/*! Holds all Components of blocks in the Scene. */
 	std::vector<VICUS::NetworkComponent>                        m_networkComponents;
 	/*! Holds all Controllers of blocks in the Scene */
 	std::vector<VICUS::NetworkController>                       m_networkControllers;

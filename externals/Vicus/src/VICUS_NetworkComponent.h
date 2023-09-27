@@ -193,23 +193,24 @@ public:
 	/*! Array parameters of the flow component */
 	NANDRAD::DataTable					m_polynomCoefficients;							// XML:E
 
+
+	/*! Categories in SubnetworkEditDialog */
+	enum ComponentCategory{
+		CC_Pipes,                                      // Keyword: Pipes
+		CC_Pumps,                                      // Keyword: Pumps
+		CC_Heatpumps,                                  // Keyword: Heatpumps
+		CC_Other,                                      // Keyword: Other
+		NUM_CC
+	};
+
+	// Helper function to get iconFile from ModelType
+	static QString iconFileFromModelType(VICUS::NetworkComponent::ModelType modelType);
+
+
+	// Helper function to get NetComCategory from ModelType
+	static ComponentCategory componentCategoryFromModelType(VICUS::NetworkComponent::ModelType modelType);
 };
 
-/*! Categories in SubnetworkEditDialog */
-enum ComponentCategory{
-	Pipes,                                      // Keyword: Pipes
-	Pumps,                                      // Keyword: Pumps
-	Heatpumps,                                  // Keyword: Heatpumps
-	Other,                                      // Keyword: Other
-	NUM_NC
-};
-
-// Helper function to get iconFile from ModelType
-QString getIconFileFromModelType(VICUS::NetworkComponent::ModelType modelType);
-
-
-// Helper function to get NetComCategory from ModelType
-ComponentCategory getComponentCategoryFromModelType(VICUS::NetworkComponent::ModelType modelType);
 } // namespace VICUS
 
 

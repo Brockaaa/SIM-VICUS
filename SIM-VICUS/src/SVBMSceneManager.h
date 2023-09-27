@@ -187,7 +187,7 @@ public:
 
 
 	/*! Creates new Connector between two Blocks and Sockets */
-	void createConnection(VICUS::BMBlock *startBlock, VICUS::BMBlock *targetBlock, VICUS::BMSocket *startSocket, VICUS::BMSocket *targetSocket);
+	void createConnection(const VICUS::BMBlock &startBlock, const VICUS::BMBlock &targetBlock, const VICUS::BMSocket &startSocket, const VICUS::BMSocket &targetSocket);
 
 	/*! Removes the block by giving a pointer to the block.
 		Block must be stored in the network's block list.
@@ -331,7 +331,7 @@ private:
 	bool                                        m_currentlyConnecting;
 
 	/*! used to store the Socket that is currently in the process of being connected */
-	VICUS::BMSocket*                            m_connectingSocket = nullptr;
+	VICUS::BMSocket								*m_connectingSocket = nullptr;
 };
 
 

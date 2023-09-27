@@ -51,6 +51,7 @@
 #include "VICUS_BMGlobals.h"
 #include "VICUS_KeywordListQt.h"
 
+
 SVBMSceneManager::SVBMSceneManager(QObject *parent) :
 	QGraphicsScene(parent),
 	m_network(new VICUS::BMNetwork)
@@ -514,11 +515,12 @@ void SVBMSceneManager::setControllerID(const VICUS::BMBlock * block, unsigned in
 }
 
 
-void SVBMSceneManager::createConnection(VICUS::BMBlock *startBlock, VICUS::BMBlock *targetBlock, VICUS::BMSocket *startSocket, VICUS::BMSocket *targetSocket) {
+void SVBMSceneManager::createConnection(const VICUS::BMBlock & startBlock, const VICUS::BMBlock & targetBlock,
+										const VICUS::BMSocket & startSocket, const VICUS::BMSocket & targetSocket) {
 	VICUS::BMConnector newConnector;
 	newConnector.m_name = VICUS::CONNECTOR_NAME;
-	newConnector.m_sourceSocket = startBlock->m_name + "." + startSocket->m_name;
-	newConnector.m_targetSocket = targetBlock->m_name + "." + targetSocket->m_name;
+	newConnector.m_sourceSocket = startBlock.m_name + "." + startSocket.m_name;
+	newConnector.m_targetSocket = targetBlock.m_name + "." + targetSocket.m_name;
 	m_network->m_connectors.push_back(newConnector);
 	m_network->adjustConnector(m_network->m_connectors.back());
 	updateConnectorSegmentItems(m_network->m_connectors.back(), nullptr);
