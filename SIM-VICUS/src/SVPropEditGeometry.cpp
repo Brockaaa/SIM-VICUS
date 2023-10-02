@@ -51,6 +51,7 @@
 #include "SVUndoAddSurface.h"
 #include "SVUndoAddZone.h"
 #include "SVUndoModifyProject.h"
+#include "SVUndoTrimObjects.h"
 #include "SVUndoCopyBuildingGeometry.h"
 #include "SVPropVertexListWidget.h"
 #include "SVGeometryView.h"
@@ -1432,60 +1433,47 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 		trimGridPoly.push_back(m_trimGrid->m_offset + m_trimGrid->m_localX);
 		trimGridPoly.push_back(m_trimGrid->m_offset + m_trimGrid->localY());
 
-		VICUS::Project trimProject = project();
-		trimProject.updatePointers();
 
 		std::set<const VICUS::Object*> sel;
-		trimProject.selectObjects(sel, VICUS::Project::SelectionGroups(0x005), true, true);
+		SVProjectHandler::instance().project().selectObjects(sel, VICUS::Project::SelectionGroups(0x005), true, true);
 		std::string failedTrims = "";
 		int successfulTrims = 0;
 
-		unsigned int nextId = trimProject.nextUnusedID();
+		VICUS::ComponentInstance compInstance;
+		std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>> trimSurfaces;
 
 		for (const VICUS::Object* o : sel) {
 			const VICUS::Surface * surf = dynamic_cast<const VICUS::Surface*>(o);
 			if (surf != nullptr) {
 
-				const VICUS::Room * room = dynamic_cast<const VICUS::Room*>(surf->m_parent);
-				if (room != nullptr) {
+				//const VICUS::Room * room = dynamic_cast<const VICUS::Room*>(surf->m_parent);
+				//if (room != nullptr) {
 
-					std::vector<IBKMK::Vector3D> polyOne = surf->polygon3D().vertexes();
-					std::vector<IBKMK::Vector3D> polyTwo = trimGridPoly;
+				std::vector<IBKMK::Vector3D> polyOne = surf->polygon3D().vertexes();
+				std::vector<IBKMK::Vector3D> polyTwo = trimGridPoly;
 
-					std::vector<std::vector<IBKMK::Vector3D>> polyInput;
-					polyInput.push_back(polyOne);
+				std::vector<std::vector<IBKMK::Vector3D>> polyInput;
+				polyInput.push_back(polyOne);
 
-					bool trimSuccessful = IBKMK::polyTrim(polyInput, polyTwo);
+				bool trimSuccessful = IBKMK::polyTrim(polyInput, polyTwo);
 
-					if (trimSuccessful) {
+				if (trimSuccessful) {
+					std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>> trimTuple = std::make_tuple(surf, polyInput);
+					trimSurfaces.push_back(trimTuple);
+					qDebug() << tr("Trimming of surface %1 successful.").arg(surf->info());
+					++successfulTrims;
 
-						VICUS::Surface s;
-						unsigned int trimResultId = 0;
-						for (std::vector<IBKMK::Vector3D> entry : polyInput) {
-							s.m_id = nextId++;
-							s.m_displayName = surf->m_displayName + "[" + QString(trimResultId) + "]";
-							s.setPolygon3D(IBKMK::Polygon3D(entry));
-							s.m_displayColor = surf->m_displayColor;
-							s.m_color = surf->m_color;
-
-							const_cast<VICUS::Room*>(room)->m_surfaces.push_back(s);
-						}
-
-						qDebug() << tr("Trimming of surface %1 successful.").arg(surf->info());
-						//delete surf:
-						unsigned int rIdx = 0;
-						for (;rIdx<room->m_surfaces.size();++rIdx) {
-							const VICUS::Surface &s = room->m_surfaces[rIdx];
-							if (s.m_id == surf->m_id)
-								break;
-						}
-						const_cast<VICUS::Room*>(room)->m_surfaces.erase(room->m_surfaces.begin()+rIdx);
-						++successfulTrims;
-					} else {
-						failedTrims.append("\n"+surf->info().toStdString());
+					/*delete surf:
+					unsigned int rIdx = 0;
+					for (;rIdx<room->m_surfaces.size();++rIdx) {
+						const VICUS::Surface &s = room->m_surfaces[rIdx];
+						if (s.m_id == surf->m_id)
+							break;
 					}
+					const_cast<VICUS::Room*>(room)->m_surfaces.erase(room->m_surfaces.begin()+rIdx); */
+
 				} else {
-					//trimProject.m_plainGeometry.m_surfaces.
+					failedTrims.append("\n"+surf->info().toStdString());
 				}
 			}
 		}
@@ -1493,7 +1481,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 			QMessageBox::information(this, QString(), "Trimming of the following surfaces failed:" + QString::fromStdString(failedTrims));
 		}
 		if (successfulTrims > 0) {
-			SVUndoModifyProject * undo = new SVUndoModifyProject(tr("Trimming performed."), trimProject);
+			SVUndoTrimObjects * undo = new SVUndoTrimObjects(tr("Trimming performed."), trimSurfaces);
 			undo->push();
 		}
 	} else IBK::IBK_Message("Invalid mode to perform trimming!", IBK::MSG_ERROR);

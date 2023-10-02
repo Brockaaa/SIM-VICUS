@@ -23,66 +23,134 @@
 	GNU General Public License for more details.
 */
 
-#include "SVUndoModifySurfaceGeometry.h"
+#include "SVUndoTrimObjects.h"
 #include "SVProjectHandler.h"
 
 #include <IBK_assert.h>
+#include "IBKMK_Polygon3D.h"
 
 #include <VICUS_Project.h>
 
-#include "SVViewStateHandler.h"
-#include "Vic3DWireFrameObject.h"
-
 SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
-														 const std::vector<VICUS::Surface> & surfaces,
-														 const std::vector<VICUS::ComponentInstance> *subSurfaceComponentInstances)
-	: m_surfaces(surfaces)
+									 std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>> & trimSurfaces):
+									// trimSurfaces is a vector of tuples, each containing a reference to the selected surface of one trim, and the polyInput vector
+									// which was handed over to the polyTrim method, and therefore contains the trim result surfaces
+
+									/// Kann ich hier wirklich einen pointer nutzen? Wenn ich surface* lösche, geht ja kein undo mehr
+	m_trimSurfaces(trimSurfaces)
 {
 	setText( label );
-	if (subSurfaceComponentInstances != nullptr) {
-		m_modifySubSurfaceComponentInstances = true;
-		m_subSurfaceComponentInstances = *subSurfaceComponentInstances;
+
+
+	// iterate over different trims
+	for (unsigned int i=0; i<m_trimSurfaces.size(); ++i) {
+
+		const VICUS::Surface* surfToBeDeleted = std::get<0>(m_trimSurfaces[i]);
+		std::vector<std::vector<IBKMK::Vector3D>> geometryToBeAdded = std::get<1>(m_trimSurfaces[i]);
+
+		bool parentRoom = false;
+		const VICUS::Room* room = dynamic_cast<const VICUS::Room*>(surfToBeDeleted->m_parent);
+		if (room != nullptr) parentRoom = true;
+
+		unsigned int nextId = theProject().nextUnusedID();
+
+		// copy these because the properties of surfToBeDeleted are unaccessible after pushing the first object into m_surfaces
+		std::string surfDisplayName = surfToBeDeleted->m_displayName.toStdString();
+		QColor surfDisplayColor = surfToBeDeleted->m_displayColor;
+		QColor surfColor = surfToBeDeleted->m_color;
+
+		// iterate over different trim result surfaces
+		for (unsigned int i=0; i<geometryToBeAdded.size(); ++i) {
+
+			std::vector<IBKMK::Vector3D> poly = geometryToBeAdded[i];
+			VICUS::Surface s;
+
+			s.m_id = nextId++;
+			s.m_displayName = QString::fromStdString(surfDisplayName + "[" + std::to_string(i+1) + "]");
+			s.setPolygon3D(IBKMK::Polygon3D(poly));
+			s.m_displayColor = surfDisplayColor;
+			s.m_color = surfColor;
+
+			if (parentRoom) {
+				// add surface to room surfaces
+				const_cast<VICUS::Room*>(room)->m_surfaces.push_back(s);
+
+			} else {
+				// add to anonymous geometry
+				theProject().m_plainGeometry.m_surfaces.push_back(s);
+			}
+		}
+
+		if (parentRoom) {
+			//!.
+
+		} else {
+			//!.
+		}
+
+
 	}
-}
 
 
-void SVUndoTrimObjects::undo() {
-
-
-}
-
-
-void SVUndoTrimObjects::redo() {
-	/// Im project selber
-
-	// process all of our stored surfaces in the project
-	for (unsigned int i=0; i<m_surfaces.size(); ++i) {
-
-		/// Füge hinzu neue surfaces
-		/// Dabei checke ob parent ein raum sonst plain
-		///
-		///
-	}
 
 	/// Lösche alle surfaces
 	/// Checke wieder ob raum oder plain
 	///
 
-	for (;;/* Deleted Surfaces*/) {
+	//for (;;/* Deleted Surfaces*/) {
 
-	}
+	//}
 
 	/// Modified suface component instances
 
 	// also modified sub-surface components, if needed
-	if (m_modifySubSurfaceComponentInstances) {
-		m_subSurfaceComponentInstances.swap(theProject().m_subSurfaceComponentInstances);
-	}
+	//if (m_modifySubSurfaceComponentInstances) {
+	//	m_subSurfaceComponentInstances.swap(theProject().m_subSurfaceComponentInstances);
+	//}
 
 	theProject().updatePointers();
-
-	// tell project that geometry has changed
-	// NOTE: this may be slow for larger geometries...
 	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingGeometryChanged );
+
+
+
+
+
+
+
+
+
+	//! TODO Brauche ich auch SubSurfaceComponentInstances?
+	/*m_oldCompInstances.reserve(project().m_componentInstances.size()); //! TODO brauche ich hier theProject() ? was ist der unterschied? wozu brauche ich reserve überhaupt?
+	for (const VICUS::ComponentInstance & ci : project().m_componentInstances) {
+
+		if (ci.m_sideASurface != nullptr &&
+				ci.m_sideASurface == surfToBeDeleted) { //! TODO kann ich den nullptr check weglassen?
+
+			m_tempCompInstancesA.push_back(ci);
+
+			VICUS::ComponentInstance comp = ci;
+			m_oldCompInstances.push_back(comp);
+
+		}
+		// same for side B
+		if (ci.m_sideBSurface != nullptr &&
+				ci.m_sideBSurface == surfToBeDeleted) {
+			m_tempCompInstancesB.push_back(ci);
+
+			VICUS::ComponentInstance comp = ci;
+			m_oldCompInstances.push_back(comp);
+		}
+	}*/
+
+}
+
+
+void SVUndoTrimObjects::undo() {
+
+}
+
+
+void SVUndoTrimObjects::redo() {
+
 }
 

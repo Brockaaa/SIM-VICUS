@@ -36,28 +36,26 @@
 	\warning IDs of modified surfaces MUST NOT change!
 */
 class SVUndoTrimObjects : public SVUndoCommandBase {
-	Q_DECLARE_TR_FUNCTIONS(SVUndoModifySurfaceGeometry)
+	Q_DECLARE_TR_FUNCTIONS(SVUndoTrimObjects)
 public:
 	/*! Creates the undo-action.
 		Mind: surfaces must be triangulated already, if they contain new sub-surfaces.
 	*/
-	SVUndoTrimObjects(const QString & label, const std::vector<VICUS::Surface> & surfaces,
-								const std::vector<VICUS::ComponentInstance> * subSurfaceComponentInstances = nullptr);
+	SVUndoTrimObjects(const QString & label,
+					  std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>> & trimSurfaces);
 
 	virtual void undo();
 	virtual void redo();
 
 private:
 
-	/*! Object copies of trimmed surfaces. */
-	std::vector<VICUS::Surface>								m_trimmedSurfaces;
+	/*! Object copies of surfaces to be deleted and added. */
+	std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>>	m_trimSurfaces;
 
-	/*! Vector with surfaces to be deleted. */
-	std::vector<unsigned int>								m_deletedSurfaces;
+	/*! Copies of surface component instances. */
+	std::vector<VICUS::ComponentInstance>														m_compInstances;
 
-	/*! Copies of modified surface component instances. */
-	std::vector<VICUS::SubSurfaceComponentInstance>			m_surfaceComponentInstances;
 };
 
 
-#endif // SVUndoModifySurfaceGeometryH
+#endif // SVUndoTrimObjectsH
