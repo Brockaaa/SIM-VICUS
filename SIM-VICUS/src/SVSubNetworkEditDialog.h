@@ -92,6 +92,8 @@ private:
 	void on_NameTextChanged(const QString &text);
 	/*! gets called when a new Block is dragged from the ToolBox into the scene */
 	void on_newBlockAdded(VICUS::BMBlock *block, unsigned int componentID);
+	/*! Recognises keyboard presses */
+	void keyPressEvent(QKeyEvent *event) override;
 	/*! Takes the componentID of a component and returns the index in the component Vector */
 	unsigned int componentIndex(unsigned int componentID);
 	/*! Generates new unique ComponentID */
@@ -108,7 +110,7 @@ private:
 	/*! SceneManager, handles the objects in the Scene */
 	SVBMSceneManager                                            *m_sceneManager = nullptr;
 	/*! Dialog to create and edit Controller */
-	SVNetworkControllerEditDialog                             *m_controllerEditDialog = nullptr;
+	SVNetworkControllerEditDialog                               *m_controllerEditDialog = nullptr;
 	/*! The database */
 	SVDatabase                                                  *m_db = nullptr;
 	/*! The Subnetwork that is currently edited */

@@ -48,13 +48,12 @@
 #include <QtExt_Locale.h>
 
 
-// TODO Maik: alles löschen was "alt" ist, den gesamten code reviewn !
-
 
 SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 	m_ui(new Ui::SVNetworkComponentEditWidget)
 {
 	m_ui->setupUi(this);
+	m_db = SVSettings::instance().m_db;
 
 	m_ui->lineEditName->initLanguages(QtExt::LanguageHandler::instance().langId().toStdString(),THIRD_LANGUAGE, true);
 	m_ui->lineEditName->setDialog3Caption(tr("Component identification name"));
@@ -79,8 +78,6 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 	// create chart and curve
 	configureChart(m_ui->widgetPlot1);
 	configureChart(m_ui->widgetPlot2);
-
-	updateInput(-1);
 }
 
 
@@ -88,17 +85,8 @@ SVNetworkComponentEditWidget::~SVNetworkComponentEditWidget() {
 	delete m_ui;
 }
 
-
-void SVNetworkComponentEditWidget::setComponents(std::vector<VICUS::NetworkComponent> & components) {
-	m_components = &components;
-	m_db = SVSettings::instance().m_db;
-}
-
-
-void SVNetworkComponentEditWidget::updateInput(int id) {
+void SVNetworkComponentEditWidget::updateInput(VICUS::NetworkComponent* component) {
 //	FUNCID(SVDBNetworkComponentEditWidget::updateInput);
-
-	m_current = nullptr; // disable edit triggers
 
 	// clear input controls
 	m_ui->lineEditName->setString(IBK::MultiLanguageString());
@@ -107,7 +95,7 @@ void SVNetworkComponentEditWidget::updateInput(int id) {
 	m_ui->lineEditSchedule2->clear();
 	m_ui->lineEditSchedule2->setEnabled(false);
 
-	if (id == -1) {
+	if (component == nullptr) {
 		// disable all controls - note: this does not disable signals of the components below
 		setEnabled(false);
 
@@ -123,11 +111,7 @@ void SVNetworkComponentEditWidget::updateInput(int id) {
 	// re-enable all controls
 	setEnabled(true);
 
-	if(m_components == nullptr){
-		m_current = const_cast<VICUS::NetworkComponent*>(m_db.m_networkComponents[(unsigned int)id]);
-	} else {
-		m_current = &(*m_components)[id];
-	}
+	m_current = component;
 
 	update();
 
@@ -188,30 +172,20 @@ void SVNetworkComponentEditWidget::update()
 			m_ui->lineEditPipeProperties->setText(QtExt::MultiLangString2QString(pipe->m_displayName));
 	}
 
-	bool isEditable = !m_current->m_builtIn;
-
 	// update table widgets and plot
 	m_ui->plotTab1->setEnabled(true);
 	m_ui->widgetPlot1->setVisible(true);
 	m_ui->plotTab2->setEnabled(true);
 	m_ui->widgetPlot2->setVisible(true);
 
-	updateParameterTableWidget(!isEditable);
-	updatePolynomCoeffTableWidget(!isEditable);
+	updateParameterTableWidget();
+	updatePolynomCoeffTableWidget();
 	updatePolynomPlot();
-
-	// for built-ins, disable editing/make read-only
-	m_ui->lineEditName->setReadOnly(!isEditable);
-	m_ui->pushButtonColor->setReadOnly(!isEditable);
-	if (!isEditable) {
-		m_ui->toolButtonSchedule1->setEnabled(false);
-		m_ui->toolButtonSchedule2->setEnabled(false);
-	}
 }
 
 
 
-void SVNetworkComponentEditWidget::updateParameterTableWidget(bool readOnly) const{
+void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 	FUNCID(SVNetworkComponentEditWidget::updateParameterTableWidget);
 
 	NANDRAD::HydraulicNetworkComponent::ModelType nandradModelType =
@@ -264,8 +238,6 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget(bool readOnly) con
 				item->setData(Qt::UserRole, DT_DoubleStd);
 			else
 				item->setData(Qt::UserRole, DT_DoubleAdditional);
-			if (readOnly)
-				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			item->setData(Qt::UserRole+1, para);
 			m_ui->tableWidgetParameters->setItem(rowCount, 1, item);
 
@@ -294,8 +266,6 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget(bool readOnly) con
 				item = new QTableWidgetItem(); // TODO : Hauke, set some meaningful initial value?
 			else
 				item = new QTableWidgetItem(QString("%L1").arg(m_current->m_intPara[paraInt].value));
-			if (readOnly)
-				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			item->setData(Qt::UserRole, DT_Integer);
 			item->setData(Qt::UserRole+1, paraInt);
 			m_ui->tableWidgetParameters->setItem(rowCount, 1, item);
@@ -331,8 +301,6 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget(bool readOnly) con
 			else
 				item = new QTableWidgetItem(QString("%L1").arg(m_current->m_para[paraOpt].get_value(ioUnit)));
 			item->setFont(fnt);
-			if (readOnly)
-				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			item->setData(Qt::UserRole, DT_DoubleOptional);
 			item->setData(Qt::UserRole+1, paraOpt);
 			m_ui->tableWidgetParameters->setItem(rowCount, 1, item);
@@ -349,7 +317,7 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget(bool readOnly) con
 }
 
 
-void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget(bool readOnly) const {
+void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget() const {
 
 	m_ui->groupBoxPolynom->setEnabled(false);
 	m_ui->tableWidgetPolynomCoefficients->blockSignals(true);
@@ -412,8 +380,6 @@ void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget(bool readOnly) 
 				val = values.at(header[row])[col];
 			QTableWidgetItem *item = new QTableWidgetItem(QString("%1").arg(val));
 			item->setFont(font);
-			if (readOnly)
-				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			m_ui->tableWidgetPolynomCoefficients->setItem((int)row, (int)col, item);
 		}
 	}
@@ -638,24 +604,12 @@ void SVNetworkComponentEditWidget::updatePolynomPlot() {
 
 }
 
-unsigned int SVNetworkComponentEditWidget::getComponentIndex(unsigned int componentID)
-{
-	Q_ASSERT(m_components != nullptr);
-	for(unsigned int i = 0; i < m_components->size(); i++){
-		if((*m_components)[i].m_id == componentID){
-			return i;
-		}
-	}
-	return -1;
-}
-
 
 void SVNetworkComponentEditWidget::on_lineEditName_editingFinished(){
 	Q_ASSERT(m_current != nullptr);
 
 	if (m_current->m_displayName != m_ui->lineEditName->string()) {
 		m_current->m_displayName = m_ui->lineEditName->string();
-		modelModify();
 	}
 }
 
@@ -665,7 +619,6 @@ void SVNetworkComponentEditWidget::on_pushButtonColor_colorChanged() {
 
 	if (m_current->m_color != m_ui->pushButtonColor->color()) {
 		m_current->m_color = m_ui->pushButtonColor->color();
-		modelModify();
 	}
 }
 
@@ -691,7 +644,6 @@ void SVNetworkComponentEditWidget::on_toolButtonSchedule1_clicked()
 			m_current->m_scheduleIds[0] = newId;
 		else
 			m_current->m_scheduleIds.push_back(newId);
-		modelModify();
 	}
 	update();
 }
@@ -717,7 +669,6 @@ void SVNetworkComponentEditWidget::on_toolButtonSchedule2_clicked()
 			m_current->m_scheduleIds[1] = newId;
 		else
 			m_current->m_scheduleIds.push_back(newId);
-		modelModify();
 	}
 	update();
 }
@@ -746,7 +697,6 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 		// empty parameters are allowed
 		if (text.isEmpty()){
 			m_current->m_para[paraNum] = IBK::Parameter();
-			modelModify();
 			return;
 		}
 
@@ -773,7 +723,6 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 			}
 			// finally set value
 			VICUS::KeywordList::setParameter(m_current->m_para, "NetworkComponent::para_t", paraNum, val);
-			modelModify();
 		}
 		else {
 			m_ui->tableWidgetParameters->blockSignals(true);
@@ -796,7 +745,6 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 		// empty parameters are allowed
 		if (text.isEmpty()){
 			m_current->m_intPara[paraNum] = IBK::IntPara();
-			modelModify();
 			return;
 		}
 
@@ -820,7 +768,6 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 			}
 			// finally set value
 			m_current->m_intPara[paraNum] = IBK::IntPara(paraName, val);
-			modelModify();
 		}
 		else {
 			m_ui->tableWidgetParameters->blockSignals(true);
@@ -836,18 +783,6 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 		QMessageBox msgBox(QMessageBox::Critical, "Invalid Value", errMsg, QMessageBox::Ok, this);
 		msgBox.exec();
 	}
-}
-
-
-
-void SVNetworkComponentEditWidget::modelModify() {
-//	if(m_components == nullptr)
-//	{
-//		m_db.m_networkComponents.m_modified = true;
-//		m_dbModel->setItemModified(m_current->m_id);
-//	}
-//	updateParameterTableWidget(m_current->m_builtIn);
-//	updatePolynomPlot();
 }
 
 
@@ -869,7 +804,6 @@ void SVNetworkComponentEditWidget::on_toolButtonPipeProperties_clicked()
 	// else if we have a new id set it
 	if (id != newId) {
 		m_current->m_pipePropertiesId = newId;
-		modelModify();
 	}
 	update();
 }

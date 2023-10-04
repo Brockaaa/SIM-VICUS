@@ -65,11 +65,8 @@ public:
 	explicit SVNetworkComponentEditWidget(QWidget *parent = nullptr);
 	~SVNetworkComponentEditWidget() ;
 
-	/*! Needs to be called once, before the widget is being used. */
-	void setComponents(std::vector<VICUS::NetworkComponent> &components);
-
 	/*! set current Component with this. */
-	void updateInput(int id);
+	void updateInput(VICUS::NetworkComponent *component);
 
 	/*! updates the Widget */
 	void update();
@@ -91,28 +88,16 @@ private slots:
 	void on_tableWidgetPolynomCoefficients_cellChanged(int row, int);
 
 private:
-	/*! Set up the modified variable of the model to true. */
-	void modelModify();
+	void updateParameterTableWidget() const;
 
-	void updateParameterTableWidget(bool readOnly) const;
-
-	void updatePolynomCoeffTableWidget(bool readOnly) const;
+	void updatePolynomCoeffTableWidget() const;
 
 	void updatePolynomPlot();
-
-	unsigned int getComponentIndex(unsigned int componentID);
 
 	Ui::SVNetworkComponentEditWidget		*m_ui;
 
 	/*! Cached pointer to database object. */
 	SVDatabase								m_db;
-
-	/*! Pointer to Vector of all components currently used in this Subnetwork. */
-	std::vector<VICUS::NetworkComponent>	*m_components = nullptr;
-
-
-	/*! Pointer to the database model, to modify items when data has changed in the widget. */
-	SVDBNetworkComponentTableModel		*m_dbModel;
 
 	/*! Pointer to currently edited component.
 		The pointer is updated whenever updateInput() is called.
