@@ -61,7 +61,7 @@ namespace VICUS {
 		"NetworkComponent::ModelType",
 		"NetworkComponent::para_t",
 		"NetworkComponent::intPara_t",
-		"NetworkComponent::NetComCategory",
+		"NetworkComponent::ComponentCategory",
 		"NetworkController::ModelType",
 		"NetworkController::ControlledProperty",
 		"NetworkController::ControllerType",
@@ -364,7 +364,7 @@ namespace VICUS {
 				case 0 : return "NumberParallelPipes";
 				case 1 : return "NumberParallelElements";
 			} break;
-			// NetworkComponent::NetComCategory
+			// NetworkComponent::ComponentCategory
 			case 26 :
 			switch (t) {
 				case 0 : return "Pipes";
@@ -869,7 +869,7 @@ namespace VICUS {
 				case 0 : return "NumberParallelPipes";
 				case 1 : return "NumberParallelElements";
 			} break;
-			// NetworkComponent::NetComCategory
+			// NetworkComponent::ComponentCategory
 			case 26 :
 			switch (t) {
 				case 0 : return "Pipes";
@@ -1375,7 +1375,7 @@ namespace VICUS {
 				case 0 : return "Number of parallel pipes in ground heat exchanger";
 				case 1 : return "Number of parallel elements";
 			} break;
-			// NetworkComponent::NetComCategory
+			// NetworkComponent::ComponentCategory
 			case 26 :
 			switch (t) {
 				case 0 : if (no_description != nullptr) *no_description = true; return "Pipes";
@@ -1880,7 +1880,7 @@ namespace VICUS {
 				case 0 : return "---";
 				case 1 : return "---";
 			} break;
-			// NetworkComponent::NetComCategory
+			// NetworkComponent::ComponentCategory
 			case 26 :
 			switch (t) {
 				case 0 : return "";
@@ -2385,7 +2385,7 @@ namespace VICUS {
 				case 0 : return "#FFFFFF";
 				case 1 : return "#FFFFFF";
 			} break;
-			// NetworkComponent::NetComCategory
+			// NetworkComponent::ComponentCategory
 			case 26 :
 			switch (t) {
 				case 0 : return "#FFFFFF";
@@ -2890,7 +2890,7 @@ namespace VICUS {
 				case 0 : return std::numeric_limits<double>::quiet_NaN();
 				case 1 : return std::numeric_limits<double>::quiet_NaN();
 			} break;
-			// NetworkComponent::NetComCategory
+			// NetworkComponent::ComponentCategory
 			case 26 :
 			switch (t) {
 				case 0 : return std::numeric_limits<double>::quiet_NaN();
@@ -3193,7 +3193,7 @@ namespace VICUS {
 			case 24 : return 25;
 			// NetworkComponent::intPara_t
 			case 25 : return 2;
-			// NetworkComponent::NetComCategory
+			// NetworkComponent::ComponentCategory
 			case 26 : return 4;
 			// NetworkController::ModelType
 			case 27 : return 2;
@@ -3319,7 +3319,7 @@ namespace VICUS {
 			case 24 : return 24;
 			// NetworkComponent::intPara_t
 			case 25 : return 1;
-			// NetworkComponent::NetComCategory
+			// NetworkComponent::ComponentCategory
 			case 26 : return 3;
 			// NetworkController::ModelType
 			case 27 : return 1;

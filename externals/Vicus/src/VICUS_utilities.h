@@ -50,7 +50,7 @@ const T * element(const std::vector<T> & vec, const std::string & name) {
 }
 
 
-/*! Utility function to find a vector element by name. */
+/*! Utility function to find a vector element by ID. */
 template <typename T>
 unsigned int elementIndex(const std::vector<T> & vec, unsigned int id) {
 	unsigned int i=0;

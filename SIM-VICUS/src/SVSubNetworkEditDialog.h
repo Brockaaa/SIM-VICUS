@@ -102,6 +102,8 @@ private:
 	unsigned int controllerIndex(unsigned int controllerID);
 	/*! Generates new unique ControllerID */
 	unsigned int newControllerID();
+	/*! Convert old Subnetwork to new Subnetwork by copying components out of Database into Subnetwork */
+	void convertSubnetwork();
 
 	// TODO Maik: transformations funktion: SubNetwork altes format mit db Referenz in neues Format umwandeln bei Aufruf der edit Funktion
 

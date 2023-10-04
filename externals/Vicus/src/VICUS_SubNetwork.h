@@ -10,6 +10,7 @@
 #include "VICUS_NetworkController.h"
 #include "VICUS_NetworkElement.h"
 #include "VICUS_BMNetwork.h"
+#include "tinyxml.h"
 
 #include <NANDRAD_HydraulicNetworkElement.h>
 
@@ -32,7 +33,7 @@ public:
 
     // *** PUBLIC MEMBER FUNCTIONS ***
 
-    VICUS_READWRITE_OVERRIDE
+    VICUS_READWRITE_PRIVATE
     VICUS_COMP(SubNetwork)
     VICUS_COMPARE_WITH_ID
 
@@ -41,8 +42,17 @@ public:
                  const Database<NetworkController> &ctrlDB,
                  const Database<Schedule> &scheduleDB) const;
 
-    /*! Comparison operator */
-    ComparisonResult equal(const AbstractDBElement *other) const override;
+	/*! updates the BMBlocks in the graphical Network with data from the NetworkElements */
+	void init();
+
+    /*! reads the subnetwork from XML, calls init() */
+    void readXML(const TiXmlElement *element) override;
+
+	/*! writes the subnetwork to XML */
+	TiXmlElement* writeXML(TiXmlElement *parent) const override;
+
+	/*! Comparison operator */
+	ComparisonResult equal(const AbstractDBElement *other) const override;
 
     /*! Access function to the component of the heat exchanging element.
         Returns pointer to database network component. Returns nullptr if there is no such element
@@ -71,7 +81,7 @@ public:
     /*! Stores all controllers used in this subnetwork */
     std::vector<NetworkController>                      m_controllers;                         // XML:E
 
-    /*! Contains graphical information of the elements */
+    /*! Holds graphical information of the elements, contains BMBlocks and BMConnectors */
     BMNetwork                                           m_graphicalNetwork;                     // XML:E:tag=GraphicalNetwork
 
     const static unsigned int INLET_ID = 333333;

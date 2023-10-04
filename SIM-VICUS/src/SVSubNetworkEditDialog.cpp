@@ -98,6 +98,9 @@ SVSubNetworkEditDialog::~SVSubNetworkEditDialog()
 void SVSubNetworkEditDialog::setupSubNetwork(VICUS::SubNetwork *subNetwork)
 {
 	m_subNetwork = subNetwork;
+	if(m_subNetwork->m_graphicalNetwork.m_blocks.size() == 0 && m_subNetwork->m_elements.size() != 0){
+		convertSubnetwork();
+	}
 	updateNetwork();
 	m_ui->networkComponentEditWidget->setFixedWidth(491);
 }
@@ -193,8 +196,6 @@ void SVSubNetworkEditDialog::updateNetwork() {
 
 	// if BMNetwork empty,create new network, fill it with NetworkElements from SubNetwork
 	if(m_subNetwork->m_graphicalNetwork.m_blocks.size() == 0){
-		Q_ASSERT(m_networkComponents.size() == 0);
-		Q_ASSERT(m_networkControllers.size() == 0);
 		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
 
 		VICUS::BMBlock bentry, bexit;
@@ -293,101 +294,8 @@ void SVSubNetworkEditDialog::updateNetwork() {
 
 			counter++;
 		}
-
 	}
-
-	// if BMNetwork filled, create necessary graphical elements
-	else if (m_subNetwork->m_graphicalNetwork.m_blocks.begin()->m_displayName == VICUS::INVALIDXMLREAD){
-
-		// TODO Maik : das in eine init() Funktion packen im BMNetwork, die in der readXML() aufrufen
-
-		for(auto &block : m_subNetwork->m_graphicalNetwork.m_blocks){
-			bool ok;
-			unsigned int number = block.m_name.toInt(&ok);
-			// If we can convert the name to integer we have a "normal" component model block
-			if(ok){
-				VICUS::NetworkElement element;
-				for(auto elementTmp : m_subNetwork->m_elements){
-					if(elementTmp.m_id == number){
-						element = elementTmp;
-						break;
-					}
-				}
-				block.m_mode = VICUS::BMBlockType::NetworkComponentBlock;
-				block.m_displayName = element.m_displayName;
-				block.m_componentId = element.m_componentId;
-				block.m_controllerID = element.m_controlElementId;
-				block.m_size = QSizeF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT);
-				block.m_properties["ShowPixmap"] = true;
-				block.m_properties["Pixmap"] = QPixmap(VICUS::NetworkComponent::iconFileFromModelType(m_networkComponents[componentIndex(element.m_componentId)].m_modelType)).scaled(256,256);
-
-				VICUS::BMSocket inlet, outlet;
-
-				inlet.m_name = VICUS::INLET_NAME;
-				inlet.m_isInlet = true;
-				inlet.m_id = element.m_inletNodeId;
-				inlet.m_orientation = Qt::Horizontal;
-				inlet.m_pos = QPointF(0, VICUS::BLOCK_HEIGHT / 2);
-				block.m_sockets.append(inlet);
-
-				outlet.m_name = VICUS::OUTLET_NAME;
-				outlet.m_isInlet = false;
-				outlet.m_id = element.m_outletNodeId;
-				outlet.m_orientation = Qt::Horizontal;
-				outlet.m_pos = QPointF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT / 2);
-				block.m_sockets.append(outlet);
-			}
-			// Do we have a connector block?
-			else if (block.m_name.contains(VICUS::CONNECTORBLOCK_NAME)) {
-				block.m_displayName = "";
-				block.m_mode = VICUS::BMBlockType::ConnectorBlock;
-				block.m_size = QSizeF(VICUS::CONNECTORBLOCK_WIDTH, VICUS::CONNECTORBLOCK_HEIGHT);
-				VICUS::BMSocket inlet, outlet;
-
-				inlet.m_name = VICUS::INLET_NAME;
-				inlet.m_isInlet = true;
-				inlet.m_id = outlet.m_id;
-				inlet.m_orientation = Qt::Horizontal;
-				inlet.m_pos = QPointF(0, VICUS::CONNECTORBLOCK_HEIGHT / 2);
-				block.m_sockets.append(inlet);
-
-				outlet.m_name = VICUS::OUTLET_NAME;
-				outlet.m_isInlet = false;
-				outlet.m_id = block.m_name.split("r")[1].toInt();
-				outlet.m_orientation = Qt::Horizontal;
-				outlet.m_pos = QPointF(VICUS::CONNECTORBLOCK_WIDTH, VICUS::CONNECTORBLOCK_HEIGHT / 2);
-					block.m_sockets.append(outlet);
-			}
-			// Do we have a global inlet?
-			else if(block.m_name.contains(VICUS::SUBNETWORK_INLET_NAME)){
-				block.m_size = QSizeF(VICUS::ENTRANCEEXITBLOCK_WIDTH, VICUS::ENTRANCEEXITBLOCK_HEIGHT);
-				block.m_mode = VICUS::BMBlockType::GlobalInlet;
-				block.m_displayName.clear();
-				VICUS::BMSocket outlet;
-				outlet.m_name = VICUS::OUTLET_NAME;
-				outlet.m_isInlet = false;
-				outlet.m_id = VICUS::ENTRANCE_ID;
-				outlet.m_orientation = Qt::Horizontal;
-				outlet.m_pos = QPointF(VICUS::ENTRANCEEXITBLOCK_WIDTH, VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
-				block.m_sockets.append(outlet);
-			}
-			// Do we have a global outlet?
-			else if(block.m_name.contains(VICUS::SUBNETWORK_OUTLET_NAME)){
-				block.m_size = QSizeF(VICUS::ENTRANCEEXITBLOCK_WIDTH, VICUS::ENTRANCEEXITBLOCK_HEIGHT);
-				block.m_mode = VICUS::BMBlockType::GlobalOutlet;
-				block.m_displayName.clear();
-				VICUS::BMSocket inlet;
-				inlet.m_name = VICUS::INLET_NAME;
-				inlet.m_isInlet = true;
-				inlet.m_id = VICUS::EXIT_ID;
-				inlet.m_orientation = Qt::Horizontal;
-				inlet.m_pos = QPointF(0, VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
-				block.m_sockets.append(inlet);
-			}
-		}
-		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
-
-	} else {
+	 else {
 		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
 	}
 
@@ -494,11 +402,13 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 	// else: we transfer the edited network
 	m_subNetwork->m_graphicalNetwork = m_sceneManager->network();
 	m_subNetwork->m_elements.clear();
+	m_subNetwork->m_components.clear();
 
 	/* Copy all used components */
 	std::set<unsigned int> usedComponentIds;
 	for (auto& block : m_subNetwork->m_graphicalNetwork.m_blocks) {
-		usedComponentIds.insert(block.m_componentId);
+		if(block.m_mode == VICUS::BMBlockType::NetworkComponentBlock)
+			usedComponentIds.insert(block.m_componentId);
 	}
 	for (unsigned int id: usedComponentIds) {
 		m_subNetwork->m_components.push_back( m_networkComponents[componentIndex(id)] );
@@ -722,6 +632,34 @@ unsigned int SVSubNetworkEditDialog::newControllerID(){
 		}
 	}
 	return id;
+}
+
+void SVSubNetworkEditDialog::convertSubnetwork()
+{
+	FUNCID(SVSubNetworkEditDialog::convertSubnetwork);
+	// iterates over every element copies component into Subnetwork and create new IDs
+	for(VICUS::NetworkElement &element : m_subNetwork->m_elements){
+		if(element.m_componentId != VICUS::INVALID_ID){
+			VICUS::NetworkComponent *componentPtr = m_db->m_networkComponents[element.m_componentId];
+			Q_ASSERT(componentPtr != nullptr);
+			VICUS::NetworkComponent component = *componentPtr;
+			component.m_id = VICUS::largestUniqueId(m_subNetwork->m_components);
+			element.m_componentId = component.m_id;
+			m_subNetwork->m_components.push_back(component);
+		} else {
+			throw IBK::Exception(tr("Invalid networkComponent ID %1  in subnetwork")
+									 .arg(element.m_componentId).toStdString(), FUNC_ID);
+		}
+		// checks if element has a controller, if yes, copy it into subNetwork and create new IDs
+		if(element.m_controlElementId != VICUS::INVALID_ID){
+			VICUS::NetworkController *controllerPtr = m_db->m_networkControllers[element.m_controlElementId];
+			Q_ASSERT(controllerPtr != nullptr);
+			VICUS::NetworkController controller = *controllerPtr;
+			controller.m_id = VICUS::largestUniqueId(m_subNetwork->m_controllers);
+			element.m_controlElementId = controller.m_id;
+			m_subNetwork->m_controllers.push_back(controller);
+		}
+	}
 }
 
 

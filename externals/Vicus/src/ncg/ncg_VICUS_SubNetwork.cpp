@@ -32,8 +32,8 @@
 
 namespace VICUS {
 
-void SubNetwork::readXML(const TiXmlElement * element) {
-	FUNCID(SubNetwork::readXML);
+void SubNetwork::readXMLPrivate(const TiXmlElement * element) {
+	FUNCID(SubNetwork::readXMLPrivate);
 
 	try {
 		// search for mandatory attributes
@@ -115,7 +115,7 @@ void SubNetwork::readXML(const TiXmlElement * element) {
 	}
 }
 
-TiXmlElement * SubNetwork::writeXML(TiXmlElement * parent) const {
+TiXmlElement * SubNetwork::writeXMLPrivate(TiXmlElement * parent) const {
 	if (m_id == VICUS::INVALID_ID)  return nullptr;
 	TiXmlElement * e = new TiXmlElement("SubNetwork");
 	parent->LinkEndChild(e);

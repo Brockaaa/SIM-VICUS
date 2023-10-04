@@ -2,6 +2,12 @@
 
 #include "VICUS_Project.h"
 #include "VICUS_utilities.h"
+#include "VICUS_BMBlock.h"
+#include "VICUS_BMConnector.h"
+#include "VICUS_BMSocket.h"
+#include "VICUS_BMGlobals.h"
+
+#include <QPixmap>
 
 #include <NANDRAD_HydraulicNetworkElement.h>
 
@@ -39,6 +45,103 @@ bool SubNetwork::isValid(const Database<NetworkComponent> &compDB,
     }
 
     return true;
+}
+
+void SubNetwork::readXML(const TiXmlElement *element){
+	readXMLPrivate(element);
+	init();
+}
+
+TiXmlElement* SubNetwork::writeXML(TiXmlElement *parent) const {
+	return writeXMLPrivate(parent);
+}
+
+void SubNetwork::init()
+{
+	for(auto &block : m_graphicalNetwork.m_blocks){
+		bool ok;
+		unsigned int number = block.m_name.toInt(&ok);
+		// If we can convert the name to integer we have a "normal" component model block
+		if(ok){
+			NetworkElement element;
+			for(auto elementTmp : m_elements){
+				if(elementTmp.m_id == number){
+					element = elementTmp;
+					break;
+				}
+			}
+			block.m_mode = BMBlockType::NetworkComponentBlock;
+			block.m_displayName = element.m_displayName;
+			block.m_componentId = element.m_componentId;
+			block.m_controllerID = element.m_controlElementId;
+			block.m_size = QSizeF(BLOCK_WIDTH, BLOCK_HEIGHT);
+			block.m_properties["ShowPixmap"] = true;
+			block.m_properties["Pixmap"] = QPixmap(NetworkComponent::iconFileFromModelType(m_components[elementIndex(m_components, block.m_componentId)].m_modelType)).scaled(256,256);
+
+			BMSocket inlet, outlet;
+
+			inlet.m_name = INLET_NAME;
+			inlet.m_isInlet = true;
+			inlet.m_id = element.m_inletNodeId;
+			inlet.m_orientation = Qt::Horizontal;
+			inlet.m_pos = QPointF(0, BLOCK_HEIGHT / 2);
+			block.m_sockets.append(inlet);
+
+			outlet.m_name = OUTLET_NAME;
+			outlet.m_isInlet = false;
+			outlet.m_id = element.m_outletNodeId;
+			outlet.m_orientation = Qt::Horizontal;
+			outlet.m_pos = QPointF(BLOCK_WIDTH, BLOCK_HEIGHT / 2);
+			block.m_sockets.append(outlet);
+		}
+		// Do we have a connector block?
+		else if (block.m_name.contains(CONNECTORBLOCK_NAME)) {
+			block.m_displayName = "";
+			block.m_mode = BMBlockType::ConnectorBlock;
+			block.m_size = QSizeF(CONNECTORBLOCK_WIDTH, CONNECTORBLOCK_HEIGHT);
+			BMSocket inlet, outlet;
+
+			inlet.m_name = INLET_NAME;
+			inlet.m_isInlet = true;
+			inlet.m_id = outlet.m_id;
+			inlet.m_orientation = Qt::Horizontal;
+			inlet.m_pos = QPointF(0, CONNECTORBLOCK_HEIGHT / 2);
+			block.m_sockets.append(inlet);
+
+			outlet.m_name = OUTLET_NAME;
+			outlet.m_isInlet = false;
+			outlet.m_id = block.m_name.split("r")[1].toInt();
+			outlet.m_orientation = Qt::Horizontal;
+			outlet.m_pos = QPointF(CONNECTORBLOCK_WIDTH, CONNECTORBLOCK_HEIGHT / 2);
+			block.m_sockets.append(outlet);
+		}
+		// Do we have a global inlet?
+		else if(block.m_name.contains(SUBNETWORK_INLET_NAME)){
+			block.m_size = QSizeF(ENTRANCEEXITBLOCK_WIDTH, ENTRANCEEXITBLOCK_HEIGHT);
+			block.m_mode = BMBlockType::GlobalInlet;
+			block.m_displayName.clear();
+			BMSocket outlet;
+			outlet.m_name = OUTLET_NAME;
+			outlet.m_isInlet = false;
+			outlet.m_id = ENTRANCE_ID;
+			outlet.m_orientation = Qt::Horizontal;
+			outlet.m_pos = QPointF(ENTRANCEEXITBLOCK_WIDTH, ENTRANCEEXITBLOCK_HEIGHT / 2);
+			block.m_sockets.append(outlet);
+		}
+		// Do we have a global outlet?
+		else if(block.m_name.contains(SUBNETWORK_OUTLET_NAME)){
+			block.m_size = QSizeF(ENTRANCEEXITBLOCK_WIDTH, ENTRANCEEXITBLOCK_HEIGHT);
+			block.m_mode = BMBlockType::GlobalOutlet;
+			block.m_displayName.clear();
+			BMSocket inlet;
+			inlet.m_name = INLET_NAME;
+			inlet.m_isInlet = true;
+			inlet.m_id = EXIT_ID;
+			inlet.m_orientation = Qt::Horizontal;
+			inlet.m_pos = QPointF(0, ENTRANCEEXITBLOCK_HEIGHT / 2);
+			block.m_sockets.append(inlet);
+		}
+	}
 }
 
 
