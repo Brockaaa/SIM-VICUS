@@ -27,6 +27,7 @@
 #define SVUndoTrimObjectsH
 
 #include <VICUS_Surface.h>
+#include <VICUS_Project.h>
 
 #include "SVUndoCommandBase.h"
 
@@ -42,7 +43,8 @@ public:
 		Mind: surfaces must be triangulated already, if they contain new sub-surfaces.
 	*/
 	SVUndoTrimObjects(const QString & label,
-					  std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>> & trimSurfaces);
+					  std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>> & trimSurfaces,
+					  const VICUS::Project & newProject);
 
 	virtual void undo();
 	virtual void redo();
@@ -53,7 +55,10 @@ private:
 	std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>>	m_trimSurfaces;
 
 	/*! Copies of surface component instances. */
-	std::vector<VICUS::ComponentInstance>														m_compInstances;
+	//std::vector<VICUS::ComponentInstance>														m_compInstances;
+
+	/*! Cache for entire project data. */
+	VICUS::Project	m_project;
 
 };
 

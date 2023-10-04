@@ -32,16 +32,24 @@
 #include <VICUS_Project.h>
 
 SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
-									 std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>> & trimSurfaces):
-									// trimSurfaces is a vector of tuples, each containing a reference to the selected surface of one trim, and the polyInput vector
-									// which was handed over to the polyTrim method, and therefore contains the trim result surfaces
-
+									 std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>> & trimSurfaces,
+									 // trimSurfaces is a vector of tuples, each containing a reference to the selected surface of one trim, and the polyInput vector
+									 // which was handed over to the polyTrim method, and therefore contains the trim result surfaces
+									 const VICUS::Project & oldProject):
 									/// Kann ich hier wirklich einen pointer nutzen? Wenn ich surface* lösche, geht ja kein undo mehr
-	m_trimSurfaces(trimSurfaces)
+	m_trimSurfaces(trimSurfaces),
+	m_project(oldProject)
+
 {
 	setText( label );
+}
+
+void SVUndoTrimObjects::undo() {
+
+}
 
 
+void SVUndoTrimObjects::redo() {
 	// iterate over different trims
 	for (unsigned int i=0; i<m_trimSurfaces.size(); ++i) {
 
@@ -74,20 +82,51 @@ SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
 			if (parentRoom) {
 				// add surface to room surfaces
 				const_cast<VICUS::Room*>(room)->m_surfaces.push_back(s);
+				theProject().updatePointers();
 
 			} else {
 				// add to anonymous geometry
 				theProject().m_plainGeometry.m_surfaces.push_back(s);
+				theProject().updatePointers();
 			}
 		}
 
+	}
+
+	theProject().updatePointers();
+
+	for (unsigned int i=0; i<m_trimSurfaces.size(); ++i) {
+
+		const VICUS::Surface* surfToBeDeleted = std::get<0>(m_trimSurfaces[i]);
+		bool parentRoom = false;
+		const VICUS::Room* room = dynamic_cast<const VICUS::Room*>(surfToBeDeleted->m_parent);
+		if (room != nullptr) parentRoom = true;
+
 		if (parentRoom) {
-			//!.
+			//IBK::IBK_Message("abcdef", IBK::MSG_WARNING);
+			//! TODO: Effizienter machen, ohne dass dabei ein SegFault auftritt
+			for (unsigned int bIdx = 0; bIdx < theProject().m_buildings.size(); ++bIdx) {
+				VICUS::Building & b = theProject().m_buildings[bIdx];
+				for (unsigned int blIdx = 0; blIdx < b.m_buildingLevels.size(); ++blIdx) {
+					VICUS::BuildingLevel & bl = b.m_buildingLevels[blIdx];
+					for (unsigned int rIdx = 0; rIdx < bl.m_rooms.size(); ++rIdx) {
+						VICUS::Room & r = bl.m_rooms[rIdx];
+						for (unsigned int sIdx = 0; sIdx < r.m_surfaces.size(); ++sIdx) {
+							// is surface selected for deletion?
+							if (surfToBeDeleted->m_id == r.m_surfaces[sIdx].m_id) {
+								r.m_surfaces.erase(r.m_surfaces.begin() + sIdx);
+								IBK::IBK_Message("DELETED ONE", IBK::MSG_WARNING);
+								theProject().updatePointers();
+							}
+						}
+					}
+				}
+			}
+			//theProject().updatePointers();
 
 		} else {
 			//!.
 		}
-
 
 	}
 
@@ -110,13 +149,6 @@ SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
 
 	theProject().updatePointers();
 	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingGeometryChanged );
-
-
-
-
-
-
-
 
 
 	//! TODO Brauche ich auch SubSurfaceComponentInstances?
@@ -142,15 +174,6 @@ SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
 		}
 	}*/
 
-}
-
-
-void SVUndoTrimObjects::undo() {
-
-}
-
-
-void SVUndoTrimObjects::redo() {
 
 }
 

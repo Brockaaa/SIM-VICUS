@@ -1481,7 +1481,9 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 			QMessageBox::information(this, QString(), "Trimming of the following surfaces failed:" + QString::fromStdString(failedTrims));
 		}
 		if (successfulTrims > 0) {
-			SVUndoTrimObjects * undo = new SVUndoTrimObjects(tr("Trimming performed."), trimSurfaces);
+			// create a copy of the whole project
+			VICUS::Project projectCopy = SVProjectHandler::instance().project();
+			SVUndoTrimObjects * undo = new SVUndoTrimObjects(tr("Trimming performed."), trimSurfaces, projectCopy);
 			undo->push();
 		}
 	} else IBK::IBK_Message("Invalid mode to perform trimming!", IBK::MSG_ERROR);
