@@ -98,16 +98,16 @@ SVSubNetworkEditDialog::~SVSubNetworkEditDialog()
 void SVSubNetworkEditDialog::setupSubNetwork(VICUS::SubNetwork *subNetwork)
 {
 	m_subNetwork = subNetwork;
-	if(m_subNetwork->m_graphicalNetwork.m_blocks.size() == 0 && m_subNetwork->m_elements.size() != 0){
+	if(m_subNetwork->m_elements.size() != 0 && m_subNetwork->m_components.size() == 0){
 		convertSubnetwork();
 	}
 	updateNetwork();
 	m_ui->networkComponentEditWidget->setFixedWidth(491);
 }
 
-void SVSubNetworkEditDialog::show()
+void SVSubNetworkEditDialog::open()
 {
-	QDialog::show();
+	QDialog::open();
 
 	QList<int> ratio;
 	ratio << 300 << m_ui->splitter->width()-300;
@@ -120,7 +120,7 @@ void SVSubNetworkEditDialog::show()
 	int sceneHeight = int(sceneWidth/aspectRatio);
 	m_sceneManager->setSceneRect(0,450-sceneHeight/2,sceneWidth,450+sceneHeight/2);
 	m_ui->viewWidget->fitInView(m_sceneManager->sceneRect(), Qt::KeepAspectRatio);
-	m_ui->networkComponentEditWidget->updateInput(nullptr);
+	selectionClearedEvent();
 	m_sceneManager->update();
 }
 
@@ -236,24 +236,8 @@ void SVSubNetworkEditDialog::updateNetwork() {
 		for(VICUS::NetworkElement element : m_subNetwork->m_elements){
 			VICUS::BMBlock block = VICUS::BMBlock(QString::number(counter));
 			VICUS::BMSocket outlet, inlet;
-			if(element.m_componentId != VICUS::INVALID_ID){
-				VICUS::NetworkComponent component;
-				if (!m_db->m_networkComponents[element.m_componentId])
-					throw IBK::Exception(tr("Network component with id %1 not found in database. Could not open sub network").arg(element.m_componentId).toStdString(), FUNC_ID);
-				component = *(m_db->m_networkComponents[element.m_componentId]);
-				component.m_id = newComponentID();
-				block.m_componentId = component.m_id;
-				m_networkComponents.push_back(component);
-			}
-			if(element.m_controlElementId != VICUS::INVALID_ID){
-				VICUS::NetworkController controller;
-				if (!m_db->m_networkControllers[element.m_controlElementId])
-					throw IBK::Exception(tr("Network controller with id %1 not found in database. Could not open sub network").arg(element.m_controlElementId).toStdString(), FUNC_ID);
-				controller = *(m_db->m_networkControllers[element.m_controlElementId]);
-				controller.m_id = newControllerID();
-				block.m_controllerID = controller.m_id;
-				m_networkControllers.push_back(controller);
-			}
+			block.m_componentId = element.m_componentId;
+			block.m_controllerID = element.m_controlElementId;
 
 			VICUS::NetworkComponent::ModelType type = m_networkComponents.back().m_modelType;
 
@@ -403,6 +387,7 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 	m_subNetwork->m_graphicalNetwork = m_sceneManager->network();
 	m_subNetwork->m_elements.clear();
 	m_subNetwork->m_components.clear();
+	m_subNetwork->m_controllers.clear();
 
 	/* Copy all used components */
 	std::set<unsigned int> usedComponentIds;
@@ -412,6 +397,18 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 	}
 	for (unsigned int id: usedComponentIds) {
 		m_subNetwork->m_components.push_back( m_networkComponents[componentIndex(id)] );
+	}
+
+
+	/* Copy all used controllers */
+	std::set<unsigned int> usedControllerIds;
+	for (auto& block : m_subNetwork->m_graphicalNetwork.m_blocks) {
+		if(block.m_mode == VICUS::BMBlockType::NetworkComponentBlock && block.m_controllerID != VICUS::INVALID_ID){
+			usedControllerIds.insert(block.m_controllerID);
+		}
+	}
+	for(unsigned int id : usedControllerIds){
+		m_subNetwork->m_controllers.push_back( m_networkControllers[controllerIndex(id)] );
 	}
 
 
@@ -426,9 +423,6 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 			m_subNetwork->m_elements.push_back(networkElement);
 		}
 	}
-
-	/* copy controllers */
-	m_subNetwork->m_controllers = m_networkControllers;
 
 	this->close();
 }
@@ -532,21 +526,6 @@ void SVSubNetworkEditDialog::selectionClearedEvent(){
 }
 
 
-void SVSubNetworkEditDialog::on_controllerDialog_accepted(VICUS::BMBlock *block, VICUS::NetworkController controller)
-{
-	if(block->m_controllerID == VICUS::INVALID_ID){
-		controller.m_id = newControllerID();
-		block->m_controllerID = controller.m_id;
-		m_networkControllers.push_back(controller);
-	} else {
-		m_networkControllers[controllerIndex(block->m_controllerID)] = controller;
-	}
-	m_ui->controllerLineEdit->setText(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(controller.m_controlledProperty)));
-	m_sceneManager->setControllerID(block, block->m_controllerID, VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", controller.m_controlledProperty));
-	m_sceneManager->update();
-}
-
-
 void SVSubNetworkEditDialog::on_NameTextChanged(const QString& text){
 	if(m_sceneManager->selectedBlocks().size() == 0)
 		return;
@@ -637,7 +616,7 @@ unsigned int SVSubNetworkEditDialog::newControllerID(){
 void SVSubNetworkEditDialog::convertSubnetwork()
 {
 	FUNCID(SVSubNetworkEditDialog::convertSubnetwork);
-	// iterates over every element copies component into Subnetwork and create new IDs
+	// iterates over every element and copies component into Subnetwork and create new IDs
 	for(VICUS::NetworkElement &element : m_subNetwork->m_elements){
 		if(element.m_componentId != VICUS::INVALID_ID){
 			VICUS::NetworkComponent *componentPtr = m_db->m_networkComponents[element.m_componentId];
@@ -691,25 +670,33 @@ void SVSubNetworkEditDialog::on_removeButton_clicked()
 void SVSubNetworkEditDialog::on_openControllerWidgetButton_clicked()
 {
 	if(m_controllerEditDialog == nullptr){
-		m_controllerEditDialog = new SVNetworkControllerEditDialog(this, m_db);
-		connect(m_controllerEditDialog, &SVNetworkControllerEditDialog::controllerAccepted, this, &SVSubNetworkEditDialog::on_controllerDialog_accepted);
+		m_controllerEditDialog = new SVNetworkControllerEditDialog(this);
 	}
 
 	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().takeFirst());
 	Q_ASSERT(selectedBlock != nullptr);
-	if(selectedBlock->m_controllerID == VICUS::INVALID_ID){
-		VICUS::NetworkController *controller = new VICUS::NetworkController();
-		m_controllerEditDialog->setup(selectedBlock, *controller, m_networkComponents[componentIndex(selectedBlock->m_componentId)]);
-	} else {
-		const VICUS::NetworkComponent &component = m_networkComponents[componentIndex(selectedBlock->m_componentId)];
-		unsigned int idx = controllerIndex(selectedBlock->m_controllerID);
-		m_controllerEditDialog->setup(selectedBlock, (m_networkControllers[idx]), component);
+	VICUS::NetworkController controller;
+	if(selectedBlock->m_controllerID != VICUS::INVALID_ID){
+		controller = m_networkControllers[controllerIndex(selectedBlock->m_controllerID)];
 	}
+	const VICUS::NetworkComponent &component = m_networkComponents[componentIndex(selectedBlock->m_componentId)];
+	m_controllerEditDialog->setup(controller, component.m_modelType);
 
-	m_controllerEditDialog->open();
+	m_controllerEditDialog->exec();
 
-	if (m_controllerEditDialog->result() == QDialog::Accepted);
-		// TODO Maik
+	if (m_controllerEditDialog->result() == QDialog::Accepted){
+		controller = m_controllerEditDialog->controller();
+		if(selectedBlock->m_controllerID == VICUS::INVALID_ID){
+			controller.m_id = newControllerID();
+			selectedBlock->m_controllerID = controller.m_id;
+			m_networkControllers.push_back(controller);
+		} else {
+			m_networkControllers[controllerIndex(selectedBlock->m_controllerID)] = controller;
+		}
+		m_ui->controllerLineEdit->setText(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(controller.m_controlledProperty)));
+		m_sceneManager->setControllerID(selectedBlock, selectedBlock->m_controllerID, VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", controller.m_controlledProperty));
+		m_sceneManager->update();
+	}
 }
 
 

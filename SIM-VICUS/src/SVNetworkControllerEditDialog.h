@@ -1,38 +1,31 @@
 #ifndef SVNETWORKCONTROLLEREDITDIALOG_H
 #define SVNETWORKCONTROLLEREDITDIALOG_H
 
-#include "SVAbstractDatabaseEditWidget.h"
+#include "SVDatabase.h"
+
 #include <QDialog>
-
-class SVDBNetworkControllerTableModel;
-
-namespace VICUS {
-	class NetworkController;
-class BMBlock;
-}
+#include <VICUS_NetworkComponent.h>
+#include <VICUS_NetworkController.h>
 
 namespace Ui {
-class SVNetworkControllerEditWidget;
+class SVNetworkControllerEditDialog;
 }
 
-class SVNetworkControllerEditDialog :  public QDialog {
+class SVNetworkControllerEditDialog : public QDialog
+{
 	Q_OBJECT
 
 public:
+	explicit SVNetworkControllerEditDialog(QWidget *parent = nullptr);
+	~SVNetworkControllerEditDialog();
 
-	explicit SVNetworkControllerEditDialog(QWidget *parent = nullptr, SVDatabase * db = nullptr);
-	~SVNetworkControllerEditDialog() override;
+	void setup(VICUS::NetworkController &controller, VICUS::NetworkComponent::ModelType modelType);
 
-	/*! Needs to be called once, before the widget is being used. */
-	void setController(VICUS::NetworkController *controller);
+	void update();
 
-	void setup(VICUS::BMBlock * block, VICUS::NetworkController controller, const VICUS::NetworkComponent & networkComponent);
-
-signals:
-	void controllerAccepted(VICUS::BMBlock* block, VICUS::NetworkController controller);
+	VICUS::NetworkController controller();
 
 private slots:
-
 	void on_lineEditSetpoint_editingFinished();
 
 	void on_lineEditKp_editingFinished();
@@ -53,22 +46,12 @@ private slots:
 
 	void on_toolButtonRemoveSchedule_clicked();
 
-	void on_buttonBox_accepted();
-
-	void on_buttonBox_rejected();
-
 private:
-	Ui::SVNetworkControllerEditWidget *m_ui;
+	Ui::SVNetworkControllerEditDialog *m_ui;
 
-	SVDatabase              *m_db = nullptr;
-
-	/*! Pointer to currently edited controller.
-		The pointer is updated whenever updateInput() is called.
-		A nullptr pointer means that there is no component to edit.
-	*/
+	SVDatabase              m_db;
+	/* currently edited controller */
 	VICUS::NetworkController			m_currentController;
-
-	VICUS::BMBlock                      *m_currentBlock;
 };
 
 #endif // SVNETWORKCONTROLLEREDITDIALOG_H

@@ -33,7 +33,7 @@ public:
 	/*! sets up Subnetwork and calls setNetwork)= */
 	void setupSubNetwork(VICUS::SubNetwork * subNetwork);
 	/*! opens window, sets appropriate height and weight values for the Splitter and the Scene */
-	void show();
+	void open();
 	/*! Gets called whenever the QDialog Window is resized, sets appropriate height values for a wrapper Widget of a QtExtToolBox */
 	void resize(int w, int h);
 
@@ -69,7 +69,6 @@ private:
 	void connectorSelectedEvent(const QString & sourceSocketName, const QString & targetSocketName);
 	/*/ Connected to selectionCleared() in SVBMSceneManager, resets all widgets and buttons that were activated when selcting Blocks or Connectors */
 	void selectionClearedEvent();
-
 	/*! Creates the ToolBox, also used to update the ToolBox */
 	void updateToolBoxPages();
 	/*! sets Network of the SVBMSceneManager. Checks if network already filled, if already filled add the the missing values of BMBlock that were not directly saved in the XML from networkElements
@@ -84,9 +83,6 @@ private:
 	void on_buttonBox_accepted();
 	/*! gets called when the Dialog is rejected and closed. Closes the Dialog. Any changes will be lost */
 	void on_buttonBox_rejected();
-	/*! gets called in the controllerDialog window. The updated controller is copied into the Block
-	 * and the name of the controller is set in the view */
-	void on_controllerDialog_accepted(VICUS::BMBlock *block, VICUS::NetworkController controller);
 	/*! gets called when the name of a Block is changed. Sets the name in the displayName attribute of the BMBlock,
 	 *  updates view immediately */
 	void on_NameTextChanged(const QString &text);
@@ -104,8 +100,6 @@ private:
 	unsigned int newControllerID();
 	/*! Convert old Subnetwork to new Subnetwork by copying components out of Database into Subnetwork */
 	void convertSubnetwork();
-
-	// TODO Maik: transformations funktion: SubNetwork altes format mit db Referenz in neues Format umwandeln bei Aufruf der edit Funktion
 
 	/*! The UI class. */
 	Ui::SVSubNetworkEditDialog									*m_ui;
