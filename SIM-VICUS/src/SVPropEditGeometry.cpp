@@ -233,14 +233,14 @@ void SVPropEditGeometry::setCoordinates(const Vic3D::Transform3D &t) {
 
 bool SVPropEditGeometry::handleGlobalKeyPress(Qt::Key k) {
 	switch (k) {
-		case Qt::Key_Escape :
-			if (!m_ui->pushButtonCancel->isEnabled())
-				return false;
-			m_ui->pushButtonCancel->click();
-			break;
-
-		default:
+	case Qt::Key_Escape :
+		if (!m_ui->pushButtonCancel->isEnabled())
 			return false;
+		m_ui->pushButtonCancel->click();
+		break;
+
+	default:
+		return false;
 	}
 	return true;
 }
@@ -254,19 +254,19 @@ void SVPropEditGeometry::finishTransformation() {
 void SVPropEditGeometry::onModified(int modificationType, ModificationInfo * ) {
 	SVProjectHandler::ModificationTypes modType((SVProjectHandler::ModificationTypes)modificationType);
 	switch (modType) {
-		case SVProjectHandler::AllModified:
-			updateUi();
-			break;
-		case SVProjectHandler::BuildingGeometryChanged:
-			// When the building geometry has changed, we need to update the geometrical info
-			// in the widget based on the current selection. LCS is not moved.
-			updateUi(false);
-			break;
-		case SVProjectHandler::NodeStateModified:
-			updateUi();
-			break;
+	case SVProjectHandler::AllModified:
+		updateUi();
+		break;
+	case SVProjectHandler::BuildingGeometryChanged:
+		// When the building geometry has changed, we need to update the geometrical info
+		// in the widget based on the current selection. LCS is not moved.
+		updateUi(false);
+		break;
+	case SVProjectHandler::NodeStateModified:
+		updateUi();
+		break;
 
-		default: ; // just to make compiler happy
+	default: ; // just to make compiler happy
 	}
 }
 
@@ -321,10 +321,10 @@ bool SVPropEditGeometry::eventFilter(QObject * target, QEvent * event) {
 		{
 			double delta = 0.1; // default
 			switch (m_ui->stackedWidget->currentIndex()) {
-				case MT_Translate				:
-				case MT_Scale					: delta = 0.01; break;
-				case MT_Rotate					: delta = 1; break;
-				case NUM_MT : ; // just to make compiler happy
+			case MT_Translate				:
+			case MT_Scale					: delta = 0.01; break;
+			case MT_Rotate					: delta = 1; break;
+			case NUM_MT : ; // just to make compiler happy
 			}
 
 			QWheelEvent *wheelEvent = static_cast<QWheelEvent*>(event);
@@ -753,27 +753,27 @@ void SVPropEditGeometry::updateScalePreview(int aspectRatioSourceEdit) {
 		else															scaleFactors.setZ(float(newZ/m_bbDim[OM_Local].m_z));
 
 		switch (aspectRatioSourceEdit) {
-			case 0 : {
-				float scale = scaleFactors.x();
-				scaleFactors.setY(scale);
-				scaleFactors.setZ(scale);
-				m_ui->lineEditScaleY->setValue((double)scale*m_bbDim[OM_Local].m_y);
-				m_ui->lineEditScaleZ->setValue((double)scale*m_bbDim[OM_Local].m_z);
-			} break;
-			case 1 : {
-				float scale = scaleFactors.y();
-				scaleFactors.setX(scale);
-				scaleFactors.setZ(scale);
-				m_ui->lineEditScaleX->setValue((double)scale*m_bbDim[OM_Local].m_x);
-				m_ui->lineEditScaleZ->setValue((double)scale*m_bbDim[OM_Local].m_z);
-			} break;
-			case 2 : {
-				float scale = scaleFactors.z();
-				scaleFactors.setX(scale);
-				scaleFactors.setY(scale);
-				m_ui->lineEditScaleX->setValue((double)scale*m_bbDim[OM_Local].m_x);
-				m_ui->lineEditScaleY->setValue((double)scale*m_bbDim[OM_Local].m_y);
-			} break;
+		case 0 : {
+			float scale = scaleFactors.x();
+			scaleFactors.setY(scale);
+			scaleFactors.setZ(scale);
+			m_ui->lineEditScaleY->setValue((double)scale*m_bbDim[OM_Local].m_y);
+			m_ui->lineEditScaleZ->setValue((double)scale*m_bbDim[OM_Local].m_z);
+		} break;
+		case 1 : {
+			float scale = scaleFactors.y();
+			scaleFactors.setX(scale);
+			scaleFactors.setZ(scale);
+			m_ui->lineEditScaleX->setValue((double)scale*m_bbDim[OM_Local].m_x);
+			m_ui->lineEditScaleZ->setValue((double)scale*m_bbDim[OM_Local].m_z);
+		} break;
+		case 2 : {
+			float scale = scaleFactors.z();
+			scaleFactors.setX(scale);
+			scaleFactors.setY(scale);
+			m_ui->lineEditScaleX->setValue((double)scale*m_bbDim[OM_Local].m_x);
+			m_ui->lineEditScaleY->setValue((double)scale*m_bbDim[OM_Local].m_y);
+		} break;
 		}
 	}
 	else {
@@ -781,27 +781,27 @@ void SVPropEditGeometry::updateScalePreview(int aspectRatioSourceEdit) {
 		scaleFactors.setY( (float)m_ui->lineEditScaleY->value());
 		scaleFactors.setZ( (float)m_ui->lineEditScaleZ->value());
 		switch (aspectRatioSourceEdit) {
-			case 0 : {
-				float scale = scaleFactors.x();
-				scaleFactors.setY(scale);
-				scaleFactors.setZ(scale);
-				m_ui->lineEditScaleY->setValue((double)scale);
-				m_ui->lineEditScaleZ->setValue((double)scale);
-			} break;
-			case 1 : {
-				float scale = scaleFactors.y();
-				scaleFactors.setX(scale);
-				scaleFactors.setZ(scale);
-				m_ui->lineEditScaleX->setValue((double)scale);
-				m_ui->lineEditScaleZ->setValue((double)scale);
-			} break;
-			case 2 : {
-				float scale = scaleFactors.z();
-				scaleFactors.setX(scale);
-				scaleFactors.setY(scale);
-				m_ui->lineEditScaleX->setValue((double)scale);
-				m_ui->lineEditScaleY->setValue((double)scale);
-			} break;
+		case 0 : {
+			float scale = scaleFactors.x();
+			scaleFactors.setY(scale);
+			scaleFactors.setZ(scale);
+			m_ui->lineEditScaleY->setValue((double)scale);
+			m_ui->lineEditScaleZ->setValue((double)scale);
+		} break;
+		case 1 : {
+			float scale = scaleFactors.y();
+			scaleFactors.setX(scale);
+			scaleFactors.setZ(scale);
+			m_ui->lineEditScaleX->setValue((double)scale);
+			m_ui->lineEditScaleZ->setValue((double)scale);
+		} break;
+		case 2 : {
+			float scale = scaleFactors.z();
+			scaleFactors.setX(scale);
+			scaleFactors.setY(scale);
+			m_ui->lineEditScaleX->setValue((double)scale);
+			m_ui->lineEditScaleY->setValue((double)scale);
+		} break;
 		}
 	}
 	// obtain offset and rotation of local coordinate system
@@ -866,96 +866,96 @@ void SVPropEditGeometry::onLineEditTextChanged(QtExt::ValidatingLineEdit * lineE
 void SVPropEditGeometry::updateInputs() {
 	switch (m_ui->stackedWidget->currentIndex()) {
 
-		// *** Translation page ***
-		case MT_Translate : {
-			if (m_ui->radioButtonTranslationAbsolute->isChecked()) {
+	// *** Translation page ***
+	case MT_Translate : {
+		if (m_ui->radioButtonTranslationAbsolute->isChecked()) {
 
-				m_ui->labelTranslateX->setText("X [m]:");
-				m_ui->labelTranslateY->setText("Y [m]:");
-				m_ui->labelTranslateZ->setText("Z [m]:");
+			m_ui->labelTranslateX->setText("X [m]:");
+			m_ui->labelTranslateY->setText("Y [m]:");
+			m_ui->labelTranslateZ->setText("Z [m]:");
 
-				// cache current local coordinate systems position as fall-back values
-				m_originalValues = QVector2IBKVector(m_lcsTransform.translation());
-			}
-			else {
-				m_ui->labelTranslateX->setText("ΔX [m]:");
-				m_ui->labelTranslateY->setText("ΔY [m]:");
-				m_ui->labelTranslateZ->setText("ΔZ [m]:");
+			// cache current local coordinate systems position as fall-back values
+			m_originalValues = QVector2IBKVector(m_lcsTransform.translation());
+		}
+		else {
+			m_ui->labelTranslateX->setText("ΔX [m]:");
+			m_ui->labelTranslateY->setText("ΔY [m]:");
+			m_ui->labelTranslateZ->setText("ΔZ [m]:");
 
-				m_originalValues.set(0,0,0);
-			}
-			m_ui->lineEditTranslateX->setValue( m_originalValues.m_x );
-			m_ui->lineEditTranslateY->setValue( m_originalValues.m_y );
-			m_ui->lineEditTranslateZ->setValue( m_originalValues.m_z );
-		} break;
+			m_originalValues.set(0,0,0);
+		}
+		m_ui->lineEditTranslateX->setValue( m_originalValues.m_x );
+		m_ui->lineEditTranslateY->setValue( m_originalValues.m_y );
+		m_ui->lineEditTranslateZ->setValue( m_originalValues.m_z );
+	} break;
 
 
-		case MT_Rotate: {
-			bool align2Angles = m_ui->radioButtonRotationAlignToAngles->isChecked();
-			m_ui->labelRotateInclinationAbs->setEnabled(align2Angles);
-			m_ui->labelRotateOrientationAbs->setEnabled(align2Angles);
-			m_ui->labelRotationX->setEnabled(!align2Angles);
-			m_ui->labelRotationY->setEnabled(!align2Angles);
-			m_ui->labelRotationZ->setEnabled(!align2Angles);
-			m_ui->lineEditRotateInclination->setEnabled(align2Angles);
-			m_ui->lineEditRotateOrientation->setEnabled(align2Angles);
-			m_ui->lineEditRotateX->setEnabled(!align2Angles);
-			m_ui->lineEditRotateY->setEnabled(!align2Angles);
-			m_ui->lineEditRotateZ->setEnabled(!align2Angles);
+	case MT_Rotate: {
+		bool align2Angles = m_ui->radioButtonRotationAlignToAngles->isChecked();
+		m_ui->labelRotateInclinationAbs->setEnabled(align2Angles);
+		m_ui->labelRotateOrientationAbs->setEnabled(align2Angles);
+		m_ui->labelRotationX->setEnabled(!align2Angles);
+		m_ui->labelRotationY->setEnabled(!align2Angles);
+		m_ui->labelRotationZ->setEnabled(!align2Angles);
+		m_ui->lineEditRotateInclination->setEnabled(align2Angles);
+		m_ui->lineEditRotateOrientation->setEnabled(align2Angles);
+		m_ui->lineEditRotateX->setEnabled(!align2Angles);
+		m_ui->lineEditRotateY->setEnabled(!align2Angles);
+		m_ui->lineEditRotateZ->setEnabled(!align2Angles);
 
-			m_ui->lineEditRotateX->setValue(0);
-			m_ui->lineEditRotateY->setValue(0);
-			m_ui->lineEditRotateZ->setValue(0);
+		m_ui->lineEditRotateX->setValue(0);
+		m_ui->lineEditRotateY->setValue(0);
+		m_ui->lineEditRotateZ->setValue(0);
 
-			if (align2Angles) {
-				m_ui->lineEditRotateInclination->setText( QString("%L1").arg(std::acos(m_normal.m_z)/IBK::DEG2RAD, 0, 'f', 3) );
-				// positive y Richtung = Norden = Orientation 0°
-				// positive x Richtung = Osten = Orientation 90°
+		if (align2Angles) {
+			m_ui->lineEditRotateInclination->setText( QString("%L1").arg(std::acos(m_normal.m_z)/IBK::DEG2RAD, 0, 'f', 3) );
+			// positive y Richtung = Norden = Orientation 0°
+			// positive x Richtung = Osten = Orientation 90°
 
-				double orientation = std::atan2(m_normal.m_x, ( m_normal.m_y == 0. ? 1E-8 : m_normal.m_y ) ) /IBK::DEG2RAD ;
-				m_ui->lineEditRotateOrientation->setText( QString("%L1").arg(orientation < 0 ? ( orientation + 360 ) : orientation, 0, 'f', 3 ) );
-			}
-			else {
-				m_ui->lineEditRotateInclination->setValue(0);
-				m_ui->lineEditRotateOrientation->setValue(0);
-			}
+			double orientation = std::atan2(m_normal.m_x, ( m_normal.m_y == 0. ? 1E-8 : m_normal.m_y ) ) /IBK::DEG2RAD ;
+			m_ui->lineEditRotateOrientation->setText( QString("%L1").arg(orientation < 0 ? ( orientation + 360 ) : orientation, 0, 'f', 3 ) );
+		}
+		else {
+			m_ui->lineEditRotateInclination->setValue(0);
+			m_ui->lineEditRotateOrientation->setValue(0);
+		}
 
-		} break;
+	} break;
 
-		case MT_Scale: {
+	case MT_Scale: {
 
-			if (m_ui->radioButtonScaleResize->isChecked()) {
-				m_ui->labelScaleX->setText("L<sub>X</sub> [m]:");
-				m_ui->labelScaleY->setText("W<sub>Y</sub> [m]:");
-				m_ui->labelScaleZ->setText("H<sub>Z</sub> [m]:");
+		if (m_ui->radioButtonScaleResize->isChecked()) {
+			m_ui->labelScaleX->setText("L<sub>X</sub> [m]:");
+			m_ui->labelScaleY->setText("W<sub>Y</sub> [m]:");
+			m_ui->labelScaleZ->setText("H<sub>Z</sub> [m]:");
 
-				// always local bounding box
-				m_originalValues = m_bbDim[OM_Local];
+			// always local bounding box
+			m_originalValues = m_bbDim[OM_Local];
 
-				m_ui->lineEditScaleX->setEnabled(!IBK::near_equal(m_bbDim[OM_Local].m_x,0.0,1e-6));
-				m_ui->lineEditScaleY->setEnabled(!IBK::near_equal(m_bbDim[OM_Local].m_y,0.0,1e-6));
-				m_ui->lineEditScaleZ->setEnabled(!IBK::near_equal(m_bbDim[OM_Local].m_z,0.0,1e-6));
+			m_ui->lineEditScaleX->setEnabled(!IBK::near_equal(m_bbDim[OM_Local].m_x,0.0,1e-6));
+			m_ui->lineEditScaleY->setEnabled(!IBK::near_equal(m_bbDim[OM_Local].m_y,0.0,1e-6));
+			m_ui->lineEditScaleZ->setEnabled(!IBK::near_equal(m_bbDim[OM_Local].m_z,0.0,1e-6));
 
-			}
-			else {
-				m_ui->labelScaleX->setText("s<sub>X</sub>:");
-				m_ui->labelScaleY->setText("s<sub>Y</sub>:");
-				m_ui->labelScaleZ->setText("s<sub>Z</sub>:");
+		}
+		else {
+			m_ui->labelScaleX->setText("s<sub>X</sub>:");
+			m_ui->labelScaleY->setText("s<sub>Y</sub>:");
+			m_ui->labelScaleZ->setText("s<sub>Z</sub>:");
 
-				m_originalValues = IBKMK::Vector3D( 1,1,1 );
+			m_originalValues = IBKMK::Vector3D( 1,1,1 );
 
-				m_ui->lineEditScaleX->setEnabled(true);
-				m_ui->lineEditScaleY->setEnabled(true);
-				m_ui->lineEditScaleZ->setEnabled(true);
-			}
-			m_ui->lineEditScaleX->setValue(m_originalValues.m_x );
-			m_ui->lineEditScaleY->setValue(m_originalValues.m_y );
-			m_ui->lineEditScaleZ->setValue(m_originalValues.m_z );
-		} break;
+			m_ui->lineEditScaleX->setEnabled(true);
+			m_ui->lineEditScaleY->setEnabled(true);
+			m_ui->lineEditScaleZ->setEnabled(true);
+		}
+		m_ui->lineEditScaleX->setValue(m_originalValues.m_x );
+		m_ui->lineEditScaleY->setValue(m_originalValues.m_y );
+		m_ui->lineEditScaleZ->setValue(m_originalValues.m_z );
+	} break;
 
-		case MT_Copy: {
-			// Nothing for now?
-		} break;
+	case MT_Copy: {
+		// Nothing for now?
+	} break;
 
 	} // switch modification type
 
@@ -1022,35 +1022,35 @@ void SVPropEditGeometry::updateCoordinateSystemLook() {
 	else {
 		// put local coordinate system back into correct transform mode
 		switch (m_ui->stackedWidget->currentIndex()) {
-			case MT_Translate:
-				if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_Translate) {
-					cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_Translate;
-					SVViewStateHandler::instance().m_geometryView->refreshSceneView();
-				}
-				break;
+		case MT_Translate:
+			if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_Translate) {
+				cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_Translate;
+				SVViewStateHandler::instance().m_geometryView->refreshSceneView();
+			}
+			break;
 
-			case MT_Rotate:
-				if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_RotateMask) {
-					cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_RotateMask;
-					SVViewStateHandler::instance().m_geometryView->refreshSceneView();
-				}
-				break;
+		case MT_Rotate:
+			if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_RotateMask) {
+				cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_RotateMask;
+				SVViewStateHandler::instance().m_geometryView->refreshSceneView();
+			}
+			break;
 
-			case MT_Scale:
-				if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_ScaleMask) {
-					cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_ScaleMask;
-					SVViewStateHandler::instance().m_geometryView->refreshSceneView();
-				}
-				break;
+		case MT_Scale:
+			if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_ScaleMask) {
+				cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_ScaleMask;
+				SVViewStateHandler::instance().m_geometryView->refreshSceneView();
+			}
+			break;
 
-			case MT_Trim:
-				if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_None) {
-					cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_None;
-					SVViewStateHandler::instance().m_geometryView->refreshSceneView();
-				}
-				break;
+		case MT_Trim:
+			if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_None) {
+				cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_None;
+				SVViewStateHandler::instance().m_geometryView->refreshSceneView();
+			}
+			break;
 
-			case NUM_MT : ; // just to make compiler happy
+		case NUM_MT : ; // just to make compiler happy
 		}
 	}
 }
@@ -1426,67 +1426,74 @@ void SVPropEditGeometry::on_pushButtonTrimGridLocalXZ_clicked() {
 
 
 void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
-	if (m_trimGrid != nullptr) {
+	if (m_trimGrid == nullptr) {
+		IBK::IBK_Message("Invalid mode to perform trimming!", IBK::MSG_ERROR);
+		return;
+	}
 
-		std::vector<IBKMK::Vector3D> trimGridPoly;
-		trimGridPoly.push_back(m_trimGrid->m_offset);
-		trimGridPoly.push_back(m_trimGrid->m_offset + m_trimGrid->m_localX);
-		trimGridPoly.push_back(m_trimGrid->m_offset + m_trimGrid->localY());
+	/// TRIMMING SUB SURFACES
+	/// 1) Convert all 2D points with axes, offest of parent surfaces
+	/// 2) Trimm all sub-surfaces and parent surface
+	/// 3) Find correct parent surface, since we might have 2 or more now by
+	///		doing point in polygon function etc.
+	/// 4) Translate 3D points back to 2D point by IBKMK::planeCoordinates
+	/// 5) Set sub-surfaces in parent polygon
 
+	std::vector<IBKMK::Vector3D> trimGridPoly;
+	trimGridPoly.push_back(m_trimGrid->m_offset);
+	trimGridPoly.push_back(m_trimGrid->m_offset + m_trimGrid->m_localX);
+	trimGridPoly.push_back(m_trimGrid->m_offset + m_trimGrid->localY());
 
-		std::set<const VICUS::Object*> sel;
-		SVProjectHandler::instance().project().selectObjects(sel, VICUS::Project::SelectionGroups(0x005), true, true);
-		std::string failedTrims = "";
-		int successfulTrims = 0;
+	std::set<const VICUS::Object *> sel;
+	SVProjectHandler::instance().project().selectObjects(sel, VICUS::Project::SelectionGroups(VICUS::Project::SG_Building | VICUS::Project::SG_Obstacle), true, true);
+	std::string failedTrims = "";
+	int successfulTrims = 0;
 
-		VICUS::ComponentInstance compInstance;
-		std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>> trimSurfaces;
+	VICUS::ComponentInstance compInstance;
+	std::map<unsigned int, std::vector<VICUS::Polygon3D>> trimmedPolygons;
 
-		for (const VICUS::Object* o : sel) {
-			const VICUS::Surface * surf = dynamic_cast<const VICUS::Surface*>(o);
-			if (surf != nullptr) {
+	for (const VICUS::Object* o : sel) {
+		const VICUS::Surface * surf = dynamic_cast<const VICUS::Surface*>(o);
+		if (surf == nullptr)
+			continue;
 
-				//const VICUS::Room * room = dynamic_cast<const VICUS::Room*>(surf->m_parent);
-				//if (room != nullptr) {
+		qDebug() << "ID of surface: " << surf->m_id;
 
-				std::vector<IBKMK::Vector3D> polyOne = surf->polygon3D().vertexes();
-				std::vector<IBKMK::Vector3D> polyTwo = trimGridPoly;
+		std::vector<IBKMK::Vector3D> polyOne = surf->polygon3D().vertexes();
+		std::vector<IBKMK::Vector3D> polyTwo = trimGridPoly;
 
-				std::vector<std::vector<IBKMK::Vector3D>> polyInput;
-				polyInput.push_back(polyOne);
+		std::vector<std::vector<IBKMK::Vector3D>> polyInput;
+		polyInput.push_back(polyOne);
 
-				bool trimSuccessful = IBKMK::polyTrim(polyInput, polyTwo);
+		bool trimSuccessful = IBKMK::polyTrim(polyInput, polyTwo);
 
-				if (trimSuccessful) {
-					std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>> trimTuple = std::make_tuple(surf, polyInput);
-					trimSurfaces.push_back(trimTuple);
-					qDebug() << tr("Trimming of surface %1 successful.").arg(surf->info());
-					++successfulTrims;
+		if (trimSuccessful) {
+			std::vector<VICUS::Polygon3D> polys3D;
+			for (const std::vector<IBKMK::Vector3D> &vertexes : polyInput) {
+				if (vertexes.empty())
+					continue;
 
-					/*delete surf:
-					unsigned int rIdx = 0;
-					for (;rIdx<room->m_surfaces.size();++rIdx) {
-						const VICUS::Surface &s = room->m_surfaces[rIdx];
-						if (s.m_id == surf->m_id)
-							break;
-					}
-					const_cast<VICUS::Room*>(room)->m_surfaces.erase(room->m_surfaces.begin()+rIdx); */
-
-				} else {
-					failedTrims.append("\n"+surf->info().toStdString());
-				}
+				polys3D.push_back(VICUS::Polygon3D(vertexes));
 			}
-		}
-		if (failedTrims != "") {
-			QMessageBox::information(this, QString(), "Trimming of the following surfaces failed:" + QString::fromStdString(failedTrims));
-		}
-		if (successfulTrims > 0) {
-			// create a copy of the whole project
-			VICUS::Project projectCopy = SVProjectHandler::instance().project();
-			SVUndoTrimObjects * undo = new SVUndoTrimObjects(tr("Trimming performed."), trimSurfaces, projectCopy);
-			undo->push();
-		}
-	} else IBK::IBK_Message("Invalid mode to perform trimming!", IBK::MSG_ERROR);
+
+			trimmedPolygons[surf->m_id] = polys3D;
+
+			qDebug() << tr("Trimming of surface %1 successful.").arg(surf->info());
+			++successfulTrims;
+
+		} else
+			failedTrims.append("\n"+surf->info().toStdString());
+
+	}
+	if (failedTrims != "") {
+		QMessageBox::information(this, QString(), "Trimming of the following surfaces failed:" + QString::fromStdString(failedTrims));
+	}
+	if (successfulTrims > 0) {
+		// create a copy of the whole project
+		VICUS::Project projectCopy = SVProjectHandler::instance().project();
+		SVUndoTrimObjects * undo = new SVUndoTrimObjects(tr("Trimming performed."), trimmedPolygons, projectCopy);
+		undo->push();
+	}
 }
 
 
