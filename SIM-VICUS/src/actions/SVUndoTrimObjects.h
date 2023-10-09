@@ -43,7 +43,7 @@ public:
 		Mind: surfaces must be triangulated already, if they contain new sub-surfaces.
 	*/
 	SVUndoTrimObjects(const QString & label,
-					  std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>> & trimSurfaces,
+					  std::map<unsigned int, std::vector<VICUS::Polygon3D>>	trimmedPolygons,
 					  const VICUS::Project & newProject);
 
 	virtual void undo();
@@ -51,8 +51,11 @@ public:
 
 private:
 
-	/*! Object copies of surfaces to be deleted and added. */
-	std::vector<std::tuple<const VICUS::Surface*, std::vector<std::vector<IBKMK::Vector3D>>>>	m_trimSurfaces;
+	/*! Object copies of surfaces to be deleted and added.
+		key is id of surface to be trimmed
+		value is vector with newly produced surfaces
+	*/
+	std::map<unsigned int, std::vector<VICUS::Polygon3D>>	m_trimmedPolygons;
 
 	/*! Copies of surface component instances. */
 	//std::vector<VICUS::ComponentInstance>														m_compInstances;
