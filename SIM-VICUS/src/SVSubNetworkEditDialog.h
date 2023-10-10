@@ -98,7 +98,7 @@ private:
 	unsigned int controllerIndex(unsigned int controllerID);
 	/*! Generates new unique ControllerID */
 	unsigned int newControllerID();
-	/*! Convert old Subnetwork to new Subnetwork by copying components out of Database into Subnetwork */
+	/*! Convert old Subnetwork (SIM-VICUS version < 1.1) to new Subnetwork by copying components out of Database into Subnetwork */
 	void convertSubnetwork();
 
 	/*! The UI class. */
