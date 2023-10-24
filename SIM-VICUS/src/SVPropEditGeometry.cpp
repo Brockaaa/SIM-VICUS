@@ -1486,7 +1486,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 	}
 	if (failedTrims != "") {
-		QMessageBox::information(this, QString(), "Trimming of the following surfaces failed:" + QString::fromStdString(failedTrims));
+		QMessageBox::information(this, QString(), tr("Trimming of the following surfaces failed:") + QString::fromStdString(failedTrims));
 	}
 	if (successfulTrims > 0) {
 		// create a copy of the whole project
