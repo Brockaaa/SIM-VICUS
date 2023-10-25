@@ -67,8 +67,8 @@ void SVUndoTrimObjects::redo() {
 			continue;
 
 		VICUS::Surface newSurf(*s);
+		unsigned int id = s->m_id; // needed since pointer will be broken after surfaces are added in room
 		const VICUS::Room* room = dynamic_cast<const VICUS::Room*>(s->m_parent);
-
 		unsigned int nextId = m_project.nextUnusedID();
 
 		std::vector<VICUS::Polygon3D> &polys = it->second;
@@ -96,7 +96,7 @@ void SVUndoTrimObjects::redo() {
 
 		if(room != nullptr) {
 			for (unsigned int i=0; i<room->m_surfaces.size(); ++i) {
-				if (s->m_id == room->m_surfaces[i].m_id) {
+				if (id == room->m_surfaces[i].m_id) {
 					qDebug() << "Removing surface with ID #%1" << s->m_id;
 					const_cast<VICUS::Room *>(room)->m_surfaces.erase(room->m_surfaces.begin() + i);
 					break;
@@ -105,7 +105,7 @@ void SVUndoTrimObjects::redo() {
 		}
 		else {
 			for (unsigned int i=0; i<m_project.m_plainGeometry.m_surfaces.size(); ++i) {
-				if (s->m_id == m_project.m_plainGeometry.m_surfaces[i].m_id) {
+				if (id == m_project.m_plainGeometry.m_surfaces[i].m_id) {
 					qDebug() << "Removing surface with ID #%1" << s->m_id;
 					m_project.m_plainGeometry.m_surfaces.erase(m_project.m_plainGeometry.m_surfaces.begin() + i);
 					break;
