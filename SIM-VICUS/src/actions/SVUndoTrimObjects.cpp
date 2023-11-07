@@ -28,16 +28,18 @@
 
 #include <IBK_assert.h>
 #include "IBKMK_Polygon3D.h"
+#include "IBKMK_3DCalculations.h"
 
 #include <VICUS_Project.h>
 
 SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
-									 std::map<unsigned int, std::vector<VICUS::Polygon3D> > trimmedPolygons,
+									 std::map<unsigned int, std::vector<VICUS::Polygon3D>> trimmedPolygons,
 									 // trimSurfaces is a vector of tuples, each containing a reference to the selected surface of one trim, and the polyInput vector
 									 // which was handed over to the polyTrim method, and therefore contains the trim result surfaces
+									 std::map<unsigned int, std::vector<VICUS::Polygon3D>> trimmedSubsurfaces,
 									 const VICUS::Project & oldProject):
-									/// Kann ich hier wirklich einen pointer nutzen? Wenn ich surface* lösche, geht ja kein undo mehr
 	m_trimmedPolygons(trimmedPolygons),
+	m_trimmedSubsurfaces(trimmedSubsurfaces),
 	m_project(oldProject)
 
 {
@@ -78,11 +80,43 @@ void SVUndoTrimObjects::redo() {
 
 		// iterate over different trim result surfaces
 		for (unsigned int i=0; i<polys.size(); ++i) {
-
+			qDebug() << "POLY";
 			newSurf.m_id = nextId++;
 			newSurf.m_displayName = QString::fromStdString(surfDisplayName + "[" + std::to_string(i+1) + "]");
 			newSurf.setPolygon3D(polys[i]);
-			newSurf.setSubSurfaces(std::vector<VICUS::SubSurface>());
+			std::vector<VICUS::SubSurface> tempSubsurfaces;
+
+			// Add all subsurfaces of former (untrimmed) surface, whose centerpoint is contained in this trim result
+			for (unsigned int i = 0; i < m_trimmedSubsurfaces[it->first].size(); ++i) {
+
+				IBKMK::Vector3D subPolyCenter = IBKMK::Polygon3D(m_trimmedSubsurfaces[it->first][i]).centerPoint();
+				//qDebug()<< subPolyCenter.m_x << " | " << subPolyCenter.m_y << " | " << subPolyCenter.m_z;
+
+				// if any of the former surface's (trimmed) subsurfaces have their center point within this trimresult surface
+				if (IBKMK::coplanarPointInPolygon3D(polys[i].vertexes(), subPolyCenter) == 1) {
+					qDebug() << "Center Point in polygon"; /// TODO!!! This always holds true, even though it shouldn't
+
+					// Transform subsurface back to 2D
+					std::vector<IBKMK::Vector2D> aux2DPolygon(m_trimmedSubsurfaces[it->first][i].vertexes().size());
+
+					// iterate over vertices of 3d subsurface
+					for (unsigned int j = 0; j < m_trimmedSubsurfaces[it->first][i].vertexes().size(); ++j) {
+						const IBKMK::Vector3D & auxPoint3d = m_trimmedSubsurfaces[it->first][i].vertexes()[j];
+
+						double xCoord = 0;
+						double yCoord = 0;
+						IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), auxPoint3d, xCoord, yCoord);
+						aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
+					}
+					VICUS::SubSurface tempSubsurface;
+					tempSubsurface.m_polygon2D = aux2DPolygon;
+					tempSubsurface.m_displayName = "test" + QString::fromStdString(std::to_string(nextId)); /// TODO!!!!!
+					tempSubsurface.m_color = QColor("#206000"); /// TODOO!!!!!
+					tempSubsurface.m_id = nextId++;
+					tempSubsurfaces.push_back(tempSubsurface);
+				}
+			}
+			newSurf.setSubSurfaces(tempSubsurfaces);
 
 			if (room != nullptr) {
 				// add surface to room surfaces

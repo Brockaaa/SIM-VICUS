@@ -44,6 +44,7 @@ public:
 	*/
 	SVUndoTrimObjects(const QString & label,
 					  std::map<unsigned int, std::vector<VICUS::Polygon3D>>	trimmedPolygons,
+					  std::map<unsigned int, std::vector<VICUS::Polygon3D>>	trimmedSubsurfaces,
 					  const VICUS::Project & newProject);
 
 	virtual void undo();
@@ -56,6 +57,7 @@ private:
 		value is vector with newly produced surfaces
 	*/
 	std::map<unsigned int, std::vector<VICUS::Polygon3D>>	m_trimmedPolygons;
+	std::map<unsigned int, std::vector<VICUS::Polygon3D>>	m_trimmedSubsurfaces;
 
 	/*! Copies of surface component instances. */
 	//std::vector<VICUS::ComponentInstance>														m_compInstances;

@@ -1433,7 +1433,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 	/// TRIMMING SUB SURFACES
 	/// 1) Convert all 2D points with axes, offest of parent surfaces
-	/// 2) Trimm all sub-surfaces and parent surface
+	/// 2) Trim all sub-surfaces and parent surface
 	/// 3) Find correct parent surface, since we might have 2 or more now by
 	///		doing point in polygon function etc.
 	/// 4) Translate 3D points back to 2D point by IBKMK::planeCoordinates
@@ -1451,6 +1451,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 	VICUS::ComponentInstance compInstance;
 	std::map<unsigned int, std::vector<VICUS::Polygon3D>> trimmedPolygons;
+	std::map<unsigned int, std::vector<VICUS::Polygon3D>> trimmedSubsurfaces;
 
 	for (const VICUS::Object* o : sel) {
 		const VICUS::Surface * surf = dynamic_cast<const VICUS::Surface*>(o);
@@ -1469,6 +1470,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 		if (trimSuccessful) {
 			std::vector<VICUS::Polygon3D> polys3D;
+			std::vector<VICUS::Polygon3D> subsurfaces3D;
 			for (const std::vector<IBKMK::Vector3D> &vertexes : polyInput) {
 				if (vertexes.empty())
 					continue;
@@ -1478,20 +1480,79 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 			trimmedPolygons[surf->m_id] = polys3D;
 
-			qDebug() << tr("Trimming of surface %1 successful.").arg(surf->info());
+			qDebug() << QString("Trimming of surface %1 successful.").arg(surf->info());
 			++successfulTrims;
 
-		} else
-			failedTrims.append("\n"+surf->info().toStdString());
+
+
+
+			// For each subsurface of the surface
+			for (const VICUS::SubSurface & subS : surf->subSurfaces()) {
+				//qDebug() << "has subsurface" << subS.m_id;
+				const IBKMK::Vector3D & offset3D = surf->polygon3D().offset();
+				const std::vector<IBKMK::Vector2D> & verts = subS.m_polygon2D.vertexes();
+
+				// Transforming 2d SubSurface into 3d surface
+				std::vector<IBKMK::Vector3D> aux3DPolygon(verts.size());
+
+				for (unsigned int i = 0; i < verts.size(); ++i) {
+					const IBKMK::Vector2D & point2d = verts[i];
+					aux3DPolygon[i] = offset3D + point2d.m_x * surf->polygon3D().localX() +
+												 point2d.m_y * surf->polygon3D().localY();
+				}
+
+
+				std::vector<std::vector<IBKMK::Vector3D>> subsPolyInput;
+				subsPolyInput.push_back(aux3DPolygon);
+				bool subsTrimSuccessful = IBKMK::polyTrim(subsPolyInput, polyTwo);
+
+				if (subsTrimSuccessful) {
+					// subSurface trimmed, add results to corresponding parent surfaces
+
+					for (const std::vector<IBKMK::Vector3D> &subVertexes : subsPolyInput) {
+						if (subVertexes.empty())
+							continue;
+
+						subsurfaces3D.push_back(VICUS::Polygon3D(subVertexes));
+
+						/*   /// USE TO SEE THE RESULTING SUBSURFACES (for debugging)
+						VICUS::Surface s;
+						s.setPolygon3D(subVertexes);
+						unsigned int nextId = project().nextUnusedID();
+						s.m_id = nextId;
+						s.m_displayName = "test";
+						s.m_displayColor = QColor("#206000");
+						s.m_color = QColor("#206000");
+						SVUndoAddSurface * undo = new SVUndoAddSurface("added window as 3d", s, 0);
+						undo->push();
+						*/
+					}
+
+					trimmedPolygons[surf->m_id] = polys3D;
+
+					qDebug() << QString("Trimming of surface %1 successful.").arg(surf->info());
+					++successfulTrims;
+				} else {
+					// subSurface not trimmed, just add entire surface to one of the parent surfaces
+					subsurfaces3D.push_back(VICUS::Polygon3D(aux3DPolygon));
+				}
+			}
+			trimmedSubsurfaces[surf->m_id] = subsurfaces3D;
+
+		} //else
+			//failedTrims.append("\n"+surf->info().toStdString());
 
 	}
-	if (failedTrims != "") {
+	/*if (failedTrims != "") {
+		// This is unintended behaviour as not all surfaces of a building intersect with the trimming grid, however this should not be treated as an "error".
+		// This could still be used for debugging.
+
 		QMessageBox::information(this, QString(), tr("Trimming of the following surfaces failed:") + QString::fromStdString(failedTrims));
-	}
+	}*/
 	if (successfulTrims > 0) {
 		// create a copy of the whole project
 		VICUS::Project projectCopy = SVProjectHandler::instance().project();
-		SVUndoTrimObjects * undo = new SVUndoTrimObjects(tr("Trimming performed."), trimmedPolygons, projectCopy);
+		SVUndoTrimObjects * undo = new SVUndoTrimObjects(tr("Trimming performed."), trimmedPolygons, trimmedSubsurfaces, projectCopy);
 		undo->push();
 	}
 }
