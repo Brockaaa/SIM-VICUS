@@ -110,7 +110,7 @@ void SVUndoTrimObjects::redo() {
 					if (IBKMK::pointInPolygon(aux2DPolygon, subPolyCenter2D) == 1) {
 
 						// Transform subsurface back to 2D
-						std::vector<IBKMK::Vector2D> aux2DPolygon(m_trimmedSubsurfaces[it->first][k].vertexes().size());
+						std::vector<IBKMK::Vector2D> aux2DPolygon;
 
 						// iterate over vertices of 3d subsurface
 						for (unsigned int l = 0; l < m_trimmedSubsurfaces[it->first][k].vertexes().size(); ++l) {
@@ -124,7 +124,6 @@ void SVUndoTrimObjects::redo() {
 						tempSubsurface.m_color = QColor("#206000"); /// TODOO!!!!!
 						tempSubsurface.m_id = nextId++;
 						tempSubsurfaces.push_back(tempSubsurface);
-
 					}
 				}
 				newSurf.setSubSurfaces(tempSubsurfaces);
