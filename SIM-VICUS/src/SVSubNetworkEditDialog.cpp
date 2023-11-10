@@ -8,15 +8,19 @@
 #include "SVNetworkControllerEditDialog.h"
 #include "SVDatabase.h"
 #include "SVSettings.h"
+#include "SVProjectHandler.h"
 
 #include <queue>
 #include <QScreen>
 #include <QKeyEvent>
+#include <QDir>
 
 #include <NANDRAD_HydraulicNetworkControlElement.h>
 #include <NANDRAD_HydraulicNetworkComponent.h>
 
 #include <IBK_MultiLanguageString.h>
+
+#include <QtExt_Directories.h>
 
 #include <VICUS_BMNetwork.h>
 #include <VICUS_BMBlock.h>
@@ -88,6 +92,7 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &SVSubNetworkEditDialog::on_buttonBox_accepted);
 	connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &SVSubNetworkEditDialog::on_buttonBox_rejected);
 	connect(m_ui->nameLineEdit, &QLineEdit::textChanged, this, &SVSubNetworkEditDialog::on_NameTextChanged);
+	connect(&SVProjectHandler::instance(), &SVProjectHandler::updateSubnetworkScreenshots, this, &SVSubNetworkEditDialog::on_projectSaved);
 }
 
 SVSubNetworkEditDialog::~SVSubNetworkEditDialog()
@@ -383,7 +388,23 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 	if (!checkAcceptedNetwork())
 		return;
 
-	// else: we transfer the edited network
+	m_sceneManager->clearSelection();
+
+	// create splash screen
+	QPixmap p = m_sceneManager->generatePixmap(QSize(815, 480));
+	QString thumbNailPath = QtExt::Directories::userDataDir()  + "/thumbs";
+	if (!QDir(thumbNailPath).exists())
+		QDir().mkdir(thumbNailPath);
+
+	QString thumbName = SVProjectHandler::instance().projectFile();
+	thumbName.replace("/", "_");
+	thumbName.replace("\\", "_");
+	thumbName.replace(":", "_");
+	QString thumbPath = QtExt::Directories::userDataDir()  + "/thumbs/" + "~SN" + thumbName + QString::number(m_subNetwork->m_id) + ".png";
+	p.save(thumbPath);
+	qDebug() << "Saved at: " << thumbPath;
+
+	// we transfer the edited network
 	m_subNetwork->m_graphicalNetwork = m_sceneManager->network();
 	m_subNetwork->m_elements.clear();
 	m_subNetwork->m_components.clear();
@@ -507,12 +528,7 @@ void SVSubNetworkEditDialog::connectorSelectedEvent(const QString & sourceSocket
 {
 	// if selection changes from block to connector, selectionClearedEvent is not called, so we do it here
 	selectionClearedEvent();
-	// if a connector is selected, check if it is connected to a ConnectorBlock, if not, enable deletion of connector
-	if(sourceSocketName.contains(VICUS::CONNECTORBLOCK_NAME) || targetSocketName.contains(VICUS::CONNECTORBLOCK_NAME)){
-		m_ui->removeButton->setEnabled(false);
-	} else{
-		m_ui->removeButton->setEnabled(true);
-	}
+	m_ui->removeButton->setEnabled(true);
 }
 
 
@@ -562,8 +578,11 @@ void SVSubNetworkEditDialog::on_newBlockAdded(VICUS::BMBlock *block, unsigned in
 void SVSubNetworkEditDialog::keyPressEvent(QKeyEvent *event)
 {
 	if (event->key() == Qt::Key_Delete) {
-		if(m_sceneManager->selectedBlocks().size() == 1){
+		if(m_sceneManager->selectedBlocks().size() >= 1){
 			m_sceneManager->removeSelectedBlocks();
+		}
+		else if(m_sceneManager->selectedConnector() != nullptr){
+			m_sceneManager->removeConnector(m_sceneManager->selectedConnector());
 		}
 	}
 }
@@ -797,5 +816,22 @@ void SVSubNetworkEditDialog::on_removeFromUserDBButton_clicked()
 	m_senderTable->clearSelection();
 	m_db->m_networkComponents.remove(entry.m_id);
 	updateToolBoxPages();
+}
+
+void SVSubNetworkEditDialog::on_projectSaved()
+{
+	QDir directory = QtExt::Directories::userDataDir() + "/thumbs/";
+	QStringList filter;
+	filter << "~SN*";
+	directory.setNameFilters(filter);
+
+	QStringList fileList = directory.entryList();
+	for(QString file : fileList){
+		qDebug() << "Files found: " << file;
+		QString oldFileName = file;
+		int index = file.indexOf("~SN");
+		file.remove(index, 1);
+		directory.rename(oldFileName, file);
+	}
 }
 

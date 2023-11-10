@@ -2,6 +2,7 @@
 
 #include "SVConstants.h"
 #include "SVStyle.h"
+#include "SVProjectHandler.h"
 
 #include <QIcon>
 #include <QFont>
@@ -137,7 +138,17 @@ QModelIndex SVDBSubNetworkTableModel::addNewItem() {
 
 	beginInsertRows(QModelIndex(), rowCount(), rowCount());
 	unsigned int id = m_db->m_subNetworks.add( bc );
+
+
+	// create new splash screen
+	QString currentPath = QFileInfo(SVProjectHandler::instance().projectFile()).filePath();
+	QPixmap pixmap(":/gfx/modeltypeicons/defaultSplashscreen.png");
+	pixmap = pixmap.scaled(815, 480, Qt::KeepAspectRatio);
+	pixmap.save(currentPath + QString::number(id) + QString(".png"));
+	qDebug() << "Saved at: " << currentPath + QString::number(id) + QString(".png");
+
 	endInsertRows();
+
 	QModelIndex idx = indexById(id);
 	return idx;
 }
@@ -165,6 +176,11 @@ void SVDBSubNetworkTableModel::deleteItem(const QModelIndex & index) {
 		return;
 	unsigned int id = data(index, Role_Id).toUInt();
 	beginRemoveRows(QModelIndex(), index.row(), index.row());
+
+	//remove splash screen
+	QString currentPath = QFileInfo(SVProjectHandler::instance().projectFile()).filePath();
+	QFile::remove(currentPath + QString::number(id) + QString(".png"));
+
 	m_db->m_subNetworks.remove(id);
 	endRemoveRows();
 }

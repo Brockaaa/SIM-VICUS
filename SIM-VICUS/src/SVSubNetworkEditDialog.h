@@ -60,6 +60,8 @@ private slots:
 	/*! gets called when removeFromDBButton is clicked,
 	 *  removes selected Component from DB if it is not builtIn */
 	void on_removeFromUserDBButton_clicked();
+	/*! updates names of screenshots of subnetworks when project is saved */
+	void on_projectSaved();
 
 private:
 	/*! Connected to slot newBlockSelected() in SVBMSceneManager, updates the widgets displaying informations of selected Block.

@@ -45,35 +45,17 @@ private slots:
 
     void on_pushButtonColor_clicked();
 
-    void on_tableWidgetElements_itemSelectionChanged();
-
-    void on_toolButtonEditComponent_clicked();
-
-    void on_toolButtonEditController_clicked();
-
     void on_lineEditSubNetworkName_editingFinished();
 
-    void on_toolButtonAdd_clicked();
-
-    void on_toolButtonRemove_clicked();
-
-    void on_checkBoxElementHasHeatExchange_clicked(bool checked);
-
-    void on_toolButtonRemoveController_clicked();
-
-    void on_tableWidgetElements_itemChanged(QTableWidgetItem *item);
-
     void on_editSubNetworkButton_clicked();
+
+    void on_subNetworkEditDialog_closed(int result);
 
 private:
     /*! Set up the modified variable of the model to true. */
     void modelModify();
 
     void updateTableWidget();
-
-    void updateElementProperties();
-
-    void setInletOutletIds();
 
 
     Ui::SVDBSubNetworkEditWidget			*m_ui;

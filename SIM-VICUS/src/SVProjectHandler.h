@@ -282,6 +282,9 @@ signals:
 	*/
 	void updateActions();
 
+	/*! Emitted from saveProject(), connected to SVSubNetworkEditDialog to update screenshots of Subnetworks */
+	void updateSubnetworkScreenshots();
+
 	/*! A signal emitted from addToRecentFiles()
 
 		Updates the menu entries in the 'Recent Projects' submenu.

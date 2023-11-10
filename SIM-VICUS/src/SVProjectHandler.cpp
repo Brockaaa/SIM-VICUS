@@ -526,6 +526,8 @@ SVProjectHandler::SaveResult SVProjectHandler::saveProject(QWidget * parent, con
 	m_modified = false;
 	// signal UI to update project status
 	emit updateActions();
+	// signal SVSubNetworkEditDialog to update screenshots of subnetworks
+	emit updateSubnetworkScreenshots();
 
 	// add project file name to recent file list
 	if (addToRecentFilesList)
