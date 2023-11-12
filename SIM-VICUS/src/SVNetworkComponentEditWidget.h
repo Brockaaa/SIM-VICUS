@@ -73,10 +73,6 @@ public:
 
 
 private slots:
-	void on_lineEditName_editingFinished();
-
-	void on_pushButtonColor_colorChanged();
-
 	void on_tableWidgetParameters_cellChanged(int row, int column);
 
 	void on_toolButtonSchedule1_clicked();

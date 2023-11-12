@@ -63,12 +63,15 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	m_ui->scrollArea->setMaximumHeight(height-20);
 
 
+	m_sceneManager = qobject_cast<SVBMSceneManager*>(m_ui->viewWidget->scene());
+	setupSubNetwork(subNetwork);
+
+	updateToolBoxPages();
+
 	// populate tool box
 	m_ui->tbox->blockSignals(true);
 	m_ui->tbox->m_enableOpenMultiplePages = true;
 	m_ui->tbox->layout()->setMargin(0);
-
-	updateToolBoxPages();
 
 	m_ui->tbox->addPage(tr("Pipes"), m_tables[0]);
 	m_ui->tbox->addPage(tr("Pumps"), m_tables[1]);
@@ -82,8 +85,8 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 
 	m_ui->controllerLineEdit->setDisabled(true);
 
-	m_sceneManager = qobject_cast<SVBMSceneManager*>(m_ui->viewWidget->scene());
-	setupSubNetwork(subNetwork);
+
+
 
 	connect(m_sceneManager, &SVBMSceneManager::newBlockSelected, this, &SVSubNetworkEditDialog::blockSelectedEvent);
 	connect(m_sceneManager, &SVBMSceneManager::newConnectorSelected, this, &SVSubNetworkEditDialog::connectorSelectedEvent);
@@ -660,6 +663,33 @@ void SVSubNetworkEditDialog::convertSubnetwork()
 	}
 }
 
+void SVSubNetworkEditDialog::openDBElementNamingDialog(unsigned int componentID)
+{
+	FUNCID(SVSubNetworkEditDialog::openDBElementNamingDialog);
+
+	// open dialog
+	QDialog *namingDialog = new QDialog(this);
+	namingDialog->setWindowTitle(tr("Element naming"));
+	QVBoxLayout *layout = new QVBoxLayout(namingDialog);
+	QLabel *label = new QLabel(tr("Please enter a name for the element"));
+	layout->addWidget(label);
+	QLineEdit *lineEdit = new QLineEdit();
+	layout->addWidget(lineEdit);
+	QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+	layout->addWidget(buttonBox);
+	connect(buttonBox, SIGNAL(accepted()), namingDialog, SLOT(accept()));
+	connect(buttonBox, SIGNAL(rejected()), namingDialog, SLOT(reject()));
+	// get name from DB
+	QString name = QString::fromStdString(m_db->m_networkComponents[componentID]->m_displayName.string(IBK::MultiLanguageString::m_language));
+	lineEdit->setText(name);
+	// show dialog
+	if(namingDialog->exec() == QDialog::Accepted){
+		// save name to DB
+		m_db->m_networkComponents[componentID]->m_displayName.setString(lineEdit->text().toStdString(), IBK::MultiLanguageString::m_language);
+	}
+	delete namingDialog;
+}
+
 
 void SVSubNetworkEditDialog::on_removeButton_clicked()
 {
@@ -778,13 +808,16 @@ void SVSubNetworkEditDialog::on_componentSelected()
 
 	if(row == -1){
 		m_ui->removeFromUserDBButton->setEnabled(false);
+		m_ui->changeDBElementNameButton->setEnabled(false);
 		return;
 	}
 	SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry entry = SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry(m_senderTable->m_elementList[(unsigned int)row]);
 	if(entry.m_id != VICUS::INVALID_ID){
 		m_ui->removeFromUserDBButton->setEnabled(!m_db->m_networkComponents[entry.m_id]->m_builtIn);
+		m_ui->changeDBElementNameButton->setEnabled(!m_db->m_networkComponents[entry.m_id]->m_builtIn);
 	} else {
 		m_ui->removeFromUserDBButton->setEnabled(false);
+		m_ui->changeDBElementNameButton->setEnabled(false);
 	}
 }
 
@@ -818,6 +851,21 @@ void SVSubNetworkEditDialog::on_removeFromUserDBButton_clicked()
 	updateToolBoxPages();
 }
 
+void SVSubNetworkEditDialog::on_changeDBElementNameButton_clicked()
+{
+
+	if(m_senderTable == nullptr)
+		return;
+	int row = m_senderTable->currentRow();
+	if(row == -1)
+		return;
+
+	SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry entry = SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry(m_senderTable->m_elementList[(unsigned int)row]);
+
+	openDBElementNamingDialog(entry.m_id);
+	updateToolBoxPages();
+}
+
 void SVSubNetworkEditDialog::on_projectSaved()
 {
 	QDir directory = QtExt::Directories::userDataDir() + "/thumbs/";
@@ -827,11 +875,10 @@ void SVSubNetworkEditDialog::on_projectSaved()
 
 	QStringList fileList = directory.entryList();
 	for(QString file : fileList){
-		qDebug() << "Files found: " << file;
 		QString oldFileName = file;
 		int index = file.indexOf("~SN");
 		file.remove(index, 1);
+		directory.remove(file);
 		directory.rename(oldFileName, file);
 	}
 }
-

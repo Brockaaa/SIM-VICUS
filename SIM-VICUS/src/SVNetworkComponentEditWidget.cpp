@@ -55,11 +55,6 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 	m_ui->setupUi(this);
 	m_db = SVSettings::instance().m_db;
 
-	m_ui->lineEditName->initLanguages(QtExt::LanguageHandler::instance().langId().toStdString(),THIRD_LANGUAGE, true);
-	m_ui->lineEditName->setDialog3Caption(tr("Component identification name"));
-
-	m_ui->pushButtonColor->setDontUseNativeDialog(SVSettings::instance().m_dontUseNativeDialogs);
-
 	// no headers
 	m_ui->tableWidgetParameters->horizontalHeader()->setVisible(false);
 	m_ui->tableWidgetParameters->verticalHeader()->setVisible(false);
@@ -89,7 +84,6 @@ void SVNetworkComponentEditWidget::updateInput(VICUS::NetworkComponent* componen
 //	FUNCID(SVDBNetworkComponentEditWidget::updateInput);
 
 	// clear input controls
-	m_ui->lineEditName->setString(IBK::MultiLanguageString());
 	m_ui->lineEditSchedule1->clear();
 	m_ui->lineEditSchedule1->setEnabled(false);
 	m_ui->lineEditSchedule2->clear();
@@ -121,11 +115,6 @@ void SVNetworkComponentEditWidget::update()
 {
 
 	// now update the GUI controls
-	m_ui->lineEditName->setString(m_current->m_displayName);
-
-	m_ui->pushButtonColor->blockSignals(true);
-	m_ui->pushButtonColor->setColor(m_current->m_color);
-	m_ui->pushButtonColor->blockSignals(false);
 
 	NANDRAD::HydraulicNetworkComponent::ModelType nandradModelType =
 		VICUS::NetworkComponent::nandradNetworkComponentModelType(m_current->m_modelType);
@@ -602,24 +591,6 @@ void SVNetworkComponentEditWidget::updatePolynomPlot() {
 	}
 
 
-}
-
-
-void SVNetworkComponentEditWidget::on_lineEditName_editingFinished(){
-	Q_ASSERT(m_current != nullptr);
-
-	if (m_current->m_displayName != m_ui->lineEditName->string()) {
-		m_current->m_displayName = m_ui->lineEditName->string();
-	}
-}
-
-
-void SVNetworkComponentEditWidget::on_pushButtonColor_colorChanged() {
-	Q_ASSERT(m_current != nullptr);
-
-	if (m_current->m_color != m_ui->pushButtonColor->color()) {
-		m_current->m_color = m_ui->pushButtonColor->color();
-	}
 }
 
 

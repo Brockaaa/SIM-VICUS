@@ -60,6 +60,9 @@ private slots:
 	/*! gets called when removeFromDBButton is clicked,
 	 *  removes selected Component from DB if it is not builtIn */
 	void on_removeFromUserDBButton_clicked();
+	/*! get called when changeDBElementNameButton is cliclked
+	 * calls small dialog to change name */
+	void on_changeDBElementNameButton_clicked();
 	/*! updates names of screenshots of subnetworks when project is saved */
 	void on_projectSaved();
 
@@ -102,6 +105,8 @@ private:
 	unsigned int newControllerID();
 	/*! Convert old Subnetwork (SIM-VICUS version < 1.1) to new Subnetwork by copying components out of Database into Subnetwork */
 	void convertSubnetwork();
+	/*! Opens a dialog to change or assign the name of a component */
+	void openDBElementNamingDialog(unsigned int componentID);
 
 	/*! The UI class. */
 	Ui::SVSubNetworkEditDialog									*m_ui;
