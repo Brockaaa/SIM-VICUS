@@ -271,6 +271,20 @@ void SVProjectHandler::loadProject(QWidget * parent, QString fileName,	bool sile
 	} while(m_reload);
 
 	try {
+
+		// delete temporary Subnetwork thumbnails
+		QDir directory = QtExt::Directories::userDataDir() + "/thumbs/";
+		QStringList filter;
+		filter << "~SN*";
+		directory.setNameFilters(filter);
+
+		QStringList fileList = directory.entryList();
+		for(QString file : fileList){
+			qDebug() << "Files found: " << file;
+			directory.remove(file);
+		}
+
+
 		// once the project has been read, perform "post-read" actions
 		bool have_modified_project = false;
 
@@ -527,7 +541,7 @@ SVProjectHandler::SaveResult SVProjectHandler::saveProject(QWidget * parent, con
 	// signal UI to update project status
 	emit updateActions();
 	// signal SVSubNetworkEditDialog to update screenshots of subnetworks
-	emit updateSubnetworkScreenshots();
+	emit updateSubnetworkThumbnails();
 
 	// add project file name to recent file list
 	if (addToRecentFilesList)

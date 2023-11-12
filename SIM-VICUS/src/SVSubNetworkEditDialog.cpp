@@ -92,7 +92,7 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &SVSubNetworkEditDialog::on_buttonBox_accepted);
 	connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &SVSubNetworkEditDialog::on_buttonBox_rejected);
 	connect(m_ui->nameLineEdit, &QLineEdit::textChanged, this, &SVSubNetworkEditDialog::on_NameTextChanged);
-	connect(&SVProjectHandler::instance(), &SVProjectHandler::updateSubnetworkScreenshots, this, &SVSubNetworkEditDialog::on_projectSaved);
+	connect(&SVProjectHandler::instance(), &SVProjectHandler::updateSubnetworkThumbnails, this, &SVSubNetworkEditDialog::on_projectSaved);
 }
 
 SVSubNetworkEditDialog::~SVSubNetworkEditDialog()
