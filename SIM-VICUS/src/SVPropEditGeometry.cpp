@@ -1451,7 +1451,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 	VICUS::ComponentInstance compInstance;
 	std::map<unsigned int, std::vector<VICUS::Polygon3D>> trimmedPolygons;
-	std::map<unsigned int, std::vector<VICUS::Polygon3D>> trimmedSubsurfaces;
+	std::map<unsigned int, std::vector<std::tuple<VICUS::Polygon3D, QString, QColor>>>  trimmedSubsurfaces;
 
 	for (const VICUS::Object* o : sel) {
 		const VICUS::Surface * surf = dynamic_cast<const VICUS::Surface*>(o);
@@ -1470,7 +1470,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 		if (trimSuccessful) {
 			std::vector<VICUS::Polygon3D> polys3D;
-			std::vector<VICUS::Polygon3D> subsurfaces3D;
+			std::vector<std::tuple<VICUS::Polygon3D, QString, QColor>> subsurfaces3D;
 			for (const std::vector<IBKMK::Vector3D> &vertexes : polyInput) {
 				if (vertexes.empty())
 					continue;
@@ -1482,9 +1482,6 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 			qDebug() << QString("Trimming of surface %1 successful.").arg(surf->info());
 			++successfulTrims;
-
-
-
 
 			// For each subsurface of the surface
 			for (const VICUS::SubSurface & subS : surf->subSurfaces()) {
@@ -1501,19 +1498,17 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 												 point2d.m_y * surf->polygon3D().localY();
 				}
 
-
 				std::vector<std::vector<IBKMK::Vector3D>> subsPolyInput;
 				subsPolyInput.push_back(aux3DPolygon);
 				bool subsTrimSuccessful = IBKMK::polyTrim(subsPolyInput, polyTwo);
 
 				if (subsTrimSuccessful) {
 					// subSurface trimmed, add results to corresponding parent surfaces
-
+					int index = 1;
 					for (const std::vector<IBKMK::Vector3D> &subVertexes : subsPolyInput) {
 						if (subVertexes.empty())
 							continue;
-
-						subsurfaces3D.push_back(VICUS::Polygon3D(subVertexes));
+						subsurfaces3D.push_back(std::make_tuple(subVertexes, subS.m_displayName + "[" + QString::fromStdString(std::to_string(index++)) + "]", subS.m_color ));
 
 						/*   /// USE TO SEE THE RESULTING SUBSURFACES (for debugging)
 						VICUS::Surface s;
@@ -1534,7 +1529,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 					++successfulTrims;
 				} else {
 					// subSurface not trimmed, just add entire surface to one of the parent surfaces
-					subsurfaces3D.push_back(VICUS::Polygon3D(aux3DPolygon));
+					subsurfaces3D.push_back(std::make_tuple(aux3DPolygon, subS.m_displayName, subS.m_color));
 				}
 			}
 			trimmedSubsurfaces[surf->m_id] = subsurfaces3D;

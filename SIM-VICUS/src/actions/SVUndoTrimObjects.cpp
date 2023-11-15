@@ -37,7 +37,7 @@ SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
 									 std::map<unsigned int, std::vector<VICUS::Polygon3D>> trimmedPolygons,
 									 // trimSurfaces is a vector of tuples, each containing a reference to the selected surface of one trim, and the polyInput vector
 									 // which was handed over to the polyTrim method, and therefore contains the trim result surfaces
-									 std::map<unsigned int, std::vector<VICUS::Polygon3D>> trimmedSubsurfaces,
+									 std::map<unsigned int, std::vector<std::tuple<VICUS::Polygon3D, QString, QColor>>> trimmedSubsurfaces,
 									 const VICUS::Project & oldProject):
 	m_trimmedPolygons(trimmedPolygons),
 	m_trimmedSubsurfaces(trimmedSubsurfaces),
@@ -101,7 +101,7 @@ void SVUndoTrimObjects::redo() {
 
 				// Add all subsurfaces of former (untrimmed) surface, whose centerpoint is contained in this trim result
 				for (unsigned int k = 0; k < m_trimmedSubsurfaces[it->first].size(); ++k) {
-					IBKMK::Vector3D subPolyCenter = IBKMK::Polygon3D(m_trimmedSubsurfaces[it->first][k]).centerPoint();
+					IBKMK::Vector3D subPolyCenter = IBKMK::Polygon3D(std::get<0>(m_trimmedSubsurfaces[it->first][k])).centerPoint();
 
 					// if any of the former surface's (trimmed) subsurfaces have their center point within this trimresult surface
 					IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), subPolyCenter, xCoord, yCoord);
@@ -113,15 +113,15 @@ void SVUndoTrimObjects::redo() {
 						std::vector<IBKMK::Vector2D> aux2DPolygon;
 
 						// iterate over vertices of 3d subsurface
-						for (unsigned int l = 0; l < m_trimmedSubsurfaces[it->first][k].vertexes().size(); ++l) {
-							IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), m_trimmedSubsurfaces[it->first][k].vertexes()[l], xCoord, yCoord);
+						for (unsigned int l = 0; l < std::get<0>(m_trimmedSubsurfaces[it->first][k]).vertexes().size(); ++l) {
+							IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), std::get<0>(m_trimmedSubsurfaces[it->first][k]).vertexes()[l], xCoord, yCoord);
 							aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
 							qDebug() << xCoord << " | " << yCoord;
 						}
 						VICUS::SubSurface tempSubsurface;
 						tempSubsurface.m_polygon2D = aux2DPolygon;
-						tempSubsurface.m_displayName = "test" + QString::fromStdString(std::to_string(nextId)); /// TODO!!!!!
-						tempSubsurface.m_color = QColor("#206000"); /// TODOO!!!!!
+						tempSubsurface.m_displayName = std::get<1>(m_trimmedSubsurfaces[it->first][k]);
+						tempSubsurface.m_color = std::get<2>(m_trimmedSubsurfaces[it->first][k]);
 						tempSubsurface.m_id = nextId++;
 						tempSubsurfaces.push_back(tempSubsurface);
 					}
