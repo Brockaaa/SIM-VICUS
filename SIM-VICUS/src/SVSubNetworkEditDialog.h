@@ -99,14 +99,16 @@ private:
 	unsigned int componentIndex(unsigned int componentID);
 	/*! Generates new unique ComponentID */
 	unsigned int newComponentID();
-	/*! Takes tje controllerID of a controller and returns the index in the controller Vector */
+	/*! Takes the controllerID of a controller and returns the index in the controller Vector */
 	unsigned int controllerIndex(unsigned int controllerID);
 	/*! Generates new unique ControllerID */
 	unsigned int newControllerID();
 	/*! Convert old Subnetwork (SIM-VICUS version < 1.1) to new Subnetwork by copying components out of Database into Subnetwork */
 	void convertSubnetwork();
 	/*! Opens a dialog to change or assign the name of a component */
-	void openDBElementNamingDialog(unsigned int componentID);
+	void openDBComponentNamingDialog(VICUS::NetworkComponent* component);
+	/*! Checks if the data in NetworkElement is compatible with the data in BMNetwork, called in updateNetwork() */
+	bool checkValidityOfNetwork();
 
 	/*! The UI class. */
 	Ui::SVSubNetworkEditDialog									*m_ui;

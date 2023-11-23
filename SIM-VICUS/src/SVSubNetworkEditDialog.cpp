@@ -202,6 +202,8 @@ void SVSubNetworkEditDialog::updateNetwork() {
 	m_networkComponents = m_subNetwork->m_components;
 	m_networkControllers = m_subNetwork->m_controllers;
 
+	Q_ASSERT(checkValidityOfNetwork());
+
 	// if BMNetwork empty,create new network, fill it with NetworkElements from SubNetwork
 	if(m_subNetwork->m_graphicalNetwork.m_blocks.size() == 0){
 		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
@@ -663,15 +665,15 @@ void SVSubNetworkEditDialog::convertSubnetwork()
 	}
 }
 
-void SVSubNetworkEditDialog::openDBElementNamingDialog(unsigned int componentID)
+void SVSubNetworkEditDialog::openDBComponentNamingDialog(VICUS::NetworkComponent* component)
 {
-	FUNCID(SVSubNetworkEditDialog::openDBElementNamingDialog);
+	FUNCID(SVSubNetworkEditDialog::openDBComponentNamingDialog);
 
 	// open dialog
 	QDialog *namingDialog = new QDialog(this);
-	namingDialog->setWindowTitle(tr("Element naming"));
+	namingDialog->setWindowTitle(tr("Component Naming"));
 	QVBoxLayout *layout = new QVBoxLayout(namingDialog);
-	QLabel *label = new QLabel(tr("Please enter a name for the element"));
+	QLabel *label = new QLabel(tr("Please enter a name for the Component"));
 	layout->addWidget(label);
 	QLineEdit *lineEdit = new QLineEdit();
 	layout->addWidget(lineEdit);
@@ -680,14 +682,142 @@ void SVSubNetworkEditDialog::openDBElementNamingDialog(unsigned int componentID)
 	connect(buttonBox, SIGNAL(accepted()), namingDialog, SLOT(accept()));
 	connect(buttonBox, SIGNAL(rejected()), namingDialog, SLOT(reject()));
 	// get name from DB
-	QString name = QString::fromStdString(m_db->m_networkComponents[componentID]->m_displayName.string(IBK::MultiLanguageString::m_language));
+	QString name = QString::fromStdString(component->m_displayName.string(IBK::MultiLanguageString::m_language));
 	lineEdit->setText(name);
 	// show dialog
 	if(namingDialog->exec() == QDialog::Accepted){
 		// save name to DB
-		m_db->m_networkComponents[componentID]->m_displayName.setString(lineEdit->text().toStdString(), IBK::MultiLanguageString::m_language);
+		component->m_displayName.setString(lineEdit->text().toStdString(), IBK::MultiLanguageString::m_language);
 	}
 	delete namingDialog;
+}
+
+bool SVSubNetworkEditDialog::checkValidityOfNetwork()
+{
+
+	// Check if there are as many NetworkComponentBlocks as NetworkElements
+	int sizeOfNetworkElements = m_subNetwork->m_elements.size();
+
+	int countNetworkElementBlocks = 0;
+	for(const VICUS::BMBlock& block: m_subNetwork->m_graphicalNetwork.m_blocks){
+		if(block.m_mode == VICUS::BMBlockType::NetworkComponentBlock)
+			countNetworkElementBlocks++;
+	}
+
+	if(countNetworkElementBlocks != sizeOfNetworkElements){
+		qDebug() << "The network contains invalid elements. Please check the network.";
+		return false;
+	}
+
+	// Check if for each NetworkElement, there is one NetworkComponentBlock
+	for(const VICUS::NetworkElement& element: m_subNetwork->m_elements){
+		bool found = false;
+		for(const VICUS::BMBlock& block: m_subNetwork->m_graphicalNetwork.m_blocks){
+			if(block.m_mode == VICUS::BMBlockType::NetworkComponentBlock){
+				if(block.m_componentId == element.m_componentId){
+					found = true;
+					break;
+				}
+			}
+		}
+		if(!found){
+			qDebug() << "The network contains invalid elements. Please check the network.";
+			return false;
+		}
+	}
+
+	// Check if for each NetworkElement that references a NetworkComponent, there is a NetworkComponent
+	for(const VICUS::NetworkElement& element: m_subNetwork->m_elements){
+		if(element.m_componentId != VICUS::INVALID_ID){
+			if(componentIndex(element.m_componentId) == VICUS::INVALID_ID){
+				qDebug() << "NetworkElement contains reference to non existent NetworkComponent. Please check the network.";
+				return false;
+			}
+		}
+	}
+
+	// Check if for each NetworkElement that references a NetworkController, there is a NetworkController
+	for(const VICUS::NetworkElement& element : m_subNetwork->m_elements){
+		if(element.m_controlElementId != VICUS::INVALID_ID){
+			if(controllerIndex(element.m_controlElementId) == VICUS::INVALID_ID){
+				qDebug() << "NetworkElement contains reference to non existent NetworkController. Please check the network.";
+				return false;
+			}
+		}
+	}
+
+	//work in progress
+	return true;
+
+	std::set<unsigned int> alreadyVisited;
+	// Check if for each connection of a NetworkElement, there is an equivalent NetworkConnection
+	for(const VICUS::NetworkElement& element : m_subNetwork->m_elements){
+		unsigned int inletNodeId = element.m_inletNodeId;
+		unsigned int outletNodeId = element.m_outletNodeId;
+
+		if(inletNodeId == outletNodeId){
+			qDebug() << "NetworkElement contains connection to itself. Please check the network.";
+			return false;
+		}
+
+		if(alreadyVisited.find(inletNodeId) == alreadyVisited.end()){
+			// Loop over all NetworkElements, look for all NetworkElements that are connected to the inletNode
+			alreadyVisited.insert(inletNodeId);
+			std::set<const VICUS::NetworkElement*> connectedElements;
+			bool notConnected = true;
+			for(const VICUS::NetworkElement& element2 : m_subNetwork->m_elements){
+				if(element2.m_inletNodeId == inletNodeId || element2.m_outletNodeId == inletNodeId){
+					connectedElements.insert(&element2);
+					notConnected = false;
+				}
+			}
+			if(notConnected){
+				if(element.m_inletNodeId != VICUS::ENTRANCE_ID){
+					qDebug() << "NetworkElement contains connection to non existent NetworkElement. Please check the network.";
+					return false;
+				}
+			}
+
+			for(const VICUS::NetworkElement* connectedElement : connectedElements){
+				unsigned int connectedInletNodeId;
+				unsigned int connectedOutletNodeId;
+				if(connectedElement->m_inletNodeId == inletNodeId){
+					if(connectedElement->m_outletNodeId != outletNodeId){
+
+					}
+				}
+				else if(connectedElement->m_outletNodeId == inletNodeId){
+					if(connectedElement->m_inletNodeId != outletNodeId){
+
+					}
+				}
+			}
+
+
+		}
+
+		if(alreadyVisited.find(outletNodeId) == alreadyVisited.end()){
+			// Loop over all NetworkElements, look for all NetworkElements that are connected to the outletNode
+			alreadyVisited.insert(outletNodeId);
+			std::set<const VICUS::NetworkElement*> connectedElements;
+			bool notConnected = true;
+			for(const VICUS::NetworkElement& element2 : m_subNetwork->m_elements){
+				if(element2.m_inletNodeId == outletNodeId || element2.m_outletNodeId == outletNodeId){
+					connectedElements.insert(&element2);
+					notConnected = false;
+				}
+			}
+			if(notConnected){
+				if(element.m_outletNodeId != VICUS::EXIT_ID){
+					qDebug() << "NetworkElement contains connection to non existent NetworkElement. Please check the network.";
+					return false;
+				}
+			}
+		}
+
+
+	}
+
 }
 
 
@@ -832,6 +962,9 @@ void SVSubNetworkEditDialog::on_addToUserDBButton_clicked()
 		return;
 	VICUS::NetworkComponent component = m_networkComponents[componentIndex(selectedBlock->m_componentId)];
 	component.m_local = false;
+
+	openDBComponentNamingDialog(&component);
+
 	m_db->m_networkComponents.add(component) ;
 	updateToolBoxPages();
 }
@@ -862,7 +995,9 @@ void SVSubNetworkEditDialog::on_changeDBElementNameButton_clicked()
 
 	SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry entry = SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry(m_senderTable->m_elementList[(unsigned int)row]);
 
-	openDBElementNamingDialog(entry.m_id);
+	VICUS::NetworkComponent* component = m_db->m_networkComponents[entry.m_id];
+	Q_ASSERT(component != nullptr);
+	openDBComponentNamingDialog(component);
 	updateToolBoxPages();
 }
 
