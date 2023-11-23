@@ -317,6 +317,16 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 		}
 	}
 
+	/* checks if a block is connected to itself */
+	for(const VICUS::BMBlock &block : m_sceneManager->network().m_blocks){
+		if (block.m_mode == VICUS::BMBlockType::NetworkComponentBlock){
+			if(block.m_sockets[0].m_id == block.m_sockets[1].m_id){
+				QMessageBox::warning(this, tr("Invalid Network"), tr("Block connected with itself. Invalid networks can not be saved."));
+				return false;
+			}
+		}
+	}
+
 	// Existing block connectivity setup
 	std::map<unsigned int, std::vector<unsigned int>> connections;
 	std::map<unsigned int, std::vector<unsigned int>> reverseConnections;
@@ -694,7 +704,6 @@ void SVSubNetworkEditDialog::openDBComponentNamingDialog(VICUS::NetworkComponent
 
 bool SVSubNetworkEditDialog::checkValidityOfNetwork()
 {
-
 	// Check if there are as many NetworkComponentBlocks as NetworkElements
 	int sizeOfNetworkElements = m_subNetwork->m_elements.size();
 
@@ -706,7 +715,7 @@ bool SVSubNetworkEditDialog::checkValidityOfNetwork()
 
 	if(countNetworkElementBlocks != sizeOfNetworkElements){
 		qDebug() << "The network contains invalid elements. Please check the network.";
-		return false;
+		Q_ASSERT(false);
 	}
 
 	// Check if for each NetworkElement, there is one NetworkComponentBlock
@@ -722,47 +731,44 @@ bool SVSubNetworkEditDialog::checkValidityOfNetwork()
 		}
 		if(!found){
 			qDebug() << "The network contains invalid elements. Please check the network.";
-			return false;
+			Q_ASSERT(false);
 		}
 	}
 
 	// Check if for each NetworkElement that references a NetworkComponent, there is a NetworkComponent
+	// Check if for each NetworkElement that references a NetworkController, there is a NetworkController
 	for(const VICUS::NetworkElement& element: m_subNetwork->m_elements){
 		if(element.m_componentId != VICUS::INVALID_ID){
 			if(componentIndex(element.m_componentId) == VICUS::INVALID_ID){
 				qDebug() << "NetworkElement contains reference to non existent NetworkComponent. Please check the network.";
-				return false;
+				Q_ASSERT(false);
 			}
 		}
-	}
-
-	// Check if for each NetworkElement that references a NetworkController, there is a NetworkController
-	for(const VICUS::NetworkElement& element : m_subNetwork->m_elements){
 		if(element.m_controlElementId != VICUS::INVALID_ID){
 			if(controllerIndex(element.m_controlElementId) == VICUS::INVALID_ID){
 				qDebug() << "NetworkElement contains reference to non existent NetworkController. Please check the network.";
-				return false;
+				Q_ASSERT(false);
 			}
 		}
 	}
 
-	//work in progress
-	return true;
-
 	std::set<unsigned int> alreadyVisited;
-	// Check if for each connection of a NetworkElement, there is an equivalent NetworkConnection
+	// Check if for each connection of a NetworkElement, there is an equivalent BMConnection
 	for(const VICUS::NetworkElement& element : m_subNetwork->m_elements){
 		unsigned int inletNodeId = element.m_inletNodeId;
 		unsigned int outletNodeId = element.m_outletNodeId;
 
 		if(inletNodeId == outletNodeId){
 			qDebug() << "NetworkElement contains connection to itself. Please check the network.";
-			return false;
+			Q_ASSERT(false);
 		}
 
-		if(alreadyVisited.find(inletNodeId) == alreadyVisited.end()){
-			// Loop over all NetworkElements, look for all NetworkElements that are connected to the inletNode
+		// if ID not previously found, create set with all networkElements that are connected to this element
+		if(alreadyVisited.find(inletNodeId) == alreadyVisited.end() && inletNodeId != VICUS::ENTRANCE_ID){
 			alreadyVisited.insert(inletNodeId);
+
+
+			// Loop over all NetworkElements, look for all NetworkElements that are connected to the inletNode
 			std::set<const VICUS::NetworkElement*> connectedElements;
 			bool notConnected = true;
 			for(const VICUS::NetworkElement& element2 : m_subNetwork->m_elements){
@@ -771,53 +777,143 @@ bool SVSubNetworkEditDialog::checkValidityOfNetwork()
 					notConnected = false;
 				}
 			}
+			// if no connection found and inlet node id is not entrance ID, return
 			if(notConnected){
-				if(element.m_inletNodeId != VICUS::ENTRANCE_ID){
-					qDebug() << "NetworkElement contains connection to non existent NetworkElement. Please check the network.";
-					return false;
-				}
+				qDebug() << "NetworkElement contains connection to non existent NetworkElement. Please check the network.";
+				Q_ASSERT(false);
 			}
 
-			for(const VICUS::NetworkElement* connectedElement : connectedElements){
-				unsigned int connectedInletNodeId;
-				unsigned int connectedOutletNodeId;
-				if(connectedElement->m_inletNodeId == inletNodeId){
-					if(connectedElement->m_outletNodeId != outletNodeId){
+			// check if node is connected to ConnectorBlock or is directly connected
+			// if directly connected, check if ENTRANCE_ID and construct source and targetName accordingly
+			if(connectedElements.size() <= 2){
+				bool foundConnector = false;
+				QString targetName = QString::number(element.m_id) + "." + VICUS::INLET_NAME;
+				QString sourceName;
+				// find correct connected Element to get the name for sourceName
+				const VICUS::NetworkElement* elementForSourceName;
+				for(const VICUS::NetworkElement* elementTmp : connectedElements){
+					if(elementTmp->m_outletNodeId == inletNodeId)
+						elementForSourceName = elementTmp;
+				}
+				sourceName = QString::number(elementForSourceName->m_id) + "." + VICUS::OUTLET_NAME;
 
+				for(VICUS::BMConnector &connector : m_subNetwork->m_graphicalNetwork.m_connectors){
+					if(connector.m_targetSocket == targetName && connector.m_sourceSocket == sourceName){
+						foundConnector = true;
+						break;
 					}
 				}
-				else if(connectedElement->m_outletNodeId == inletNodeId){
-					if(connectedElement->m_inletNodeId != outletNodeId){
-
-					}
-				}
-			}
-
-
-		}
-
-		if(alreadyVisited.find(outletNodeId) == alreadyVisited.end()){
-			// Loop over all NetworkElements, look for all NetworkElements that are connected to the outletNode
-			alreadyVisited.insert(outletNodeId);
-			std::set<const VICUS::NetworkElement*> connectedElements;
-			bool notConnected = true;
-			for(const VICUS::NetworkElement& element2 : m_subNetwork->m_elements){
-				if(element2.m_inletNodeId == outletNodeId || element2.m_outletNodeId == outletNodeId){
-					connectedElements.insert(&element2);
-					notConnected = false;
-				}
-			}
-			if(notConnected){
-				if(element.m_outletNodeId != VICUS::EXIT_ID){
-					qDebug() << "NetworkElement contains connection to non existent NetworkElement. Please check the network.";
-					return false;
-				}
+				if(!foundConnector) Q_ASSERT(false);
 			}
 		}
-
-
 	}
 
+	//Check if globalInlet is connected, verify that all necessary BMConnections exist
+	std::vector<const VICUS::NetworkElement*> connectedElementsGlobalInlet;
+	for(const VICUS::NetworkElement& element : m_subNetwork->m_elements){
+		if(element.m_inletNodeId == VICUS::ENTRANCE_ID)
+			connectedElementsGlobalInlet.push_back(&element);
+	}
+
+	if(connectedElementsGlobalInlet.size() == 0 && m_subNetwork->m_elements.size() != 0){
+		qDebug() << "GlobalInlet not connected";
+		Q_ASSERT(false);
+	} else if(connectedElementsGlobalInlet.size() == 1){
+
+		QString sourceName;
+		QString targetName;
+
+		sourceName = VICUS::SUBNETWORK_INLET_NAME + "." + VICUS::OUTLET_NAME;
+		targetName = QString::number(connectedElementsGlobalInlet[0]->m_id) + "." + VICUS::INLET_NAME;
+
+		bool foundConnector = false;
+		for(VICUS::BMConnector &connector : m_subNetwork->m_graphicalNetwork.m_connectors){
+			if(connector.m_targetSocket == targetName && connector.m_sourceSocket == sourceName){
+				foundConnector = true;
+				break;
+			}
+		}
+		if(!foundConnector){
+			qDebug() << "NetworkElement contains connection to non existent NetworkElement. Please check the network.";
+			Q_ASSERT(false);
+		}
+	}
+	else {
+		QString sourceName;
+		QString targetName;
+
+		sourceName = VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::ENTRANCE_ID) + "." + VICUS::OUTLET_NAME;
+		for(const VICUS::NetworkElement* element : connectedElementsGlobalInlet){
+			targetName = QString::number(element->m_id) + "." + VICUS::INLET_NAME;
+
+			bool foundConnector = false;
+			for(VICUS::BMConnector &connector : m_subNetwork->m_graphicalNetwork.m_connectors){
+				if(connector.m_targetSocket == targetName && connector.m_sourceSocket == sourceName){
+					foundConnector = true;
+					break;
+				}
+			}
+			if(!foundConnector){
+				qDebug() << "NetworkElement contains connection to non existent NetworkElement. Please check the network.";
+				Q_ASSERT(false);
+			}
+		}
+	}
+
+
+	//Check if globalOutlet is connected, verify that all necessary BMConnections exist
+	std::vector<const VICUS::NetworkElement*> connectedElementsGlobalOutlet;
+	for(const VICUS::NetworkElement& element : m_subNetwork->m_elements){
+		if(element.m_outletNodeId == VICUS::EXIT_ID)
+			connectedElementsGlobalOutlet.push_back(&element);
+	}
+
+	if(connectedElementsGlobalOutlet.size() == 0 && m_subNetwork->m_elements.size() != 0){
+		qDebug() << "GlobalOutlet not connected";
+		Q_ASSERT(false);
+	} else if(connectedElementsGlobalOutlet.size() == 1){
+
+		QString sourceName;
+		QString targetName;
+
+		sourceName = QString::number(connectedElementsGlobalOutlet[0]->m_id) + "." + VICUS::OUTLET_NAME;
+		targetName = VICUS::SUBNETWORK_OUTLET_NAME + "." + VICUS::INLET_NAME;
+
+		bool foundConnector = false;
+		for(VICUS::BMConnector &connector : m_subNetwork->m_graphicalNetwork.m_connectors){
+			if(connector.m_targetSocket == targetName && connector.m_sourceSocket == sourceName){
+				foundConnector = true;
+				break;
+			}
+		}
+		if(!foundConnector){
+			qDebug() << "NetworkElement contains connection to non existent NetworkElement. Please check the network.";
+			Q_ASSERT(false);
+		}
+	}
+	else {
+		QString sourceName;
+		QString targetName;
+
+		targetName = VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::EXIT_ID) + "." + VICUS::INLET_NAME;
+		for(const VICUS::NetworkElement* element : connectedElementsGlobalOutlet){
+			sourceName = QString::number(element->m_id) + "." + VICUS::OUTLET_NAME;
+
+			bool foundConnector = false;
+			for(VICUS::BMConnector &connector : m_subNetwork->m_graphicalNetwork.m_connectors){
+				if(connector.m_targetSocket == targetName && connector.m_sourceSocket == sourceName){
+					foundConnector = true;
+					break;
+				}
+			}
+			if(!foundConnector){
+				qDebug() << "NetworkElement contains connection to non existent NetworkElement. Please check the network.";
+				Q_ASSERT(false);
+			}
+		}
+	}
+
+	return true;
 }
 
 
