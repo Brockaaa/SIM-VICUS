@@ -35,20 +35,19 @@ SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filenam
 		setToolTip(tooltip);
 		setLayout(layout);
 	} else {
-		const int LEFT_PADDING = 30; // Adjust this constant for desired left padding
-
-		QLabel *textLabel = new QLabel(text, this);
+		QLabel *textLabel = new QLabel("        " + text, this);
 		textLabel->setMinimumSize(0, 0);
-		textLabel->setAlignment(Qt::AlignLeft); // This will center the text both horizontally and vertically
+		textLabel->setAlignment(Qt::AlignLeft| Qt::AlignVCenter); // This will center the text both horizontally and vertically
 		textLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
 
 		QHBoxLayout *layout = new QHBoxLayout(this);
-		layout->addSpacing(LEFT_PADDING); // Add padding to the left
 		layout->addWidget(textLabel);
-		layout->setStretchFactor(textLabel, 1);
+		layout->setContentsMargins(0,0,0,0);
+		layout->setStretchFactor(textLabel, 0);
 		setToolTip(tooltip);
 		setLayout(layout);
 	}
+	this->setAutoFillBackground(true);
 
 }
 

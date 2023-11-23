@@ -66,7 +66,7 @@ void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent &component)
 	const int rowHeight = 35;
 	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(component.m_modelType),  QString::fromStdString(component.m_displayName.string("en")), VICUS::KeywordListQt::Description("NetworkComponent::ModelType", component.m_modelType), m_defaultRowHeight, this, true);
 	if(!component.m_builtIn){
-		bmItem1->setStyleSheet("background-color: #ADD8E6;");
+		bmItem1->setStyleSheet("background-color: rgb(173, 216, 230);");
 	}
 	setFixedHeight(height() + rowHeight);
 	insertRow(m_rowSize);
@@ -109,18 +109,6 @@ void SVSubNetworkEditDialogTable::startDrag(Qt::DropActions supportedActions){
 	double scaleY = m_zoomMeshGraphicsView->getScaleY();
 
 	VICUS::NetworkComponent::ModelType type = m_elementList[index].m_modelType;
-
-//	if(m_elementList[index].startsWith("default:")){
-//		type = static_cast<VICUS::NetworkComponent::ModelType>(m_elementList[index].split(":")[1].toInt());
-//	}
-//	else if (m_elementList[index].startsWith("db:")){
-//		for(int i = index; i >= 0; i--){
-//			if(m_elementList[i].startsWith("default:")){
-//				type = static_cast<VICUS::NetworkComponent::ModelType>(m_elementList[i].split(":")[1].toInt());
-//				break;
-//			}
-//		}
-//	}
 
 	QPixmap pixmap = QPixmap(VICUS::NetworkComponent::iconFileFromModelType(type));
 	drag->setPixmap(pixmap.scaled(m_defaultRowHeight * scaleX, m_defaultRowHeight * scaleY));

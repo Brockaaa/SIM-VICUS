@@ -202,10 +202,13 @@ void SVSubNetworkEditDialog::updateNetwork() {
 	m_networkComponents = m_subNetwork->m_components;
 	m_networkControllers = m_subNetwork->m_controllers;
 
-	Q_ASSERT(checkValidityOfNetwork());
+	Q_ASSERT(checkValidityOfNetworkElements());
 
-	// if BMNetwork empty,create new network, fill it with NetworkElements from SubNetwork
-	if(m_subNetwork->m_graphicalNetwork.m_blocks.size() == 0){
+	bool keepGraphicalNetwork = checkValidityOfNetworkElementsAndGraphicalNetwork();
+	if(keepGraphicalNetwork) createNewScene();
+
+	// if BMNetwork empty, create new network, fill it with NetworkElements from SubNetwork
+	if(m_subNetwork->m_graphicalNetwork.m_blocks.size() == 0 && !keepGraphicalNetwork){
 		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
 
 		VICUS::BMBlock bentry, bexit;
@@ -289,7 +292,7 @@ void SVSubNetworkEditDialog::updateNetwork() {
 			counter++;
 		}
 	}
-	 else {
+	else if (!keepGraphicalNetwork) {
 		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
 	}
 
@@ -702,7 +705,38 @@ void SVSubNetworkEditDialog::openDBComponentNamingDialog(VICUS::NetworkComponent
 	delete namingDialog;
 }
 
-bool SVSubNetworkEditDialog::checkValidityOfNetwork()
+bool SVSubNetworkEditDialog::checkValidityOfNetworkElements()
+{
+	// Check if there are as many NetworkComponentBlocks as NetworkElements
+	int sizeOfNetworkElements = m_subNetwork->m_elements.size();
+
+	// Check that NetworkElement is not connected to itself
+	// Check if for each NetworkElement that references a NetworkComponent, there is a NetworkComponent
+	// Check if for each NetworkElement that references a NetworkController, there is a NetworkController
+	for(const VICUS::NetworkElement& element: m_subNetwork->m_elements){
+		if(element.m_inletNodeId == element.m_outletNodeId){
+			qDebug() << "NetworkElement contains connection to itself. Please check the network.";
+			Q_ASSERT(false);
+		}
+		if(element.m_componentId != VICUS::INVALID_ID){
+			if(componentIndex(element.m_componentId) == VICUS::INVALID_ID){
+				qDebug() << "NetworkElement contains reference to non existent NetworkComponent. Please check the network.";
+				Q_ASSERT(false);
+			}
+		}
+		if(element.m_controlElementId != VICUS::INVALID_ID){
+			if(controllerIndex(element.m_controlElementId) == VICUS::INVALID_ID){
+				qDebug() << "NetworkElement contains reference to non existent NetworkController. Please check the network.";
+				Q_ASSERT(false);
+			}
+		}
+	}
+
+	return true;
+
+}
+
+bool SVSubNetworkEditDialog::checkValidityOfNetworkElementsAndGraphicalNetwork()
 {
 	// Check if there are as many NetworkComponentBlocks as NetworkElements
 	int sizeOfNetworkElements = m_subNetwork->m_elements.size();
@@ -718,37 +752,20 @@ bool SVSubNetworkEditDialog::checkValidityOfNetwork()
 		Q_ASSERT(false);
 	}
 
-	// Check if for each NetworkElement, there is one NetworkComponentBlock
+	// Check if for each NetworkElement, there is one NetworkComponentBlock, check if inlet and outlet IDs are correct
 	for(const VICUS::NetworkElement& element: m_subNetwork->m_elements){
-		bool found = false;
+		bool toAccept = false;
 		for(const VICUS::BMBlock& block: m_subNetwork->m_graphicalNetwork.m_blocks){
 			if(block.m_mode == VICUS::BMBlockType::NetworkComponentBlock){
-				if(block.m_componentId == element.m_componentId){
-					found = true;
+				if(block.m_componentId == element.m_componentId && block.m_sockets[0].m_id == element.m_inletNodeId && block.m_sockets[1].m_id == element.m_outletNodeId){
+					toAccept = true;
 					break;
 				}
 			}
 		}
-		if(!found){
+		if(!toAccept){
 			qDebug() << "The network contains invalid elements. Please check the network.";
 			Q_ASSERT(false);
-		}
-	}
-
-	// Check if for each NetworkElement that references a NetworkComponent, there is a NetworkComponent
-	// Check if for each NetworkElement that references a NetworkController, there is a NetworkController
-	for(const VICUS::NetworkElement& element: m_subNetwork->m_elements){
-		if(element.m_componentId != VICUS::INVALID_ID){
-			if(componentIndex(element.m_componentId) == VICUS::INVALID_ID){
-				qDebug() << "NetworkElement contains reference to non existent NetworkComponent. Please check the network.";
-				Q_ASSERT(false);
-			}
-		}
-		if(element.m_controlElementId != VICUS::INVALID_ID){
-			if(controllerIndex(element.m_controlElementId) == VICUS::INVALID_ID){
-				qDebug() << "NetworkElement contains reference to non existent NetworkController. Please check the network.";
-				Q_ASSERT(false);
-			}
 		}
 	}
 
@@ -757,11 +774,6 @@ bool SVSubNetworkEditDialog::checkValidityOfNetwork()
 	for(const VICUS::NetworkElement& element : m_subNetwork->m_elements){
 		unsigned int inletNodeId = element.m_inletNodeId;
 		unsigned int outletNodeId = element.m_outletNodeId;
-
-		if(inletNodeId == outletNodeId){
-			qDebug() << "NetworkElement contains connection to itself. Please check the network.";
-			Q_ASSERT(false);
-		}
 
 		// if ID not previously found, create set with all networkElements that are connected to this element
 		if(alreadyVisited.find(inletNodeId) == alreadyVisited.end() && inletNodeId != VICUS::ENTRANCE_ID){
@@ -914,6 +926,61 @@ bool SVSubNetworkEditDialog::checkValidityOfNetwork()
 	}
 
 	return true;
+}
+
+void SVSubNetworkEditDialog::createNewScene()
+{
+	m_subNetwork->m_graphicalNetwork.m_blocks.clear();
+	m_subNetwork->m_graphicalNetwork.m_connectors.clear();
+
+	m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
+
+	VICUS::BMBlock bentry, bexit;
+	bentry.m_name = VICUS::SUBNETWORK_INLET_NAME;
+	bentry.m_mode = VICUS::BMBlockType::GlobalInlet;
+	bentry.m_size = QSizeF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT);
+	bentry.m_pos = QPointF(0,400);
+
+	bexit.m_name = VICUS::SUBNETWORK_OUTLET_NAME;
+	bexit.m_mode = VICUS::BMBlockType::GlobalOutlet;
+	bexit.m_size = QSizeF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT);
+	bexit.m_pos = QPointF(1102,400);
+
+	VICUS::BMSocket outlet, inlet;
+	inlet.m_name = VICUS::INLET_NAME;
+	inlet.m_isInlet = true;
+	inlet.m_id = VICUS::EXIT_ID;
+	inlet.m_orientation = Qt::Horizontal;
+	inlet.m_pos = QPointF(0,VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
+	bexit.m_sockets.append(inlet);
+
+	outlet.m_name = VICUS::OUTLET_NAME;
+	outlet.m_isInlet = false;
+	outlet.m_id = VICUS::ENTRANCE_ID;
+	outlet.m_orientation = Qt::Horizontal;
+	outlet.m_pos = QPointF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
+	bentry.m_sockets.append(outlet);
+
+	m_sceneManager->addBlock(bentry);
+	m_sceneManager->addBlock(bexit);
+
+	std::vector<unsigned int> orderedListNodeIds;
+
+	for(const VICUS::NetworkElement &element : m_subNetwork->m_elements){
+		if( std::find(orderedListNodeIds.begin(), orderedListNodeIds.end(), element.m_inletNodeId) == orderedListNodeIds.end()){
+			orderedListNodeIds.push_back(element.m_inletNodeId);
+		}
+	}
+
+	int distancePerBlock = (1102 - VICUS::ENTRANCEEXITBLOCK_WIDTH) / orderedListNodeIds.size() - VICUS::CONNECTORBLOCK_WIDTH;
+
+	std::vector<const VICUS::NetworkElement*>* previousElements;
+	std::vector<const VICUS::NetworkElement*>* currentElements;
+	for(unsigned int nodeId : orderedListNodeIds){
+		for(const VICUS::NetworkElement &element : m_subNetwork->m_elements){
+
+		}
+	}
 }
 
 
