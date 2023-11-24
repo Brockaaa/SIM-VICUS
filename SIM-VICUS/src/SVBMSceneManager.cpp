@@ -108,11 +108,7 @@ void SVBMSceneManager::updateNetwork(VICUS::BMNetwork & network) {
 		}
 	}
 
-	// trigger the itemChange() function to update adjust the connector positions
-	for (auto blockItem : m_blockItems) {
-		blockItem->setPos(blockItem->pos() + QPointF(8,8));
-		blockItem->setPos(blockItem->pos() - QPointF(8,8));
-	}
+	triggerItemChange();
 
 	// By default, the connection mode is off.
 	m_currentlyConnecting = false;
@@ -1073,6 +1069,15 @@ bool SVBMSceneManager::evaluateNewConnection(QString startSocketName, QString ta
 	}
 
 	return true;
+}
+
+void SVBMSceneManager::triggerItemChange()
+{
+	// trigger the itemChange() function to update adjust the connector positions
+	for (auto blockItem : m_blockItems) {
+		blockItem->setPos(blockItem->pos() + QPointF(8,8));
+		blockItem->setPos(blockItem->pos() - QPointF(8,8));
+	}
 }
 
 

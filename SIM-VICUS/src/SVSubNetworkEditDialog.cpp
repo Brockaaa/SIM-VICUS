@@ -85,9 +85,6 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 
 	m_ui->controllerLineEdit->setDisabled(true);
 
-
-
-
 	connect(m_sceneManager, &SVBMSceneManager::newBlockSelected, this, &SVSubNetworkEditDialog::blockSelectedEvent);
 	connect(m_sceneManager, &SVBMSceneManager::newConnectorSelected, this, &SVSubNetworkEditDialog::connectorSelectedEvent);
 	connect(m_sceneManager, &SVBMSceneManager::selectionCleared, this, &SVSubNetworkEditDialog::selectionClearedEvent);
@@ -202,13 +199,18 @@ void SVSubNetworkEditDialog::updateNetwork() {
 	m_networkComponents = m_subNetwork->m_components;
 	m_networkControllers = m_subNetwork->m_controllers;
 
-	Q_ASSERT(checkValidityOfNetworkElements());
+	//Q_ASSERT(checkValidityOfNetworkElements());
 
-	bool keepGraphicalNetwork = checkValidityOfNetworkElementsAndGraphicalNetwork();
-	if(keepGraphicalNetwork) createNewScene();
+	//bool keepGraphicalNetwork = !checkValidityOfNetworkElementsAndGraphicalNetwork();
+	//if(keepGraphicalNetwork) createNewScene();
+
+
+	bool keepGraphicalNetwork = false;
+
+	createNewScene();
 
 	// if BMNetwork empty, create new network, fill it with NetworkElements from SubNetwork
-	if(m_subNetwork->m_graphicalNetwork.m_blocks.size() == 0 && !keepGraphicalNetwork){
+	if(m_subNetwork->m_graphicalNetwork.m_blocks.size() == 0 && keepGraphicalNetwork){
 		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
 
 		VICUS::BMBlock bentry, bexit;
@@ -247,7 +249,7 @@ void SVSubNetworkEditDialog::updateNetwork() {
 		VICUS::BMBlock previous = bentry;
 
 		for(VICUS::NetworkElement element : m_subNetwork->m_elements){
-			VICUS::BMBlock block = VICUS::BMBlock(QString::number(counter));
+			VICUS::BMBlock block = VICUS::BMBlock(QString::number(element.m_id));
 			VICUS::BMSocket outlet, inlet;
 			block.m_componentId = element.m_componentId;
 			block.m_controllerID = element.m_controlElementId;
@@ -292,7 +294,7 @@ void SVSubNetworkEditDialog::updateNetwork() {
 			counter++;
 		}
 	}
-	else if (!keepGraphicalNetwork) {
+	else if (keepGraphicalNetwork) {
 		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
 	}
 
@@ -964,23 +966,194 @@ void SVSubNetworkEditDialog::createNewScene()
 	m_sceneManager->addBlock(bentry);
 	m_sceneManager->addBlock(bexit);
 
-	std::vector<unsigned int> orderedListNodeIds;
+	std::vector<unsigned int> listContainingAllNodeIds;
+	std::map<const VICUS::NetworkElement*, VICUS::BMBlock> mapWithAllBlocks;
+	listContainingAllNodeIds.push_back(VICUS::ENTRANCE_ID);
+
+	std::map<unsigned int, bool> isBlockAlreadyPlacedOnScene;
+	for(const VICUS::NetworkElement& element : m_subNetwork->m_elements){
+		isBlockAlreadyPlacedOnScene[element.m_id] = false;
+	}
+
 
 	for(const VICUS::NetworkElement &element : m_subNetwork->m_elements){
-		if( std::find(orderedListNodeIds.begin(), orderedListNodeIds.end(), element.m_inletNodeId) == orderedListNodeIds.end()){
-			orderedListNodeIds.push_back(element.m_inletNodeId);
+		VICUS::BMBlock block = VICUS::BMBlock(QString::number(element.m_id));
+		VICUS::BMSocket outlet, inlet;
+		block.m_componentId = element.m_componentId;
+		block.m_controllerID = element.m_controlElementId;
+
+		VICUS::NetworkComponent::ModelType type = m_networkComponents.back().m_modelType;
+
+		block.m_displayName = element.m_displayName;
+		block.m_mode = VICUS::BMBlockType::NetworkComponentBlock;
+		block.m_size = QSizeF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT);
+		block.m_properties["ShowPixmap"] = true;
+		block.m_properties["Pixmap"] = QPixmap(VICUS::NetworkComponent::iconFileFromModelType(type)).scaled(256,256);
+
+		inlet.m_name = VICUS::INLET_NAME;
+		inlet.m_isInlet = true;
+		inlet.m_id = element.m_inletNodeId;
+		inlet.m_orientation = Qt::Horizontal;
+		inlet.m_pos = QPointF(0, VICUS::BLOCK_HEIGHT / 2);
+		block.m_sockets.append(inlet);
+
+		outlet.m_name = VICUS::OUTLET_NAME;
+		outlet.m_isInlet = false;
+		outlet.m_id = element.m_outletNodeId;
+		outlet.m_orientation = Qt::Horizontal;
+		outlet.m_pos = QPointF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT / 2);
+		block.m_sockets.append(outlet);
+
+		mapWithAllBlocks[&element] = block;
+		if( std::find(listContainingAllNodeIds.begin(), listContainingAllNodeIds.end(), element.m_inletNodeId) == listContainingAllNodeIds.end()){
+			listContainingAllNodeIds.push_back(element.m_inletNodeId);
+		}
+		if( std::find(listContainingAllNodeIds.begin(), listContainingAllNodeIds.end(), element.m_outletNodeId) == listContainingAllNodeIds.end()){
+			listContainingAllNodeIds.push_back(element.m_outletNodeId);
 		}
 	}
 
-	int distancePerBlock = (1102 - VICUS::ENTRANCEEXITBLOCK_WIDTH) / orderedListNodeIds.size() - VICUS::CONNECTORBLOCK_WIDTH;
+	int distancePerBlock = (1102 - VICUS::ENTRANCEEXITBLOCK_WIDTH) / listContainingAllNodeIds.size() - VICUS::CONNECTORBLOCK_WIDTH;
 
-	std::vector<const VICUS::NetworkElement*>* previousElements;
-	std::vector<const VICUS::NetworkElement*>* currentElements;
-	for(unsigned int nodeId : orderedListNodeIds){
+	for(int i = 0; i < listContainingAllNodeIds.size(); i++){
+		unsigned int nodeId = listContainingAllNodeIds[i];
+		if(nodeId == VICUS::ENTRANCE_ID || nodeId == VICUS::EXIT_ID) continue;
+		std::vector<VICUS::BMBlock*> outletNodeBlocks;
+		std::vector<VICUS::BMBlock*> inletNodeBlocks;
 		for(const VICUS::NetworkElement &element : m_subNetwork->m_elements){
 
+			if (element.m_inletNodeId == nodeId){
+				inletNodeBlocks.push_back(&mapWithAllBlocks[&element]);
+
+			} else if (element.m_outletNodeId == nodeId){
+				outletNodeBlocks.push_back(&mapWithAllBlocks[&element]);
+			}
+		}
+
+		for(int j = 0; j < outletNodeBlocks.size(); j++){
+			VICUS::BMBlock *block = outletNodeBlocks[j];
+			if(!isBlockAlreadyPlacedOnScene[block->m_name.toUInt()]){
+				block->m_pos = QPointF(VICUS::ENTRANCEEXITBLOCK_WIDTH + (i) * distancePerBlock, 120 * j + 400  - 120 * ( outletNodeBlocks.size() / 2));
+				m_sceneManager->addBlock(*block);
+				isBlockAlreadyPlacedOnScene[block->m_name.toUInt()] = true;
+			}
+		}
+
+		for(int j = 0; j < inletNodeBlocks.size(); j++){
+			VICUS::BMBlock *block = inletNodeBlocks[j];
+			if(!isBlockAlreadyPlacedOnScene[block->m_name.toUInt()]){
+				block->m_pos = QPointF(VICUS::BLOCK_WIDTH + (i+1) * distancePerBlock, 120 * (j) + 400 - 120 * ( inletNodeBlocks.size() / 2));
+				m_sceneManager->addBlock(*block);
+				isBlockAlreadyPlacedOnScene[block->m_name.toUInt()] = true;
+			}
+		}
+
+		if(outletNodeBlocks.size() + inletNodeBlocks.size() <= 2){
+			m_sceneManager->createConnection(outletNodeBlocks[0], inletNodeBlocks[0], &outletNodeBlocks[0]->m_sockets[1], &inletNodeBlocks[0]->m_sockets[0]);
+
+		} else {
+			// Create connector block and socket
+			// calculate position in the center between source and target block
+			VICUS::BMBlock connectorBlock(VICUS::CONNECTORBLOCK_NAME + QString::number(nodeId),
+										  outletNodeBlocks[0]->m_pos.x() + VICUS::BLOCK_WIDTH + (inletNodeBlocks[0]->m_pos.x() - outletNodeBlocks[0]->m_pos.x() - VICUS::BLOCK_WIDTH ) / 2,
+										  400 + VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
+			connectorBlock.m_mode = VICUS::BMBlockType::ConnectorBlock;
+			connectorBlock.m_size = QSizeF(VICUS::CONNECTORBLOCK_WIDTH, VICUS::CONNECTORBLOCK_HEIGHT);
+			VICUS::BMSocket inlet(VICUS::INLET_NAME, QPointF(0, connectorBlock.m_size.height() / 2), Qt::Horizontal, true);
+			inlet.m_id = nodeId;
+			inlet.m_isSocketOfConnector = true;
+			VICUS::BMSocket outlet(VICUS::OUTLET_NAME, QPointF(connectorBlock.m_size.width() / 2, connectorBlock.m_size.height() / 2), Qt::Horizontal, false);
+			outlet.m_id = nodeId;
+			outlet.m_isSocketOfConnector = true;
+			connectorBlock.m_sockets.append(inlet);
+			connectorBlock.m_sockets.append(outlet);
+
+			m_sceneManager->addConnectorBlock(connectorBlock);
+
+			for(int j = 0; j < outletNodeBlocks.size(); j++){
+				m_sceneManager->createConnection(outletNodeBlocks[j], &connectorBlock, &outletNodeBlocks[j]->m_sockets[1], &connectorBlock.m_sockets[0]);
+			}
+
+			for(int j = 0; j < inletNodeBlocks.size(); j++){
+				m_sceneManager->createConnection(&connectorBlock, inletNodeBlocks[j], &connectorBlock.m_sockets[1], &inletNodeBlocks[j]->m_sockets[0]);
+			}
 		}
 	}
+
+	std::vector<VICUS::NetworkElement *> elementsConnectedToGlobalOutlet;
+
+	std::vector<VICUS::BMBlock> blocksConnectedToGlobalOutlet;
+	for(const VICUS::NetworkElement &element : m_subNetwork->m_elements){
+		if(element.m_outletNodeId == VICUS::EXIT_ID){
+			if(!isBlockAlreadyPlacedOnScene[element.m_id]){
+				VICUS::BMBlock block = VICUS::BMBlock(QString::number(element.m_id));
+				VICUS::BMSocket outlet, inlet;
+				block.m_componentId = element.m_componentId;
+				block.m_controllerID = element.m_controlElementId;
+
+				VICUS::NetworkComponent::ModelType type = m_networkComponents.back().m_modelType;
+
+				block.m_displayName = element.m_displayName;
+				block.m_mode = VICUS::BMBlockType::NetworkComponentBlock;
+				block.m_size = QSizeF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT);
+				block.m_properties["ShowPixmap"] = true;
+				block.m_properties["Pixmap"] = QPixmap(VICUS::NetworkComponent::iconFileFromModelType(type)).scaled(256,256);
+
+				inlet.m_name = VICUS::INLET_NAME;
+				inlet.m_isInlet = true;
+				inlet.m_id = element.m_inletNodeId;
+				inlet.m_orientation = Qt::Horizontal;
+				inlet.m_pos = QPointF(0, VICUS::BLOCK_HEIGHT / 2);
+				block.m_sockets.append(inlet);
+
+				outlet.m_name = VICUS::OUTLET_NAME;
+				outlet.m_isInlet = false;
+				outlet.m_id = element.m_outletNodeId;
+				outlet.m_orientation = Qt::Horizontal;
+				outlet.m_pos = QPointF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT / 2);
+				block.m_sockets.append(outlet);
+
+				isBlockAlreadyPlacedOnScene[block.m_name.toUInt()] = true;
+
+				mapWithAllBlocks[&element] = block;
+
+				blocksConnectedToGlobalOutlet.push_back(block);
+			} else {
+				blocksConnectedToGlobalOutlet.push_back(mapWithAllBlocks[&element]);
+			}
+		}
+	}
+
+	if(blocksConnectedToGlobalOutlet.size() > 1){
+		// Create connector block and socket
+		// calculate position in the center between source and target block
+		VICUS::BMBlock connectorBlock(VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::EXIT_ID),(
+									  blocksConnectedToGlobalOutlet[0].m_pos.x() + VICUS::BLOCK_WIDTH + 1102 - blocksConnectedToGlobalOutlet[0].m_pos.x() - VICUS::BLOCK_WIDTH ) / 2,
+									  400 + VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
+		connectorBlock.m_mode = VICUS::BMBlockType::ConnectorBlock;
+		connectorBlock.m_size = QSizeF(VICUS::CONNECTORBLOCK_WIDTH, VICUS::CONNECTORBLOCK_HEIGHT);
+		VICUS::BMSocket inlet(VICUS::INLET_NAME, QPointF(0, connectorBlock.m_size.height() / 2), Qt::Horizontal, true);
+		inlet.m_id = VICUS::EXIT_ID;
+		inlet.m_isSocketOfConnector = true;
+		VICUS::BMSocket outlet(VICUS::OUTLET_NAME, QPointF(connectorBlock.m_size.width() / 2, connectorBlock.m_size.height() / 2), Qt::Horizontal, false);
+		outlet.m_id = VICUS::EXIT_ID;
+		outlet.m_isSocketOfConnector = true;
+		connectorBlock.m_sockets.append(inlet);
+		connectorBlock.m_sockets.append(outlet);
+
+		m_sceneManager->addConnectorBlock(connectorBlock);
+
+		for(int j = 0; j < blocksConnectedToGlobalOutlet.size(); j++){
+			m_sceneManager->createConnection(&blocksConnectedToGlobalOutlet[j], &connectorBlock, &blocksConnectedToGlobalOutlet[j].m_sockets[1], &connectorBlock.m_sockets[0]);
+		}
+
+	} else if(blocksConnectedToGlobalOutlet.size() == 1){
+		m_sceneManager->createConnection(&blocksConnectedToGlobalOutlet[0], &bexit, &blocksConnectedToGlobalOutlet[0].m_sockets[1], &bexit.m_sockets[0]);
+	}
+
+
+
+	m_sceneManager->triggerItemChange();
 }
 
 

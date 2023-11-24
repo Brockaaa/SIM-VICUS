@@ -226,6 +226,12 @@ public:
 	*/
 	void setHighlightallConnectorsOfBlock(const VICUS::BMBlock * block, bool highlighted);
 
+	/*! Helper Function to evaluate attempted new Connection */
+	bool evaluateNewConnection(QString startSocketName, QString targetSocketName);
+
+	/*! Helper Function to trigger itemChange() function to adjust the connector segment positions */
+	void triggerItemChange();
+
 signals:
 	/*! Emitted when a new connection was made and a connector was added.
 		The new connector is added to the end of the connectors in the network.
@@ -282,7 +288,6 @@ protected:
 	*/
 	virtual QList<SVBMConnectorSegmentItem *> createConnectorItems( VICUS::BMConnector & con);
 
-
 private:
 	/*! Looks up all segment items belonging to this connector and updates
 		their coordinates.
@@ -305,9 +310,6 @@ private:
 
 	/*! Retrieve first connector of a block */
 	VICUS::BMConnector* firstConnectorOfBlock(const VICUS::BMBlock *block, const VICUS::BMSocket *socket);
-
-	/*! Helper Function to evaluate attempted new Connection */
-	bool evaluateNewConnection(QString startSocketName, QString targetSocketName);
 
 	/*! Checks if each socket has exactly one connection */
 	bool checkOneConnectionPerSocket(const VICUS::BMBlock *block);
