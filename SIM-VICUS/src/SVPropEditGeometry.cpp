@@ -1483,9 +1483,6 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 			qDebug() << QString("Trimming of surface %1 successful.").arg(surf->info());
 			++successfulTrims;
 
-
-
-
 			// For each subsurface of the surface
 			for (const VICUS::SubSurface & subS : surf->subSurfaces()) {
 				//qDebug() << "has subsurface" << subS.m_id;
@@ -1500,7 +1497,6 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 					aux3DPolygon[i] = offset3D + point2d.m_x * surf->polygon3D().localX() +
 												 point2d.m_y * surf->polygon3D().localY();
 				}
-
 
 				std::vector<std::vector<IBKMK::Vector3D>> subsPolyInput;
 				subsPolyInput.push_back(aux3DPolygon);
@@ -1536,8 +1532,9 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 					// subSurface not trimmed, just add entire surface to one of the parent surfaces
 					subsurfaces3D.push_back(VICUS::Polygon3D(aux3DPolygon));
 				}
+				trimmedSubsurfaces[subS.m_id] = subsurfaces3D;
 			}
-			trimmedSubsurfaces[surf->m_id] = subsurfaces3D;
+
 
 		} //else
 			//failedTrims.append("\n"+surf->info().toStdString());

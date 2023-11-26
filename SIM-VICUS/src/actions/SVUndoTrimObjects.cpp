@@ -83,61 +83,75 @@ void SVUndoTrimObjects::redo() {
 		double xCoord;
 		double yCoord;
 
-		// iterate over different trim result surfaces
+		// iterate over different trim result surfaces (of one trim / one original surface)
 		for (unsigned int i=0; i<polys.size(); ++i) {
 			newSurf.m_id = nextId++;
 			newSurf.m_displayName = QString::fromStdString(surfDisplayName + "[" + std::to_string(i+1) + "]");
 			newSurf.setPolygon3D(polys[i]);
 			std::vector<VICUS::SubSurface> tempSubsurfaces;
 
-			// if we have subsurfaces that need to be added:
-			if (m_trimmedSubsurfaces[it->first].size() > 0) {
-				// transform the trimmed polygon to 2d for testing pointInPolygon with each former subsurface's centerpoint later
-				std::vector<IBKMK::Vector2D> aux2DPolygon(polys[i].vertexes().size());
-				for (unsigned int j = 0; j < polys[i].vertexes().size(); ++j) {
-					IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), polys[i].vertexes()[j], xCoord, yCoord);
-					aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
-				}
+			// iterate over all subsurfaces that were trimmed
+			for (std::map<unsigned int, std::vector<VICUS::Polygon3D>>::iterator ssit = m_trimmedSubsurfaces.begin();
+				 ssit != m_trimmedSubsurfaces.end(); ++ssit )
+			{
+				const VICUS::Object *oo = m_project.objectById(ssit->first);
+				if (oo == nullptr)
+					continue;
 
-				// Add all subsurfaces of former (untrimmed) surface, whose centerpoint is contained in this trim result
-				for (unsigned int k = 0; k < m_trimmedSubsurfaces[it->first].size(); ++k) {
-					IBKMK::Vector3D subPolyCenter = IBKMK::Polygon3D(m_trimmedSubsurfaces[it->first][k]).centerPoint();
+				const VICUS::SubSurface *ss = dynamic_cast<const VICUS::SubSurface *>(oo);
+				if (ss == nullptr)
+					continue;
 
-					// if any of the former surface's (trimmed) subsurfaces have their center point within this trimresult surface
-					IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), subPolyCenter, xCoord, yCoord);
-					IBKMK::Vector2D subPolyCenter2D = IBKMK::Vector2D(xCoord, yCoord);
+				// If this subsurface was located in this parent surface before trim
+				if (ss->m_parent->m_id == it->first) {
 
-					if (IBKMK::pointInPolygon(aux2DPolygon, subPolyCenter2D) == 1) {
+					// transform the trimmed polygon to 2d for testing pointInPolygon with each former subsurface's centerpoint later
+					std::vector<IBKMK::Vector2D> aux2DPolygon(polys[i].vertexes().size());
+					for (unsigned int j = 0; j < polys[i].vertexes().size(); ++j) {
+						IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), polys[i].vertexes()[j], xCoord, yCoord);
+						aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
+					}
 
-						// Transform subsurface back to 2D
-						std::vector<IBKMK::Vector2D> aux2DPolygon;
+					// Add all trimresults of this subsurface, whose centerpoint is contained in this polys[i]
+					for (unsigned int k = 0; k < m_trimmedSubsurfaces[ssit->first].size(); ++k) {
+						IBKMK::Vector3D subPolyCenter = IBKMK::Polygon3D(m_trimmedSubsurfaces[ssit->first][k]).centerPoint();
 
-						// iterate over vertices of 3d subsurface
-						for (unsigned int l = 0; l < m_trimmedSubsurfaces[it->first][k].vertexes().size(); ++l) {
-							IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), m_trimmedSubsurfaces[it->first][k].vertexes()[l], xCoord, yCoord);
-							aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
-							qDebug() << xCoord << " | " << yCoord;
+						// if any of the former surface's (trimmed) subsurfaces have their center point within this trimresult surface
+						IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), subPolyCenter, xCoord, yCoord);
+						IBKMK::Vector2D subPolyCenter2D = IBKMK::Vector2D(xCoord, yCoord);
+
+						if (IBKMK::pointInPolygon(aux2DPolygon, subPolyCenter2D) == 1) {
+
+							// Transform subsurface back to 2D
+							std::vector<IBKMK::Vector2D> aux2DPolygon;
+
+							// iterate over vertices of 3d subsurface
+							for (unsigned int l = 0; l < m_trimmedSubsurfaces[ssit->first][k].vertexes().size(); ++l) {
+								IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), m_trimmedSubsurfaces[ssit->first][k].vertexes()[l], xCoord, yCoord);
+								aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
+							}
+							VICUS::SubSurface tempSubsurface;
+							tempSubsurface.m_polygon2D = aux2DPolygon;
+							tempSubsurface.m_displayName = ss->m_displayName + QString::fromStdString("[" + std::to_string(k+1) + "]");
+							tempSubsurface.m_color = ss->m_color;
+							tempSubsurface.m_id = nextId++;
+							tempSubsurfaces.push_back(tempSubsurface);
 						}
-						VICUS::SubSurface tempSubsurface;
-						tempSubsurface.m_polygon2D = aux2DPolygon;
-						tempSubsurface.m_displayName = "test" + QString::fromStdString(std::to_string(nextId)); /// TODO!!!!!
-						tempSubsurface.m_color = QColor("#206000"); /// TODOO!!!!!
-						tempSubsurface.m_id = nextId++;
-						tempSubsurfaces.push_back(tempSubsurface);
 					}
 				}
-				newSurf.setSubSurfaces(tempSubsurfaces);
+			}
 
-			} else newSurf.setSubSurfaces(std::vector<VICUS::SubSurface>());
-
+			newSurf.setSubSurfaces(tempSubsurfaces);
 
 			if (room != nullptr) {
 				// add surface to room surfaces
 				const_cast<VICUS::Room*>(room)->m_surfaces.push_back(newSurf);
+				m_project.updatePointers();
 
 			} else {
 				// add to anonymous geometry
 				m_project.m_plainGeometry.m_surfaces.push_back(newSurf);
+				m_project.updatePointers();
 			}
 		}
 
