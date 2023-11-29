@@ -210,8 +210,8 @@ QVariant SVBMConnectorSegmentItem::itemChange(GraphicsItemChange change, const Q
     if (change == QGraphicsItem::ItemPositionChange && m_segmentIdx >= 0) {
         // snap to grid
         QPointF pF = value.toPointF();
-        pF.setX( std::floor(pF.x() / VICUS::BMGlobals::GridSpacing) * VICUS::BMGlobals::GridSpacing);
-        pF.setY( std::floor(pF.y() / VICUS::BMGlobals::GridSpacing) * VICUS::BMGlobals::GridSpacing);
+        pF.setX( std::floor(pF.x()));
+        pF.setY( std::floor(pF.y()));
         QPoint p = pF.toPoint();
         if (m_lastPos != pF.toPoint()) {
             m_moved = true;

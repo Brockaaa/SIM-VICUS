@@ -73,7 +73,7 @@ SVBMSocketItem * SVBMBlockItem::inletSocketAcceptingConnection(const QPointF & s
 
 		socketScenePos -= scenePos;
 		double d = socketScenePos.manhattanLength();
-		if (d < VICUS::BMGlobals::GridSpacing/2) { // half grid spacing snapping tolerance
+		if (d < 9) { // half grid spacing snapping tolerance
 
 			return si;
 		}
@@ -346,8 +346,8 @@ QVariant SVBMBlockItem::itemChange(GraphicsItemChange change, const QVariant & v
 		QPointF pos = value.toPointF();
 
 		// apply true rounding
-		pos.setX( std::floor((pos.x()+0.5*VICUS::BMGlobals::GridSpacing) / VICUS::BMGlobals::GridSpacing) * VICUS::BMGlobals::GridSpacing);
-		pos.setY( std::floor((pos.y()+0.5*VICUS::BMGlobals::GridSpacing) / VICUS::BMGlobals::GridSpacing) * VICUS::BMGlobals::GridSpacing);
+		pos.setX( std::floor((pos.x()+0.5)));
+		pos.setY( std::floor((pos.y()+0.5)));
 		if (m_block->m_pos != pos.toPoint()) {
 			m_moved = true;
 			QPointF oldPos = m_block->m_pos;

@@ -229,7 +229,7 @@ public:
 	/*! Helper Function to evaluate attempted new Connection */
 	bool evaluateNewConnection(QString startSocketName, QString targetSocketName);
 
-	/*! Helper Function to trigger itemChange() function to adjust the connector segment positions */
+	/*! Helper Function to trigger itemChange() in SVBMConnectorSegmentItem to adjust the connector segment positions */
 	void triggerItemChange();
 
 signals:

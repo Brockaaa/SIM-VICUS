@@ -38,10 +38,8 @@
 namespace VICUS{
 
 bool BMGlobals::nearZero(double gridDistance) {
-	return std::fabs(gridDistance/BMGlobals::GridSpacing) < 1e-10;
+	return std::fabs(gridDistance) < 1e-10;
 }
-
-double BMGlobals::GridSpacing = 12; // in pixel
 
 double BMGlobals::LabelFontSize = 8;
 

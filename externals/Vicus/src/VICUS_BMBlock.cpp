@@ -75,10 +75,10 @@ QLineF BMBlock::socketStartLine(const BMSocket * socket) const {
 	// first determine the direction: top, left, right, bottom
 	QPointF otherPoint = socket->m_pos;
 	switch (socket->direction()) {
-		case BMSocket::Left	: otherPoint += QPointF(-2*BMGlobals::GridSpacing, 0); break;
-		case BMSocket::Right	: otherPoint += QPointF(+2*BMGlobals::GridSpacing, 0); break;
-		case BMSocket::Top	: otherPoint += QPointF(0, -2*BMGlobals::GridSpacing); break;
-		case BMSocket::Bottom	: otherPoint += QPointF(0, +2*BMGlobals::GridSpacing); break;
+		case BMSocket::Left	: otherPoint += QPointF(-2*3, 0); break;
+		case BMSocket::Right	: otherPoint += QPointF(+2*7, 0); break;
+		case BMSocket::Top	: otherPoint += QPointF(0, -2*5); break;
+		case BMSocket::Bottom	: otherPoint += QPointF(0, +2*5); break;
 	}
 	QPointF startPoint(socket->m_pos);
 	// shift both points by block position
