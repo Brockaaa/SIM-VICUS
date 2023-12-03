@@ -44,6 +44,8 @@
 
 #include <NANDRAD_HydraulicNetworkComponent.h>
 
+#include <QScrollBar>
+
 #include <QtExt_LanguageHandler.h>
 #include <QtExt_Locale.h>
 
@@ -198,39 +200,41 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 	// get optional parameters
 	std::vector<unsigned int> paraVecOpt = m_current->optionalParameter(m_current->m_modelType);
 
+	int rowCount = paraVec.size() + paraVecInt.size() + paraVecOpt.size();
 	// populate table widget with parameters
-	m_ui->tableWidgetParameters->setRowCount(paraVec.size() + paraVecInt.size() + paraVecOpt.size());
+	m_ui->tableWidgetParameters->setRowCount(rowCount);
 	if (paraVec.empty() && paraVecInt.empty() && paraVecOpt.empty())
 		m_ui->groupBoxModelParameters->setEnabled(false);
 	else
 		m_ui->groupBoxModelParameters->setEnabled(true);
 
+	m_ui->tableWidgetParameters->setMaximumHeight(rowCount * m_ui->tableWidgetParameters->rowHeight(0));
 	m_ui->tableWidgetParameters->blockSignals(true);
 
-	int rowCount = 0;
+	int rowCounter = 0;
 	for (unsigned int para: paraVec) {
 		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Keyword("NetworkComponent::para_t", (int)para));
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-		m_ui->tableWidgetParameters->setItem(rowCount, 0, item);
+		m_ui->tableWidgetParameters->setItem(rowCounter, 0, item);
 		try {
 			IBK::Unit ioUnit(VICUS::KeywordListQt::Unit("NetworkComponent::para_t", (int)para));
 			item = new QTableWidgetItem(QString::fromStdString(ioUnit.name()));
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-			m_ui->tableWidgetParameters->setItem(rowCount, 2, item);
+			m_ui->tableWidgetParameters->setItem(rowCounter, 2, item);
 
 			if (m_current->m_para[para].name.empty())
 				item = new QTableWidgetItem(); // TODO : Hauke, set some meaningful initial value?
 			else
 				item = new QTableWidgetItem(QString("%L1").arg(m_current->m_para[para].get_value(ioUnit)));
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
-			if ((unsigned int)rowCount < paraVecStd.size())
+			if ((unsigned int)rowCounter < paraVecStd.size())
 				item->setData(Qt::UserRole, DT_DoubleStd);
 			else
 				item->setData(Qt::UserRole, DT_DoubleAdditional);
 			item->setData(Qt::UserRole+1, para);
-			m_ui->tableWidgetParameters->setItem(rowCount, 1, item);
+			m_ui->tableWidgetParameters->setItem(rowCounter, 1, item);
 
-			++rowCount;
+			++rowCounter;
 		}
 		catch (IBK::Exception & ex) {
 			IBK::IBK_Message(ex.what(), IBK::MSG_ERROR, FUNC_ID);
@@ -244,12 +248,12 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 		// parameter name
 		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Keyword("NetworkComponent::intPara_t", (int)paraInt));
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-		m_ui->tableWidgetParameters->setItem(rowCount, 0, item);
+		m_ui->tableWidgetParameters->setItem(rowCounter, 0, item);
 		try {
 			// parameter unit
 			item = new QTableWidgetItem("-");
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-			m_ui->tableWidgetParameters->setItem(rowCount, 2, item);
+			m_ui->tableWidgetParameters->setItem(rowCounter, 2, item);
 			// parameter value
 			if (m_current->m_intPara[paraInt].name.empty())
 				item = new QTableWidgetItem(); // TODO : Hauke, set some meaningful initial value?
@@ -257,9 +261,9 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 				item = new QTableWidgetItem(QString("%L1").arg(m_current->m_intPara[paraInt].value));
 			item->setData(Qt::UserRole, DT_Integer);
 			item->setData(Qt::UserRole+1, paraInt);
-			m_ui->tableWidgetParameters->setItem(rowCount, 1, item);
+			m_ui->tableWidgetParameters->setItem(rowCounter, 1, item);
 
-			++rowCount;
+			++rowCounter;
 		}
 		catch (IBK::Exception & ex) {
 			IBK::IBK_Message(ex.what(), IBK::MSG_ERROR, FUNC_ID);
@@ -276,14 +280,14 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Keyword("NetworkComponent::para_t", (int)paraOpt));
 		item->setFont(fnt);
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-		m_ui->tableWidgetParameters->setItem(rowCount, 0, item);
+		m_ui->tableWidgetParameters->setItem(rowCounter, 0, item);
 		try {
 			// parameter unit
 			IBK::Unit ioUnit(VICUS::KeywordListQt::Unit("NetworkComponent::para_t", (int)paraOpt));
 			item = new QTableWidgetItem(QString::fromStdString(ioUnit.name()));
 			item->setFont(fnt);
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-			m_ui->tableWidgetParameters->setItem(rowCount, 2, item);
+			m_ui->tableWidgetParameters->setItem(rowCounter, 2, item);
 			// parameter value
 			if (m_current->m_para[paraOpt].name.empty())
 				item = new QTableWidgetItem(); // TODO : Hauke, set some meaningful initial value?
@@ -292,9 +296,9 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 			item->setFont(fnt);
 			item->setData(Qt::UserRole, DT_DoubleOptional);
 			item->setData(Qt::UserRole+1, paraOpt);
-			m_ui->tableWidgetParameters->setItem(rowCount, 1, item);
+			m_ui->tableWidgetParameters->setItem(rowCounter, 1, item);
 
-			++rowCount;
+			++rowCounter;
 		}
 		catch (IBK::Exception & ex) {
 			IBK::IBK_Message(ex.what(), IBK::MSG_ERROR, FUNC_ID);
@@ -372,7 +376,15 @@ void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget() const {
 			m_ui->tableWidgetPolynomCoefficients->setItem((int)row, (int)col, item);
 		}
 	}
+
 	m_ui->tableWidgetPolynomCoefficients->resizeRowsToContents();
+
+	int tableWidgetHeight = rowCount * m_ui->tableWidgetPolynomCoefficients->rowHeight(0);
+	tableWidgetHeight += m_ui->tableWidgetPolynomCoefficients->horizontalScrollBar()->height();
+	m_ui->tableWidgetPolynomCoefficients->setMinimumHeight(tableWidgetHeight);
+	m_ui->tableWidgetPolynomCoefficients->setMaximumHeight(tableWidgetHeight);
+
+
 	m_ui->tableWidgetPolynomCoefficients->blockSignals(false);
 }
 

@@ -9,6 +9,7 @@
 #include "SVDatabase.h"
 #include "SVSettings.h"
 #include "SVProjectHandler.h"
+#include "SVStyle.h"
 
 #include <queue>
 #include <QScreen>
@@ -21,6 +22,7 @@
 #include <IBK_MultiLanguageString.h>
 
 #include <QtExt_Directories.h>
+#include <QtExt_Style.h>
 
 #include <VICUS_BMNetwork.h>
 #include <VICUS_BMBlock.h>
@@ -66,7 +68,10 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	m_sceneManager = qobject_cast<SVBMSceneManager*>(m_ui->viewWidget->scene());
 	setupSubNetwork(subNetwork);
 
-	updateToolBoxPages();
+	for(unsigned int i = 0; i < VICUS::NetworkComponent::ComponentCategory::NUM_CC; i++){
+		m_tables.push_back(new SVSubNetworkEditDialogTable(this));
+		connect(m_tables[i], &SVSubNetworkEditDialogTable::itemSelectionChanged, this, &SVSubNetworkEditDialog::on_componentSelected);
+	}
 
 	// populate tool box
 	m_ui->tbox->blockSignals(true);
@@ -79,11 +84,16 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	m_ui->tbox->addPage(tr("Other"), m_tables[3]);
 	m_ui->tbox->blockSignals(false);
 	m_ui->tbox->setCurrentIndex(0);
+
 	m_ui->viewWidget->setDragMode(QGraphicsView::ScrollHandDrag);
 	m_ui->viewWidget->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 	m_ui->viewWidget->setResolution(1);
+	m_ui->viewWidget->setStyleSheet("background-color: white;");
 
 	m_ui->controllerLineEdit->setDisabled(true);
+
+	m_ui->frameBuiltIn->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(QtExt::Style::ToolBoxPageBackground));
+	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundBright.name()));
 
 	connect(m_sceneManager, &SVBMSceneManager::newBlockSelected, this, &SVSubNetworkEditDialog::blockSelectedEvent);
 	connect(m_sceneManager, &SVBMSceneManager::newConnectorSelected, this, &SVSubNetworkEditDialog::connectorSelectedEvent);
@@ -93,6 +103,7 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &SVSubNetworkEditDialog::on_buttonBox_rejected);
 	connect(m_ui->nameLineEdit, &QLineEdit::textChanged, this, &SVSubNetworkEditDialog::on_NameTextChanged);
 	connect(&SVProjectHandler::instance(), &SVProjectHandler::updateSubnetworkThumbnails, this, &SVSubNetworkEditDialog::on_projectSaved);
+
 }
 
 SVSubNetworkEditDialog::~SVSubNetworkEditDialog()
@@ -127,6 +138,7 @@ void SVSubNetworkEditDialog::open()
 	m_ui->viewWidget->fitInView(m_sceneManager->sceneRect(), Qt::KeepAspectRatio);
 	selectionClearedEvent();
 	m_sceneManager->update();
+	updateToolBoxPages();
 }
 
 void SVSubNetworkEditDialog::resize(int w, int h)
@@ -137,16 +149,9 @@ void SVSubNetworkEditDialog::resize(int w, int h)
 
 void SVSubNetworkEditDialog::updateToolBoxPages(){
 
-	if(m_tables.size() == 0){
-		for(unsigned int i = 0; i < VICUS::NetworkComponent::ComponentCategory::NUM_CC; i++){
-			m_tables.push_back(new SVSubNetworkEditDialogTable(this));
-			connect(m_tables[i], &SVSubNetworkEditDialogTable::itemSelectionChanged, this, &SVSubNetworkEditDialog::on_componentSelected);
-		}
-	} else {
-		for (SVSubNetworkEditDialogTable *table : m_tables){
-			table->clearSelection();
-			table->clear();
-		}
+	for (SVSubNetworkEditDialogTable *table : m_tables){
+		table->clearSelection();
+		table->clear();
 	}
 
 	for(int i = 0; i < VICUS::NetworkComponent::ModelType::NUM_MT; ++i) {

@@ -4,6 +4,7 @@
 #include "SVSubNetworkEditDialogTableItem.h"
 #include "SVSubNetworkEditDialog.h"
 #include "SVBMZoomMeshGraphicsView.h"
+#include "SVStyle.h"
 
 #include <QDebug>
 #include <QHeaderView>
@@ -28,6 +29,7 @@ SVSubNetworkEditDialogTable::SVSubNetworkEditDialogTable(QWidget *parent) :
 	setSelectionMode(QAbstractItemView::SingleSelection);
 	setSelectionBehavior(QAbstractItemView::SelectItems);
 	setColumnCount(1);
+	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
 	m_zoomMeshGraphicsView = dynamic_cast<SVSubNetworkEditDialog*>(parent)->zoomMeshGraphicsView();
 
@@ -66,7 +68,7 @@ void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent &component)
 	const int rowHeight = 35;
 	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(component.m_modelType),  QString::fromStdString(component.m_displayName.string("en")), VICUS::KeywordListQt::Description("NetworkComponent::ModelType", component.m_modelType), m_defaultRowHeight, this, true);
 	if(!component.m_builtIn){
-		bmItem1->setStyleSheet("background-color: rgb(173, 216, 230);");
+		bmItem1->setStyleSheet(QString("background-color: %1;").arg(SVStyle::instance().m_userDBBackgroundBright.name()));
 	}
 	setFixedHeight(height() + rowHeight);
 	insertRow(m_rowSize);

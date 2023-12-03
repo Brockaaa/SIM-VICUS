@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>876</width>
+    <width>1038</width>
     <height>540</height>
    </rect>
   </property>
@@ -52,14 +52,104 @@
         <number>0</number>
        </property>
        <property name="topMargin">
-        <number>9</number>
+        <number>0</number>
        </property>
        <property name="rightMargin">
         <number>0</number>
        </property>
        <property name="bottomMargin">
-        <number>9</number>
+        <number>0</number>
        </property>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayoutLegend">
+         <property name="bottomMargin">
+          <number>6</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="labelBuiltIn">
+           <property name="text">
+            <string> builtIn Elements </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QFrame" name="frameBuiltIn">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>80</height>
+            </size>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelUserDB">
+           <property name="text">
+            <string> UserDB elements </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QFrame" name="frameUserDB">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
        <item>
         <widget class="QScrollArea" name="scrollArea">
          <property name="frameShape">
@@ -79,8 +169,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>183</width>
-            <height>473</height>
+            <width>345</width>
+            <height>462</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="scrollAreaLayout">
@@ -128,7 +218,7 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <layout class="QHBoxLayout" name="horizontalLayoutToolboxButtons">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -195,7 +285,7 @@
           <number>9</number>
          </property>
          <property name="bottomMargin">
-          <number>9</number>
+          <number>0</number>
          </property>
          <item>
           <layout class="QHBoxLayout" name="buttonsLayout">

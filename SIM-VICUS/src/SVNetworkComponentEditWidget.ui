@@ -31,8 +31,23 @@
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>120</height>
+          <height>200</height>
          </size>
+        </property>
+        <property name="lineWidth">
+         <number>1</number>
+        </property>
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+        <property name="autoScroll">
+         <bool>true</bool>
+        </property>
+        <property name="showGrid">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -62,8 +77,17 @@
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>70</height>
+          <height>140</height>
          </size>
+        </property>
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOn</enum>
+        </property>
+        <property name="showGrid">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
