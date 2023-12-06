@@ -47,18 +47,56 @@ SVUndoModifySurfaceGeometry::SVUndoModifySurfaceGeometry(const QString & label,
 	}
 }
 
+void updateParent(VICUS::Surface &s) {
+	VICUS::Surface *ps = dynamic_cast<VICUS::Surface *>(s.m_parent);
+
+	if (ps == nullptr)
+		return;
+
+	std::vector<VICUS::Surface>		childs = ps->childSurfaces();
+	std::vector<VICUS::SubSurface>	subs   = ps->subSurfaces();
+
+	ps->setChildAndSubSurfaces(subs, childs);
+
+	updateParent(*ps);
+
+}
+
 
 void SVUndoModifySurfaceGeometry::undo() {
-
+	VICUS::Project &prj = theProject();
 	// process all of our stored surfaces in the project
 	for (unsigned int i=0; i<m_surfaces.size(); ++i) {
 		// find surface by ID in current project
+		VICUS::Object * o = prj.objectById(m_surfaces[i].m_id);
+		IBK_ASSERT(o != nullptr);
+		VICUS::Surface * s = dynamic_cast<VICUS::Surface *>(o);
+		Q_ASSERT(s != nullptr);
+
+		// We need to temporarily store the child surfaces
+		std::vector<VICUS::Surface>		childs = s->childSurfaces();
+
+		// exchange data between surfaces
+		std::swap(m_surfaces[i], *s);
+
+		std::vector<VICUS::SubSurface>	subs   = s->subSurfaces();
+		s->setChildAndSubSurfaces(subs, childs);
+		//updateParent(*s);
+
+		// Link updated child surfaces correctly, so that
+		// objectById does not link to old child surfaces
+		if (childs.size() > 0)
+			prj.updatePointers();
+	}
+
+	for (unsigned int i=0; i<m_surfaces.size(); ++i) {
 		VICUS::Object * o = theProject().objectById(m_surfaces[i].m_id);
 		IBK_ASSERT(o != nullptr);
 		VICUS::Surface * s = dynamic_cast<VICUS::Surface *>(o);
 		Q_ASSERT(s != nullptr);
-		// exchange data between surfaces
-		std::swap(m_surfaces[i], *s);
+		std::vector<VICUS::Surface>		childs = s->childSurfaces();
+		std::vector<VICUS::SubSurface>	subs   = s->subSurfaces();
+		s->setChildAndSubSurfaces(subs, childs);
 	}
 
 	// process all of our stored surfaces in the project
@@ -83,6 +121,7 @@ void SVUndoModifySurfaceGeometry::undo() {
 	// NOTE: this may be slow for larger geometries...
 	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingGeometryChanged );
 	SVProjectHandler::instance().setModified( SVProjectHandler::DrawingModified );
+	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingTopologyChanged );
 }
 
 

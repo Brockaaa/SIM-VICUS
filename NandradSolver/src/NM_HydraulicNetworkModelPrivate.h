@@ -57,11 +57,13 @@ struct Network {
 	std::vector<Node>		m_nodes;
 };
 
+
 // *** Pimpl class declaration ***
 
 class HydraulicNetworkModelImpl {
 public:
-	HydraulicNetworkModelImpl(const std::vector<Element> &elems, unsigned int referenceElemIdx);
+	HydraulicNetworkModelImpl(const std::vector<Element> &elems, unsigned int referenceElemIdx,
+							  double solverAbsTol, double solverMassFluxScale);
 	~HydraulicNetworkModelImpl();
 
 	/*! Initialized solver based on current content of m_flowElements.
@@ -113,6 +115,11 @@ public:
 	/*! Container with absolute pressures for each outlet node of each flow element.
 	*/
 	std::vector<double>									m_outletNodeAbsolutePressures;
+
+	/*! To distinguish in update() between calls for "a new time point" or "calls to update solution in the same step"
+		which affects the initial guess of our Newton scheme.
+	*/
+	bool												m_newStepStarted = true;
 
 private:
 
@@ -173,6 +180,11 @@ private:
 	DenseSolver							m_denseSolver;
 	/*! Stucture storing sparse jacobian and KLU solver information. */
 	SparseSolver						m_sparseSolver;
+
+	/*! The threshold for the WRMS norm of the residual vector to accept the solution. */
+	double								m_residualTolerance = -999;
+	/*! Mass flux scaling factor for y. */
+	double								m_massFluxScale = -999;
 
 	unsigned int						m_nodeCount;
 	unsigned int						m_elementCount;

@@ -129,7 +129,7 @@ public:
 	/*! Inverts normal vector (this is a convenience function for setting a new orientation
 		with negated normal vector.
 	*/
-	void flip();
+	Vector2D flip();
 
 
 	// Calculation functions
@@ -172,8 +172,8 @@ private:
 	/*! Checks if the vector is smaller zero. */
 	bool smallerVectZero(const IBKMK::Vector3D &vect);
 
-	/*! Calculates a normal of a polyline. If an error occurs the vector (1,0,0) is output.  */
-	IBKMK::Vector3D getNormal(const std::vector<IBKMK::Vector3D>& polygon);
+	/*! Calculates a normalized normal of a polyline. If an error occurs the vector (1,0,0) is output.  */
+	IBKMK::Vector3D computeNormal(const std::vector<IBKMK::Vector3D>& polygon);
 
 	// *** PRIVATE MEMBER VARIABLES ***
 

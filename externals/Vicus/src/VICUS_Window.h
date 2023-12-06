@@ -102,6 +102,7 @@ public:
 
 	/*! Frame parameters (optional). */
 	WindowFrame						m_frame;								// XML:E
+
 	/*! Divider parameters (optional). */
 	WindowDivider					m_divider;								// XML:E
 

@@ -34,6 +34,7 @@
 #include <IBK_messages.h>
 #include <IBK_assert.h>
 #include <IBK_Exception.h>
+#include <IBK_FileUtils.h>
 
 #include <IBKMK_3DCalculations.h>
 
@@ -53,6 +54,12 @@
 namespace VICUS {
 
 Project::Project() {
+
+	m_location.initDefaults();
+	m_simulationParameter.initDefaults();
+	m_solverParameter.initDefaults();
+
+
 	// build test building
 
 #if 0
@@ -218,17 +225,7 @@ void Project::parseHeader(const IBK::Path & filename) {
 	FUNCID(Project::parseHeader);
 
 	std::ifstream inputStream;
-#if defined(_WIN32)
-#if defined(_MSC_VER)
-	inputStream.open(filename.wstr().c_str(), std::ios_base::binary);
-#else
-	std::string filenameAnsi = IBK::WstringToANSI(filename.wstr(), false);
-	inputStream.open(filenameAnsi.c_str(), std::ios_base::binary);
-#endif
-#else // _WIN32
-	inputStream.open(filename.c_str(), std::ios_base::binary);
-#endif
-	if (!inputStream.is_open()) {
+	if (!IBK::open_ifstream(inputStream, filename, std::ios_base::binary)) {
 		throw IBK::Exception( IBK::FormatString("Cannot open input file '%1' for reading").arg(filename.c_str()), FUNC_ID);
 	}
 	std::string line;
@@ -260,75 +257,38 @@ void Project::parseHeader(const IBK::Path & filename) {
 
 
 void Project::readXML(const IBK::Path & filename) {
-	FUNCID(Project::readXML);
-
 	TiXmlDocument doc;
 	IBK::Path filenamePath(filename);
 	std::map<std::string,IBK::Path> pathPlaceHolders; // only dummy for now, filenamePath does not contain placeholders
-	TiXmlElement * xmlElem = NANDRAD::openXMLFile(pathPlaceHolders, filenamePath, "VicusProject", doc);
+	TiXmlElement * xmlElem = NANDRAD::openXMLFile(pathPlaceHolders, filenamePath, "VicusProject", doc); // NOTE: Throws exception in case of error
 	if (!xmlElem)
 		return; // empty project, this means we are using only defaults
 
-	// we read our subsections from this handle
-	TiXmlHandle xmlRoot = TiXmlHandle(xmlElem);
-
-	// clear existing grid planes
-	m_viewSettings.m_gridPlanes.clear();
-
-	try {
-		xmlElem = xmlRoot.FirstChild("ProjectInfo").Element();
-		if (xmlElem) {
-			m_projectInfo.readXML(xmlElem);
-		}
-
-		// Directory Placeholders
-		xmlElem = xmlRoot.FirstChild( "DirectoryPlaceholders" ).Element();
-		if (xmlElem) {
-			readDirectoryPlaceholdersXML(xmlElem);
-		}
-
-		xmlElem = xmlRoot.FirstChild("Project").Element();
-		if (xmlElem) {
-			readXML(xmlElem);
-		}
-
-		// if we do not have a default grid, create it
-		if (m_viewSettings.m_gridPlanes.empty()) {
-			m_viewSettings.m_gridPlanes.push_back( VICUS::GridPlane(IBKMK::Vector3D(0,0,0), IBKMK::Vector3D(0,0,1),
-																	IBKMK::Vector3D(1,0,0), QColor("white"), 200, 10 ) );
-		}
-
-		// update internal pointer-based links
-		updatePointers();
-
-		// set default colors for network objects
-		for (VICUS::Network & net : m_geometricNetworks) {
-			// updateColor is a const-function, this is possible since
-			// the m_color property of edges and nodes is mutable
-			net.setDefaultColors();
-		}
-	}
-	catch (IBK::Exception & ex) {
-		throw IBK::Exception(ex, IBK::FormatString("Error reading project '%1'.").arg(filename), FUNC_ID);
-	}
+	readXMLDocument(xmlElem);
 }
 
-void Project::readXML(const QString & projectText) {
-	FUNCID(Project::readXML);
 
+void Project::readXML(const QString & projectText) {
 	TiXmlDocument doc;
 	TiXmlElement * xmlElem = NANDRAD::openXMLText(projectText.toStdString(), "VicusProject", doc);
 	if (!xmlElem)
 		return; // empty project, this means we are using only defaults
 
+	readXMLDocument(xmlElem);
+}
+
+
+void Project::readXMLDocument(TiXmlElement * rootElement) {
+	FUNCID(Project::readXML);
+
 	// we read our subsections from this handle
-	TiXmlHandle xmlRoot = TiXmlHandle(xmlElem);
+	TiXmlHandle xmlRoot = TiXmlHandle(rootElement);
 
 	// clear existing grid planes
 	m_viewSettings.m_gridPlanes.clear();
 
 	try {
-		xmlElem = xmlRoot.FirstChild("ProjectInfo").Element();
+		TiXmlElement * xmlElem = xmlRoot.FirstChild("ProjectInfo").Element();
 		if (xmlElem) {
 			m_projectInfo.readXML(xmlElem);
 		}
@@ -350,8 +310,32 @@ void Project::readXML(const QString & projectText) {
 																	IBKMK::Vector3D(1,0,0), QColor("white"), 200, 10 ) );
 		}
 
-		// update internal pointer-based links
+		// update internal pointer-based links and alongside check for data consistency
 		updatePointers();
+
+		// update the colors
+		// if project has invalid colors nothing is drawn ...
+		for (VICUS::Building &b : m_buildings) {
+			for (VICUS::BuildingLevel & bl : b.m_buildingLevels) {
+				for (VICUS::Room &r : bl.m_rooms) {
+					for (VICUS::Surface &s : r.m_surfaces) {
+						if (!s.m_displayColor.isValid())
+							s.initializeColorBasedOnInclination();
+						s.m_color = s.m_displayColor;
+						for (const VICUS::SubSurface &sub : s.subSurfaces()) {
+							const_cast<VICUS::SubSurface &>(sub).updateColor();
+						}
+					}
+				}
+			}
+		}
+
+		// plain geometry surfaces will be silver
+		for (VICUS::Surface &s : m_plainGeometry.m_surfaces) {
+			if (s.m_color == QColor::Invalid) {
+				s.m_color = QColor("#C0C0C0");
+			}
+		}
 
 		// set default colors for network objects
 		for (VICUS::Network & net : m_geometricNetworks) {
@@ -363,6 +347,7 @@ void Project::readXML(const QString & projectText) {
 	catch (IBK::Exception & ex) {
 		throw IBK::Exception(ex, IBK::FormatString("Error reading project from text."), FUNC_ID);
 	}
+
 }
 
 
@@ -469,22 +454,28 @@ void Project::writeDirectoryPlaceholdersXML(TiXmlElement * parent) const {
 }
 
 
-void Project::clean() {
-	// TODO : Implement cleanup, i.e. removal of ComponentInstances and SubSurfaceComponentInstance that no longer
-	//        reference valid surfaces etc.
-}
-
 void Project::addChildSurface(const VICUS::Surface &s) {
 	for (VICUS::Surface & childSurf : const_cast<std::vector<VICUS::Surface> &>(s.childSurfaces()) ) {
 		addAndCheckForUniqueness(&childSurf);
 		childSurf.m_componentInstance = nullptr;
-
 		addChildSurface(childSurf);
 	}
 }
 
+
 void Project::updatePointers() {
 	FUNCID(Project::updatePointers);
+
+	// This is a pretty important function as it check and guarantees data consistency in the model.
+	// It is called whenever something changes in the data structure, and thus should be pretty fast.
+	// If any check fails, it throws an exception - this is useful when developing code as it triggers
+	// when data was modified inconsistenty.
+	//
+	// Checks are:
+	// - unique object IDs
+	// - valid surface references from component instances
+	// - backward references from surfaces to component instances are unique
+
 
 	m_objectPtr.clear();
 	m_objectPtr[VICUS::INVALID_ID] = nullptr; // this will help us detect invalid IDs in the data model
@@ -506,112 +497,183 @@ void Project::updatePointers() {
 						addAndCheckForUniqueness(&sub);
 						sub.m_subSurfaceComponentInstance = nullptr;
 					}
-
 					addChildSurface(s);
 				}
 			}
 		}
 	}
 
-	// update pointers
+	// Now our m_objectsPtr map contains ALL ids in the model that are referenced elsewhere
+
+
+	// *** check component instances ***
+
+	// this map holds all surfaces referenced by components (key = surfaceID, value = componentID of component that references the surface)
+	// and is used to check, if several components reference the same surface
+	std::map<unsigned int, unsigned int> referencedSurface;
+
+	// also check, that backward referenced from surfaces to component instances are unique
+	// Note: invalid "component" is ok, as this does not affect model consistency (it is just meta-data)
 	for (VICUS::ComponentInstance & ci : m_componentInstances) {
+
+		// component instance must have at least one valid side ID
+		if (ci.m_idSideASurface == VICUS::INVALID_ID && ci.m_idSideBSurface == VICUS::INVALID_ID)
+			throw IBK::Exception(IBK::FormatString("Component instance #%1 has two invalid surface references.").arg(ci.m_id), FUNC_ID);
+
+		// component instance may not reference the same surface on both sides
+		if (ci.m_idSideASurface == ci.m_idSideBSurface)
+			throw IBK::Exception(IBK::FormatString("Component instance #%1 references the same surface on both sides.").arg(ci.m_id), FUNC_ID);
+
 		// lookup surfaces
-		ci.m_sideASurface = surfaceByID(ci.m_idSideASurface);
-		if (ci.m_sideASurface != nullptr) {
-			// check that no two components reference the same surface
-			if (ci.m_sideASurface->m_componentInstance != nullptr) {
-				IBK::IBK_Message(IBK::FormatString("Surface id: %1 name: '%2' is referenced by multiple component instances!")
-								 .arg(ci.m_idSideASurface).arg(ci.m_sideASurface->m_displayName.toStdString()), IBK::MSG_ERROR, FUNC_ID);
+		if (ci.m_idSideASurface != VICUS::INVALID_ID) {
+			ci.m_sideASurface = surfaceByID(ci.m_idSideASurface);
+			if (ci.m_sideASurface == nullptr)
+				throw IBK::Exception(IBK::FormatString("Component instance #%1 references an invalid/unknown surface #%2.").arg(ci.m_id).arg(ci.m_idSideASurface), FUNC_ID);
 
-			}
-			else {
-				ci.m_sideASurface->m_componentInstance = &ci;
-			}
-		}
+			// check that this surface hasn't been referenced before
+			std::map<unsigned int, unsigned int>::const_iterator it = referencedSurface.find(ci.m_idSideASurface);
+			if (it != referencedSurface.end())
+				throw IBK::Exception(IBK::FormatString("Surface #%1 name: '%2' is referenced by component instance #%3, but was previously also referenced by component instance #%4!")
+									 .arg(ci.m_idSideASurface).arg(ci.m_sideASurface->m_displayName.toStdString()).arg(ci.m_id).arg(it->second), FUNC_ID);
+			// remember referenced surface
+			referencedSurface[ci.m_idSideASurface] = ci.m_id;
 
-		ci.m_sideBSurface = surfaceByID(ci.m_idSideBSurface);
-		if (ci.m_sideBSurface != nullptr) {
-			// check that no two components reference the same surface
-			if (ci.m_sideBSurface->m_componentInstance != nullptr) {
-				IBK::IBK_Message(IBK::FormatString("Surface id: %1 name: '%2' is referenced by multiple component instances!")
-								 .arg(ci.m_idSideBSurface).arg(ci.m_sideBSurface->m_displayName.toStdString()), IBK::MSG_ERROR, FUNC_ID);
-			}
-			else {
-				ci.m_sideBSurface->m_componentInstance = &ci;
-			}
+			// store pointer to this component in referenced side
+			ci.m_sideASurface->m_componentInstance = &ci;
 		}
+		else
+			ci.m_sideASurface = nullptr; // set nullptr if now invalid id
+
+		if (ci.m_idSideBSurface != VICUS::INVALID_ID) {
+			ci.m_sideBSurface = surfaceByID(ci.m_idSideBSurface);
+			if (ci.m_sideBSurface == nullptr)
+				throw IBK::Exception(IBK::FormatString("Component instance #%1 references an invalid/unknown surface #%2.").arg(ci.m_id).arg(ci.m_idSideBSurface), FUNC_ID);
+
+			// check that this surface hasn't been referenced before
+			std::map<unsigned int, unsigned int>::const_iterator it = referencedSurface.find(ci.m_idSideBSurface);
+			if (it != referencedSurface.end())
+				throw IBK::Exception(IBK::FormatString("Surface #%1 name: '%2' is referenced by component instance #%3, but was previously also referenced by component instance #%4!")
+									 .arg(ci.m_idSideBSurface).arg(ci.m_sideBSurface->m_displayName.toStdString()).arg(ci.m_id).arg(it->second), FUNC_ID);
+			// remember referenced surface
+			referencedSurface[ci.m_idSideBSurface] = ci.m_id;
+
+			// store pointer to this component in referenced side
+			ci.m_sideBSurface->m_componentInstance = &ci;
+		}
+		else
+			ci.m_sideBSurface = nullptr; // set nullptr if now invalid id
+
+		// NOTE: surface heating control zone may be referenced by several component instances (forward reference)
 		if (ci.m_idSurfaceHeatingControlZone != VICUS::INVALID_ID) {
-			for (VICUS::Building & b : m_buildings)
-				for (VICUS::BuildingLevel & bl : b.m_buildingLevels)
-					for (VICUS::Room & r : bl.m_rooms)
-						if (r.m_id == ci.m_idSurfaceHeatingControlZone)
+			bool found = false;
+			for (VICUS::Building & b : m_buildings) {
+				for (VICUS::BuildingLevel & bl : b.m_buildingLevels) {
+					for (VICUS::Room & r : bl.m_rooms) {
+						if (r.m_id == ci.m_idSurfaceHeatingControlZone) {
 							ci.m_surfaceHeatingControlZone = &r;
+							found = true;
+							break;
+						}
+						if (found) break;
+					}
+					if (found) break;
+				}
+				if (found) break;
+			}
+			if (!found)
+				throw IBK::Exception(IBK::FormatString("Component instance #%1 references an invalid/unknown surface heating control zone #%2.")
+									 .arg(ci.m_id).arg(ci.m_idSurfaceHeatingControlZone), FUNC_ID);
 		}
-		if (ci.m_idSupplySystem != VICUS::INVALID_ID) {
-			for (VICUS::SupplySystem & s : m_embeddedDB.m_supplySystems)
-				if (s.m_id == ci.m_idSupplySystem)
-					ci.m_supplySystem = &s;
-		}
-	}
+	} // for component instances
+
+
+	// *** check subsurface component instances ***
+
+	// same as referencedSurface
+	std::map<unsigned int, unsigned int> referencedSubSurface;
 
 	// update pointers in subsurfaces
 	for (VICUS::SubSurfaceComponentInstance & ci : m_subSurfaceComponentInstances) {
+		// subsurface component instance must have at least one valid side ID
+		if (ci.m_idSideASurface == VICUS::INVALID_ID && ci.m_idSideBSurface == VICUS::INVALID_ID)
+			throw IBK::Exception(IBK::FormatString("Subsurface component instance #%1 has two invalid references.").arg(ci.m_id), FUNC_ID);
+
+		// subsurface component instance may not reference the same surface on both sides
+		if (ci.m_idSideASurface == ci.m_idSideBSurface)
+			throw IBK::Exception(IBK::FormatString("Subsurface component instance #%1 references the same subsurface on both sides.").arg(ci.m_id), FUNC_ID);
+
 		// lookup surfaces
-		ci.m_sideASubSurface = subSurfaceByID(ci.m_idSideASurface);
-		if (ci.m_sideASubSurface != nullptr) {
-			// check that no two components reference the same surface
-			if (ci.m_sideASubSurface->m_subSurfaceComponentInstance != nullptr) {
-				IBK::IBK_Message(IBK::FormatString("Sub-Surface id: %1 name: '%2' is referenced by multiple component instances!")
-								 .arg(ci.m_idSideASurface).arg(ci.m_sideASubSurface->m_displayName.toStdString()), IBK::MSG_ERROR, FUNC_ID);
-			}
-			else {
-				ci.m_sideASubSurface->m_subSurfaceComponentInstance = &ci;
-			}
+		if (ci.m_idSideASurface != VICUS::INVALID_ID) {
+			ci.m_sideASubSurface = subSurfaceByID(ci.m_idSideASurface);
+			if (ci.m_sideASubSurface == nullptr)
+				throw IBK::Exception(IBK::FormatString("Subsurface component instance #%1 references an invalid/unknown subsurface #%2.").arg(ci.m_id).arg(ci.m_idSideASurface), FUNC_ID);
+
+			// check that this surface hasn't been referenced before
+			std::map<unsigned int, unsigned int>::const_iterator it = referencedSubSurface.find(ci.m_idSideASurface);
+			if (it != referencedSubSurface.end())
+				throw IBK::Exception(IBK::FormatString("Subsurface #%1 name: '%2' is referenced by subcomponent instance #%3, but was previously also "
+													   "referenced by component instance #%4!")
+									 .arg(ci.m_idSideASurface).arg(ci.m_sideASubSurface->m_displayName.toStdString()).arg(ci.m_id).arg(it->second), FUNC_ID);
+			// remember referenced surface
+			referencedSubSurface[ci.m_idSideASurface] = ci.m_id;
+
+			// store pointer to this component in referenced side
+			ci.m_sideASubSurface->m_subSurfaceComponentInstance = &ci;
 		}
 
-		ci.m_sideBSubSurface = subSurfaceByID(ci.m_idSideBSurface);
-		if (ci.m_sideBSubSurface != nullptr) {
-			// check that no two components reference the same surface
-			if (ci.m_sideBSubSurface->m_subSurfaceComponentInstance != nullptr) {
-				IBK::IBK_Message(IBK::FormatString("Sub-Surface id: %1 name: '%2' is referenced by multiple component instances!")
-								 .arg(ci.m_idSideBSurface).arg(ci.m_sideBSubSurface->m_displayName.toStdString()), IBK::MSG_ERROR, FUNC_ID);
-			}
-			else {
-				ci.m_sideBSubSurface->m_subSurfaceComponentInstance = &ci;
-			}
+		if (ci.m_idSideBSurface != VICUS::INVALID_ID) {
+			ci.m_sideBSubSurface = subSurfaceByID(ci.m_idSideBSurface);
+			if (ci.m_sideBSubSurface == nullptr)
+				throw IBK::Exception(IBK::FormatString("Subsurface component instance #%1 references an invalid/unknown subsurface #%2.").arg(ci.m_id).arg(ci.m_idSideBSurface), FUNC_ID);
+
+			// check that this surface hasn't been referenced before
+			std::map<unsigned int, unsigned int>::const_iterator it = referencedSubSurface.find(ci.m_idSideBSurface);
+			if (it != referencedSubSurface.end())
+				throw IBK::Exception(IBK::FormatString("Subsurface #%1 name: '%2' is referenced by subcomponent instance #%3, but was previously also "
+													   "referenced by component instance #%4!")
+									 .arg(ci.m_idSideBSurface).arg(ci.m_sideBSubSurface->m_displayName.toStdString()).arg(ci.m_id).arg(it->second), FUNC_ID);
+			// remember referenced surface
+			referencedSubSurface[ci.m_idSideBSurface] = ci.m_id;
+
+			// store pointer to this component in referenced side
+			ci.m_sideBSubSurface->m_subSurfaceComponentInstance = &ci;
 		}
-
 	}
 
-	// networks
-
-	for (VICUS::Network & n : m_geometricNetworks) {
-		addAndCheckForUniqueness(&n);
-		for (VICUS::NetworkNode & nod : n.m_nodes)
-			addAndCheckForUniqueness(&nod);
-		n.updateNodeEdgeConnectionPointers();
-	}
-
-	// plain geometry
+	// *** plain geometry ***
 
 	for (VICUS::Surface & s : m_plainGeometry.m_surfaces)
 		addAndCheckForUniqueness(&s);
 
 
-	// network edges
+	// *** networks ***
 
-	// Note: VICUS::NetworkEdge objects do not save their unique IDs in the project file.
-	//       Hence, we need to assign unique IDs on the first time the object is created,
-	//       or, when the object pointer list is first updated.
-	// CAUTION: This should always be the last step in this function, otherwise we may assign object ids here,
-	// which are used by other objects that have not been added yet.
 	for (VICUS::Network & n : m_geometricNetworks) {
+		addAndCheckForUniqueness(&n);
+		for (VICUS::NetworkNode & nod : n.m_nodes)
+			addAndCheckForUniqueness(&nod);
+
+		// create note-edge-pointer links
+		try {
+			n.updateNodeEdgeConnectionPointers();
+		} catch (IBK::Exception & ex) {
+			throw IBK::Exception(ex, IBK::FormatString("Invalid edge-to-node references in network #%1").arg(n.m_id), FUNC_ID);
+		}
+
+		// network edges
+
+		// NOTE: VICUS::NetworkEdge objects do not save their unique IDs in the project file.
+		//       Hence, we need to assign unique IDs on the first time the object is created,
+		//       or, when the object pointer list is first updated.
+		//
+		// CAUTION: This should always be the last step in this function, otherwise we may assign object ids here,
+		//          which are used by other objects that have not been added yet.
+
 		for (VICUS::NetworkEdge & e : n.m_edges) {
 			if (e.m_id == VICUS::INVALID_ID)
 				e.m_id = nextUnusedID();
 			addAndCheckForUniqueness(&e);
 		}
-		n.updateNodeEdgeConnectionPointers();
 	}
 
 	for (VICUS::Drawing &d : m_drawings) {
@@ -717,6 +779,13 @@ void Project::selectObjects(std::set<const Object*> &selectedObjs, SelectionGrou
 		}
 	}
 
+	// Dumb plain geometry
+	if (sg & SG_Obstacle) {
+		for (const VICUS::Surface & s : m_plainGeometry.m_surfaces) {
+			if (selectionCheck(s, takeSelected, takeVisible))
+				selectedObjs.insert(&s);
+		}
+	}
 }
 
 void Project::selectChildSurfaces(std::set<const Object *> &selectedObjs, const Surface &s, bool takeSelected, bool takeVisible) const {
@@ -1178,8 +1247,18 @@ void Project::generateNandradProject(NANDRAD::Project & p, QStringList & errorSt
 
 	// replace vicus ids in shading file with nandrad ids
 	IBK::Path shadingFilePath;
-	if (generateShadingFactorsFile(surfaceIdsVicusToNandrad, IBK::Path(nandradProjectPath), shadingFilePath))
-		p.m_location.m_shadingFactorFilePath = IBK::Path(shadingFilePath);
+	if (generateShadingFactorsFile(surfaceIdsVicusToNandrad, IBK::Path(nandradProjectPath), shadingFilePath)) {
+		std::string composedFilePath;
+		IBK::Path proPath = IBK::Path(nandradProjectPath).parentPath();
+		try {
+			IBK::Path relPath = shadingFilePath.relativePath(proPath);
+			composedFilePath = (IBK::Path("${Project Directory}") / relPath).str();
+		} catch (...) {
+			// can't relate paths... keep absolute
+			composedFilePath = shadingFilePath.str();
+		}
+		p.m_location.m_shadingFactorFilePath = composedFilePath;
+	}
 	else {
 		errorStack.push_back(tr("Shading factor file data invalid/outdated, try re-generating shading factor data!"));
 		throw IBK::Exception("Error during shading factor file generation.", FUNC_ID);
@@ -1187,8 +1266,8 @@ void Project::generateNandradProject(NANDRAD::Project & p, QStringList & errorSt
 
 	// *** generate network data ***
 
-	if (!m_geometricNetworks.empty()) {
-		generateNetworkProjectData(p, errorStack, nandradProjectPath);
+	for (const VICUS::Network &net: m_geometricNetworks) {
+		generateNetworkProjectData(p, errorStack, nandradProjectPath, net.m_id);
 		if (!errorStack.isEmpty())
 			throw IBK::Exception("Error during network data conversion.", FUNC_ID);
 	}
@@ -1398,26 +1477,65 @@ void Project::generateNandradProject(NANDRAD::Project & p, QStringList & errorSt
 		d.m_gridName = def.m_gridName;
 		d.m_timeType = (NANDRAD::OutputDefinition::timeType_t)def.m_timeType;
 		d.m_quantity = def.m_quantity;
-		if (!def.m_vectorIds.empty()) {
-			NANDRAD::IDGroup idGroup;
-			idGroup.m_ids = std::set<unsigned int>(def.m_vectorIds.begin(), def.m_vectorIds.end());
-			d.m_quantity += "[" + idGroup.encodedString() + "]";
-		}
+		//		if (!def.m_vectorIds.empty()) {
+		//			NANDRAD::IDGroup idGroup;
+		//			idGroup.m_ids = std::set<unsigned int>(def.m_vectorIds.begin(), def.m_vectorIds.end());
+		//			d.m_quantity += "[" + idGroup.encodedString() + "]";
+		//		}
 
-		// now generate an object list for this output - don't mind if we get duplicate object lists
+		std::map<std::pair<NANDRAD::ModelInputReference::referenceType_t, std::set<unsigned int>>, std::string> outputLists;
 		NANDRAD::ObjectList ol;
-		ol.m_name ="Outputs-" + IBK::val2string(objectListCount++);
-		ol.m_filterID.m_ids = std::set<unsigned int>(def.m_sourceObjectIds.begin(), def.m_sourceObjectIds.end());
+		NANDRAD::ModelInputReference::referenceType_t type;
 		try {
-			ol.m_referenceType = (NANDRAD::ModelInputReference::referenceType_t)NANDRAD::KeywordList::Enumeration("ModelInputReference::referenceType_t", def.m_sourceObjectType);
+			type = (NANDRAD::ModelInputReference::referenceType_t)NANDRAD::KeywordList::Enumeration("ModelInputReference::referenceType_t", def.m_sourceObjectType);
 		} catch (...) {
 			IBK::IBK_Message(IBK::FormatString("Invalid/unknown source object type '%1' in output definition.").arg(def.m_sourceObjectType),
 							 IBK::MSG_ERROR, FUNC_ID, IBK::VL_STANDARD);
 		}
-		p.m_objectLists.push_back(ol);
+		std::set<unsigned int> ids = std::set<unsigned int>(def.m_sourceObjectIds.begin(), def.m_sourceObjectIds.end());
+		std::pair<NANDRAD::ModelInputReference::referenceType_t, std::set<unsigned int>> key = std::pair<NANDRAD::ModelInputReference::referenceType_t, std::set<unsigned int>>(type, ids);
 
-		d.m_objectListName = ol.m_name;
-		p.m_outputs.m_definitions.push_back(d);
+		if(!def.m_vectorIds.empty()) {
+			for(unsigned int i=0; i<def.m_vectorIds.size(); ++i) {
+				NANDRAD::OutputDefinition newD = d;
+				newD.m_quantity += "[" + IBK::val2string(def.m_vectorIds[i]) + "]";
+
+				// now generate an object list for this output - don't mind if we get duplicate object lists
+				std::string outputListName;
+
+				if(outputLists.find(key) != outputLists.end())
+					outputListName = outputLists.at(key);
+				else {
+					outputListName = "Outputs-" + IBK::val2string(objectListCount++);
+					outputLists[key] = outputListName;
+
+					ol.m_referenceType = type;
+					ol.m_name = outputListName;
+					ol.m_filterID.m_ids = ids;
+
+					p.m_objectLists.push_back(ol);
+				}
+				newD.m_objectListName = outputListName;
+				p.m_outputs.m_definitions.push_back(newD);
+			}
+		}
+		else  {
+			std::string outputListName;
+			if(outputLists.find(key) != outputLists.end())
+				outputListName = outputLists.at(key);
+			else {
+				outputListName = "Outputs-" + IBK::val2string(objectListCount++);
+				outputLists[key] = outputListName;
+
+				ol.m_referenceType = type;
+				ol.m_name = outputListName;
+				ol.m_filterID.m_ids = ids;
+
+				p.m_objectLists.push_back(ol);
+			}
+			d.m_objectListName = outputListName;
+			p.m_outputs.m_definitions.push_back(d);
+		}
 	}
 }
 
@@ -1449,11 +1567,6 @@ std::string createUniqueNandradObjListName(const std::map<std::string, std::vect
 		}
 	}
 	return newName;
-
-
-
-
-
 }
 
 std::string createUniqueNandradObjListAndName(const std::string &name,

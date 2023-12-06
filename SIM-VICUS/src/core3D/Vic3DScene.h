@@ -104,6 +104,7 @@ public:
 	*/
 	bool inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoint & localMousePos, QPoint & newLocalMousePos);
 
+
 	/*! Actually renders to the current OpenGL context. */
 	void render();
 
@@ -162,7 +163,7 @@ public:
 
 private:
 	void generateBuildingGeometry();
-	void generateTransparentBuildingGeometry(const HighlightingMode &mode = HighlightingMode::HM_ColoredSurfaces);
+	void generateTransparentBuildingGeometry(const HighlightingMode &mode = HighlightingMode::HM_TransparentWithBoxes);
 	void generateNetworkGeometry();
 
 	void generate2DDrawingGeometry();
@@ -336,7 +337,7 @@ private:
 	/*! Holds the origin of the orbit controller coordinates. */
 	QVector3D				m_orbitControllerOrigin;
 
-	// *** Interactive translation/rotation/scale stuff **
+	// *** Interactive translation/rotation/scale stuff ***
 
 	/*! Reference vector (coordinate system will be rotated around this vector). */
 	IBKMK::Vector3D			m_rotationAxis;

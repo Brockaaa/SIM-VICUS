@@ -43,6 +43,7 @@
 #include <IBK_Path.h>
 #include <IBK_FileReader.h>
 #include <IBK_FluidPhysics.h>
+#include <IBK_FileUtils.h>
 
 #include <IBKMK_3DCalculations.h>
 #include <IBKMK_UTM.h>
@@ -136,7 +137,10 @@ void Network::addEdge(const NetworkEdge &edge) {
 
 
 void Network::updateNodeEdgeConnectionPointers() {
+	FUNCID(Network::updateNodeEdgeConnectionPointers);
+
 	// resolve all node and edge pointers
+	// check for valid node IDs and throws exceptions, if any check fails
 
 	// first clear edge pointers in all nodes
 	for (NetworkNode & n : m_nodes)
@@ -144,9 +148,28 @@ void Network::updateNodeEdgeConnectionPointers() {
 
 	// loop over all edges
 	for (NetworkEdge & e : m_edges) {
+		// an edge must have 2 valid node IDs
+		if (e.nodeId1() == VICUS::INVALID_ID || e.nodeId2() == VICUS::INVALID_ID)
+			throw IBK::Exception(IBK::FormatString("Network edge #%1 does not have to valid node IDs.").arg(e.m_id), FUNC_ID);
+
+		// an edge must not reference the same node twice
+		if (e.nodeId1() == e.nodeId2())
+			throw IBK::Exception(IBK::FormatString("Network edge #%1 referenced the same node #%2 on both sides.")
+								 .arg(e.m_id).arg(e.nodeId1()), FUNC_ID);
+
 		// store pointers to connected nodes
-		e.m_node1 = nodeById(e.nodeId1());
-		e.m_node2 = nodeById(e.nodeId2());
+		try {
+			e.m_node1 = nodeById(e.nodeId1());
+		} catch (...) {
+			throw IBK::Exception(IBK::FormatString("Network edge #%1 references invalid node #%2.")
+								 .arg(e.m_id).arg(e.nodeId1()), FUNC_ID);
+		}
+		try {
+			e.m_node2 = nodeById(e.nodeId2());
+		} catch (...) {
+			throw IBK::Exception(IBK::FormatString("Network edge #%1 references invalid node #%2.")
+								 .arg(e.m_id).arg(e.nodeId2()), FUNC_ID);
+		}
 
 		// now also store pointer to this edge into connected nodes
 		e.m_node1->m_edges.push_back(&e);
@@ -232,32 +255,32 @@ void Network::setVisible(bool visible) {
 
 
 NetworkNode *Network::nodeById(unsigned int id) {
+	FUNCID(Network::nodeById);
 	for (NetworkNode &n: m_nodes){
 		if (n.m_id == id)
 			return &n;
 	}
-	IBK_ASSERT(false);
-	return nullptr;
+	throw IBK::Exception(IBK::FormatString("Invalid/unknown node ID #%1").arg(id), FUNC_ID);
 }
 
 
 const NetworkNode *Network::nodeById(unsigned int id) const {
+	FUNCID(Network::nodeById() const);
 	for (const NetworkNode &n: m_nodes){
 		if (n.m_id == id)
 			return &n;
 	}
-	IBK_ASSERT(false);
-	return nullptr;
+	throw IBK::Exception(IBK::FormatString("Invalid/unknown node ID #%1").arg(id), FUNC_ID);
 }
 
 
 unsigned int Network::indexOfNode(unsigned int id) const {
+	FUNCID(Network::indexOfNode);
 	for (unsigned int i=0; i<m_nodes.size(); ++i){
 		if (m_nodes[i].m_id == id)
 			return i;
 	}
-	IBK_ASSERT(false);
-	return 99999;
+	throw IBK::Exception(IBK::FormatString("Invalid/unknown node ID #%1").arg(id), FUNC_ID);
 }
 
 
@@ -896,52 +919,52 @@ size_t Network::numberOfBuildings() const {
 }
 
 void Network::writeNetworkNodesCSV(const IBK::Path &file) const {
-	std::ofstream f;
-	f.open(file.str(), std::ofstream::out | std::ofstream::trunc);
+	std::ofstream out;
+	IBK::open_ofstream(out, file);
 	for (const NetworkNode &n: m_nodes){
-		f.precision(0);
-		f << std::fixed << n.m_id << "\t";
-		f.precision(10);
-		f << std::fixed << n.m_position.m_x << "\t" << n.m_position.m_y << "\t" << std::endl;
+		out.precision(0);
+		out << std::fixed << n.m_id << "\t";
+		out.precision(10);
+		out << std::fixed << n.m_position.m_x << "\t" << n.m_position.m_y << "\t" << std::endl;
 	}
-	f.close();
+	out.close();
 }
 
 void Network::writeNetworkEdgesCSV(const IBK::Path &file) const {
-	std::ofstream f;
-	f.open(file.str(), std::ofstream::out | std::ofstream::trunc);
-	f.precision(0);
+	std::ofstream out;
+	IBK::open_ofstream(out, file);
+	out.precision(0);
 	for (const NetworkEdge &e: m_edges){
-		f << std::fixed << e.m_idNodeInlet << "\t" <<e.m_idNodeOutlet << "\t" << e.m_idSoil;
-		f.precision(10);
-		f << "\t" << e.m_cumulativeTempChangeIndicator << "\t" << e.length() << std::endl;
+		out << std::fixed << e.m_id << "\t" << e.m_idSoil;
+		out.precision(10);
+		out << "\t" << e.m_cumulativeTempChangeIndicator << "\t" << e.length() << std::endl;
 	}
-	f.close();
+	out.close();
 }
 
 
 void Network::writePathCSV(const IBK::Path &file, const NetworkNode & node, const std::vector<NetworkEdge *> &path) const {
-	std::ofstream f;
-	f.open(file.str(), std::ofstream::out | std::ofstream::trunc);
-	f.precision(10);
-	f << std::fixed << node.m_position.m_x << "\t" << node.m_position.m_y << std::endl;
+	std::ofstream out;
+	IBK::open_ofstream(out, file);
+	out.precision(10);
+	out << std::fixed << node.m_position.m_x << "\t" << node.m_position.m_y << std::endl;
 	for (const NetworkEdge *e: path){
-		f << std::fixed << e->m_node1->m_position.m_x << "\t" << e->m_node1->m_position.m_y << "\t"
+		out << std::fixed << e->m_node1->m_position.m_x << "\t" << e->m_node1->m_position.m_y << "\t"
 		  << e->m_node2->m_position.m_x << "\t" << e->m_node2->m_position.m_y << "\t" << e->length() << std::endl;
 	}
-	f.close();
+	out.close();
 }
 
 
 void Network::writeBuildingsCSV(const IBK::Path &file) const {
-	std::ofstream f;
-	f.open(file.str(), std::ofstream::out | std::ofstream::trunc);
-	f.precision(10);
+	std::ofstream out;
+	IBK::open_ofstream(out, file);
+	out.precision(10);
 	for (const NetworkNode &n: m_nodes){
 		if (n.m_type==NetworkNode::NT_SubStation)
-			f << std::fixed << n.m_position.m_x << "\t" << n.m_position.m_y << "\t" << n.m_maxHeatingDemand.value << std::endl;
+			out << std::fixed << n.m_position.m_x << "\t" << n.m_position.m_y << "\t" << n.m_maxHeatingDemand.value << std::endl;
 	}
-	f.close();
+	out.close();
 }
 
 

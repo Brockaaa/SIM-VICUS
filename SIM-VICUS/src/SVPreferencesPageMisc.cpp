@@ -27,7 +27,6 @@
 #include "ui_SVPreferencesPageMisc.h"
 
 #include "SVSettings.h"
-#include "SVStyle.h"
 #include "SVMainWindow.h"
 
 SVPreferencesPageMisc::SVPreferencesPageMisc(QWidget *parent) :
@@ -49,6 +48,12 @@ void SVPreferencesPageMisc::updateUi() {
 	m_ui->checkBoxDontUseNativeDialogs->blockSignals(true);
 	m_ui->checkBoxDontUseNativeDialogs->setChecked(s.m_dontUseNativeDialogs);
 	m_ui->checkBoxDontUseNativeDialogs->blockSignals(false);
+
+	m_ui->spinBoxAutosaveInterval->blockSignals(true);
+	m_ui->spinBoxAutosaveInterval->setValue(s.m_autosaveInterval); // in min
+	m_ui->spinBoxAutosaveInterval->blockSignals(false);
+
+	m_ui->groupBoxAutoSaving->setChecked(s.m_autosaveEnabled); // from ms in min
 }
 
 
@@ -66,3 +71,16 @@ void SVPreferencesPageMisc::on_pushButtonResetDoNotShowAgainDialogs_clicked() {
 	}
 	QMessageBox::information(this, QString(), tr("All confirmations have been disabled and information/confirmation dialogs will pop up again."));
 }
+
+
+void SVPreferencesPageMisc::on_spinBoxAutosaveInterval_valueChanged(int value) {
+	SVSettings::instance().m_autosaveInterval = value;
+	emit autosaveSettingsChanged();
+}
+
+
+void SVPreferencesPageMisc::on_groupBoxAutoSaving_toggled(bool isEnabled) {
+	SVSettings::instance().m_autosaveEnabled = isEnabled;
+	emit autosaveSettingsChanged();
+}
+

@@ -173,7 +173,6 @@ add_subdirectory( ../../externals/IntegratorFramework/projects/cmake_local Integ
 add_subdirectory( ../../externals/Zeppelin/projects/cmake_local Zeppelin )
 add_subdirectory( ../../externals/TiCPP/projects/cmake_local TiCPP )
 add_subdirectory( ../../externals/clipper/projects/cmake_local clipper )
-add_subdirectory( ../../externals/libdxfrw/projects/cmake_local libdxfrw )
 #add_subdirectory( ../../externals/zlib/src zlib )
 add_subdirectory( ../../externals/IDFReader/projects/cmake_local IDFReader )
 
@@ -199,6 +198,7 @@ add_subdirectory( ../../View3D/projects/cmake_local View3D)
 
 add_subdirectory( ../../NandradSolver/projects/cmake_local NandradSolver)
 add_subdirectory( ../../NandradSolverFMI/projects/cmake_local NandradSolverFMI)
+add_subdirectory( ../..//FMUs/CO2ComfortVentilation/projects/cmake CO2ComfortVentilation)
 
 if (NOT DISABLE_QT)
 	add_subdirectory( ../../SIM-VICUS/projects/cmake_local SIM-VICUS)

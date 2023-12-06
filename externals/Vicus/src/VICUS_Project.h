@@ -41,13 +41,12 @@
 #include <NANDRAD_Schedules.h>
 
 #include "VICUS_CodeGenMacros.h"
-#include "VICUS_SupplySystem.h"
 #include "VICUS_Network.h"
 #include "VICUS_Building.h"
 #include "VICUS_ViewSettings.h"
-#include "VICUS_NetworkFluid.h"
-#include "VICUS_NetworkPipe.h"
 #include "VICUS_Outputs.h"
+#include "VICUS_LcaSettings.h"
+#include "VICUS_LccSettings.h"
 #include "VICUS_ComponentInstance.h"
 #include "VICUS_SubSurfaceComponentInstance.h"
 #include "VICUS_EmbeddedDatabase.h"
@@ -110,6 +109,9 @@ public:
 	*/
 	void readXML(const QString & projectText);
 
+	/*! Actual read function, called from both variants of readXML(). */
+	void readXMLDocument(TiXmlElement * rootElement);
+
 	/*! Writes the project file to an XML file.
 		\param filename  The full path to the project file.
 	*/
@@ -121,11 +123,12 @@ public:
 	/*! Writes the section with directory place holders. */
 	void writeDirectoryPlaceholdersXML(TiXmlElement * parent) const;
 
-	/*! Removes un-referenced/un-needed data structures. */
-	void clean();
-
 	/*! Call this function whenever project data has changed that depends on
 		objects linked through pointers (building hierarchies, networks etc.).
+		Checks interrelated definitions/references for validity.
+		Throws IBK::Exceptions in case of errors.
+		Call this function after reading a project and during debugging after
+		project modifications to ensure data consistency.
 	*/
 	void updatePointers();
 
@@ -234,8 +237,9 @@ public:
 	*/
 	void generateNandradProject(NANDRAD::Project & p, QStringList & errorStack, const std::string & nandradProjectPath) const;
 //	void generateBuildingProjectData(NANDRAD::Project & p) const;
-	void generateNetworkProjectData(NANDRAD::Project & p, QStringList & errorStack, const std::string & nandradProjectPath) const;
+	void generateNetworkProjectData(NANDRAD::Project & p, QStringList & errorStack, const std::string & nandradProjectPath, unsigned int networkId) const;
 
+	void generateHeatLoadExport();
 
 	// *** STATIC FUNCTIONS ***
 
@@ -298,6 +302,10 @@ public:
 
 	ViewSettings										m_viewSettings;				// XML:E
 
+	LcaSettings											m_lcaSettings;				// XML:E
+
+	LccSettings											m_lccSettings;				// XML:E
+
 	std::vector<Network>								m_geometricNetworks;		// XML:E
 
 	std::vector<Building>								m_buildings;	 			// XML:E
@@ -342,9 +350,13 @@ public:
 
 	/*! Mapping element holds the room data for later export. */
 	struct RoomMapping {
+		unsigned int							m_idBuildingVicus;
+		unsigned int							m_idBuildingLevelVicus;
 		unsigned int							m_idRoomVicus;
 		unsigned int							m_idRoomNandrad;
 		unsigned int							m_idZoneTemplateVicus;
+		std::string								m_nameBuildingVicus;
+		std::string								m_nameBuildingLevelVicus;
 		std::string								m_nameRoomVicus;
 		std::string								m_nameRoomNandrad;
 		std::string								m_zonetemplateName;
@@ -393,8 +405,11 @@ private:
 	*/
 	void addAndCheckForUniqueness(VICUS::Object* o);
 
+	/*! Adds view factors to the nandrad project.
+		If there are conflicts Exceptions are thrown.
+	*/
 	void addViewFactorsToNandradZones(NANDRAD::Project & p, const std::vector<Project::RoomMapping> &roomMappings, const std::map<unsigned int, unsigned int> &componentInstanceMapping,
-									  std::map<unsigned int, unsigned int> &subSurfaceMapping, QStringList & errorStack) const;
+									  const std::map<unsigned int, unsigned int> &subSurfaceMapping, QStringList & errorStack) const;
 
 	/*! Cached unique-ID -> object ptr map. Greatly speeds up objectByID() and any other lookup functions.
 		This map is updated in updatePointers().

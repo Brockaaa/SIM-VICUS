@@ -66,13 +66,10 @@ const float TRANSLATION_SPEED = 1.2f;
 const float MOUSE_ROTATION_SPEED = 0.5f;
 
 // Size of the local coordinate system window
-const int SUBWINDOWSIZE = 150;
+const int SUBWINDOWSIZE = 400;
 
 /// \todo All: adjust the THRESHOLD based on DPI/Screenresolution or have it as user option
 const float MOUSE_MOVE_DISTANCE_ORBIT_CONTROLLER = 5;
-
-// needed for drawing of circle/arc/ellipse in generate2DDrawingGeometry()
-const double PI = 3.14159265358979323846;
 
 namespace Vic3D {
 
@@ -356,13 +353,13 @@ void Scene::resize(int width, int height, qreal retinaScale) {
 				/* near */           0.1f,
 				/* far */            farDistance
 				);
-
 	// Mind: do not use 0.0 for near plane, otherwise depth buffering and depth testing won't work!
+//	m_projection.ortho(-.02*width, .02*width, -.02*height, .02*height, -farDistance, farDistance);
 	// the small view projection matrix is constant
 	m_smallViewProjection.setToIdentity();
 	// create projection matrix, i.e. camera lens
 	m_smallViewProjection.perspective(
-				/* vertical angle */ 45.0f,
+				/* vertical angle */ 30.0f,
 				/* aspect ratio */   1, // it's a square window
 				/* near */           0.1f,
 				/* far */            farDistance
@@ -392,7 +389,9 @@ void Scene::updateWorld2ViewMatrix() {
 	// move it into origin
 	m_smallCoordinateSystemObject.m_smallViewCamera.setTranslation(QVector3D(0,0,0));
 	// move 10 units backwards
-	m_smallCoordinateSystemObject.m_smallViewCamera.translate( -6*m_smallCoordinateSystemObject.m_smallViewCamera.forward());
+	m_smallCoordinateSystemObject.m_smallViewCamera.translate( -22*m_smallCoordinateSystemObject.m_smallViewCamera.forward());
+	m_smallCoordinateSystemObject.m_smallViewCamera.translate(   2*m_smallCoordinateSystemObject.m_smallViewCamera.right());
+	m_smallCoordinateSystemObject.m_smallViewCamera.translate(   2*m_smallCoordinateSystemObject.m_smallViewCamera.up());
 	// store in m_smallCoordinateSystemMatrix
 	m_smallCoordinateSystemObject.m_worldToSmallView = m_smallViewProjection * m_smallCoordinateSystemObject.m_smallViewCamera.toMatrix();
 }
@@ -433,6 +432,9 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 		float transSpeed = TRANSLATION_SPEED;
 		if (keyboardHandler.keyDown(Qt::Key_Shift))
 			transSpeed = 0.1f;
+		else if (keyboardHandler.keyDown(Qt::Key_Space))
+			transSpeed = 10.0f;
+
 		m_camera.translate(transSpeed * translation);
 		m_camera.rotate(transSpeed, rotationAxis);
 
@@ -504,7 +506,7 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 			// qDebug() << "Camera translation";
 			m_camera.setTranslation(IBKVector2QVector(m_panCameraStart + cameraTrans));
 			// cursor wrap adjustment
-			// qDebug() << "Adjust Dragging";
+			//			qDebug() << "Adjust Dragging: " << mouseDelta << localMousePos << newLocalMousePos;
 			adjustCursorDuringMouseDrag(mouseDelta, localMousePos, newLocalMousePos, pickObject);
 		}
 	}
@@ -885,6 +887,11 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 		if (!pickObject.m_pickPerformed)
 			pick(pickObject);
 
+		// NOTE: standard mouse wheel delta is either +1 (forward) or -1 (backward)
+		//       some mouse have high-res switch buttons and then the wheel delta is strange... for example
+		//       on Mac the wheel delta is generally 16 or higher and the high-res button turns the sensitivity
+		//       down to 1. We need to figure out the nominal wheel delta for a mouse (without modifier) somehow.
+
 		// move forward along camera's forward vector
 #ifdef Q_OS_MAC
 		if (wheelDelta > 2)
@@ -892,22 +899,35 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 		if (wheelDelta < -2)
 			wheelDelta = -2;
 #endif
-		double transSpeed = 0.05;
+
+		// our default translation speed
+		double translationSpeedFactor = 1;
+
+		// if user presses either Shift or Space for slow/fast speed, we do not apply the "automatic-slowdown-when near"
 		if (keyboardHandler.keyDown(Qt::Key_Shift))
-			transSpeed *= 0.1;
+			translationSpeedFactor = 0.1;
 
 		if (keyboardHandler.keyDown(Qt::Key_Space))
-			transSpeed *= 10;
+			translationSpeedFactor = 10;
 
-		IBKMK::Vector3D moveDist = transSpeed*pickObject.m_candidates.front().m_depth*pickObject.m_lineOfSightDirection;
+		IBKMK::Vector3D moveDist = pickObject.m_candidates.front().m_depth*pickObject.m_lineOfSightDirection;
 
-		const IBKMK::Vector3D &lineOfSight = pickObject.m_candidates.front().m_depth*pickObject.m_lineOfSightDirection;
-		double dampening = std::min(1.0, (80.0 / (lineOfSight.magnitude())));
-		double moveFactor = std::max(1.0, (1.0 / (5 * moveDist.magnitude())));
-		// qDebug() << "Dampening factor: " << dampening;
-		// qDebug() << "Move distance: " << moveDist.magnitude();
-		// move camera along line of sight towards selected object
-		m_camera.translate(IBKVector2QVector(dampening*wheelDelta*moveFactor*moveDist));
+		// normal distance that we move our camera (in meters along our line of sight)
+		// it is large, when our intersection point to first object is far away, and small if we are very close
+		double cameraMoveDistance = moveDist.magnitude();
+
+		// normalize moveDist vector - this is now only a direction
+		moveDist /= cameraMoveDistance;
+
+		cameraMoveDistance *= 0.05; // we move 5 % of our distance to target; with 100 % we would hit the intersection point
+
+		// clip move distance for very large values (when mouse points to emptiness)
+		cameraMoveDistance = std::min(cameraMoveDistance, 100.0);
+		// ensure move distance is at least 1 meter (10 cm with Shift modifier)
+		cameraMoveDistance = std::max(cameraMoveDistance, 1.0); // normally we move by at least 1 meter
+
+		// we move towards the object at adjusted speed selected by user
+		m_camera.translate(IBKVector2QVector(wheelDelta*translationSpeedFactor*cameraMoveDistance*moveDist));
 	}
 
 	// store camera position in view settings, but only if we have a project
@@ -1948,6 +1968,22 @@ void Scene::generate2DDrawingGeometry() {
 	m_drawingGeometryObject.m_transparentStartIndex = m_drawingGeometryObject.m_indexBufferData.size();
 }
 
+// Helper to color all child surfaces (recursive)
+void colorSubSurfaces(const VICUS::Surface &surf, const QColor &color) {
+	for(const VICUS::Surface &cs : surf.childSurfaces()) {
+		cs.m_color = color;
+		colorSubSurfaces(cs, color);
+	}
+}
+
+void colorChildSurfaces(const VICUS::Surface &s, const QColor &color) {
+	// now the subsurfaces
+	for (const VICUS::Surface & cs : s.childSurfaces()) {
+		cs.m_color = color; // will be drawn opaque in most modes
+		colorChildSurfaces(cs, color);
+	}
+}
+
 
 void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) const {
 	// Note: the meaning of the filter id depends on the coloring mode
@@ -2000,6 +2036,8 @@ void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) co
 							sub.m_color = QColor(72,72,82,192); // will be drawn opaque in most modes
 						}
 					}
+
+					colorChildSurfaces(s, s.m_color.darker(120));
 				}
 			}
 		}
@@ -2034,6 +2072,8 @@ void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) co
 						// change color of selected surfaces
 						if (s.m_selected)
 							s.m_color = QColor(255,144,0,255); // nice orange
+
+						colorChildSurfaces(s, QColor(255,144,0,255));
 					}
 				}
 			}
@@ -2157,7 +2197,7 @@ void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) co
 
 
 		// *** OCM_BoundaryConditions
-	case SVViewState::OCM_BoundaryConditions: {
+	case SVViewState::OCM_BoundaryConditionsInside: {
 		// now color all surfaces, this works by first looking up the components, associated with each surface
 		for (const VICUS::ComponentInstance & ci : project().m_componentInstances) {
 			// lookup component definition
@@ -2177,6 +2217,7 @@ void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) co
 					ci.m_sideBSurface->m_color = bc->m_color;
 			}
 		}
+		// TODO: coloring sub-surfaces is unnecessary here?
 		// now color all sub-surfaces, this works by first looking up the components, associated with each surface
 		for (const VICUS::SubSurfaceComponentInstance & ci : project().m_subSurfaceComponentInstances) {
 			// lookup component definition
@@ -2198,6 +2239,29 @@ void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) co
 					ci.m_sideBSubSurface->m_color = bc->m_color.lighter(50);
 					ci.m_sideBSubSurface->m_color.setAlpha(128);
 				}
+			}
+		}
+	} break;
+
+
+	case SVViewState::OCM_BoundaryConditionsOutside: {
+		// now color all surfaces, this works by first looking up the components, associated with each surface
+		for (const VICUS::ComponentInstance & ci : project().m_componentInstances) {
+			// lookup component definition
+			const VICUS::Component * comp = db.m_components[ci.m_idComponent];
+			if (comp == nullptr)
+				continue; // no component definition - keep default (gray) color
+			if (ci.m_sideASurface == nullptr && comp->m_idSideABoundaryCondition != VICUS::INVALID_ID && ci.m_sideBSurface != nullptr ) {
+				// lookup boundary condition definition
+				const VICUS::BoundaryCondition * bc = db.m_boundaryConditions[comp->m_idSideABoundaryCondition];
+				if (bc != nullptr)
+					ci.m_sideBSurface->m_color = bc->m_color;
+			}
+			if (ci.m_sideBSurface == nullptr && comp->m_idSideBBoundaryCondition != VICUS::INVALID_ID && ci.m_sideASurface != nullptr ) {
+				// lookup boundary condition definition
+				const VICUS::BoundaryCondition * bc = db.m_boundaryConditions[comp->m_idSideBBoundaryCondition];
+				if (bc != nullptr)
+					ci.m_sideASurface->m_color = bc->m_color;
 			}
 		}
 	} break;
@@ -2246,10 +2310,11 @@ void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) co
 						if (zt == nullptr)
 							continue; // no definition - keep default (gray) color
 						// color all surfaces of room based on zone template color
-						for (const VICUS::Surface & s : r.m_surfaces)
+						for (const VICUS::Surface & s : r.m_surfaces) {
 							s.m_color = zt->m_color;
-						// TODO : subsurfaces
-
+							colorSubSurfaces(s, zt->m_color);
+							colorChildSurfaces(s, zt->m_color);
+						}
 					}
 				}
 			}
@@ -2271,10 +2336,12 @@ void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) co
 						if (at == nullptr)
 							continue; // no definition - keep default (gray) color
 						// color all surfaces of room based on zone template color
-						for (const VICUS::Surface & s : r.m_surfaces)
+						for (const VICUS::Surface & s : r.m_surfaces) {
 							s.m_color = at->m_color;
-						// TODO : subsurfaces
-
+							// TODO : subsurfaces
+							colorSubSurfaces(s, at->m_color);
+							colorChildSurfaces(s, at->m_color);
+						}
 					}
 				}
 			}
@@ -2663,12 +2730,19 @@ void Scene::pick(PickObject & pickObject) {
 	QElapsedTimer pickTimer;
 	pickTimer.start();
 #endif
-
-
-	// *** intersection with grid plane ***
-
+	// *** intersects x-y-plane ***
 	IBKMK::Vector3D intersectionPoint;
+	IBKMK::Vector2D point;
 	double t;
+
+
+	// *** intersection with grid planes ***
+
+	// NOTE: the vector project().m_viewSettings.m_gridPlanes usually contains our default
+	//       grid plane IBKMK::Vector3D(0,0,0), IBKMK::Vector3D(0,0,1) as first grid plane.
+	//       However, users may delete this plane and add their own, so we do not hard-code this grid plane.
+	//       We may even have no grid plane at all!
+
 	// process all grid planes - being transparent, these are picked from both sides
 	for (unsigned int i=0; i< project().m_viewSettings.m_gridPlanes.size(); ++i) {
 		if (project().m_viewSettings.m_gridPlanes[i].m_isVisible &&
@@ -3313,28 +3387,40 @@ void Scene::adjustCursorDuringMouseDrag(const QPoint & mouseDelta, const QPoint 
 	// cursor position moves out of window?
 	const int WINDOW_MOVE_MARGIN = 50;
 	if (localMousePosScaled.x() < WINDOW_MOVE_MARGIN && mouseDelta.x() < 0) {
-		//						qDebug() << "Resetting mousepos to right side of window.";
+		//		qDebug() << "Resetting mousepos to right side of window.";
 		newLocalMousePos.setX(m_viewPort.width()/SVSettings::instance().m_ratio-WINDOW_MOVE_MARGIN);
 	}
 	else if (localMousePosScaled.x() > (m_viewPort.width()-WINDOW_MOVE_MARGIN) && mouseDelta.x() > 0) {
-		//						qDebug() << "Resetting mousepos to right side of window.";
+		//		qDebug() << "Resetting mousepos to left side of window.";
 		newLocalMousePos.setX(WINDOW_MOVE_MARGIN);
 	}
 
 	if (localMousePosScaled.y() < WINDOW_MOVE_MARGIN && mouseDelta.y() < 0) {
-		qDebug() << "Resetting mousepos to bottom side of window.";
+		//		qDebug() << "Resetting mousepos to bottom side of window.";
 		newLocalMousePos.setY(m_viewPort.height()/SVSettings::instance().m_ratio-WINDOW_MOVE_MARGIN);
 	}
 	else if (localMousePosScaled.y() > (m_viewPort.height()-WINDOW_MOVE_MARGIN) && mouseDelta.y() > 0) {
-		qDebug() << "Resetting mousepos to top side of window.";
+		//		qDebug() << "Resetting mousepos to top side of window.";
 		newLocalMousePos.setY(WINDOW_MOVE_MARGIN);
 	}
 
 	// if panning is enabled, reset the pan start positions/variables
 	if (m_navigationMode == NM_Panning && newLocalMousePos != localMousePos) {
-		pickObject.m_localMousePos = newLocalMousePos * SVSettings::instance().m_ratio;
-		pick(pickObject);
-		panStart(newLocalMousePos, pickObject, true);
+		bool useMouseWarping = false;
+#ifdef Q_OS_LINUX
+#if HAVE_X11
+		if (QX11Info::isPlatformX11()) {
+			useMouseWarping = true;
+		}
+#endif
+#else
+		useMouseWarping = true;
+#endif
+		if (useMouseWarping) {
+			pickObject.m_localMousePos = newLocalMousePos * SVSettings::instance().m_ratio;
+			pick(pickObject);
+			panStart(newLocalMousePos, pickObject, true);
+		}
 	}
 }
 
@@ -3571,6 +3657,8 @@ void Scene::setDefaultViewState() {
 		vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;
 		SVViewStateHandler::instance().setViewState(vs);
 		return;
+	case SVViewState::PM_BuildingAcousticProperties:
+		break;
 	} // switchd
 }
 
