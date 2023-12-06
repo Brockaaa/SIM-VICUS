@@ -12,7 +12,6 @@ SVNotesDialog::SVNotesDialog(QWidget *parent) :
 	m_ui->setupUi(this);
 	// Connect to project handler
 	connect(&SVProjectHandler::instance(), &SVProjectHandler::modified, this, &SVNotesDialog::onModified);
-	updateNotesFromPrj();
 }
 
 SVNotesDialog::~SVNotesDialog() {
@@ -25,7 +24,7 @@ void SVNotesDialog::updateNotesFromPrj() {
 	m_ui->plainTextEditNotes->setPlainText(QString::fromStdString(prj.m_projectInfo.m_comment) );
 }
 
-void SVNotesDialog::onModified( int modificationType, ModificationInfo * data ) {
+void SVNotesDialog::onModified(int modificationType, ModificationInfo *) {
 	SVProjectHandler::ModificationTypes modType((SVProjectHandler::ModificationTypes)modificationType);
 	switch (modType) {
 		case SVProjectHandler::AllModified:

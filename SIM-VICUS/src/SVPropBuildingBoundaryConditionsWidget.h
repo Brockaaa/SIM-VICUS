@@ -32,9 +32,6 @@ public:
 	/*! Updates user interface. */
 	void updateUi();
 
-	/*! returns current object color mode */
-	unsigned int currentObjectColorMode();
-
 private slots:
 	/*! Triggers the openEditBoundaryConditionsDialog function */
 	void on_pushButtonEditBoundaryConditions_clicked();
@@ -44,10 +41,6 @@ private slots:
 
 	/*! Triggers the openEditBoundaryConditionsDialog function */
 	void on_tableWidgetBoundaryConditions_cellDoubleClicked(int, int);
-
-	void on_radioButtonFromInside_clicked();
-
-	void on_radioButtonFromOutside_clicked();
 
 private:
 

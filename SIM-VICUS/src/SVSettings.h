@@ -216,12 +216,6 @@ public:
 	/*! Holds the acctual device pixel ratio needed for HighDPI scaling. */
 	double						m_ratio;
 
-	/*! Auto-save intervall in minutes. */
-	int							m_autosaveInterval;
-
-	/*! Determines whether autosaving is enabled. */
-	bool						m_autosaveEnabled;
-
 	// *** members below are stored in settings file ***
 
 	/*! This string is to be read from the settings and used to check if the settings exist already
@@ -237,9 +231,6 @@ public:
 
 	/*! Path to CCMEditor executable. */
 	QString						m_CCMEditorExecutable;
-
-	/*! Path to DWDWeatherDataConverter executable. */
-	QString						m_DWDConverterExecutable;
 
 	/*! Path to MasterSim. */
 	QString						m_masterSimExecutable;
@@ -274,7 +265,6 @@ public:
 
 	/*! The project file suffix including the . */
 	QString						m_projectFileSuffix			= ".vicus";
-
 	/*! The project package suffix including the . */
 	QString						m_projectPackageSuffix		= ".vicpac";
 

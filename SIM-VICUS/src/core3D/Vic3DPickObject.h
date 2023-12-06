@@ -62,9 +62,7 @@ struct PickObject {
 		RT_CoordinateSystemCenter,
 		/*! One of the marker objects at the end of the axis in "rotation" and "scale" modes have been picked,
 			m_uniqueObjectID in pick object identifies axis: 0 = x, 1 = y, 2 = z. */
-		RT_AxisEndMarker,
-		/*! X-Y-Plane. */
-		RT_xyPlane
+		RT_AxisEndMarker
 	};
 
 	/*! Stores information about a particular snap point candidate. */

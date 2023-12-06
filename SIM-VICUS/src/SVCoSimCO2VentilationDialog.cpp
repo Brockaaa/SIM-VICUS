@@ -102,7 +102,9 @@ void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::init(const VICUS
 				IBK_ASSERT(room.m_idZoneTemplate != VICUS::INVALID_ID);
 
 				// retrieve zone remplate
-				const VICUS::ZoneTemplate * zoneTemplate = SVSettings::instance().m_db.m_zoneTemplates[room.m_idZoneTemplate];
+				const VICUS::ZoneTemplate * zoneTemplate = dynamic_cast<const VICUS::ZoneTemplate*>
+						(VICUS::element(project.m_embeddedDB.m_zoneTemplates,
+										 room.m_idZoneTemplate) );
 
 				IBK_ASSERT(zoneTemplate != nullptr);
 				// no ventilation control possible
@@ -272,7 +274,9 @@ void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::generateCO2LoadS
 				}
 
 				// retrieve zone remplate
-				const VICUS::ZoneTemplate * zoneTemplate = SVSettings::instance().m_db.m_zoneTemplates[room.m_idZoneTemplate];
+				const VICUS::ZoneTemplate * zoneTemplate = dynamic_cast<const VICUS::ZoneTemplate*>
+						(VICUS::element(project.m_embeddedDB.m_zoneTemplates,
+										 room.m_idZoneTemplate) );
 
 				// shouöd be checked in initialization
 				IBK_ASSERT(zoneTemplate != nullptr);
@@ -292,7 +296,9 @@ void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::generateCO2LoadS
 				}
 
 				// find out internal load model
-				const VICUS::InternalLoad * internalLoad = SVSettings::instance().m_db.m_internalLoads[idReference];
+				const VICUS::InternalLoad * internalLoad = dynamic_cast<const VICUS::InternalLoad*>
+						(VICUS::element(project.m_embeddedDB.m_internalLoads,
+										 idReference) );
 
 				// shouöd be checked in initialization
 				IBK_ASSERT(internalLoad != nullptr);
@@ -309,7 +315,9 @@ void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::generateCO2LoadS
 				// ... and an occupancy schedule [---]
 				scheduleId = internalLoad->m_idOccupancySchedule;
 
-				const VICUS::Schedule * occupancySchedule = SVSettings::instance().m_db.m_schedules[scheduleId];
+				const VICUS::Schedule * occupancySchedule = dynamic_cast<const VICUS::Schedule*>
+						(VICUS::element(project.m_embeddedDB.m_schedules,
+												 scheduleId) );
 
 				IBK_ASSERT(occupancySchedule != nullptr);
 
@@ -515,9 +523,11 @@ bool SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::hasVentilationCo
 	}
 
 	// retrieve zone remplate
-	const VICUS::ZoneTemplate * zoneTemplate = SVSettings::instance().m_db.m_zoneTemplates[room.m_idZoneTemplate];
+	const VICUS::ZoneTemplate * zoneTemplate = dynamic_cast<const VICUS::ZoneTemplate*>
+			(VICUS::element(project.m_embeddedDB.m_zoneTemplates,
+							 room.m_idZoneTemplate) );
 
-	// should be checked in initialization
+	// shouöd be checked in initialization
 	IBK_ASSERT(zoneTemplate != nullptr);
 
 	// find out id to corresponding person load and occupancy schedule:
@@ -542,7 +552,9 @@ void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::checkVentilation
 	}
 
 	// retrieve zone remplate
-	const VICUS::ZoneTemplate * zoneTemplate = SVSettings::instance().m_db.m_zoneTemplates[room.m_idZoneTemplate];
+	const VICUS::ZoneTemplate * zoneTemplate = dynamic_cast<const VICUS::ZoneTemplate*>
+			(VICUS::element(project.m_embeddedDB.m_zoneTemplates,
+							 room.m_idZoneTemplate) );
 
 	// shouöd be checked in initialization
 	IBK_ASSERT(zoneTemplate != nullptr);
@@ -558,7 +570,9 @@ void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::checkVentilation
 	}
 
 	// should be checked in initialization
-	IBK_ASSERT(SVSettings::instance().m_db.m_zoneControlVentilationNatural[idReference] != nullptr);
+	IBK_ASSERT(dynamic_cast<const VICUS::ZoneControlNaturalVentilation*>
+			   (VICUS::element(project.m_embeddedDB.m_zoneControlVentilationNatural,
+								idReference) ) != nullptr);
 }
 
 
@@ -572,7 +586,9 @@ void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::checkVentilation
 	}
 
 	// retrieve zone remplate
-	const VICUS::ZoneTemplate * zoneTemplate = SVSettings::instance().m_db.m_zoneTemplates[room.m_idZoneTemplate];
+	const VICUS::ZoneTemplate * zoneTemplate = dynamic_cast<const VICUS::ZoneTemplate*>
+			(VICUS::element(project.m_embeddedDB.m_zoneTemplates,
+							 room.m_idZoneTemplate) );
 
 	// shouöd be checked in initialization
 	IBK_ASSERT(zoneTemplate != nullptr);
@@ -590,7 +606,8 @@ void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::checkVentilation
 	// Check for parameter '
 	// find out internal load model
 	const VICUS::VentilationNatural * ventilation = dynamic_cast<const VICUS::VentilationNatural*>
-														(SVSettings::instance().m_db.m_ventilationNatural[idReference]);
+			(VICUS::element(project.m_embeddedDB.m_ventilationNatural,
+							 idReference) );
 
 	// should be checked in initialization
 	IBK_ASSERT(ventilation != nullptr);
@@ -1464,6 +1481,13 @@ void SVCoSimCO2VentilationDialog::on_pushButtonLaunchMasterSim_clicked() {
 																  "MASTERSIM in the preferences dialog!"));
 
 		SVMainWindow::instance().preferencesDialog()->edit(0);
+		// TODO Andreas, find a way to show a mode-less window within a dialog's event loop
+		QEventLoop loop;
+		connect(SVMainWindow::instance().preferencesDialog(), &SVPreferencesDialog::closed, &loop, &QEventLoop::quit);
+		loop.exec();
+
+		// ensure that preferences dialog is in foreground
+//		stackUnder(SVMainWindow::instance().preferencesDialog());
 
 		masterSimPath = SVSettings::instance().m_masterSimExecutable;
 

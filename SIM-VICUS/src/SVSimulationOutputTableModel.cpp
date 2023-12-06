@@ -52,7 +52,6 @@ QVariant SVSimulationOutputTableModel::data(const QModelIndex & index, int role)
 		return QVariant();
 
 	const OutputVariable & var = m_variables[(size_t)index.row()];
-
 	switch (role) {
 		case Qt::DisplayRole : {
 			switch (index.column()) {
@@ -92,7 +91,7 @@ QVariant SVSimulationOutputTableModel::data(const QModelIndex & index, int role)
 }
 
 
-void SVSimulationOutputTableModel::updateListFromFile(const QString & outputRefListFilepath, bool enableSeparateVectorIndexSelection) {
+void SVSimulationOutputTableModel::updateListFromFile(const QString & outputRefListFilepath) {
 	FUNCID(SVSimulationOutputTableModel::updateListFromFile);
 
 
@@ -175,22 +174,7 @@ void SVSimulationOutputTableModel::updateListFromFile(const QString & outputRefL
 			var.m_unit = tokens[3];
 			var.m_description = tokens[4];
 
-			// if separateVectorIndexSelection not enabled: we summarize outputs of same type and name and collect the object ids
-			bool addedToExisting = false;
-			if (!enableSeparateVectorIndexSelection) {
-				for (OutputVariable &exVariable: m_variables) {
-					if (exVariable.m_objectTypeName == var.m_objectTypeName &&
-						exVariable.m_quantity == var.m_quantity) {
-						for (unsigned int id: var.m_objectIds)
-							exVariable.m_objectIds.insert(id);
-						addedToExisting = true;
-						break;
-					}
-				}
-			}
-
-			if (!addedToExisting)
-				m_variables.push_back(var);
+			m_variables.push_back(var);
 		}
 
 		endResetModel();
@@ -229,5 +213,4 @@ bool SVSimulationOutputTableModel::haveOutput(const VICUS::OutputDefinition & of
 	}
 	return false;
 }
-
 

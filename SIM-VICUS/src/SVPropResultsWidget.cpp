@@ -18,11 +18,8 @@
 #include <IBK_CSVReader.h>
 
 #include <QtExt_Directories.h>
-#include <QtExt_BrowseFilenameWidget.h>
 
 #include <fstream>
-
-#include <VICUS_BTFReader.h>
 
 
 SVPropResultsWidget::SVPropResultsWidget(QWidget *parent) :
@@ -51,9 +48,6 @@ SVPropResultsWidget::SVPropResultsWidget(QWidget *parent) :
 
 	connect(m_ui->widgetTimeSlider, &SVTimeSliderWidget::cutValueChanged,
 			this, &SVPropResultsWidget::onTimeSliderCutValueChanged);
-
-	connect(m_ui->resultsDir, &QtExt::BrowseFilenameWidget::editingFinished,
-			this, &SVPropResultsWidget::on_resultsDir_editingFinished);
 
 	connect(&SVProjectHandler::instance(), &SVProjectHandler::modified,
 			this, &SVPropResultsWidget::onModified);
@@ -338,82 +332,38 @@ void SVPropResultsWidget::readResultsDir() {
 		}
 	}
 
-	// now read result files
+	// now read result tsv files
 	QDir resultFilesDir = QDir(m_resultsDir.absolutePath() + "/results");
 	QStringList tsvFiles = resultFilesDir.entryList(QStringList() << "*.tsv", QDir::Files);
-	QStringList btfFiles = resultFilesDir.entryList(QStringList() << "*.btf", QDir::Files);
-	QStringList files;
 	QSet<QString> filesFound;
 
-	// set file Mode
-	if (!tsvFiles.empty()) {
-		m_resultFileType = FT_TSV;
-		files = tsvFiles;
-	}
-	else if (!btfFiles.empty()) {
-		m_resultFileType = FT_BTF;
-		files = btfFiles;
-	}
-	else {
-		m_resultFileType = FT_None;
-		return;
-	}
-
 	// update progress dialog
-	progDiag.setMaximum(files.size()+1);
+	progDiag.setMaximum(tsvFiles.size()+1);
 	int nProg = 0;
 
-	for (const QString &fileName: qAsConst(files)) {
+	for (const QString &fileName: qAsConst(tsvFiles)) {
 
 		progDiag.setLabelText(tr("Reading header of file '%1'").arg(fileName));
 		progDiag.setValue(++nProg);
 		qApp->processEvents();
 
-		std::vector<std::string> captions;
-		std::vector<std::string> units;
-		QString absoluteFilePath = resultFilesDir.absoluteFilePath(fileName);
-
 		// read tsv header
-		if (m_resultFileType == FT_TSV) {
-			IBK::CSVReader reader;
-			IBK::Path tsvFilePath(absoluteFilePath.toStdString());
-			try {
-				reader.read(tsvFilePath, true, true);
-			}
-			catch (IBK::Exception & ex) {
-				ex.writeMsgStackToError();
-				IBK::IBK_Message(IBK::FormatString("Error parsing file '%1").arg(tsvFilePath), IBK::MSG_ERROR);
-				continue; // skip this file
-			}
-
-			if (reader.m_captions.empty() || reader.m_units.empty()) {
-				IBK::IBK_Message(IBK::FormatString("Empty result file '%1").arg(tsvFilePath), IBK::MSG_ERROR);
-				continue;
-			}
-
-			// check captions, units, remove first column (which is the time)
-			captions = reader.m_captions;
-			units = reader.m_units;
-			captions.erase(captions.begin());
-			units.erase(units.begin());
-			if (captions.size() != units.size() || captions.empty())
-				continue;
+		IBK::CSVReader reader;
+		QString absoluteTsvFilePath = resultFilesDir.absoluteFilePath(fileName);
+		IBK::Path tsvFilePath(absoluteTsvFilePath.toStdString());
+		try {
+			reader.read(tsvFilePath, true, true);
 		}
-		// read btf header
-		else if (m_resultFileType == FT_BTF) {
-			VICUS::BTFReader btfReader;
-			try {
-				btfReader.parseHeaderData(absoluteFilePath, captions, units);
-			}
-			catch (IBK::Exception & ex) {
-				ex.writeMsgStackToError();
-				IBK::IBK_Message(IBK::FormatString("Error parsing file '%1").arg(absoluteFilePath.toStdString()), IBK::MSG_ERROR);
-				continue; // skip this file
-			}
-			if (captions.empty())
-				continue;
+		catch (IBK::Exception & ex) {
+			ex.writeMsgStackToError();
+			IBK::IBK_Message(IBK::FormatString("Error parsing file '%1").arg(tsvFilePath), IBK::MSG_ERROR);
+			continue; // skip this file
 		}
 
+		std::vector<std::string> captions = reader.m_captions;
+		std::vector<std::string> units = reader.m_units;
+		if (captions.size() != units.size() || captions.empty())
+			continue;
 
 		// remember this file so that we can find missing files later
 		filesFound.insert(fileName);
@@ -424,7 +374,7 @@ void SVPropResultsWidget::readResultsDir() {
 				// previously read?
 				if (m_outputFiles[outputFileIdx].m_status != ResultDataSet::FS_Unread) {
 					// check time stamp on file
-					if (QFileInfo(absoluteFilePath).lastModified() > m_outputFiles[outputFileIdx].m_timeStampLastUpdated)
+					if (QFileInfo(absoluteTsvFilePath).lastModified() > m_outputFiles[outputFileIdx].m_timeStampLastUpdated)
 						m_outputFiles[outputFileIdx].m_status = ResultDataSet::FS_Outdated;
 					else
 						m_outputFiles[outputFileIdx].m_status = ResultDataSet::FS_Current;
@@ -439,8 +389,9 @@ void SVPropResultsWidget::readResultsDir() {
 			m_outputFiles.append(ds);
 		}
 
-		// we go through the header and look for our object names
-		for (unsigned int i=0; i<captions.size(); ++i) {
+		// we go through the tsv header and look for our object names
+		// Note: we always skip the first time column
+		for (unsigned int i=1; i<captions.size(); ++i) {
 			QString caption = QString::fromStdString(captions[i]);
 			QString unit = QString::fromStdString(units[i]);
 			QString outputName;
@@ -461,8 +412,6 @@ void SVPropResultsWidget::readResultsDir() {
 			}
 		}
 	}
-
-
 
 	// finally update the state of files that have been lost, i.e. are no longer in the directory
 	for (ResultDataSet & rds : m_outputFiles) {
@@ -589,9 +538,6 @@ void SVPropResultsWidget::updateTableWidgetFormatting() {
 void SVPropResultsWidget::readDataFile(const QString & filename) {
 	FUNCID(SVPropResultsWidget::readDataFile);
 
-	if (m_resultFileType == FT_None)
-		return;
-
 	QString fullFilePath = m_resultsDir.absoluteFilePath("results/" + filename);
 	QProgressDialog progDiag(tr("Reading file '%1'").arg(filename), tr("Cancel"), 0, 100, this);
 	progDiag.setWindowTitle(tr("Reading results file"));
@@ -600,45 +546,19 @@ void SVPropResultsWidget::readDataFile(const QString & filename) {
 	progDiag.setMinimumDuration(0);
 	qApp->processEvents();
 
-	std::vector<std::string> captions;
-	std::vector<IBK::Unit> units;
+
 	IBK::CSVReader reader;
-	VICUS::BTFReader btfReader;
-	IBK::UnitVector timeSeconds;
-
-	std::vector<std::vector<double> > dataColMajor;
-
+	IBK::Unit timeUnit;
 	try {
-		if (m_resultFileType == FT_TSV) {
-			// read entire file
-			reader.read(IBK::Path(fullFilePath.toStdString()), false, true);
-			if (reader.m_nColumns < 2 || reader.m_nRows < 5)
-				throw IBK::Exception("Missing data in file.", FUNC_ID);
+		// read entire file
+		reader.read(IBK::Path(fullFilePath.toStdString()), false, true);
+		if (reader.m_nColumns < 2 || reader.m_nRows < 5)
+			throw IBK::Exception("Missing data in file.", FUNC_ID);
 
-			// check time unit
-			IBK::Unit timeUnit = IBK::Unit(reader.m_units[0]); // may throw an exception
-			if (timeUnit.base_unit() != IBK::Unit("s"))
-				throw IBK::Exception("Invalid time unit.", FUNC_ID);
-			// store captions, units
-			for (unsigned int i=0; i<reader.m_captions.size(); ++i) {
-				captions.push_back(reader.m_captions[i]);
-				units.push_back(IBK::Unit(reader.m_units[i]));
-			}
-			std::vector<double> time = reader.colData(0);
-			timeSeconds = IBK::UnitVector(time.begin(), time.end(), timeUnit);
-			timeSeconds.convert(IBK::Unit("s"));
-		}
-		else if (m_resultFileType == FT_BTF) {
-			// read header and data
-			std::vector<std::string> ustrs;
-			btfReader.readData(fullFilePath, timeSeconds, dataColMajor, captions, ustrs);
-			for (const std::string & ustr: ustrs)
-				units.push_back(IBK::Unit(ustr));
-			timeSeconds.convert(IBK::Unit("s"));
-		}
-		else {
-			throw IBK::Exception("Invalid result file type.", FUNC_ID);
-		}
+		// check time unit
+		timeUnit = IBK::Unit(reader.m_units[0]); // may throw an exception
+		if (timeUnit.base_unit() != IBK::Unit("s"))
+			throw IBK::Exception("Invalid time unit.", FUNC_ID);
 	}
 	catch (IBK::Exception & ex) {
 		ex.writeMsgStackToError();
@@ -654,17 +574,24 @@ void SVPropResultsWidget::readDataFile(const QString & filename) {
 		return;
 	}
 
+
 	// the rest of the parsing may not throw, except for value unit conversion handled invidiually
+
 	progDiag.setLabelText(tr("Processing results"));
-	progDiag.setMaximum((int)captions.size()-1);
+	progDiag.setMaximum((int)reader.m_captions.size()-1);
+
+	// we convert time to seconds so its in accordance with time slider
+	std::vector<double> time = reader.colData(0);
+	IBK::UnitVector timeSeconds(time.begin(), time.end(), timeUnit);
+	timeSeconds.convert(IBK::Unit("s"));
 
 	// process all columns of the tsv file, except time column
-	for (unsigned int i=1; i<captions.size(); ++i) {
+	for (unsigned int i=1; i<reader.m_captions.size(); ++i) {
 
 		progDiag.setValue((int)i);
 
 		// check if this caption is among our recognized captions
-		QString qCaption = QString::fromStdString(captions[i]);
+		QString qCaption = QString::fromStdString(reader.m_captions[i]);
 		// extract output name - everything past the last .
 		int dotpos = qCaption.lastIndexOf('.');
 		if (dotpos == -1)
@@ -692,17 +619,11 @@ void SVPropResultsWidget::readDataFile(const QString & filename) {
 		QString outputName = addOutputName + qCaption.mid(dotpos+1);
 
 		// and store in map with all outputs
-		if (m_resultFileType == FT_TSV) {
-			m_allResults[outputName][id] = NANDRAD::LinearSplineParameter(captions[i], NANDRAD::LinearSplineParameter::I_LINEAR,
-																				   timeSeconds.m_data, reader.colData(i), IBK::Unit("s"), units[i]);
-		}
-		else if (m_resultFileType == FT_BTF) {
-			m_allResults[outputName][id] = NANDRAD::LinearSplineParameter(captions[i], NANDRAD::LinearSplineParameter::I_LINEAR,
-																				   timeSeconds.m_data, dataColMajor[i], IBK::Unit("s"), units[i]);
-		}
+		m_allResults[outputName][id] = NANDRAD::LinearSplineParameter(reader.m_captions[i], NANDRAD::LinearSplineParameter::I_LINEAR,
+																			   timeSeconds.m_data, reader.colData(i), IBK::Unit("s"), IBK::Unit(reader.m_units[i]));
 	} // for captions in file
 
-	progDiag.setValue((int)captions.size()-1); // fill and closes the dialog
+	progDiag.setValue((int)reader.m_captions.size()-1); // fill and closes the dialog
 
 	// update status in filelist
 	for (ResultDataSet & rds : m_outputFiles) {
@@ -736,9 +657,9 @@ void SVPropResultsWidget::setCurrentMinMaxValues(bool localMinMax) {
 		// local min/max
 		if (localMinMax) {
 			if (convertToAbs)
-				max = std::abs( vals.nonInterpolatedValue(currentTime) );
+				max = std::abs( vals.value(currentTime) );
 			else
-				max = vals.nonInterpolatedValue(currentTime);
+				max = vals.value(currentTime);
 			min = max;
 		}
 		// global min/max
@@ -799,7 +720,7 @@ void SVPropResultsWidget::updateColors(const double &currentTime) {
 		for (const VICUS::NetworkEdge &e: net.m_edges) {
 			e.m_color = GREY; // initialize with grey
 			if (haveData && m_allResults[m_currentOutputQuantity].find(e.m_id) != m_allResults[m_currentOutputQuantity].end()) {
-				double yint = m_allResults[m_currentOutputQuantity][e.m_id].m_values.nonInterpolatedValue(currentTime);
+				double yint = m_allResults[m_currentOutputQuantity][e.m_id].m_values.value(currentTime);
 				interpolateColor(yint, col);
 				e.m_color = col;
 			}
@@ -817,7 +738,7 @@ void SVPropResultsWidget::updateColors(const double &currentTime) {
 				}
 				// a room related property (e.g. AirTemperature)
 				if (haveData && m_allResults[m_currentOutputQuantity].find(r.m_id) != m_allResults[m_currentOutputQuantity].end() ) {
-					double yint = m_allResults[m_currentOutputQuantity][r.m_id].m_values.nonInterpolatedValue(currentTime);
+					double yint = m_allResults[m_currentOutputQuantity][r.m_id].m_values.value(currentTime);
 					interpolateColor(yint, col);
 					for (const VICUS::Surface & s : r.m_surfaces) {
 						s.m_color = col;
@@ -830,13 +751,13 @@ void SVPropResultsWidget::updateColors(const double &currentTime) {
 				else if (haveData) {
 					for (const VICUS::Surface & s : r.m_surfaces) {
 						if (m_allResults[m_currentOutputQuantity].find(s.m_id) != m_allResults[m_currentOutputQuantity].end()) {
-							double yint = m_allResults[m_currentOutputQuantity][s.m_id].m_values.nonInterpolatedValue(currentTime);
+							double yint = m_allResults[m_currentOutputQuantity][s.m_id].m_values.value(currentTime);
 							interpolateColor(yint, col);
 							s.m_color = col;
 						}
 						for (const VICUS::SubSurface &ss: s.subSurfaces()) {
 							if (m_allResults[m_currentOutputQuantity].find(ss.m_id) != m_allResults[m_currentOutputQuantity].end()) {
-								double yint = m_allResults[m_currentOutputQuantity][ss.m_id].m_values.nonInterpolatedValue(currentTime);
+								double yint = m_allResults[m_currentOutputQuantity][ss.m_id].m_values.value(currentTime);
 								interpolateColor(yint, col);
 								ss.m_color = col;
 							}
@@ -1029,7 +950,7 @@ void SVPropResultsWidget::updateLineEditCurrentValue() {
 	auto it = m_allResults.at(m_currentOutputQuantity).find(m_selectedObjectId);
 	if (it != m_allResults.at(m_currentOutputQuantity).end()) {
 		double t = m_ui->widgetTimeSlider->currentCutValue();
-		double val = it->second.m_values.nonInterpolatedValue(t);
+		double val = it->second.m_values.value(t);
 		if (m_ui->checkBoxConvertToAbsolute->isChecked())
 			val = std::abs(val);
 		m_ui->lineEditCurrentValue->setText(QString("%1 %2").arg(val).arg(m_currentOutputUnit));
@@ -1044,7 +965,7 @@ void SVPropResultsWidget::on_pushButtonFindMaxObject_clicked() {
 	unsigned int targetId = VICUS::INVALID_ID;
 	double maxVal = std::numeric_limits<double>::lowest();
 	for (auto it=m_allResults[m_currentOutputQuantity].begin(); it!=m_allResults[m_currentOutputQuantity].end(); ++it) {
-		const double &val = it->second.m_values.nonInterpolatedValue(t);
+		const double &val = it->second.m_values.value(t);
 		if (val > maxVal) {
 			maxVal = val;
 			targetId = it->first;
@@ -1060,7 +981,7 @@ void SVPropResultsWidget::on_pushButtonFindMinObject_clicked() {
 	unsigned int targetId = VICUS::INVALID_ID;
 	double minVal = std::numeric_limits<double>::max();
 	for (auto it=m_allResults[m_currentOutputQuantity].begin(); it!=m_allResults[m_currentOutputQuantity].end(); ++it) {
-		const double &val = it->second.m_values.nonInterpolatedValue(t);
+		const double &val = it->second.m_values.value(t);
 		if (val < minVal) {
 			minVal = val;
 			targetId = it->first;
@@ -1068,10 +989,5 @@ void SVPropResultsWidget::on_pushButtonFindMinObject_clicked() {
 	}
 	if (targetId != VICUS::INVALID_ID)
 		selectTargetObject(targetId);
-}
-
-
-void SVPropResultsWidget::on_resultsDir_editingFinished() {
-	on_pushButtonRefreshDirectory_clicked();
 }
 

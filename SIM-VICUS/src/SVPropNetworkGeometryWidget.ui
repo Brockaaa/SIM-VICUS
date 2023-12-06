@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>349</width>
-    <height>825</height>
+    <width>311</width>
+    <height>778</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -200,7 +200,7 @@
       <item>
        <widget class="QLabel" name="label_24">
         <property name="text">
-         <string>threshold:</string>
+         <string>threshold [m]</string>
         </property>
        </widget>
       </item>
@@ -208,13 +208,6 @@
        <widget class="QtExt::ValidatingLineEdit" name="lineEditThresholdSmallEdge">
         <property name="text">
          <string>1</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_25">
-        <property name="text">
-         <string>m</string>
         </property>
        </widget>
       </item>

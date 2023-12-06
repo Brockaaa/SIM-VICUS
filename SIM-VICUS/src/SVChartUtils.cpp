@@ -62,12 +62,11 @@ void configureChart(QwtPlot * plot) {
 }
 
 
-QwtPlotCurve * addConfiguredCurve(QwtPlot * plot, int yAxis) {
+QwtPlotCurve * addConfiguredCurve(QwtPlot * plot) {
 	// add curve
 	QwtPlotCurve *curve = new QwtPlotCurve("Curve 1");
 	curve->setTitle( "Some Points" ); // will later be used in legend
 	curve->setRenderHint( QwtPlotItem::RenderAntialiased, true ); // use antialiasing
-	curve->setYAxis(yAxis);
 	configureCurveTheme(curve);
 	curve->attach(plot);
 	return curve;

@@ -48,7 +48,6 @@
 #include "IBK_FormatString.h"
 #include "IBK_Exception.h"
 #include "IBK_assert.h"
-#include "IBK_FileUtils.h"
 
 #include "IBK_messages.h"
 
@@ -100,10 +99,20 @@ void QuantityManager::write(std::ostream & out) {
 void QuantityManager::readFromFile(const IBK::Path & fname) {
 	FUNCID(QuantityManager::readFromFile);
 
-	std::ifstream in;
-	if (!IBK::open_ifstream(in, fname))
-		throw IBK::Exception(IBK::FormatString("Cannot open quantity file '%1'.").arg(fname), FUNC_ID);
+#if defined(_WIN32)
+	#if defined(_MSC_VER)
+		std::ifstream in(fname.wstr().c_str());
+	#else  // MinGW
+		std::string filenameAnsi = IBK::WstringToANSI(fname.wstr(), false);
+		std::ifstream in(filenameAnsi.c_str());
+	#endif
+#else  // !defined(_WIN32)
+	std::ifstream in(fname.c_str());
+#endif
 
+	if (!in) {
+		throw IBK::Exception(IBK::FormatString("Cannot open quantity file '%1'.").arg(fname), FUNC_ID);
+	}
 	std::stringstream strm;
 	strm << in.rdbuf();
 	try {
@@ -117,8 +126,17 @@ void QuantityManager::readFromFile(const IBK::Path & fname) {
 
 void QuantityManager::writeToFile(const IBK::Path & fname) {
 	FUNCID(QuantityManager::writeToFile);
-	std::ofstream out;
-	if (!IBK::open_ofstream(out, fname)) {
+#if defined(_WIN32)
+	#if defined(_MSC_VER)
+		std::ofstream out(fname.wstr().c_str());
+	#else  // MinGW
+		std::string filenameAnsi = IBK::WstringToANSI(fname.wstr(), false);
+		std::ofstream out(filenameAnsi.c_str());
+	#endif
+#else  // !defined(_WIN32)
+	std::ofstream out(fname.c_str());
+#endif
+	if (!out) {
 		throw IBK::Exception(IBK::FormatString("Cannot open quantity file '%1' for writing.").arg(fname), FUNC_ID);
 	}
 	write(out);

@@ -37,11 +37,10 @@ Makefile*
 *.pyc
 *.pdb
 /build/build-*
-bin/release/
-bin/release_x64/
 
 # Mac-specific stuff
 .DS_Store
+
 
 # misc
 *.tlog
@@ -50,22 +49,19 @@ bin/release_x64/
 *.autosave
 object_script.*
 *.png~
+
+*.lyx~
+*.lyx\#
+*.odg\#
+*.ilk
+/release/
+/build/cmake/bb_VC_x64_Debug/
+/build/cmake/out/
+/bin/debug_x64/ifc_convert.log
 moc_*
+/bin/debug_x64/ResultsGenVICUS
 *.debian.tar.xz
 *.dsc
 *source.buildinfo
 *source.changes
 *source.ppa.upload
-*.so.*
-
-# docu
-*.lyx~
-*.lyx\#
-*.odg\#
-*.ilk
-
-# build
-/build/Qt/.qtc_clangd/
-/release/
-/build-*/
-/SIM-VICUS/projects/build-*/

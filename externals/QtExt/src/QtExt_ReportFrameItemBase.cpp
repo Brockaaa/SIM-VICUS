@@ -35,10 +35,6 @@
 
 #include "QtExt_ReportFrameItemBase.h"
 
-#include <typeinfo>
-
-#include <QPainter>
-
 namespace QtExt {
 
 ReportFrameItemBase::ReportFrameItemBase(QPaintDevice* paintDevice, double width, double spaceAfter, double spaceBefore, bool canPageBreakAfter) :
@@ -49,7 +45,6 @@ ReportFrameItemBase::ReportFrameItemBase(QPaintDevice* paintDevice, double width
 	m_spaceAfter(spaceAfter),
 	m_xPos(0),
 	m_canPageBreakAfter(canPageBreakAfter),
-	m_noYStep(false),
 	m_oldXPos(0)
 {
 }
@@ -64,15 +59,6 @@ void ReportFrameItemBase::draw(QPainter* painter, QPointF& pos) {
 	setStartPos(pos);
 	drawItem(painter, pos);
 	setEndPos(pos);
-
-	if(m_drawItemRect) {
-		painter->save();
-		QPen pen(Qt::black);
-		pen.setWidth(5);
-		double height = m_currentRect.height() + m_spaceBefore + m_spaceAfter;
-		QRectF rect(m_xPos, pos.y(), m_currentRect.width(), height);
-		painter->drawRect(rect);
-	}
 }
 
 void ReportFrameItemBase::setVisible(bool visible) {
@@ -83,14 +69,6 @@ void ReportFrameItemBase::setNoYStep(bool noYStep) {
 	m_noYStep = noYStep;
 	if(m_noYStep)
 		m_canPageBreakAfter = false;
-}
-
-std::string ReportFrameItemBase::posText() const {
-	std::string res = typeid(*this).name() + std::string("\n");
-	res += "b: " + std::to_string(m_spaceBefore) + "\n";
-	res += "h: " + std::to_string(m_currentRect.height()) + "\n";
-	res += "a: " + std::to_string(m_spaceAfter) + "\n\n";
-	return res;
 }
 
 
@@ -117,14 +95,6 @@ void ReportFrameItemBase::setEndPos(QPointF& pos) {
 	if(!m_noYStep)
 		pos.ry() += m_spaceAfter + m_currentRect.height();
 	pos.rx() = m_oldXPos;
-}
-
-bool ReportFrameItemBase::drawItemRect() const {
-	return m_drawItemRect;
-}
-
-void ReportFrameItemBase::setDrawItemRect(bool newDrawItemRect) {
-	m_drawItemRect = newDrawItemRect;
 }
 
 } // namespace QtExt

@@ -43,7 +43,7 @@ void ConstructionBalanceModel::setup(const NANDRAD::ConstructionInstance & con,
 {
 	m_con = &con;
 	m_statesModel = statesModel;
-	m_moistureBalanceConstruction = statesModel->m_moistureBalanceConstruction;
+	m_moistureBalanceEnabled = statesModel->m_moistureBalanceEnabled;
 
 	// cache total absorption surface areas
 	m_totalAdsorptionAreaA = totalAdsorptionAreaA;
@@ -493,7 +493,7 @@ void ConstructionBalanceModel::stateDependencies(std::vector<std::pair<const dou
 			resultInputValueReferences.push_back(std::make_pair(&m_ydot[i], m_statesModel->m_vectorValuedResults[ConstructionStatesModel::VVR_ElementTemperature].dataPtr() + i-1 ) );
 	}
 
-	if (m_moistureBalanceConstruction) {
+	if (m_moistureBalanceEnabled) {
 		/// \todo hygrothermal code
 	}
 
@@ -611,7 +611,7 @@ int ConstructionBalanceModel::update() {
 
 	// now compute all divergences in all elements
 
-	if (m_moistureBalanceConstruction) {
+	if (m_moistureBalanceEnabled) {
 		/// \todo hygrothermal code
 	}
 	else {
@@ -840,8 +840,8 @@ void ConstructionBalanceModel::calculateBoundaryConditions(bool sideA, const NAN
 		// side A
 		IBK_ASSERT(m_totalAdsorptionAreaA != 0.0);
 		double radLoadFraction = internalRadiation*m_area/m_totalAdsorptionAreaA; // in [W]
-		m_results[R_FluxLongWaveRadiationA] += radLoadFraction; // this is into the construction
-		m_fluxDensityLongWaveRadiationA += radLoadFraction/m_area;
+		m_results[R_FluxShortWaveRadiationA] += radLoadFraction; // this is into the construction
+		m_fluxDensityShortWaveRadiationA += radLoadFraction/m_area;
 	}
 
 	if (!sideA && m_valueRefs[InputRef_SideBRadiationFromEquipmentLoads] != nullptr) {
@@ -860,8 +860,8 @@ void ConstructionBalanceModel::calculateBoundaryConditions(bool sideA, const NAN
 		// side A
 		IBK_ASSERT(m_totalAdsorptionAreaB != 0.0);
 		double radLoadFraction = internalRadiation*m_area/m_totalAdsorptionAreaB; // in [W]
-		m_results[R_FluxLongWaveRadiationB] += radLoadFraction; // this is into the construction
-		m_fluxDensityLongWaveRadiationB -= radLoadFraction/m_area;
+		m_results[R_FluxShortWaveRadiationB] += radLoadFraction; // this is into the construction
+		m_fluxDensityShortWaveRadiationB -= radLoadFraction/m_area;
 	}
 }
 

@@ -296,7 +296,7 @@ public:
 	/*! Writes database to XML file.
 		Usage:
 		\code
-		// write user material DB (writes only those materials marked not as built-in and not as local)
+		// write user material DB (writes only those materials marked not as built-in)
 		db.writeXML("db_materials.xml", "Materials");
 		\endcode
 	*/
@@ -309,7 +309,7 @@ public:
 		doc.LinkEndChild(root);
 
 		for (auto e : m_data)
-			if (!e.second.m_builtIn && !e.second.m_local)
+			if (!e.second.m_builtIn)
 				e.second.writeXML(root);
 
 		doc.SaveFile( fname.c_str() );

@@ -592,11 +592,11 @@ void SceneView::onColorRefreshNeeded() {
 	if (!SVProjectHandler::instance().isValid())
 		return;
 	m_mainScene.refreshColors();
-	renderLater();
+    renderLater();
 }
 
 void SceneView::onTransparentBuildingModeChanged(Scene::HighlightingMode m) {
-	m_mainScene.updatedHighlightingMode(m);
+    m_mainScene.updatedHighlightingMode(m);
 }
 
 
@@ -818,7 +818,7 @@ bool SceneView::processInput() {
 	// function must only be called if an input event has been received
 	Q_ASSERT(m_inputEventReceived);
 	m_inputEventReceived = false;
-	//qDebug() << "SceneView::processInput(), QCursor::pos()=" << QCursor::pos();
+	//	qDebug() << "SceneView::processInput()";
 
 	// get current cursor position - might be different from last mouse press/release position,
 	// but usually is the same
@@ -829,21 +829,9 @@ bool SceneView::processInput() {
 	bool needRepaint = m_mainScene.inputEvent(m_keyboardMouseHandler, localMousePos, newLocalMousePos);
 
 	if (localMousePos != newLocalMousePos) {
-		// pointer warping currently only on X11 and Linux, and on Windows
-		bool useMouseWarping = false;
-#ifdef Q_OS_LINUX
-#if HAVE_X11
-		if (QX11Info::isPlatformX11()) {
-			useMouseWarping = true;
-		}
-#endif
-#else
-		useMouseWarping = true;
-#endif
-		if (useMouseWarping) {
-			QPoint globalMousePos = mapToGlobal(newLocalMousePos);
-			QCursor::setPos(globalMousePos);
-		}
+		QCursor c = cursor();
+		c.setPos(mapToGlobal(newLocalMousePos));
+		setCursor(c);
 	}
 
 	// resets the internal position for the next move and wheel scroll

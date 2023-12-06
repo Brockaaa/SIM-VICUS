@@ -58,9 +58,6 @@ Polygon2D::Polygon2D(const std::vector<IBKMK::Vector2D> & vertexes) {
 }
 
 
-
-
-// Comparison operator !=
 bool Polygon2D::operator!=(const Polygon2D &other) const {
 	if (m_type != other.m_type)
 		return true;

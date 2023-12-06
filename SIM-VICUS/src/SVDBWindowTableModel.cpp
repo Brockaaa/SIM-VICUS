@@ -157,7 +157,8 @@ void SVDBWindowTableModel::resetModel() {
 
 QModelIndex SVDBWindowTableModel::addNewItem() {
 	VICUS::Window c;
-	c.m_displayName.setString(tr("<new window>").toStdString(), IBK::MultiLanguageString::m_language);
+	c.m_displayName.setEncodedString("en:<new Window type>");
+	c.m_color = SVStyle::randomColor();
 	beginInsertRows(QModelIndex(), rowCount(), rowCount());
 	unsigned int id = m_db->m_windows.add( c );
 	endInsertRows();

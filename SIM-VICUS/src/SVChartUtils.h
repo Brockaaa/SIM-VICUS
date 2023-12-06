@@ -31,7 +31,7 @@ class QwtPlotCurve;
 
 void configureChart(QwtPlot * plot);
 
-QwtPlotCurve * addConfiguredCurve(QwtPlot * plot, int yAxis=0);
+QwtPlotCurve * addConfiguredCurve(QwtPlot * plot);
 void configureCurveTheme(QwtPlotCurve * curve);
 
 #endif // SVChartUtilsH

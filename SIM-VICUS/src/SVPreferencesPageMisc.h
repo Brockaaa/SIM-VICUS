@@ -46,17 +46,15 @@ public:
 	void updateUi();
 
 signals:
-	/*! Emitted, when user has modified autosave settings. */
-	void autosaveSettingsChanged();
+	/*! Emitted, when user has changed the style. */
+	void styleChanged();
+
+protected:
 
 private slots:
 	void on_checkBoxDontUseNativeDialogs_toggled(bool checked);
 
 	void on_pushButtonResetDoNotShowAgainDialogs_clicked();
-
-	void on_spinBoxAutosaveInterval_valueChanged(int value);
-
-	void on_groupBoxAutoSaving_toggled(bool isEnabled);
 
 private:
 	Ui::SVPreferencesPageMisc *m_ui;

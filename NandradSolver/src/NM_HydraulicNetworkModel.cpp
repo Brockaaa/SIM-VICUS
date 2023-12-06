@@ -1,4 +1,4 @@
-/*	NANDRAD Solver Framework and Model Implementation.
+﻿/*	NANDRAD Solver Framework and Model Implementation.
 
 	Copyright (c) 2012-today, Institut für Bauklimatik, TU Dresden, Germany
 
@@ -36,17 +36,11 @@
 
 namespace NANDRAD_MODEL {
 
-// constants that control Jacobian matrix generation
-const double JACOBIAN_EPS_RELTOL = 1e-6;
-const double JACOBIAN_EPS_ABSTOL = 1e-8; // in Pa and scaled kg/s
-
-
 // *** HydraulicNetworkModel members ***
 
 HydraulicNetworkModel::HydraulicNetworkModel(const NANDRAD::HydraulicNetwork & nw,
 											 const std::vector<NANDRAD::Thermostat> &thermostats,
-											 unsigned int id, const std::string &displayName,
-											 double solverAbsTol, double solverMassFluxScale) :
+											 unsigned int id, const std::string &displayName) :
 	m_id(id), m_displayName(displayName),m_hydraulicNetwork(&nw), m_thermostats(thermostats)
 {
 
@@ -104,7 +98,7 @@ HydraulicNetworkModel::HydraulicNetworkModel(const NANDRAD::HydraulicNetwork & n
 	unsigned int refElemeIdx = std::distance(nw.m_elements.begin(), refFeIt);
 
 	// create implementation instance
-	m_p = new HydraulicNetworkModelImpl(elems, refElemeIdx, solverAbsTol, solverMassFluxScale); // we take ownership
+	m_p = new HydraulicNetworkModelImpl(elems, refElemeIdx); // we take ownership
 }
 
 
@@ -599,28 +593,7 @@ int HydraulicNetworkModel::update() {
 	return 0; // signal success
 }
 
-
 int HydraulicNetworkModel::setTime(double t) {
-
-	// NOTE
-	// ----
-	//
-	// This function is called indirectly from the CVODE integrator (or any other time integrator) whenever:
-	//    - the last time step was completed and a new time point with an extrapolated solution has been computed
-	//    - the Newton iteration failed and the integration step is repeated with reduced time step
-	// In either case, the y-solution vector (system state) was newly approximated, and thus we expect
-	// some differences in the y-vector compared to previous model evalutions. In fact, in case of the Newton
-	// convergence failure the state still stored in our m_y vector may be very unsuitable for a quick convergence.
-	// Hence, we want to commence our new hydraulic network calculation using the previously computed _converged_
-	// solution from the last step, which is stored in m_yLast.
-	// m_yLast is updated only whenever we have a converged solution, and hence we rely on physically meaningful values
-	// in this vector.
-	// In all subsequent model evaluations (at the same time point, but with mildly modified y vector as part of the
-	// CVODE Newton iteration) we restart our own Newton method with the previously obtained solution, which should be
-	// pretty close to the final result as we approach convergence in the outer CVODE Newton scheme.
-
-	// To distinguish between "a new step" and "iterating over the same step" we set a variable here.
-	m_p->m_newStepStarted = true;
 
 	for(HydraulicNetworkAbstractFlowElement* fe : m_p->m_flowElements)
 		fe->setTime(t);
@@ -691,14 +664,17 @@ void HydraulicNetworkModel::setFollowingElementId(HydraulicNetworkAbstractFlowEl
 
 // *** HydraulicNetworkModelImpl members ***
 
-HydraulicNetworkModelImpl::HydraulicNetworkModelImpl(const std::vector<Element> &elems, unsigned int referenceElemIdx,
-													 double solverAbsTol, double solverMassFluxScale) {
+// constants that control Jacobian matrix generation
+const double JACOBIAN_EPS_RELTOL = 1e-6;
+const double JACOBIAN_EPS_ABSTOL = 1e-8; // in Pa and scaled kg/s
+
+// convergence threshold for WRMS norm
+const double THRESHOLD = 0.1;
+const double MASS_FLUX_SCALE = 1000;
+
+
+HydraulicNetworkModelImpl::HydraulicNetworkModelImpl(const std::vector<Element> &elems, unsigned int referenceElemIdx) {
 	FUNCID(HydraulicNetworkModelImpl::HydraulicNetworkModelImpl);
-
-	// solver parameter
-	m_residualTolerance = solverAbsTol;
-	m_massFluxScale = solverMassFluxScale;
-
 	// copy elements vector
 	m_network.m_elements = elems;
 	// count number of nodes
@@ -909,7 +885,7 @@ double WRMSNorm(const std::vector<double> & vec) {
 void HydraulicNetworkModelImpl::printVars() const {
 	std::cout << "Mass fluxes [kg/s]" << std::endl;
 	for (unsigned int i=0; i<m_elementCount; ++i)
-		std::cout << "  " << i << "   " << m_y[i]/m_massFluxScale  << std::endl;
+		std::cout << "  " << i << "   " << m_y[i]/MASS_FLUX_SCALE  << std::endl;
 
 	std::cout << "Nodal pressures [Pa]" << std::endl;
 	for (unsigned int i=0; i<m_nodeCount; ++i)
@@ -942,25 +918,17 @@ int HydraulicNetworkModelImpl::solve() {
 	FUNCID(HydraulicNetworkModelImpl::solve);
 
 	unsigned int n = m_nodeCount + m_elementCount;
+
+	// reset initial guess
 	std::vector<double> rhs(n, 0);
-
-	// Reset initial guess to previous converged solution whenever we start a new step.
-	// See explanation in HydraulicNetworkModel::setTime()
-	if (m_newStepStarted) {
-		std::memcpy(m_y.data(), m_yLast.data(), sizeof(double)*n);
-		m_newStepStarted = false;
-	}
-
+	std::memcpy(m_y.data(), m_yLast.data(), sizeof(double)*n);
 #if 0
 	for (unsigned int i=0; i<n; ++i)
 		m_y[i] = 10;
 #endif
 
-	// NOTE: 20 iterations is enough, if we take more iterations than that, we just bail out and let
-	//       the outer Newton deal with the sub-optimal solution.
-	const int MAX_ITERATIONS = 30;
-	int iterations = MAX_ITERATIONS;
 	// now start the Newton iteration
+	int iterations = 100;
 	while (--iterations > 0) {
 		// evaluate system function for current guess
 		updateG();
@@ -969,17 +937,12 @@ int HydraulicNetworkModelImpl::solve() {
 		for (unsigned int i=0; i<m_G.size(); ++i)
 			rhs[i] = -m_G[i];
 
-//		std::cout << "\n*** Iter " << MAX_ITERATIONS-iterations  << std::endl;
-//		printVars();
-
 		// compose right hand side (mind the minus sign)
 		// and evaluate residuals
 		double resNorm = WRMSNorm(m_G);
 //		std::cout << "res = " << resNorm << std::endl;
-		if (resNorm < m_residualTolerance && iterations < MAX_ITERATIONS-1) { // require at least one solve always!
-//			std::cout << "--- Newton finished " << std::endl;
+		if (resNorm < THRESHOLD)
 			break;
-		}
 
 		// now compose Jacobian with FD quotients
 
@@ -993,7 +956,9 @@ int HydraulicNetworkModelImpl::solve() {
 			return 1;
 		}
 
+//		std::cout << "\n\n*** Iter " << 100-iterations  << std::endl;
 
+//		printVars();
 //		jacobianWrite(rhs);
 
 #ifdef RESIDUAL_TEST
@@ -1046,16 +1011,18 @@ int HydraulicNetworkModelImpl::solve() {
 	printVars();
 #endif // NANDRAD_NETWORK_DEBUG_OUTPUTS
 
+
 	if (iterations > 0) {
-		IBK_FastMessage(IBK::VL_DETAILED)(IBK::FormatString("Hydraulic model Newton method converged after %1 iterations\n").arg(MAX_ITERATIONS-iterations),
-										  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_DETAILED);
+		IBK_FastMessage(IBK::VL_DETAILED)(IBK::FormatString("Hydraulic model Newton method converged after %1 iterations\n").arg(100-iterations), IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_DETAILED);
+		return 0;
 	}
+	// we register a recoverable error if the system did not converge
+	// (and allow a retry with a new guess)
 	else {
-		IBK_FastMessage(IBK::VL_DETAILED)(IBK::FormatString("Not converged within %1 iterations, returned solution optained so far.").arg(MAX_ITERATIONS),
-										  IBK::MSG_WARNING, FUNC_ID, IBK::VL_DETAILED);
+		IBK_FastMessage(IBK::VL_DETAILED)("Not converged within given number of iterations.", IBK::MSG_ERROR, FUNC_ID, IBK::VL_DETAILED);
+		return 1;
 	}
 
-	return 0;
 }
 
 
@@ -1449,7 +1416,7 @@ void HydraulicNetworkModelImpl::updateG() {
 
 	// extract mass flows
 	for (unsigned int i=0; i<m_elementCount; ++i) {
-		m_fluidMassFluxes[i] = m_y[i] / m_massFluxScale;
+		m_fluidMassFluxes[i] = m_y[i]/MASS_FLUX_SCALE;
 	}
 	// first nodal equations
 	for (unsigned int i=0; i<m_nodeCount; ++i) {
@@ -1468,7 +1435,7 @@ void HydraulicNetworkModelImpl::updateG() {
 				massSum += m_fluidMassFluxes[feIndex]; // otherwise flux goes into the node -> positive sign
 		}
 		// store in system function vector
-		m_G[i + m_elementCount] = massSum * m_massFluxScale; // we'll apply scaling here
+		m_G[i + m_elementCount] = massSum*MASS_FLUX_SCALE; // we'll apply scaling here
 
 	}
 

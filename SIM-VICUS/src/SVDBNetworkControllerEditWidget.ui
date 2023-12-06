@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>470</width>
-    <height>488</height>
+    <width>400</width>
+    <height>401</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -46,6 +46,9 @@
       <string>Controlled Property</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="1" colspan="2">
+       <widget class="QComboBox" name="comboBoxProperty"/>
+      </item>
       <item row="2" column="2">
        <widget class="QLineEdit" name="lineEditSchedule"/>
       </item>
@@ -90,9 +93,6 @@
           <normaloff>:/gfx/actions/24x24/minus.png</normaloff>:/gfx/actions/24x24/minus.png</iconset>
         </property>
        </widget>
-      </item>
-      <item row="0" column="1" colspan="4">
-       <widget class="QComboBox" name="comboBoxProperty"/>
       </item>
      </layout>
     </widget>
@@ -196,6 +196,11 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>QtExt::ColorButton</class>
+   <extends>QPushButton</extends>
+   <header location="global">QtExt_ColorButton.h</header>
+  </customwidget>
+  <customwidget>
    <class>QtExt::LanguageStringEditWidget1</class>
    <extends>QLineEdit</extends>
    <header location="global">QtExt_LanguageStringEditWidget1.h</header>
@@ -205,17 +210,6 @@
    <class>QtExt::ValidatingLineEdit</class>
    <extends>QLineEdit</extends>
    <header location="global">QtExt_ValidatingLineEdit.h</header>
-   <slots>
-    <signal>editingFinishedSuccessfully()</signal>
-   </slots>
-  </customwidget>
-  <customwidget>
-   <class>QtExt::ColorButton</class>
-   <extends>QPushButton</extends>
-   <header location="global">QtExt_ColorButton.h</header>
-   <slots>
-    <signal>colorChanged()</signal>
-   </slots>
   </customwidget>
  </customwidgets>
  <resources>

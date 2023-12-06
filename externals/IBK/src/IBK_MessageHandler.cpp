@@ -51,7 +51,6 @@
 #include "IBK_messages.h"
 #include "IBK_MessageHandler.h"
 #include "IBK_StringUtils.h"
-#include "IBK_FileUtils.h"
 #include "IBK_Path.h"
 
 namespace IBK {
@@ -149,11 +148,20 @@ bool MessageHandler::openLogFile(const std::string& logfile, bool append, std::s
 		return true; // no log file writing
 
 	if (append) {
-		m_logfile = IBK::create_ofstream( IBK::Path(logfile), std::ios_base::app);
+
+#if defined(_WIN32) && !defined(__MINGW32__)
+		m_logfile = new std::ofstream( IBK::Path(logfile).wstr().c_str(), std::ios_base::app);
+#else // _WIN32
+		m_logfile = new std::ofstream( logfile.c_str(), std::ios_base::app);
+#endif // _WIN32
 		*m_logfile << "\n----------- continued -------------\n" << std::endl;
 	}
 	else {
-		m_logfile = IBK::create_ofstream( IBK::Path(logfile) );
+#if defined(_WIN32) && !defined(__MINGW32__)
+		m_logfile = new std::ofstream( IBK::Path(logfile).wstr().c_str());
+#else // _WIN32
+		m_logfile = new std::ofstream( logfile.c_str() );
+#endif // _WIN32
 	}
 	if (!m_logfile->good()) {
 		closeLogFile();

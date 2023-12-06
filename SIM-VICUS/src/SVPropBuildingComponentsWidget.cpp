@@ -16,7 +16,7 @@ SVPropBuildingComponentsWidget::SVPropBuildingComponentsWidget(QWidget *parent) 
 	m_ui(new Ui::SVPropBuildingComponentsWidget)
 {
 	m_ui->setupUi(this);
-	m_ui->mainGridLayout->setMargin(0);
+	m_ui->verticalLayout->setMargin(0);
 
 	m_ui->tableWidgetComponents->setColumnCount(2);
 	m_ui->tableWidgetComponents->setHorizontalHeaderLabels(QStringList() << QString() << tr("Component"));
@@ -195,28 +195,27 @@ void SVPropBuildingComponentsWidget::updateUi() {
 	// update selection-related info
 
 	std::set<const VICUS::Component *> selectedComponents;
-	m_sceneSelectedComponentId = VICUS::INVALID_ID;
 	const SVDatabase & db = SVSettings::instance().m_db;
 	for (const VICUS::Surface * s : m_selectedSurfaces) {
 		if (s->m_componentInstance != nullptr) {
-			selectedComponents.insert(db.m_components[s->m_componentInstance->m_idComponent]);
+			const VICUS::Component * surfcomp = db.m_components[s->m_componentInstance->m_idComponent];
+			selectedComponents.insert(surfcomp);
 		}
 	}
-	if (selectedComponents.empty())
+	if (selectedComponents.empty()) {
 		m_ui->labelSelectedComponents->setText(tr("None"));
+	}
 	else if (selectedComponents.size() == 1) {
 		if (*selectedComponents.begin() == nullptr)
 			m_ui->labelSelectedComponents->setText(tr("Component with invalid/unknown ID"));
-		else {
-			m_sceneSelectedComponentId = (*selectedComponents.begin())->m_id;
+		else
 			m_ui->labelSelectedComponents->setText(tr("%1 [%2]")
-				.arg(QtExt::MultiLangString2QString((*selectedComponents.begin())->m_displayName)).arg(m_sceneSelectedComponentId));
-		}
+				.arg(QtExt::MultiLangString2QString((*selectedComponents.begin())->m_displayName)).arg((*selectedComponents.begin())->m_id));
 	}
-	else
+	else {
 		m_ui->labelSelectedComponents->setText(tr("%1 different components")
 			.arg(selectedComponents.size()));
-
+	}
 	// update table related button states
 	on_tableWidgetComponents_itemSelectionChanged();
 }
@@ -407,13 +406,12 @@ const VICUS::Component * SVPropBuildingComponentsWidget::currentlySelectedCompon
 
 
 void SVPropBuildingComponentsWidget::assignComponent(bool insideWall, bool fromSurfaceSelection, unsigned int selectedComponentId) {
-
 	// ask user to select a new component, unless given
 	if (selectedComponentId == VICUS::INVALID_ID) {
 		SVSettings::instance().showDoNotShowAgainMessage(this, "PropertyWidgetInfoAssignComponent",
 			tr("Assign component"), tr("You may now select a component from the database, which will then be "
 									   "assigned to the selected surfaces."));
-		selectedComponentId = SVMainWindow::instance().dbComponentEditDialog()->select(m_sceneSelectedComponentId);
+		selectedComponentId = SVMainWindow::instance().dbComponentEditDialog()->select(VICUS::INVALID_ID);
 		if (selectedComponentId == VICUS::INVALID_ID)
 			return; // user aborted the dialog
 	}

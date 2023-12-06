@@ -38,8 +38,6 @@
 
 #include <QRectF>
 
-#include <string>
-
 class QPainter;
 class QPaintDevice;
 
@@ -84,12 +82,6 @@ public:
 	/*! Return break capability after the item. If true a page break is possible.*/
 	bool canPageBreakAfter() const { return m_canPageBreakAfter; }
 
-	/*! generates a desription text for positions and sizes.*/
-	virtual std::string	posText() const;
-
-	bool drawItemRect() const;
-	void setDrawItemRect(bool newDrawItemRect);
-
 protected:
 
 	/*! Draw the item with the given painter at the given position.
@@ -102,8 +94,6 @@ protected:
 	*/
 	virtual void setCurrentRect() = 0;
 
-	/*! Set internal variables based on the given ones.
-	*/
 	void setInternals(ReportFrameItemBase* item) const;
 
 	QPaintDevice*	m_paintDevice;
@@ -125,7 +115,6 @@ private:
 	void setEndPos(QPointF& pos);
 
 	double			m_oldXPos;
-	bool			m_drawItemRect = false;
 };
 
 } // namespace QtExt

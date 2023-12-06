@@ -33,15 +33,11 @@
 #include <QtExt_LanguageHandler.h>
 #include <SVConversions.h>
 
-#include <qwt_plot_curve.h>
-
 #include "SVSettings.h"
 #include "SVDBWindowTableModel.h"
 #include "SVDatabaseEditDialog.h"
 #include "SVMainWindow.h"
 #include "SVConstants.h"
-#include "SVDBWindowGlazingSystemEditWidget.h"
-
 
 SVDBWindowEditWidget::SVDBWindowEditWidget(QWidget *parent) :
 	SVAbstractDatabaseEditWidget(parent),
@@ -69,9 +65,6 @@ SVDBWindowEditWidget::SVDBWindowEditWidget(QWidget *parent) :
 	m_ui->comboBoxFrameMethod->blockSignals(false);
 	m_ui->comboBoxDividerMethod->blockSignals(false);
 
-	m_shgcCurve = new QwtPlotCurve();
-	SVDBWindowGlazingSystemEditWidget::initPlot(m_ui->shgcPlot, m_shgcCurve);
-
 	// initial state is "nothing selected"
 	updateInput(-1);
 }
@@ -98,10 +91,6 @@ void SVDBWindowEditWidget::updateInput(int id) {
 
 	m_ui->lineEditDividerMaterialName->setText("");
 	m_ui->lineEditDividerMaterialThickness->setText("---");
-
-	m_shgcCurve->setSamples(QVector<QPointF>());
-	m_ui->shgcPlot->replot();
-	m_ui->shgcPlot->setEnabled(false);
 
 	if (id == -1) {
 		// disable all controls
@@ -131,7 +120,6 @@ void SVDBWindowEditWidget::updateInput(int id) {
 
 	m_ui->lineEditUValue->setText("---");
 	m_ui->lineEditSHGC->setText("---");
-	m_ui->lineEditFrameInput->setText("---");
 
 	// for built-ins, disable editing/make read-only
 	bool isEditable = !m_current->m_builtIn;
@@ -144,14 +132,9 @@ void SVDBWindowEditWidget::updateInput(int id) {
 			m_ui->lineEditUValue->setText(QString("%L1").arg(glazSys->uValue(), 0, 'f', 4));
 			m_ui->lineEditSHGC->setText(QString("%L1").arg(glazSys->SHGC(), 0, 'f', 4));
 			m_ui->lineEditGlazingSystemName->setText(QtExt::MultiLangString2QString(glazSys->m_displayName));
-
-			// also update plot
-			SVDBWindowGlazingSystemEditWidget::updatePlot(glazSys, m_shgcCurve);
-			m_ui->shgcPlot->setEnabled(true);
 		}
 	}
-	m_ui->shgcPlot->replot();
-
+	m_ui->lineEditFrameInput->setText("---");
 	// *** frame ***
 	int frameIdx = 0;
 	switch(m_current->m_methodFrame) {

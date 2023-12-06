@@ -57,7 +57,7 @@ const QColor ConstructionView::ColorList[12] = {
 
 ConstructionView::ConstructionView(QWidget *parent) :
 	QGraphicsView(parent),
-	m_device(nullptr),
+	m_device(0),
 	m_diagramScene(new ConstructionGraphicsScene(true, this)),
 	m_margins(5),
 	m_resolution(1.0),
@@ -80,6 +80,7 @@ ConstructionView::ConstructionView(QWidget *parent) :
 						 | QGraphicsView::DontSavePainterState
 						 | QGraphicsView::DontAdjustForAntialiasing);
 	setAlignment(Qt::AlignLeft | Qt::AlignBottom);
+
 
 }
 

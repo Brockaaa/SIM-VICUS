@@ -59,7 +59,7 @@ public:
 	static void formatListView(QListView * v);
 
 	/*! Replaces all color text placeholders with colors based on the current style sheet. */
-	static void setHtmlColors(QString & htmlCode);
+	static void formatWelcomePage(QString & htmlCode);
 
 	/*! Resizes column to contents, yet honors the enlargeOnly flag.
 		Useful if user can adjust column width manually, but data changes may require enlarging
@@ -88,7 +88,6 @@ public:
 
 	QColor				m_userDBBackgroundBright;
 	QColor				m_userDBBackgroundDark;
-	QColor				m_DBSelectionColor;
 	/*! Regular text color to be used for not-referenced DB entries in database tables. */
 	QColor				m_regularDBEntryColorDark;
 

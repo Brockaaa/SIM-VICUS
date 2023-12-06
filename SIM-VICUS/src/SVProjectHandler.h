@@ -63,12 +63,8 @@ public:
 	enum ModificationTypes {
 		/*! Used whenever a solver/model parameter (NANDRAD::SolverParameters) has changed. */
 		SolverParametersModified,
-		/*! Used when a climate location parameter (longitude, latitude, timezone) has changed. */
+		/*! Used when a climate location parameter (CCM file path, longitude, latitude, timezone) has changed. */
 		ClimateLocationModified,
-		/*! Used when a climate file path has changed. */
-		ClimateLocationAndFileModified,
-		/*! Used when outouts have been changed. */
-		OutputsModified,
 		/*! Grid properties changed. */
 		GridModified,
 		/*! Network geometry has changed (e.g. modfied/added nodes or edges). */
@@ -106,8 +102,6 @@ public:
 		ObjectRenamed,
 		/*! Drawings have been added / removed from project */
 		DrawingModified,
-		/*! LCA / LCC settings have been modified. */
-		LcaLccModified,
 		/*! Used whenever the project data changes completely (new project created, project loaded etc.)
 			and a complete reset of all views and models is needed.
 		*/
@@ -164,11 +158,13 @@ public:
 		function returns with invalid state of project manager.
 		Emits updateActions() signal on success.
 		\param parent Parent widget, needed for QMessageBox
-		\param filename Filename of project file to read (NOTE: pass-by-value is needed here)
+		\param filename Filename of project file to read.
 		\param silent If true, error messages won't pop-up as dialog box but rather be
 					  sent to IBK::IBK_Message().
 	*/
-	void loadProject(QWidget * parent, QString filename, bool silent);
+	void loadProject(	QWidget * parent,
+						const QString & filename,
+						bool silent);
 
 	/*! Closes project (discarding modifications) and reopens the project.
 		Project must have a valid filename already.
@@ -196,9 +192,8 @@ public:
 		\param parent Pointe to parent widget. Used in MessageBox.
 		\param fileName Filepath for the project file. Should not contain placeholder. A missing project file extension will be added.
 		\param addToRecentFilesList If true file will be added to recent file list if save was successful.
-		\param autosave If true, create an autosave-copy of the project, i.e. appends ~ to filename, does not add to recent files, no error message in case of error.
 	*/
-	SaveResult saveProject(QWidget * parent, const QString & fileName, bool addToRecentFilesList = true, bool autosave = false);
+	SaveResult saveProject(QWidget * parent, const QString & fileName, bool addToRecentFilesList = true);
 
 	/*! Interface function for the user interface that allows
 		different levels of modifications to be signalled to the project.
@@ -266,12 +261,6 @@ public:
 	*/
 	bool importEmbeddedDB(VICUS::Project & pro);
 
-public slots:
-
-	/*! Creates autosave backup of current project.
-		Calls saveProject() internally.
-	*/
-	void onAutoSave();
 
 signals:
 	/*! Emitted when the project has been modified.
@@ -349,6 +338,9 @@ private:
 	*/
 	void addToRecentFiles(const QString& fname);
 
+	/*! Set new colors for each invalid color in the surface data. */
+	void updateSurfaceColors();
+
 	/*! This function is called once a project has been read and the internal databases have been updated.
 		Here, all clearly invalid data elements are removed so that the project retains a meaningful state.
 
@@ -369,7 +361,7 @@ private:
 		Access to the project instance is strictly forbidden and should only be granted
 		to undo actions via a suitable mechanism.
 	*/
-	VICUS::Project			*m_project;
+	VICUS::Project		*m_project;
 
 	/*! Holds the time stamp of the last time the project was read.
 		This time stamp is updated in read() and used to check for external project modifications.

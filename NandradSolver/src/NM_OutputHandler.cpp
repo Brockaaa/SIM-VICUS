@@ -40,7 +40,7 @@
 
 const char * const STATE_QUANTITIES[] = {
 	"AirTemperature",
-	"AbsoluteHumidity",
+	"MoistureDensity",
 	"RelativeHumidity",
 	"OperativeTemperature",
 	"VentilationRate",
@@ -50,7 +50,6 @@ const char * const STATE_QUANTITIES[] = {
 	"ActiveLayerTemperature",
 	"ShadingFactor",
 	"ShadingControlValue",
-	"SpecificHumidity",
 	"ReturnTemperature"
 };
 
@@ -75,12 +74,6 @@ const char * const FLUX_QUANTITIES[] = {
 	"SolarRadiationFluxB",
 	"FluxShortWaveRadiationA",
 	"FluxShortWaveRadiationB",
-	"FluxLongWaveRadiationA",
-	"FluxLongWaveRadiationB",
-	"LongWaveRadiationFluxA",
-	"LongWaveRadiationFluxB",
-	"EmittedLongWaveRadiationFluxA",
-	"EmittedLongWaveRadiationFluxB",
 	"ConstructionHeatConductionLoad",
 	"WindowHeatConductionLoad",
 	"WindowSolarRadiationLoad",

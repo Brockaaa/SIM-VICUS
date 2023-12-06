@@ -263,7 +263,7 @@ void Polygon3D::setRotation(const IBKMK::Vector3D & normal, const IBKMK::Vector3
 }
 
 
-IBKMK::Vector2D Polygon3D::flip() {
+void Polygon3D::flip() {
 	IBK_ASSERT(isValid());
 	m_normal = -1.0*m_normal;
 	// we need to swap x and y axes to keep right-handed coordinate system
@@ -288,8 +288,6 @@ IBKMK::Vector2D Polygon3D::flip() {
 	m_polyline.setVertexes(vertexes2DNew);
 	m_dirty = true;
 	vertexes();
-
-	return offset2D;
 }
 
 
@@ -358,8 +356,8 @@ bool Polygon3D::smallerVectZero(const IBKMK::Vector3D& vect) {
 	return false;
 }
 
-IBKMK::Vector3D Polygon3D::computeNormal(const std::vector<IBKMK::Vector3D>& polygon) {
-	FUNCID(Polygon3D::computeNormal);
+IBKMK::Vector3D Polygon3D::getNormal(const std::vector<IBKMK::Vector3D>& polygon) {
+	FUNCID(Polygon3D::getNormal);
 
 	if (polygon.size() < 3)
 		return IBKMK::Vector3D(1,0,0);
@@ -449,7 +447,7 @@ void Polygon3D::updateLocalCoordinateSystem(const std::vector<IBKMK::Vector3D> &
 	// calculate normal with first 3 points
 	m_localX = verts[1] - verts[0];
 //	IBKMK::Vector3D y = verts.back() - verts[0];
-	IBKMK::Vector3D n1 = computeNormal(verts);
+	IBKMK::Vector3D n1 = getNormal(verts);
 //	IBKMK::Vector3D n2;
 
 //	m_localX.crossProduct(y, n2);

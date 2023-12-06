@@ -20,6 +20,20 @@
       <string>Add geometrical primitives</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_7">
+      <item row="0" column="1">
+       <widget class="QPushButton" name="pushButtonAddPolygon">
+        <property name="text">
+         <string>Polygon</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QPushButton" name="pushButtonAddRect">
+        <property name="text">
+         <string>Rect</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="2">
        <spacer name="horizontalSpacer_3">
         <property name="orientation">
@@ -33,45 +47,19 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="0">
-       <widget class="QPushButton" name="pushButtonAddRect">
-        <property name="text">
-         <string>Rect</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources/icons.qrc">
-          <normaloff>:/gfx/icons8/icons8-rectangle-80.png</normaloff>:/gfx/icons8/icons8-rectangle-80.png</iconset>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QPushButton" name="pushButtonAddPolygon">
-        <property name="text">
-         <string>Polygon</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources/icons.qrc">
-          <normaloff>:/gfx/icons8/icons8-polygon-80.png</normaloff>:/gfx/icons8/icons8-polygon-80.png</iconset>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox_4">
      <property name="title">
-      <string>Add Building components</string>
+      <string>Physical Components</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="2">
        <widget class="QPushButton" name="pushButtonAddWindow">
         <property name="text">
          <string>Window/Door</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources/icons.qrc">
-          <normaloff>:/gfx/icons8/icons8-window-80.png</normaloff>:/gfx/icons8/icons8-window-80.png</iconset>
         </property>
        </widget>
       </item>
@@ -93,20 +81,12 @@
         <property name="text">
          <string>Zone</string>
         </property>
-        <property name="icon">
-         <iconset resource="../resources/icons.qrc">
-          <normaloff>:/gfx/icons8/icons8-3d-80.png</normaloff>:/gfx/icons8/icons8-3d-80.png</iconset>
-        </property>
        </widget>
       </item>
       <item row="0" column="1">
        <widget class="QPushButton" name="pushButtonAddRoof">
         <property name="text">
          <string>Roof</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources/icons.qrc">
-          <normaloff>:/gfx/icons8/icons8-roof-80.png</normaloff>:/gfx/icons8/icons8-roof-80.png</iconset>
         </property>
        </widget>
       </item>
@@ -116,7 +96,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Add Network elements</string>
+      <string>Network</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
@@ -124,20 +104,12 @@
         <property name="text">
          <string>Pipeline</string>
         </property>
-        <property name="icon">
-         <iconset resource="../resources/icons.qrc">
-          <normaloff>:/gfx/icons8/icons8-pipeline-80.png</normaloff>:/gfx/icons8/icons8-pipeline-80.png</iconset>
-        </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="pushButtonAddSubStation">
         <property name="text">
          <string>Sub Stations</string>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources/icons.qrc">
-          <normaloff>:/gfx/icons8/icons8-haus-80.png</normaloff>:/gfx/icons8/icons8-haus-80.png</iconset>
         </property>
        </widget>
       </item>
@@ -172,8 +144,6 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../resources/icons.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

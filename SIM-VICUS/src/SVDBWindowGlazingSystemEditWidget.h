@@ -36,7 +36,6 @@ class SVDBWindowGlazingSystemTableModel;
 class SVDatabase;
 class QwtPlotCurve;
 class QTableWidgetItem;
-class QwtPlot;
 
 namespace VICUS {
 	class WindowGlazingSystem;
@@ -63,12 +62,6 @@ public:
 
 	/*! Update widget with this. */
 	void updateInput(int id) override;
-
-	/*! Initializes the plot, called in constructor */
-	static void initPlot(QwtPlot *shgcPlot, QwtPlotCurve *shgcCurve);
-
-	/*! Updates the actual data in the plot */
-	static void updatePlot(const VICUS::WindowGlazingSystem * glazingSys, QwtPlotCurve *shgcCurve);
 
 private slots:
 	void on_lineEditName_editingFinished();

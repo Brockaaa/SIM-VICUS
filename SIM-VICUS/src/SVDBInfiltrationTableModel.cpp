@@ -139,7 +139,7 @@ void SVDBInfiltrationTableModel::resetModel() {
 
 QModelIndex SVDBInfiltrationTableModel::addNewItem() {
 	VICUS::Infiltration inf;
-	inf.m_displayName.setString(tr("<new infiltration model>").toStdString(), IBK::MultiLanguageString::m_language);
+	inf.m_displayName.setEncodedString("en:<new zone control infiltration model>");
 
 	// set default parameters
 

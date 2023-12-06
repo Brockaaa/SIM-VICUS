@@ -28,7 +28,6 @@
 
 #include <QWidget>
 
-class ModificationInfo;
 
 namespace QtExt {
 	class ValidatingLineEdit;
@@ -47,7 +46,7 @@ class SVSimulationPerformanceOptions : public QWidget {
 	Q_OBJECT
 public:
 	/*! Constructor, takes solver settings object reference (object is stored in main start dialog). */
-	explicit SVSimulationPerformanceOptions(QWidget *parent);
+	explicit SVSimulationPerformanceOptions(QWidget *parent, NANDRAD::SolverParameter & solverParams);
 	~SVSimulationPerformanceOptions();
 
 	/*! Updates user interface with properties from the project data structure.
@@ -58,8 +57,6 @@ public:
 private slots:
 	/*! Triggered whenever one of the combo boxes on this widget has changed index. */
 	void currentIndexChanged(int index);
-
-	void onModified(int modificationType, ModificationInfo */*data*/);
 
 	void on_lineEditMaxOrder_editingFinishedSuccessfully();
 	void on_lineEditNonLin_editingFinishedSuccessfully();
@@ -77,6 +74,10 @@ private:
 
 	/*! UI pointer. */
 	Ui::SVSimulationPerformanceOptions	*m_ui;
+
+	/*! Data storage location, synchronized with user interface. */
+	NANDRAD::SolverParameter			*m_solverParams = nullptr;
+
 };
 
 #endif // SVSimulationPerformanceOptionsH

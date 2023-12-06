@@ -166,7 +166,7 @@ void SVDBInternalLoadsTableModel::resetModel() {
 
 QModelIndex SVDBInternalLoadsTableModel::addNewItem() {
 	VICUS::InternalLoad intLoad;
-	intLoad.m_displayName.setString(tr("<new internal loads model>").toStdString(), IBK::MultiLanguageString::m_language);
+	intLoad.m_displayName.setEncodedString("en:<new internal load model>");
 
 	// set default parameters
 	//category dependent
@@ -184,10 +184,8 @@ QModelIndex SVDBInternalLoadsTableModel::addNewItem() {
 			VICUS::KeywordList::setParameter(intLoad.m_para, "InternalLoad::para_t", VICUS::InternalLoad::P_LossHeatFactor, 0.0);
 		break;
 		case VICUS::InternalLoad::IC_Lighting:
-			VICUS::KeywordList::setParameter(intLoad.m_para, "InternalLoad::para_t", VICUS::InternalLoad::P_ConvectiveHeatFactor, 0.8);
 		break;
 		case VICUS::InternalLoad::IC_Other:
-			VICUS::KeywordList::setParameter(intLoad.m_para, "InternalLoad::para_t", VICUS::InternalLoad::P_ConvectiveHeatFactor, 0.8);
 		break;
 		case VICUS::InternalLoad::NUM_MC:
 		break;

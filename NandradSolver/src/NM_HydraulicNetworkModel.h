@@ -56,8 +56,7 @@ public:
 	/*! Constructor. */
 	HydraulicNetworkModel(const NANDRAD::HydraulicNetwork & nw,
 		const std::vector<NANDRAD::Thermostat> &thermostats,
-		unsigned int id, const std::string &displayName,
-		double solverAbsTol, double solverMassFluxScale);
+		unsigned int id, const std::string &displayName);
 
 	/*! D'tor, released pimpl object. */
 	~HydraulicNetworkModel() override;
@@ -195,6 +194,7 @@ private:
 	std::vector<double>								m_geodeticInletNodePressures;
 	/*! The static pressure resulting from the geodetic height of the outlet nodes, will be pre-calculated in setup() */
 	std::vector<double>								m_geodeticOutletNodePressures;
+
 
 	friend class ThermalNetworkStatesModel;
 

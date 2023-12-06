@@ -48,7 +48,6 @@
 #include "IBK_Path.h"
 #include "IBK_messages.h"
 #include "IBK_FormatString.h"
-#include "IBK_FileUtils.h"
 
 namespace IBK {
 
@@ -331,7 +330,17 @@ long long FileReader::readAll(	const Path &filename,
 	// get filesize
 	long long fsize = filename.fileSize();
 
-	if (!open_ifstream(inputStream, filename, std::ios_base::binary)) {
+#if defined(_WIN32)
+	#if defined(_MSC_VER)
+			inputStream.open(filename.wstr().c_str(), std::ios_base::binary);
+	#else
+			std::string filenameAnsi = IBK::WstringToANSI(filename.wstr(), false);
+			inputStream.open(filenameAnsi.c_str(), std::ios_base::binary);
+	#endif
+#else // _WIN32
+			inputStream.open(filename.c_str(), std::ios_base::binary);
+#endif
+	if (!inputStream.is_open()) {
 		throw IBK::Exception( IBK::FormatString("Cannot open input file '%1' for reading").arg(filename), FUNC_ID);
 	}
 

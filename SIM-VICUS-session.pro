@@ -2,8 +2,6 @@
 
 TEMPLATE = subdirs
 
-#EXTRA_LIBS += dxfrw
-
 SUBDIRS = \
 		CO2ComfortVentilation \
 		DummyDatabasePlugin \
@@ -19,6 +17,7 @@ SUBDIRS = \
 		IBK \
 		IBKMK \
 		IntegratorFramework \
+                libdxfrw \
 		Nandrad \
 		NandradSolver \
 		NandradModel \
@@ -46,6 +45,7 @@ DataIO.file = externals/DataIO/projects/Qt/DataIO.pro
 IBK.file = externals/IBK/projects/Qt/IBK.pro
 IBKMK.file = externals/IBKMK/projects/Qt/IBKMK.pro
 IntegratorFramework.file = externals/IntegratorFramework/projects/Qt/IntegratorFramework.pro
+libdxfrw.file = externals/libdxfrw/projects/Qt/libdxfrw.pro
 Nandrad.file = externals/Nandrad/projects/Qt/Nandrad.pro
 SuiteSparse.file = externals/SuiteSparse/projects/Qt/SuiteSparse.pro
 sundials.file = externals/sundials/projects/Qt/sundials.pro
@@ -69,13 +69,13 @@ CO2ComfortVentilation.file = FMUs/CO2ComfortVentilation/projects/Qt/CO2ComfortVe
 NandradSolver.depends = NandradModel DataIO CCM TiCPP IBK IntegratorFramework Nandrad IBKMK
 NandradSolverFMI.depends = NandradModel DataIO CCM TiCPP IBK IntegratorFramework Nandrad IBKMK
 NandradCodeGenerator.depends = IBK Nandrad QtExt TiCPP
-SIM-VICUS.depends = QuaZIP qwt Vicus Nandrad IBK TiCPP CCM QtExt Zeppelin IDFReader Shading DataIO clipper RoomClipper
+SIM-VICUS.depends = QuaZIP qwt Vicus Nandrad IBK TiCPP CCM QtExt Zeppelin IDFReader Shading DataIO clipper RoomClipper libdxfrw
 NandradFMUGenerator.depends = IBK Nandrad QtExt QuaZIP TiCPP
 
 
 # library dependencies
 CCM.depends = IBK TiCPP
-Shading.depends = IBK TiCPP CCM IBKMK DataIO RoomClipper
+Shading.depends = IBK TiCPP CCM IBKMK DataIO
 DataIO.depends = IBK
 IBKMK.depends = IBK sundials
 TiCPP.depends = IBK
@@ -85,19 +85,10 @@ IntegratorFramework.depends = IBK IBKMK sundials SuiteSparse
 sundials.depends = SuiteSparse
 Nandrad.depends = IBK TiCPP IBKMK
 Zeppelin.depends = IBK
-Vicus.depends = IBK TiCPP Nandrad IBKMK CCM DataIO
+Vicus.depends = IBK TiCPP Nandrad IBKMK CCM DataIO libdxfrw
 NandradModel.depends = DataIO CCM TiCPP IBK IntegratorFramework Nandrad IBKMK
-RoomClipper.depends = IBK Nandrad IBKMK TiCPP CCM clipper Vicus
+RoomClipper.depends = IBK Nandrad IBKMK TiCPP CCM clipper Vicus libdxfrw
 
-DummyDatabasePlugin.depends = Vicus
-DummyImportPlugin.depends = Vicus
+DummyDatabasePlugin.depends = Vicus libdxfrw
+DummyImportPlugin.depends = Vicus libdxfrw
 
-# only build dxfrw if enabled
-
-contains(EXTRA_LIBS,dxfrw) {
-	SUBDIRS += dxfrw
-
-	dxfrw.file = externals/dxfrw/projects/Qt/dxfrw.pro
-
-	Vicus.depends += dxfrw
-}

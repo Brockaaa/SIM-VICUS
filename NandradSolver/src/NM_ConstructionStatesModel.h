@@ -71,7 +71,7 @@ public:
 
 	/*! Constructor */
 	ConstructionStatesModel(unsigned int id, const std::string &displayName) :
-		m_id(id), m_displayName(displayName), m_moistureBalanceConstruction(false)
+		m_id(id), m_displayName(displayName)
 	{
 	}
 
@@ -149,10 +149,8 @@ private:
 	unsigned int									m_id;
 	/*! Display name (for error messages). */
 	std::string										m_displayName;
-	/*! True if zone moisture balance is enabled. */
+	/*! True if moisture balance is enabled. */
 	bool											m_moistureBalanceEnabled;
-	/*! True if moisture balance is calculated in construction. */
-	bool											m_moistureBalanceConstruction;
 
 	/*! Results, computed/updated during the calculation. */
 	std::vector<double>								m_results;

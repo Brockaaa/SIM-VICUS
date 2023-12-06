@@ -38,11 +38,6 @@ extern const double MIN_AREA;
 /*! Epsilon for distance clipping. */
 extern const double EPSILON;
 
-/*! Interval for stopwatch, needed for Dialog updating. */
-extern const double STOPWATCH_INTERVAL;
-
-// When defined writes detailled output for debugging
-//#define DETAILED_INFO
 
 } // namespace RC
 #endif // RC_ConstantsH

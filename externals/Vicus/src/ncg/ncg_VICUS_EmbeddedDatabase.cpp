@@ -208,15 +208,15 @@ void EmbeddedDatabase::readXML(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
-			else if (cName == "EPDDatasets") {
+			else if (cName == "EPDElements") {
 				const TiXmlElement * c2 = c->FirstChildElement();
 				while (c2) {
 					const std::string & c2Name = c2->ValueStr();
-					if (c2Name != "EpdDataset")
+					if (c2Name != "EPDDataset")
 						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
-					VICUS::EpdDataset obj;
+					VICUS::EPDDataset obj;
 					obj.readXML(c2);
-					m_EPDDatasets.push_back(obj);
+					m_EPDElements.push_back(obj);
 					c2 = c2->NextSiblingElement();
 				}
 			}
@@ -515,12 +515,12 @@ TiXmlElement * EmbeddedDatabase::writeXML(TiXmlElement * parent) const {
 	}
 
 
-	if (!m_EPDDatasets.empty()) {
-		TiXmlElement * child = new TiXmlElement("EPDDatasets");
+	if (!m_EPDElements.empty()) {
+		TiXmlElement * child = new TiXmlElement("EPDElements");
 		e->LinkEndChild(child);
 
-		for (std::vector<VICUS::EpdDataset>::const_iterator it = m_EPDDatasets.begin();
-			it != m_EPDDatasets.end(); ++it)
+		for (std::vector<VICUS::EPDDataset>::const_iterator it = m_EPDElements.begin();
+			it != m_EPDElements.end(); ++it)
 		{
 			it->writeXML(child);
 		}

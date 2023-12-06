@@ -39,8 +39,7 @@ class SVUndoModifyBuildingTopology : public SVUndoCommandBase {
 public:
 	/*! Replaces building entity at given index in buildings vector. */
 	SVUndoModifyBuildingTopology(const QString & label, const std::vector<VICUS::Building> & buildings,
-								 const std::vector<VICUS::ComponentInstance> *surfaceComponentInstances = nullptr,
-								 const std::vector<VICUS::SubSurfaceComponentInstance> *subSurfaceComponentInstances = nullptr);
+								 const std::vector<VICUS::ComponentInstance> *surfaceComponentInstances = nullptr);
 
 	virtual void undo();
 	virtual void redo();
@@ -52,12 +51,7 @@ private:
 	/*! Copies of modified surface component instances. */
 	std::vector<VICUS::ComponentInstance>			m_surfaceComponentInstances;
 
-	/*! Copies of modified sub-surface component instances. */
-	std::vector<VICUS::SubSurfaceComponentInstance> m_subSurfaceComponentInstances;
-
 	bool                                            m_modifySurfaceComponentInstances = false;
-
-	bool                                            m_modifySubSurfaceComponentInstances = false;
 };
 
 #endif // SVUndoModifyBuildingTopologyH

@@ -14,7 +14,6 @@
 #include <QPushButton>
 
 #include <IBKMK_UTM.h>
-#include <IBK_FileUtils.h>
 
 #include <fstream>
 
@@ -68,7 +67,6 @@ bool SVNetworkExportDialog::edit() {
 
 
 void SVNetworkExportDialog::exportToGeoJson(unsigned int networkId) {
-	FUNCID(SVNetworkExportDialog::exportToGeoJson);
 
 	const VICUS::Network *network = VICUS::element(project().m_geometricNetworks, networkId);
 	Q_ASSERT(network != nullptr);
@@ -199,10 +197,10 @@ void SVNetworkExportDialog::exportToGeoJson(unsigned int networkId) {
 
 	IBK::Path exportFile(m_ui->lineEditExportFileName->filename().toStdString());
 
-	std::ofstream geoJsonFile;
+	std::ofstream geoJsonFile(exportFile.str());
 
-	if ( !IBK::open_ofstream(geoJsonFile, exportFile) )
-		throw IBK::Exception(IBK::FormatString("Could not open output file '%1'\n").arg(exportFile), FUNC_ID);
+	if ( !geoJsonFile.is_open() )
+		throw IBK::Exception(IBK::FormatString("Could not open output file '%1'\n").arg(exportFile.str() ), "SVNetworkExportDialog::on_pushButtonExport_clicked");
 
 	geoJsonFile << ba.toStdString();
 

@@ -56,11 +56,4 @@ void Location::checkParameters() const {
 	}
 }
 
-void Location::initDefaults() {
-	m_flags[Location::F_PerezDiffuseRadiationModel].set("PerezDiffuseRadiationModel", true);
-	NANDRAD::KeywordList::setParameter(m_para, "Location::para_t", NANDRAD::Location::P_Albedo, 0.2);
-	NANDRAD::KeywordList::setParameter(m_para, "Location::para_t", NANDRAD::Location::P_Longitude, 13.1);
-	NANDRAD::KeywordList::setParameter(m_para, "Location::para_t", NANDRAD::Location::P_Longitude, 13.1);
-}
-
 } // namespace NANDRAD

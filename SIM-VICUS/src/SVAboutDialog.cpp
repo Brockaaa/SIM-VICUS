@@ -66,12 +66,16 @@ SVAboutDialog::SVAboutDialog(QWidget *parent) :
 				"font-size:12pt; color: #3caed0; text-decoration:none"
 				);
 
-	SVStyle::setHtmlColors(labelStyle);
+	SVStyle::formatWelcomePage(labelStyle);
 
-	QString infoText = QString("<a href=\"https://sim-vicus.de\"><span style=\"%1\">https://sim-vicus.de</span></a><br><br>"
-							   "<a href=\"https://icons8.de\"><span style=\"%1\">https://icons8.de</span></a>").arg(labelStyle);
-	m_ui->labelInfoText->setText(infoText);
-	m_ui->labelInfoText->setOpenExternalLinks(true);
+	QLabel * linkLabel = new QLabel( QString("<a href=\"https://sim-vicus.de\"><span style=\"%1\">https://sim-vicus.de</span></a>").arg(labelStyle));
+	linkLabel->setParent(this);
+	linkLabel->resize(400,25);
+	linkLabel->setAutoFillBackground(false);
+	linkLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+	linkLabel->setOpenExternalLinks(true);
+	linkLabel->move(250,270);
+	linkLabel->setAttribute(Qt::WA_TranslucentBackground);
 
 	layout()->setMargin(0);
 	layout()->setSizeConstraint( QLayout::SetFixedSize );

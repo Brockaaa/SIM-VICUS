@@ -29,6 +29,7 @@
 #include <VICUS_Project.h>
 
 #include "VICUS_AcousticTemplate.h"
+//TODO Anton Why the include?
 
 /*! Central provider of predefined and user defined construction, window, material... databases.
 
@@ -55,7 +56,6 @@ public:
 		DT_NetworkControllers,
 		DT_SubNetworks,
 		DT_SupplySystems,
-		DT_EpdDatasets,
 		DT_Schedules,
 		DT_InternalLoads,
 		DT_ZoneControlThermostat,
@@ -79,7 +79,7 @@ public:
 	void readDatabases(DatabaseTypes t = NUM_DT);
 
 	/*! Writes user-defined database. */
-	void writeDatabases(DatabaseTypes t = NUM_DT) const;
+	void writeDatabases();
 
 	/*! Import DB elements from other database into our database, but only if the IDs of the imported
 		DB elements to not yet exist. Import errors are logged to IBK::IBK_message()
@@ -185,7 +185,7 @@ public:
 	VICUS::Database<VICUS::SupplySystem>				m_supplySystems;
 
 	/*! Map of all database EPD elements */
-	VICUS::Database<VICUS::EpdDataset>					m_epdDatasets;
+//	VICUS::Database<VICUS::EPDDataset>					m_EPDElements;
 
 	/*! Map of all database schedules */
 	VICUS::Database<VICUS::Schedule>					m_schedules;

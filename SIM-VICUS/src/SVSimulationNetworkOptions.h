@@ -5,8 +5,6 @@
 
 #include <VICUS_Network.h>
 
-class ModificationInfo;
-
 namespace Ui {
 class SVSimulationNetworkOptions;
 }
@@ -17,16 +15,13 @@ class SVSimulationNetworkOptions : public QWidget {
 	Q_OBJECT
 
 public:
-	explicit SVSimulationNetworkOptions(QWidget *parent);
+	explicit SVSimulationNetworkOptions(QWidget *parent, std::vector<VICUS::Network> &networks);
 	~SVSimulationNetworkOptions();
 
 	void updateUi();
 
-public slots:
-	/*! Connected to SVProjectHandler::modified() */
-	void onModified( int modificationType, ModificationInfo * /*data*/ );
-
 private slots:
+	void on_comboBoxNetwork_activated(int index);
 	void on_comboBoxModelType_activated(int index);
 	void on_lineEditDefaultFluidTemperature_editingFinished();
 	void on_lineEditReferencePressure_editingFinished();
@@ -40,13 +35,14 @@ private slots:
 
 	void on_groupBoxHeatExchangeWithGround_clicked(bool checked);
 
-	void on_comboBoxNetwork_activated(int index);
-
 private:
-
-	void updateNetworkParameters();
-
 	Ui::SVSimulationNetworkOptions *m_ui;
+
+	/*! Pointer to local project's network data. */
+	std::vector<VICUS::Network>		*m_networks;
+
+
+	VICUS::Network					*m_current = nullptr;
 };
 
 #endif // SVSIMULATIONETWORKOPTIONS_H

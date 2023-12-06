@@ -34,7 +34,6 @@ namespace Ui {
 
 class SVDBWindowTableModel;
 class SVDatabase;
-class QwtPlotCurve;
 
 namespace VICUS {
 	class Window;
@@ -107,9 +106,6 @@ private:
 		A nullptr pointer means that there is no component (window) to edit.
 	*/
 	VICUS::Window				*m_current;
-
-	/*! Diagram curve for SHGC-plot. */
-	QwtPlotCurve				*m_shgcCurve;
 };
 
 #endif // SVDBWindowEditWidgetH

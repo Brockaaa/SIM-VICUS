@@ -37,24 +37,12 @@
 
 #include <IBK_Flag.h>
 #include <IBK_Parameter.h>
-#include <IBK_IntPara.h>
 
 namespace VICUS {
 
 /*! Stores data for a single material layer in a construction. */
 class MaterialLayer {
 public:
-
-	/*! Basic parameters. */
-	enum para_t {
-		//thermal paramters
-		/*! Dry density of the material. */
-		P_Thickness,			// Keyword: Thickness				[m]	'Thickness of the material layer.'
-		/*! Specific heat capacity of the material. */
-		P_LifeTime,				// Keyword: Lifetime				[a]	'Lifetime of the material layer.'
-
-		NUM_P
-	};
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
@@ -63,19 +51,16 @@ public:
 
 	/*! Simple Constructor with thickness in [m] and material id. */
 	MaterialLayer(double thickness, unsigned int id):
-		m_idMaterial(id)
-	{
-		m_para[P_Thickness].set("Thickness", thickness, IBK::Unit("m"));
-		m_para[P_LifeTime] .set("LifeTime", 50, IBK::Unit("a")); // We take 50 years as standard
-	}
+		m_idMaterial(id),
+		m_thickness(IBK::Parameter("Thickness", thickness, "m"))
+	{}
 
 	/*! Simple Constructor with thickness and material id. */
 	MaterialLayer(IBK::Parameter thickness, unsigned int id):
-		m_idMaterial(id)
-	{
-		m_para[P_Thickness] = thickness;
-		m_para[P_LifeTime].set("LifeTime", 50, IBK::Unit("a")); // We take 50 years as standard
-	}
+		m_idMaterial(id),
+		m_thickness(thickness)
+	{}
+
 
 	VICUS_READWRITE
 
@@ -85,9 +70,7 @@ public:
 	/*! Inequality operator. */
 	bool operator!=(const MaterialLayer & other) const {
 		return (m_idMaterial != other.m_idMaterial ||
-				m_para[P_LifeTime] != other.m_para[P_LifeTime] ||
-				m_para[P_Thickness] != other.m_para[P_Thickness] ||
-				m_cost != other.m_cost);
+				m_thickness != other.m_thickness);
 	}
 	/*! Equality operator. */
 	bool operator==(const MaterialLayer & other) const { return !operator!=(other); }
@@ -97,15 +80,11 @@ public:
 	/*! Unique ID of material. */
 	unsigned int					m_idMaterial = INVALID_ID;	// XML:A:required
 
-	/*! IBK::Parameter. */
-	IBK::Parameter					m_para[NUM_P];				// XML:E:required
-
-	/*! Cost of the material layer in Euro Cent. */
-	IBK::IntPara					m_cost;						// XML:E
+	/*! Thickness of the material layer. */
+	IBK::Parameter					m_thickness;				// XML:E:required
 
 	/*! Holds error string in order to give users a tooltip in db dialog. */
 	mutable std::string				m_errorMsg;
-
 };
 
 } // namespace VICUS

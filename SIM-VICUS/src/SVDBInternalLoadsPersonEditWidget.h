@@ -75,8 +75,6 @@ private:
 
 	void updatePlot();
 
-	void updateLabelPersonCount();
-
 	Ui::SVDBInternalLoadsPersonEditWidget	*m_ui;
 
 	/*! Cached pointer to database object. */

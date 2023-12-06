@@ -50,7 +50,6 @@
 #include "IBK_messages.h"
 #include "IBK_StringUtils.h"
 #include "IBK_FormatString.h"
-#include "IBK_FileUtils.h"
 
 using namespace std;
 
@@ -60,8 +59,17 @@ bool CSVReader::haveTabSeparationChar(const IBK::Path & filename) {
 	FUNCID(CSVReader::haveTabSeparationChar);
 	// first detect file format
 	bool tabFormat = true;
-	std::ifstream in;
-	if (!IBK::open_ifstream(in, filename))
+#if defined(_WIN32)
+	#if defined(_MSC_VER)
+			std::ifstream in(filename.wstr().c_str());
+	#else
+			std::string filenameAnsi = IBK::WstringToANSI(filename.wstr(), false);
+			std::ifstream in(filenameAnsi.c_str());
+	#endif
+#else // _WIN32
+		std::ifstream in(filename.c_str());
+#endif
+	if (!in)
 		throw IBK::Exception( IBK::FormatString("File doesn't exist or cannot open/access file."), FUNC_ID);
 
 	// now try to read at least two lines of data
@@ -90,8 +98,17 @@ bool CSVReader::haveTabSeparationChar(const IBK::Path & filename) {
 void CSVReader::read(const IBK::Path & filename, bool headerOnly, bool extractUnits) {
 	FUNCID(CSVReader::read);
 	try {
-		std::ifstream in;
-		if (!IBK::open_ifstream(in, filename))
+#if defined(_WIN32)
+	#if defined(_MSC_VER)
+			std::ifstream in(filename.wstr().c_str());
+	#else
+			std::string filenameAnsi = IBK::WstringToANSI(filename.wstr(), false);
+			std::ifstream in(filenameAnsi.c_str());
+	#endif
+#else // _WIN32
+			std::ifstream in(filename.c_str());
+#endif
+		if (!in)
 			throw IBK::Exception( IBK::FormatString("File doesn't exist or cannot open/access file."), FUNC_ID);
 
 		parse(in, headerOnly, extractUnits);
@@ -149,8 +166,8 @@ void CSVReader::parse(istream & in, bool headerOnly, bool extractUnits) {
 	if (extractUnits) {
 		for (unsigned int i=0; i<m_captions.size(); ++i) {
 			const std::string & c = m_captions[i];
-			std::size_t pos = c.find_last_of("[");
-			std::size_t pos2 = c.find_last_of("]");
+			std::size_t pos = c.find("[");
+			std::size_t pos2 = c.find("]");
 			if (pos != std::string::npos && pos != std::string::npos && pos < pos2) {
 				m_units.push_back(c.substr(pos+1, pos2-pos-1));
 				m_captions[i] = c.substr(0, pos);

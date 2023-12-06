@@ -43,9 +43,10 @@
 #include <QDebug>
 
 SVPreferencesDialog::SVPreferencesDialog(QWidget * parent) :
-	QDialog(parent),
+	QWidget(parent, Qt::Window | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint),
 	m_ui(new Ui::SVPreferencesDialog)
 {
+	setWindowFlags(Qt::Dialog);
 	m_ui->setupUi(this);
 
 
@@ -76,7 +77,18 @@ void SVPreferencesDialog::edit(int initialPage) {
 
 	m_ui->tabWidget->setCurrentIndex(initialPage);
 
-	exec();
+	if (isVisible()) {
+		activateWindow();
+		raise();
+	}
+	else
+		show();
+}
+
+
+void SVPreferencesDialog::closeEvent(QCloseEvent * event) {
+	(void) event;
+	emit closed();
 }
 
 

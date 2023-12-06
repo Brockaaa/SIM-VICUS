@@ -150,9 +150,9 @@ QVariant SVDBZoneTemplateTreeModel::data ( const QModelIndex & index, int role) 
 					case ColType	: return VICUS::KeywordListQt::Description("ZoneTemplate::SubTemplateType", subType);
 					case ColName	: {
 						if (dbElement == nullptr)
-							return QString("     ") + tr("<invalid ID reference>");
+							return tr("<invalid ID reference>");
 						else
-							return QString("     ") + QtExt::MultiLangString2QString(dbElement->m_displayName);
+							return QtExt::MultiLangString2QString(dbElement->m_displayName);
 					}
 				}
 			} break;
@@ -335,7 +335,7 @@ void SVDBZoneTemplateTreeModel::resetModel() {
 
 QModelIndex SVDBZoneTemplateTreeModel::addNewItem() {
 	VICUS::ZoneTemplate c;
-	c.m_displayName.setString(tr("<new zone template>").toStdString(), IBK::MultiLanguageString::m_language);
+	c.m_displayName.setEncodedString("en:<new zone template>");
 	c.m_color = SVStyle::randomColor();
 	beginInsertRows(QModelIndex(), rowCount(), rowCount());
 	unsigned int id = m_db->m_zoneTemplates.add( c );

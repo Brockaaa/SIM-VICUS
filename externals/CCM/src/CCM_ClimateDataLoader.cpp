@@ -267,8 +267,12 @@ ClimateDataLoader::ReadFunctionReturnValues ClimateDataLoader::readCCDFile(const
 {
 	FUNCID(ClimateDataLoader::readCCDFile);
 
-	std::ifstream in;
-	if (!IBK::open_ifstream(in, fname))
+#ifdef _MSC_VER
+	std::ifstream in(fname.wstr().c_str());
+#else // _WIN32
+	std::ifstream in(fname.str().c_str());
+#endif // _WIN32
+	if (!in)
 		return RF_InvalidFilePath; // cannot file file
 
 	IBK::IBK_Message( IBK::FormatString("%1\n").arg(fname), IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_INFO);
@@ -463,10 +467,14 @@ bool ClimateDataLoader::fillWMOCodeFromMLID(const IBK::Path & MLIDDatabaseFile) 
 	}
 
 	// open MLID file
-	std::ifstream in;
-	if (!IBK::open_ifstream(in, MLIDDatabaseFile))
+#ifdef _MSC_VER
+	std::ifstream in(MLIDDatabaseFile.wstr().c_str());
+#else // _WIN32
+	std::ifstream in(MLIDDatabaseFile.str().c_str());
+#endif // _WIN32
+	if (!in) {
 		throw IBK::Exception( IBK::FormatString("%1 - not available").arg(MLIDDatabaseFile), FUNC_ID);
-
+	}
 	IBK::IBK_Message( IBK::FormatString("Reading MLID database file %1 and trying to find the current climate location %2, %3\n")
 					  .arg(MLIDDatabaseFile).arg(city).arg(country), IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_INFO);
 
@@ -608,8 +616,13 @@ void ClimateDataLoader::readClimateData(const IBK::Path & fname, bool headerOnly
 void ClimateDataLoader::readClimateDataEPW(const IBK::Path & fname, bool headerOnly) {
 	FUNCID(ClimateDataLoader::readClimateDataEPW);
 	// open file
-	std::ifstream in;
-	if (!IBK::open_ifstream(in, fname))
+#ifdef _MSC_VER
+	std::ifstream in(fname.wstr().c_str());
+#else
+	std::ifstream in(fname.str().c_str());
+#endif
+	// check if file exists
+	if (!in)
 		throw IBK::Exception( IBK::FormatString("Climate data file '%1' does not exist or is not accessible.")
 							  .arg(fname), FUNC_ID);
 
@@ -678,11 +691,6 @@ void ClimateDataLoader::readClimateDataEPW(const IBK::Path & fname, bool headerO
 			IBK::explode_csv(line, tokens);
 			if (m_startYear == DATA_NOT_VALID)
 				m_startYear = IBK::string2val<int>(tokens[0]);
-
-			if (tokens.size() < 22)
-				throw IBK::Exception(IBK::FormatString("Error in reading EPW weather file."),
-									 FUNC_ID);	// empty lines, such as in the end when lines are missing, prevents sigsev
-
 			double temperature = IBK::string2val<double>(tokens[6]);
 			if(IBK::near_equal(temperature, 99.9))
 				temperature = DATA_NOT_VALID;
@@ -737,8 +745,13 @@ void ClimateDataLoader::readClimateDataEPW(const IBK::Path & fname, bool headerO
 void ClimateDataLoader::readClimateDataIBK(const IBK::Path & fname, bool headerOnly) {
 	FUNCID(ClimateDataLoader::readClimateDataIBK);
 	// open file in binary mode
-	std::ifstream in;
-	if (!IBK::open_ifstream(in, fname, std::ios_base::binary))
+#ifdef _MSC_VER
+	std::ifstream in(fname.wstr().c_str(), std::ios_base::binary);
+#else
+	std::ifstream in(fname.str().c_str(), std::ios_base::binary);
+#endif
+	// check if file exists
+	if (!in)
 		throw IBK::Exception( IBK::FormatString("Climate data file '%1' does not exist or is not accessible.")
 							  .arg(fname), FUNC_ID);
 
@@ -875,8 +888,13 @@ double valueFromParaString(const std::string & valLine) {
 void ClimateDataLoader::readClimateDataBBSRDat(const IBK::Path & fname, bool headerOnly) {
 	FUNCID(ClimateDataLoader::readClimateDataBBSRDat);
 	// open file
-	std::ifstream in;
-	if (!IBK::open_ifstream(in, fname))
+#ifdef _MSC_VER
+	std::ifstream in(fname.wstr().c_str());
+#else
+	std::ifstream in(fname.str().c_str());
+#endif
+	// check if file exists
+	if (!in)
 		throw IBK::Exception( IBK::FormatString("Climate data file '%1' does not exist or is not accessible.")
 							  .arg(fname), FUNC_ID);
 
@@ -885,6 +903,7 @@ void ClimateDataLoader::readClimateDataBBSRDat(const IBK::Path & fname, bool hea
 	// ***
 
 
+//	const char * const HEADER_END1 = "     RW      HW MM DD HH     t    p  WR   WG N    x  RF    B    D   A    E IL";
 	const char * const HEADER_END2 = "***";
 
 	try {
@@ -1012,8 +1031,13 @@ void ClimateDataLoader::readClimateDataBBSRDat(const IBK::Path & fname, bool hea
 void ClimateDataLoader::readClimateDataWAC(const IBK::Path & fname, bool headerOnly) {
 	FUNCID(ClimateDataLoader::readClimateDataWAC);
 	// open file
-	std::ifstream in;
-	if (!IBK::open_ifstream(in, fname))
+#ifdef _MSC_VER
+	std::ifstream in(fname.wstr().c_str());
+#else
+	std::ifstream in(fname.str().c_str());
+#endif
+	// check if file exists
+	if (!in)
 		throw IBK::Exception( IBK::FormatString("Climate data file '%1' does not exist or is not accessible.")
 							  .arg(fname), FUNC_ID);
 
@@ -1263,9 +1287,11 @@ void ClimateDataLoader::readClimateDataWAC(const IBK::Path & fname, bool headerO
 void ClimateDataLoader::writeClimateDataIBK(const IBK::Path & fname) {
 
 	// open file in binary mode
-	std::ofstream out;
-	IBK::open_ofstream(out, fname, std::ios_base::binary | std::ios_base::trunc); // TODO : Error handling, in case file cannot be opened
-
+#ifdef _MSC_VER
+	std::ofstream out(fname.wstr().c_str(), std::ios_base::binary);
+#else
+	std::ofstream out(fname.str().c_str(), std::ios_base::binary);
+#endif
 	// write magic header and version number
 	IBK::write_uint32_binary( out, MAGIC_FIRST_NUMBER );
 	IBK::write_uint32_binary( out, MAGIC_SECOND_NUMBER );
@@ -1298,8 +1324,11 @@ void ClimateDataLoader::writeClimateDataIBK(const IBK::Path & fname) {
 
 
 void ClimateDataLoader::writeClimateDataTSV(const IBK::Path & fname) {
-	std::ofstream out;
-	IBK::open_ofstream(out, fname); // TODO : Error handling, in case file cannot be opened
+#ifdef _MSC_VER
+	std::ofstream out(fname.wstr().c_str());
+#else
+	std::ofstream out(fname.str().c_str());
+#endif
 	if (!m_dataTimePoints.empty()) {
 		out << "Time [d]\t"
 			<< "Temperature [C]\t"
@@ -1353,9 +1382,11 @@ void ClimateDataLoader::writeClimateDataEPW(const IBK::Path & fname) {
 		throw IBK::Exception( IBK::FormatString("Climate data with custom time points cannot be saved as epw.")
 							  .arg(fname), FUNC_ID);
 	}
-	std::ofstream out;
-	IBK::open_ofstream(out, fname); // TODO : Error handling, in case file cannot be opened
-
+#ifdef _MSC_VER
+	std::ofstream out(fname.wstr().c_str());
+#else
+	std::ofstream out(fname.str().c_str());
+#endif
 	std::string epwHeader = IBK::FormatString("LOCATION,%1,%2,%3,%4,%5,%6,%7,%8,%9")
 			.arg(m_city)
 			.arg("-")
@@ -1834,34 +1865,19 @@ void ClimateDataLoader::setTime(int year, double secondsOfYear) {
 	}
 	else {
 		if (m_dataTimePoints.size() != m_data[Temperature].size())
-			throw IBK::Exception("Mismatching sizes of time points vector and data vectors.", FUNC_ID);
+			throw IBK::Exception("Mismatching sizes of time points vector and data vectors (non-cyclic data).", FUNC_ID);
 
-		std::string errmsg;
-		bool canBeUsedCyclic = checkForValidCyclicData(m_dataTimePoints, errmsg);
-
-		if(canBeUsedCyclic) {
-			// normalize to year
-			while (t >= SECONDS_PER_YEAR)
-				t -= (double)SECONDS_PER_YEAR;
-		}
-		else {
-
-			// for each year that we differ from startYear, add appropriate number of seconds
-	//		double yearDiff = (double) SECONDS_PER_YEAR * year - m_startYear;
-			t += (double) SECONDS_PER_YEAR * (year - m_startYear);
-		}
-
-		if(!canBeUsedCyclic) {
-			// ensure, that time point is within interval spanned by m_dataTimePoints
-			if (t < m_dataTimePoints.front() || t > m_dataTimePoints.back())
-				throw IBK::Exception( IBK::FormatString("Time point out of range of time points vector (%1;%2), data available "
-														"for interval %3 - %4, start year of simulation %5, start year of climate data %6.")
-									  .arg(year)
-									  .arg(IBK::Time::format_time_difference(secondsOfYear))
-									  .arg(IBK::Time::format_time_difference(m_dataTimePoints.front()))
-									  .arg(IBK::Time::format_time_difference(m_dataTimePoints.back()))
-									  .arg(year).arg(m_startYear), FUNC_ID);
-		}
+		// for each year that we differ from startYear, add appropriate number of seconds
+		t += (double) SECONDS_PER_YEAR * (year - m_startYear);
+		// ensure, that time point is within interval spanned by m_dataTimePoints
+		if (t < m_dataTimePoints.front() || t > m_dataTimePoints.back())
+			throw IBK::Exception( IBK::FormatString("Time point out of range of time points vector (%1;%2), data available "
+													"for interval %3 - %4, start year of simulation %5, start year of climate data %6.")
+								  .arg(year)
+								  .arg(IBK::Time::format_time_difference(secondsOfYear))
+								  .arg(IBK::Time::format_time_difference(m_dataTimePoints.front()))
+								  .arg(IBK::Time::format_time_difference(m_dataTimePoints.back()))
+								  .arg(year).arg(m_startYear), FUNC_ID);
 
 		// lookup t in m_dataTimePoints
 		std::vector<double>::const_iterator it = std::lower_bound(m_dataTimePoints.begin(), m_dataTimePoints.end(), t);
@@ -1958,23 +1974,6 @@ std::string ClimateDataLoader::composeErrorText(ReadFunctionReturnValues res, co
 	default: ;
 		return IBK::FormatString("Unknown error in line %1\n(CCM developers should add error text here!)").arg(errorLine).str();
 	}
-}
-
-
-bool ClimateDataLoader::checkForValidCyclicData(const std::vector<double> & timeVec, std::string& errmsg) {
-	if (timeVec.size() < 2) {
-		errmsg = "Missing data, at least two time points are required.";
-		return false;
-	}
-	if (timeVec.back() > 365*24*3600) {
-		errmsg = "Time points must not exceed 365 d for cyclic use.";
-		return false;
-	}
-	if (timeVec.front() == 0 && timeVec.back() == 365*24*3600) {
-		errmsg = "Must not have time point 0 d and 365 d for cyclic use.";
-		return false;
-	}
-	return true;
 }
 
 

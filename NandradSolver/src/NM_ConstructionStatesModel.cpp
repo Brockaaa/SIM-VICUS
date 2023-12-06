@@ -165,7 +165,7 @@ void ConstructionStatesModel::setup(const NANDRAD::ConstructionInstance & con,
 	// for thermal balance only, we have 6 outputs = R_EmittedLongWaveRadiationFluxB+1
 	unsigned int skalarResultCount = R_EmittedLongWaveRadiationFluxB+1;
 	// add scalar outputs for rh calculation only if balance equation is enabled
-	if (m_moistureBalanceConstruction) {
+	if (m_moistureBalanceEnabled) {
 		/// \todo hygrothermal code
 	}
 	m_results.resize(skalarResultCount); // NOTE: for now the same as m_results.resize(NUM_R)
@@ -187,7 +187,7 @@ void ConstructionStatesModel::setup(const NANDRAD::ConstructionInstance & con,
 
 void ConstructionStatesModel::resultDescriptions(std::vector<QuantityDescription> & resDesc) const {
 	int skalarResultCount = R_LongWaveRadiationFluxB+1;
-	if (m_moistureBalanceConstruction) {
+	if (m_moistureBalanceEnabled) {
 		/// \todo hygrothermal implementation
 //		varCount = 2; // more variables for hygrothermal calculation
 	}
@@ -324,7 +324,7 @@ const double * ConstructionStatesModel::resultValueRef(const InputReference & qu
 
 
 unsigned int ConstructionStatesModel::nPrimaryStateResults() const {
-	if (!m_moistureBalanceConstruction) {
+	if (!m_moistureBalanceEnabled) {
 		// *** thermal transport ***
 		return m_nElements;
 	}
@@ -336,7 +336,7 @@ unsigned int ConstructionStatesModel::nPrimaryStateResults() const {
 
 
 void ConstructionStatesModel::stateDependencies(std::vector<std::pair<const double *, const double *> > & resultInputValueReferences) const {
-	if (m_moistureBalanceConstruction) {
+	if (m_moistureBalanceEnabled) {
 		/// \todo hygrothermal
 	}
 	else {
@@ -409,7 +409,7 @@ int ConstructionStatesModel::update(const double * y) {
 	// here we compute all temperatures from conserved quantities (i.e. energy densities) and
 	// also compute all thermal fluxes across elements
 
-	if (!m_moistureBalanceConstruction) {
+	if (!m_moistureBalanceEnabled) {
 
 		/// \todo switch between different loop kernels when PCM materials are in the construction
 
@@ -452,7 +452,6 @@ int ConstructionStatesModel::update(const double * y) {
 	// *** hygrothermal transport ***
 	else {
 		/// \todo hygrothermal
-
 	}
 
 	// compute surface temperatures
@@ -787,7 +786,7 @@ void ConstructionStatesModel::generateGrid() {
 	m_nElements = dx_vec.size();
 	IBK_ASSERT(mat_vec.size() == m_nElements);
 	// total number of unkowns
-	if (m_moistureBalanceConstruction)
+	if (m_moistureBalanceEnabled)
 		m_n = m_nElements*2;
 	else
 		m_n = m_nElements;

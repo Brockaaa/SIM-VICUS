@@ -46,9 +46,9 @@ public:
 
 	/*! SubSurfaceComponent types. */
 	enum SubSurfaceComponentType {
-		CT_Window,					// Keyword: Window						'A window'
-		CT_Door,					// Keyword: Door						'A door'
-		CT_Miscellaneous,			// Keyword: Miscellaneous				'Some other component type'
+		CT_Window,					// Keyword: Window					'A window'
+		CT_Door,					// Keyword: Door					'A door'
+		CT_Miscellaneous,			// Keyword: Miscellaneous			'Some other component type'
 		NUM_CT
 	};
 

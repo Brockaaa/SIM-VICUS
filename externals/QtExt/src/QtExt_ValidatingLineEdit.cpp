@@ -124,14 +124,12 @@ void ValidatingLineEdit::setText(const QString& str) {
 void ValidatingLineEdit::setEnabled(bool enabled) {
 	QLineEdit::setEnabled(enabled);
 	onTextChanged(text());
-	repaint();
 }
 
 
 void ValidatingLineEdit::setReadOnly(bool readOnly) {
 	QLineEdit::setReadOnly(readOnly);
 	onTextChanged(text());
-	repaint();
 }
 
 

@@ -99,13 +99,13 @@ void RubberbandObject::render() {
 		gap = 15.0;
 	}
 
-	/*!
-		dashedLines.m_uniformNames.append("worldToView");
-		dashedLines.m_uniformNames.append("resolution");
-		dashedLines.m_uniformNames.append("dashSize");
-		dashedLines.m_uniformNames.append("gapSize");
-		dashedLines.m_uniformNames.append("fixedColor");
-	*/
+	/*
+	dashedLines.m_uniformNames.append("worldToView");
+	dashedLines.m_uniformNames.append("resolution");
+	dashedLines.m_uniformNames.append("dashSize");
+	dashedLines.m_uniformNames.append("gapSize");
+	dashedLines.m_uniformNames.append("fixedColor");
+	 */
 
 	m_rubberbandShaderProgram->shaderProgram()->setUniformValue(m_rubberbandShaderProgram->m_uniformIDs[1], QVector2D((float)m_viewport.width(), (float)m_viewport.height()));
 	m_rubberbandShaderProgram->shaderProgram()->setUniformValue(m_rubberbandShaderProgram->m_uniformIDs[2], dash);
@@ -285,10 +285,8 @@ void RubberbandObject::selectObjectsBasedOnRubberband() {
 
 				// We want to also select the room, when all surfaces are selected
 				unsigned int surfaceSelectionCount = 0;
-				for(const VICUS::Surface &s : r.m_surfaces) {
 
-					if(!s.m_visible)
-						continue;
+				for(const VICUS::Surface &s : r.m_surfaces) {
 
 					// qDebug() << "------------------";
 					// qDebug() << s.m_displayName;
@@ -367,10 +365,6 @@ void RubberbandObject::selectObjectsBasedOnRubberband() {
 	// TODO: Select Network Geometry.
 	for(const VICUS::Network &n : prj.m_geometricNetworks) {
 		for(const VICUS::NetworkEdge &ne : n.m_edges) {
-
-			if(!ne.m_visible)
-				continue;
-
 			const IBKMK::Vector3D &p1 = ne.m_node1->m_position;
 			const IBKMK::Vector3D &p2 = ne.m_node2->m_position;
 
@@ -411,10 +405,6 @@ void RubberbandObject::selectObjectsBasedOnRubberband() {
 		}
 
 		for (const VICUS::NetworkNode &nn : n.m_nodes) {
-
-			if(!nn.m_visible)
-				continue;
-
 			// projected radius on NDC
 			const IBKMK::Vector3D &v3D = nn.m_position;
 
@@ -484,9 +474,6 @@ void RubberbandObject::selectObjectsBasedOnRubberband() {
 
 	// Also select all plain geomerties
 	for(const VICUS::Surface &surf : prj.m_plainGeometry.m_surfaces) {
-
-		if(!surf.m_visible)
-			continue;
 
 		// qDebug() << "------------------";
 		// qDebug() << s.m_displayName;

@@ -155,14 +155,10 @@ public:
 			gray.
 		*/
 		OCM_ComponentOrientation,
-		/*! Looking from inside a the rooms: all surfaces that have a component assigned which has a boundary condition ID are colored based on the
+		/*! All surfaces that have a component assigned which has a boundary condition ID are colored based on the
 			boundary condition color.
 		*/
-		OCM_BoundaryConditionsInside,
-		/*! Looking from outside: all surfaces that have a component assigned which has a boundary condition ID are colored based on the
-			boundary condition color.
-		*/
-		OCM_BoundaryConditionsOutside,
+		OCM_BoundaryConditions,
 		/*! All surfaces of rooms with associated zone template are colored based on that zone template color.
 		*/
 		OCM_ZoneTemplates,

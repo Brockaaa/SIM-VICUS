@@ -454,7 +454,7 @@ void NandradFMUGeneratorWidget::on_lineEditModelName_editingFinished() {
 		}
 		return;
 	}
-	QString modelName = QString::fromStdString(m_project.m_fmiDescription.m_modelName);
+	QString modelName = m_ui->lineEditModelName->text();
 	// update FMU path
 	m_ui->lineEditFMUPath->setText( QString::fromStdString(m_fmuExportDirectory.str()) + "/" + modelName + ".fmu");
 	m_project.m_fmiDescription.m_modelName = modelName.toStdString();

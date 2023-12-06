@@ -188,7 +188,7 @@ void SVStyle::formatDatabaseTreeView(QTreeView * v) {
 #endif
 }
 
-void SVStyle::setHtmlColors(QString & htmlCode) {
+void SVStyle::formatWelcomePage(QString & htmlCode) {
 	switch (SVSettings::instance().m_theme) {
 		case SVSettings::TT_Dark :
 		{
@@ -206,7 +206,7 @@ void SVStyle::setHtmlColors(QString & htmlCode) {
 		default:
 		{
 			htmlCode.replace("${STYLE_TEXT_COLOR}", qApp->palette().color(QPalette::Text).name());
-			htmlCode.replace("${STYLE_BACKGROUND_COLOR}", qApp->palette().color(QPalette::Background).name());
+			htmlCode.replace("${STYLE_BACKGROUND_COLOR}", "#FFFFFF");
 			htmlCode.replace("${STYLE_LINKTEXT_COLOR}", "#0053A6");
 			htmlCode.replace("${STYLE_LINKTEXT_HOVER_COLOR}", "#1C7DEF");
 			htmlCode.replace("${STYLE_LINKTEXT_HOVER_BACKGROUND_COLOR}", qApp->palette().color(QPalette::Background).name());
@@ -229,13 +229,13 @@ void SVStyle::resizeTableColumnToContents(QTableView * v, int column, bool enlar
 
 
 void SVStyle::setStyle(SVSettings::ThemeType theme) {
-	QFile styleDark(":/qdarkstyle/style.qss");
-	QFile styleWhite(":/qdarkstyle/whitestyle.qss");
+	QFile file(":/qdarkstyle/style.qss");
+	QFile fileWhite(":/qdarkstyle/whitestyle.qss");
 
-	if ( theme == SVSettings::TT_Dark && styleDark.exists()) {
+	if ( theme == SVSettings::TT_Dark && file.exists()) {
 
-		styleDark.open(QFile::ReadOnly);
-		m_styleSheet = QLatin1String(styleDark.readAll());
+		file.open(QFile::ReadOnly);
+		m_styleSheet = QLatin1String(file.readAll());
 		qApp->setStyleSheet(m_styleSheet);
 		// set specific background/font colors
 		m_alternativeBackgroundBright				= "#73580e";
@@ -249,7 +249,6 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 		m_userDBBackgroundDark						= "#012a4a";
 		m_userDBBackgroundBright					= "#013a63";
 		m_regularDBEntryColorDark					= "#e0e0e0";
-		m_DBSelectionColor							= "#4a8522";
 
 		m_logProgressText							= "#c0c0c0";
 		m_logErrorText								= "#ff2222";
@@ -271,10 +270,10 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 		QtExt::Style::ToolBoxPageBackground		= "#212124";
 		QtExt::Style::ToolBoxPageEdge			= "#3a3b3f";
 	}
-	else if ( theme == SVSettings::TT_White && styleWhite.exists()) {
+	else if ( theme == SVSettings::TT_White && fileWhite.exists()) {
 
-		styleWhite.open(QFile::ReadOnly);
-		m_styleSheet = QLatin1String(styleWhite.readAll());
+		fileWhite.open(QFile::ReadOnly);
+		m_styleSheet = QLatin1String(fileWhite.readAll());
 		qApp->setStyleSheet(m_styleSheet);
 
 		// set specific background/font colors
@@ -287,7 +286,6 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 
 		m_userDBBackgroundDark						= "#cddafd";
 		m_userDBBackgroundBright					= "#dfe7fd";
-		m_DBSelectionColor							= "#4a8522";
 
 		m_logProgressText							= "#202020";
 		m_logErrorText								= "#ab0000";

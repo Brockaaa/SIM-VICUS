@@ -28,8 +28,6 @@
 
 #include <QWidget>
 
-#include <QtExt_BrowseFilenameWidget.h>
-
 namespace Ui {
 	class SVPreferencesPageTools;
 }
@@ -62,12 +60,6 @@ private slots:
 
 	void on_filePathMasterSim_editingFinished();
 	void on_filePathMasterSim_returnPressed();
-
-	void on_pushButtonAutoDetectDWD_clicked();
-	void on_filePathDWDConverter_editingFinished();
-
-	void on_pushButtonAutoDetectCCM_clicked();
-
 private:
 	Ui::SVPreferencesPageTools *m_ui;
 };

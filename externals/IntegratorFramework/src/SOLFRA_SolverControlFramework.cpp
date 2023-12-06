@@ -250,8 +250,11 @@ void SolverControlFramework::restart(int step) {
 
 		double t = m_model->t0();
 		// clear restart file
-		std::ofstream out;
-		IBK::open_ofstream(out, m_restartFilename, std::ios_base::binary | std::ios_base::trunc);
+#if defined(_MSC_VER)
+		std::ofstream out(m_restartFilename.wstr().c_str(), std::ios_base::binary);
+#else // _WIN32
+		std::ofstream out(m_restartFilename.str().c_str(), std::ios_base::binary);
+#endif // _WIN32
 		out.close();
 		run(t);
 		// we are allready finished here, so we will return
@@ -262,8 +265,11 @@ void SolverControlFramework::restart(int step) {
 	// create restart file to hold all previous restart data up to and including 'step'
 	IBK::Path tmpfile_name = m_restartFilename;
 	tmpfile_name.addExtension("tmp");
-	std::ofstream tmp_restartfile;
-	IBK::open_ofstream(tmp_restartfile, tmpfile_name, std::ios_base::binary | std::ios_base::trunc);
+#if defined(_MSC_VER)
+	std::ofstream tmp_restartfile(tmpfile_name.wstr().c_str(), std::ios_base::binary);
+#else
+	std::ofstream tmp_restartfile(tmpfile_name.str().c_str(), std::ios_base::binary);
+#endif
 	bool success = readRestartFile(step, 0, t, &tmp[0], &tmp_restartfile);
 	tmp_restartfile.close();
 	if (!success)
@@ -277,10 +283,13 @@ void SolverControlFramework::restart(int step) {
 	//       consecutively following the old restart points.
 	bool copy_success;
 	{
-		std::ofstream out;
-		std::ifstream in;
-		IBK::open_ofstream(out, m_restartFilename, std::ios_base::binary | std::ios_base::trunc);
-		IBK::open_ifstream(in, tmpfile_name, std::ios_base::binary);
+#if defined(_MSC_VER)
+		std::ofstream out(m_restartFilename.wstr().c_str(), std::ios_base::binary);
+		std::ifstream in(tmpfile_name.wstr().c_str(), std::ios_base::binary);
+#else
+		std::ofstream out(m_restartFilename.str().c_str(), std::ios_base::binary);
+		std::ifstream in(tmpfile_name.str().c_str(), std::ios_base::binary);
+#endif
 		out << in.rdbuf();
 		copy_success = out.good();
 	}
@@ -319,9 +328,13 @@ void SolverControlFramework::restart(int step) {
 void SolverControlFramework::printRestartFileInfo(const IBK::Path & restartFilePath) {
 	FUNCID(SolverControlFramework::printRestartFileInfo);
 
-	std::ifstream in;
-	if (!IBK::open_ifstream(in, restartFilePath, std::ios_base::binary)) {
-		IBK::IBK_Message( IBK::FormatString("Cannot open restart file '%1' for reading.").arg(restartFilePath), IBK::MSG_ERROR);
+#if defined(_MSC_VER)
+	std::ifstream in(restartFilePath.wstr().c_str(), std::ios_base::binary);
+#else //_WIN32
+	std::ifstream in(restartFilePath.str().c_str(), std::ios_base::binary);
+#endif // _WIN32
+	if (!in) {
+		IBK::IBK_Message( IBK::FormatString("Cannot open restart file '%1' for writing.").arg(restartFilePath), IBK::MSG_ERROR);
 		return;
 	}
 
@@ -548,10 +561,21 @@ void SolverControlFramework::appendRestartInfo(double t, const double * y) const
 
 	// try to open file for writing
 	std::ofstream out;
-	if (m_restartMode == RestartFromAll)
-		IBK::open_ofstream(out, m_restartFilename, std::ios_base::app | std::ios_base::binary);
+	if (m_restartMode == RestartFromAll) {
+		// append to existing file
+#if defined(_MSC_VER)
+		out.open(m_restartFilename.wstr().c_str(), std::ios_base::app | std::ios_base::binary);
+#else
+		out.open(m_restartFilename.c_str(), std::ios_base::app | std::ios_base::binary);
+#endif
+	}
 	else {
-		IBK::open_ofstream(out, m_restartFilename, std::ios_base::trunc | std::ios_base::binary);
+		// create new file
+#if defined(_MSC_VER)
+		out.open(m_restartFilename.wstr().c_str(), std::ios_base::binary);
+#else
+		out.open(m_restartFilename.c_str(), std::ios_base::binary);
+#endif
 	}
 	if (!out)
 		throw IBK::Exception( IBK::FormatString("Cannot open restart file '%1' for writing.").arg(m_restartFilename), FUNC_ID);
@@ -585,8 +609,12 @@ bool SolverControlFramework::readRestartFile(int step,
 	std::ostream * restartFileCopy) const
 {
 	// open restart file for reading
-	std::ifstream in;
-	if (!IBK::open_ifstream(in, m_restartFilename, std::ios_base::binary)) {
+#if defined(_MSC_VER)
+	std::ifstream in(m_restartFilename.wstr().c_str(), std::ios_base::binary);
+#else // _WIN32
+	std::ifstream in(m_restartFilename.str().c_str(), std::ios_base::binary);
+#endif // _WIN32
+	if (!in) {
 		IBK::IBK_Message( IBK::FormatString("Cannot open restart file '%1' for reading.").arg(m_restartFilename), IBK::MSG_ERROR);
 		return false;
 	}

@@ -26,24 +26,21 @@
 #include "SVSimulationPerformanceOptions.h"
 #include "ui_SVSimulationPerformanceOptions.h"
 
-#include "SVProjectHandler.h"
-#include "SVUndoModifySolverParameter.h"
-
 #include <limits>
 
 #include <NANDRAD_KeywordList.h>
 #include <NANDRAD_KeywordListQt.h>
 #include <NANDRAD_SolverParameter.h>
 
-#include <VICUS_Project.h>
 
-
-SVSimulationPerformanceOptions::SVSimulationPerformanceOptions(QWidget *parent) :
+SVSimulationPerformanceOptions::SVSimulationPerformanceOptions(QWidget *parent, NANDRAD::SolverParameter & solverParams) :
 	QWidget(parent),
-	m_ui(new Ui::SVSimulationPerformanceOptions)
+	m_ui(new Ui::SVSimulationPerformanceOptions),
+	m_solverParams(&solverParams)
 {
 	m_ui->setupUi(this);
-	layout()->setContentsMargins(0,0,0,0);
+
+	m_ui->verticalLayout->setMargin(0);
 
 	for (int i=0; i<NANDRAD::SolverParameter::NUM_I; ++i )
 		m_ui->comboBoxIntegrator->addItem( QString("%1 [%2]")
@@ -83,9 +80,6 @@ SVSimulationPerformanceOptions::SVSimulationPerformanceOptions(QWidget *parent) 
 	connect(m_ui->comboBoxIntegrator, SIGNAL(currentIndexChanged(int)), this, SLOT(currentIndexChanged(int)));
 	connect(m_ui->comboBoxLesSolver, SIGNAL(currentIndexChanged(int)), this, SLOT(currentIndexChanged(int)));
 	connect(m_ui->comboBoxPreCond, SIGNAL(currentIndexChanged(int)), this, SLOT(currentIndexChanged(int)));
-
-	connect(&SVProjectHandler::instance(), &SVProjectHandler::modified,
-			this, &SVSimulationPerformanceOptions::onModified);
 }
 
 
@@ -95,8 +89,6 @@ SVSimulationPerformanceOptions::~SVSimulationPerformanceOptions() {
 
 
 void SVSimulationPerformanceOptions::updateUi() {
-
-	const NANDRAD::SolverParameter &solverParams = project().m_solverParameter;
 
 	m_ui->comboBoxIntegrator->blockSignals(true);
 	m_ui->comboBoxLesSolver->blockSignals(true);
@@ -110,75 +102,60 @@ void SVSimulationPerformanceOptions::updateUi() {
 	m_ui->lineEditMinDT->blockSignals(true);
 	m_ui->lineEditInitialDT->blockSignals(true);
 
-	// set enable states
-
-	bool haveIterative = solverParams.m_lesSolver == NANDRAD::SolverParameter::LES_GMRES ||
-			solverParams.m_lesSolver == NANDRAD::SolverParameter::LES_BiCGStab ||
-			solverParams.m_lesSolver == NANDRAD::SolverParameter::NUM_LES;
-
-	bool haveLES = (solverParams.m_integrator != NANDRAD::SolverParameter::I_ExplicitEuler);
-	m_ui->comboBoxLesSolver->setEnabled(haveLES);
-	m_ui->lineEditMaxKry->setEnabled(haveLES);
-	m_ui->lineEditIterative->setEnabled(haveLES);
-	m_ui->comboBoxPreCond->setEnabled(haveLES);
-	m_ui->lineEditPreILU->setEnabled(haveLES);
-
-	if (!haveLES)
-		haveIterative = false;
-	m_ui->comboBoxPreCond->setEnabled(haveIterative);
-	m_ui->lineEditPreILU->setEnabled(haveIterative);
-
-
-	// set values
+	// generate defaults
+	NANDRAD::SolverParameter s;
+	s.initDefaults();
 
 	m_ui->lineEditNonLin->setFromParameter(
-		solverParams.m_para[NANDRAD::SolverParameter::P_NonlinSolverConvCoeff], IBK::Unit("---"));
+		m_solverParams->m_para[NANDRAD::SolverParameter::P_NonlinSolverConvCoeff], IBK::Unit("---"));
 
 	m_ui->lineEditIterative->setFromParameter(
-		solverParams.m_para[NANDRAD::SolverParameter::P_IterativeSolverConvCoeff], IBK::Unit("---"));
+		m_solverParams->m_para[NANDRAD::SolverParameter::P_IterativeSolverConvCoeff], IBK::Unit("---"));
 
-	if (solverParams.m_intPara[NANDRAD::SolverParameter::IP_MaxOrder].empty())
+	if (m_solverParams->m_intPara[NANDRAD::SolverParameter::IP_MaxOrder].empty())
 		m_ui->lineEditMaxOrder->setText("");
 	else
-		m_ui->lineEditMaxOrder->setValue(solverParams.m_intPara[NANDRAD::SolverParameter::IP_MaxOrder].value);
+		m_ui->lineEditMaxOrder->setValue(m_solverParams->m_intPara[NANDRAD::SolverParameter::IP_MaxOrder].value);
 
-	if (solverParams.m_intPara[NANDRAD::SolverParameter::IP_MaxKrylovDim].empty())
+	if (m_solverParams->m_intPara[NANDRAD::SolverParameter::IP_MaxKrylovDim].empty())
 		m_ui->lineEditMaxKry->setText("");
 	else
-		m_ui->lineEditMaxKry->setValue(solverParams.m_intPara[NANDRAD::SolverParameter::IP_MaxKrylovDim].value);
+		m_ui->lineEditMaxKry->setValue(m_solverParams->m_intPara[NANDRAD::SolverParameter::IP_MaxKrylovDim].value);
 
-	if (solverParams.m_para[NANDRAD::SolverParameter::P_MinTimeStep].name.empty())
-		m_ui->lineEditMinDT->clear();
+	if (m_solverParams->m_para[NANDRAD::SolverParameter::P_MinTimeStep].name.empty())
+		m_ui->lineEditMinDT->setFromParameter( s.m_para[NANDRAD::SolverParameter::P_MinTimeStep]);
 	else
 		m_ui->lineEditMinDT->setFromParameter(
-			solverParams.m_para[NANDRAD::SolverParameter::P_MinTimeStep]);
+			m_solverParams->m_para[NANDRAD::SolverParameter::P_MinTimeStep]);
 
-	if (solverParams.m_para[NANDRAD::SolverParameter::P_InitialTimeStep].name.empty())
-		m_ui->lineEditInitialDT->clear();
+	if (m_solverParams->m_para[NANDRAD::SolverParameter::P_InitialTimeStep].name.empty())
+		m_ui->lineEditInitialDT->setFromParameter(
+			s.m_para[NANDRAD::SolverParameter::P_InitialTimeStep]);
 	else
 		m_ui->lineEditInitialDT->setFromParameter(
-			solverParams.m_para[NANDRAD::SolverParameter::P_InitialTimeStep]);
+			m_solverParams->m_para[NANDRAD::SolverParameter::P_InitialTimeStep]);
 
-	if (solverParams.m_para[NANDRAD::SolverParameter::P_RelTol].empty())
-		m_ui->lineEditRelTol->clear();
+	if (m_solverParams->m_para[NANDRAD::SolverParameter::P_RelTol].empty())
+		m_ui->lineEditRelTol->setFromParameter(
+					s.m_para[NANDRAD::SolverParameter::P_RelTol], IBK::Unit("---"));
 	else
 		m_ui->lineEditRelTol->setFromParameter(
-					solverParams.m_para[NANDRAD::SolverParameter::P_RelTol], IBK::Unit("---"));
+					m_solverParams->m_para[NANDRAD::SolverParameter::P_RelTol], IBK::Unit("---"));
 
-	if (solverParams.m_integrator == NANDRAD::SolverParameter::NUM_I)
+	if (m_solverParams->m_integrator == NANDRAD::SolverParameter::NUM_I)
 		m_ui->comboBoxIntegrator->setCurrentIndex(NANDRAD::SolverParameter::I_CVODE);
 	else
-		m_ui->comboBoxIntegrator->setCurrentIndex( solverParams.m_integrator);
+		m_ui->comboBoxIntegrator->setCurrentIndex( m_solverParams->m_integrator);
 
-	if (solverParams.m_lesSolver == NANDRAD::SolverParameter::NUM_LES)
+	if (m_solverParams->m_lesSolver == NANDRAD::SolverParameter::NUM_LES)
 		m_ui->comboBoxLesSolver->setCurrentIndex(NANDRAD::SolverParameter::LES_KLU);
 	else
-		m_ui->comboBoxLesSolver->setCurrentIndex( solverParams.m_lesSolver);
+		m_ui->comboBoxLesSolver->setCurrentIndex( m_solverParams->m_lesSolver);
 
-	if (solverParams.m_preconditioner == NANDRAD::SolverParameter::NUM_PRE)
+	if (m_solverParams->m_preconditioner == NANDRAD::SolverParameter::NUM_PRE)
 		m_ui->comboBoxPreCond->setCurrentIndex(NANDRAD::SolverParameter::PRE_ILU);
 	else
-		m_ui->comboBoxPreCond->setCurrentIndex( solverParams.m_preconditioner);
+		m_ui->comboBoxPreCond->setCurrentIndex( m_solverParams->m_preconditioner);
 
 	m_ui->comboBoxIntegrator->blockSignals(false);
 	m_ui->comboBoxLesSolver->blockSignals(false);
@@ -191,77 +168,28 @@ void SVSimulationPerformanceOptions::updateUi() {
 	m_ui->lineEditPreILU->blockSignals(false);
 	m_ui->lineEditMinDT->blockSignals(false);
 	m_ui->lineEditInitialDT->blockSignals(false);
+
+	// update enabled-state of widgets
+	currentIndexChanged(0);
 }
 
 
 void SVSimulationPerformanceOptions::currentIndexChanged(int /*index*/) {
 
-	NANDRAD::SolverParameter solverParams = project().m_solverParameter;
+	m_solverParams->m_integrator = (NANDRAD::SolverParameter::integrator_t)m_ui->comboBoxIntegrator->currentIndex();
+	m_solverParams->m_lesSolver = (NANDRAD::SolverParameter::lesSolver_t)m_ui->comboBoxLesSolver->currentIndex();
+	m_solverParams->m_preconditioner = (NANDRAD::SolverParameter::precond_t)m_ui->comboBoxPreCond->currentIndex();
 
-	solverParams.m_integrator = (NANDRAD::SolverParameter::integrator_t)m_ui->comboBoxIntegrator->currentIndex();
-	solverParams.m_lesSolver = (NANDRAD::SolverParameter::lesSolver_t)m_ui->comboBoxLesSolver->currentIndex();
-	solverParams.m_preconditioner = (NANDRAD::SolverParameter::precond_t)m_ui->comboBoxPreCond->currentIndex();
+	bool haveIterative = m_solverParams->m_lesSolver == NANDRAD::SolverParameter::LES_GMRES ||
+			m_solverParams->m_lesSolver == NANDRAD::SolverParameter::LES_BiCGStab ||
+			m_solverParams->m_lesSolver == NANDRAD::SolverParameter::NUM_LES;
 
-	SVUndoModifySolverParameter *undo = new SVUndoModifySolverParameter("modified solver parameter", solverParams, project().m_simulationParameter);
-	undo->push();
-}
+	bool haveLES = (m_solverParams->m_integrator != NANDRAD::SolverParameter::I_ExplicitEuler);
+	m_ui->groupBox_2->setEnabled(haveLES);
 
-
-void SVSimulationPerformanceOptions::onModified(int modificationType, ModificationInfo *) {
-	SVProjectHandler::ModificationTypes modType = (SVProjectHandler::ModificationTypes)modificationType;
-	switch (modType) {
-		case SVProjectHandler::AllModified:
-		case SVProjectHandler::SolverParametersModified:
-			updateUi();
-		break;
-		default:;
-	}
-}
-
-
-void SVSimulationPerformanceOptions::parameterEditingFinished(int paraEnum, const QtExt::ValidatingLineEdit *edit) {
-
-	NANDRAD::SolverParameter solverParams = project().m_solverParameter;
-
-	if (edit->isValid() && edit->text().trimmed().isEmpty()) {
-		// clear parameter
-		if (solverParams.m_para[paraEnum].name.empty())
-			return; // parameter not changed, no undo action needed
-		// clear parameter
-		solverParams.m_para[paraEnum] = IBK::Parameter();
-	}
-	else {
-		double val = edit->value();
-		// update parameter value
-		NANDRAD::KeywordList::setParameter(solverParams.m_para, "SolverParameter::para_t", paraEnum, val);
-	}
-
-	SVUndoModifySolverParameter *undo = new SVUndoModifySolverParameter("modified solver parameter", solverParams, project().m_simulationParameter);
-	undo->push();
-}
-
-
-void SVSimulationPerformanceOptions::intParameterEditingFinished(int paraEnum, const QtExt::ValidatingLineEdit *edit) {
-
-	NANDRAD::SolverParameter solverParams = project().m_solverParameter;
-
-	if (edit->isValid() && edit->text().trimmed().isEmpty()) {
-		// clear parameter
-		if (solverParams.m_intPara[paraEnum].name.empty())
-			return; // parameter not changed, no undo action needed
-		// clear parameter
-		solverParams.m_intPara[paraEnum] = IBK::IntPara();
-	}
-	else {
-		int val = (int)edit->value();
-		// update parameter value
-		solverParams.m_intPara[paraEnum] = IBK::IntPara(
-												NANDRAD::KeywordList::Keyword("SolverParameter::intPara_t", paraEnum),
-												val);
-	}
-
-	SVUndoModifySolverParameter *undo = new SVUndoModifySolverParameter("modified solver parameter", solverParams, project().m_simulationParameter);
-	undo->push();
+	if (!haveLES)
+		haveIterative = false;
+	m_ui->groupBox_3->setEnabled(haveIterative);
 }
 
 
@@ -299,6 +227,43 @@ void SVSimulationPerformanceOptions::on_lineEditMinDT_editingFinishedSuccessfull
 	parameterEditingFinished(NANDRAD::SolverParameter::P_MinTimeStep, m_ui->lineEditMinDT);
 }
 
-void SVSimulationPerformanceOptions::on_lineEditRelTol_editingFinished() {
+
+void SVSimulationPerformanceOptions::parameterEditingFinished(int paraEnum, const QtExt::ValidatingLineEdit *edit) {
+	// create copy of solver parameter object
+
+	if (edit->isValid() && edit->text().trimmed().isEmpty()) {
+		// clear parameter
+		if (m_solverParams->m_para[paraEnum].name.empty())
+			return; // parameter not changed, no undo action needed
+		// clear parameter
+		m_solverParams->m_para[paraEnum] = IBK::Parameter();
+	}
+	else {
+		double val = edit->value();
+		// update parameter value
+		NANDRAD::KeywordList::setParameter(m_solverParams->m_para, "SolverParameter::para_t", paraEnum, val);
+	}
+}
+
+void SVSimulationPerformanceOptions::intParameterEditingFinished(int paraEnum, const QtExt::ValidatingLineEdit *edit)
+{
+	if (edit->isValid() && edit->text().trimmed().isEmpty()) {
+		// clear parameter
+		if (m_solverParams->m_intPara[paraEnum].name.empty())
+			return; // parameter not changed, no undo action needed
+		// clear parameter
+		m_solverParams->m_intPara[paraEnum] = IBK::IntPara();
+	}
+	else {
+		int val = (int)edit->value();
+		// update parameter value
+		m_solverParams->m_intPara[paraEnum] = IBK::IntPara(
+												NANDRAD::KeywordList::Keyword("SolverParameter::intPara_t", paraEnum),
+												val);
+	}
+}
+
+void SVSimulationPerformanceOptions::on_lineEditRelTol_editingFinished()
+{
 	parameterEditingFinished(NANDRAD::SolverParameter::P_RelTol, m_ui->lineEditRelTol);
 }

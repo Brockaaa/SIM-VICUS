@@ -54,6 +54,9 @@ public:
 	/*! Draw the item with the given painter at the given position and set the position for the next item.*/
 	virtual void drawItem(QPainter* painter, QPointF& pos) override;
 
+//	/*! Clone the current text frame item.*/
+//	virtual ReportFrameItemBase* clone() const override;
+
 private:
 	TextFrame* m_textFrame;
 };

@@ -45,22 +45,22 @@
 #include <VICUS_Surface.h>
 #include <VICUS_Project.h>
 #include <VICUS_utilities.h>
-#include <VICUS_Constants.h>
+#include "VICUS_Constants.h"
 
 #include <SH_StructuralShading.h>
 
 #include "SVProjectHandler.h"
+#include "SVSimulationStartNandrad.h"
 #include "SVSettings.h"
 #include "SVMainWindow.h"
 #include "SVStyle.h"
 #include "SVClimateDataTableModel.h"
 #include "SVSettings.h"
 
-
 std::vector<IBKMK::Polygon2D> convertVicus2IBKMKPolyVector(const std::vector<VICUS::PlaneGeometry::Hole> holePolys) {
 	std::vector<IBKMK::Polygon2D> ibkmkHolePolys;
-	for(const VICUS::PlaneGeometry::Hole &h : holePolys) {
-		const VICUS::Polygon2D &poly2D = h.m_holeGeometry;
+    for(const VICUS::PlaneGeometry::Hole &h : holePolys) {
+        const VICUS::Polygon2D &poly2D = h.m_holeGeometry;
 		poly2D.vertexes();
 		ibkmkHolePolys.push_back(poly2D);
 	}
@@ -73,7 +73,6 @@ void debugPolygonPoints(QString preText, const IBKMK::Polygon3D &poly) {
 							<< "\ty: " << (double)((int)(1000.0*v3D.m_y))/1000.0
 							<< "\tz: " << (double)((int)(1000.0*v3D.m_z))/1000.0;
 }
-
 
 class ShadingCalculationProgress : public SH::Notification {
 	Q_DECLARE_TR_FUNCTIONS(ShadingCalculationProgress)
@@ -88,7 +87,6 @@ public:
 	QString				m_labelText;
 };
 
-
 void ShadingCalculationProgress::notify(double percentage) {
 	m_dlg->setValue((int)(m_dlg->maximum() * percentage));
 	QTime currTime = QTime::currentTime();
@@ -101,8 +99,9 @@ void ShadingCalculationProgress::notify(double percentage) {
 
 	QTime remainingTime (0,0,0);
 	remainingTime = remainingTime.addSecs(remainingSecs);
-	QString labelText = tr("Calculating Shading factors\nRemaining time: %1")
-							.arg(remainingTime.toString() );
+	QString labelText = tr("Calculating Shading factors\nRemaining time: %1 h %2 min")
+							.arg(remainingTime.toString("hh"))
+							.arg(remainingTime.toString("mm"));
 	m_dlg->setLabelText(labelText);
 	qApp->processEvents();
 	if (m_dlg->wasCanceled())
@@ -110,16 +109,18 @@ void ShadingCalculationProgress::notify(double percentage) {
 }
 
 
-
-SVSimulationShadingOptions::SVSimulationShadingOptions(QWidget *parent) :
+SVSimulationShadingOptions::SVSimulationShadingOptions(QWidget *parent, NANDRAD::SimulationParameter & simParams, NANDRAD::Location & location) :
 	QWidget(parent),
 	m_ui(new Ui::SVSimulationShadingOptions),
+	m_simParams(&simParams),
+	m_location(&location),
 	m_shading(new SH::StructuralShading)
 {
 	m_ui->setupUi(this);
-	layout()->setContentsMargins(0,0,0,0);
+	m_ui->gridLayoutWidget->setMargin(0);
 
 	QPalette p;
+
 	p.setColor(QPalette::Text, SVStyle::instance().m_logErrorText);
 	m_ui->labelInputError->setPalette(p);
 
@@ -127,32 +128,25 @@ SVSimulationShadingOptions::SVSimulationShadingOptions(QWidget *parent) :
 	m_ui->lineEditGridSize->setup(0, 1000, tr("Grid size must be > 0 m!"), false, true);
 	m_ui->lineEditSteps->setup(1, 60, tr("Steps per hour must be between 1 and 60!"), true, true);
 
-	m_ui->comboBoxCalculationMethod->clear();
-	m_ui->comboBoxCalculationMethod->addItem(tr("Ray Tracing"), RayTracing);
-	m_ui->comboBoxCalculationMethod->addItem(tr("Surface Clipping"), SurfaceClipping);
+	m_ui->comboBoxFileType->addItem( "tsv" );
+	m_ui->comboBoxFileType->addItem( "d6o" );
+	m_ui->comboBoxFileType->addItem( "d6b" );
 
-	m_ui->comboBoxGeometryMode->clear();
-	m_ui->comboBoxGeometryMode->addItem(tr("Flat Surfaces"), Flat);
-	m_ui->comboBoxGeometryMode->addItem(tr("Extruded Surfaces based on component thickness"), Extruded);
+	m_ui->radioButtonFast->toggle();
 
-	m_ui->comboBoxPresets->clear();
-	m_ui->comboBoxPresets->addItem(tr("Fast"), Fast);
-	m_ui->comboBoxPresets->addItem(tr("Detailed"), Detailed);
-	m_ui->comboBoxPresets->addItem(tr("User-defined"), Manual);
+	// TODO : restore previously used setting
+	m_ui->comboBoxFileType->setCurrentIndex( 0 );
 
-	m_ui->comboBoxFileType->clear();
-	m_ui->comboBoxFileType->addItem( "tsv", TsvFile );
-	m_ui->comboBoxFileType->addItem( "d6o", D6oFile );
-	m_ui->comboBoxFileType->addItem( "d6b", D6bFile );
+	QButtonGroup *bg = new QButtonGroup;
+	bg->addButton(m_ui->radioButtonFlatGeometry);
+	bg->addButton(m_ui->radioButtonExtrudedGeometry);
 
-	on_comboBoxCalculationMethod_activated(0);
-	on_comboBoxFileType_activated(0);
-	on_comboBoxGeometryMode_activated(0);
-	on_comboBoxPresets_activated(0);
+	QButtonGroup *bgMethod = new QButtonGroup;
+	bgMethod->addButton(m_ui->radioButtonRayTracing);
+	bgMethod->addButton(m_ui->radioButtonSurfaceClipping);
 
-	// connect to project handler
-	connect(&SVProjectHandler::instance(), &SVProjectHandler::modified,
-			this, &SVSimulationShadingOptions::onModified);
+	m_ui->radioButtonFlatGeometry->toggle();
+	m_ui->radioButtonRayTracing->toggle();
 }
 
 
@@ -162,25 +156,11 @@ SVSimulationShadingOptions::~SVSimulationShadingOptions() {
 }
 
 
-void SVSimulationShadingOptions::onModified(int modificationType, ModificationInfo */*info*/) {
-
-	SVProjectHandler::ModificationTypes modType = (SVProjectHandler::ModificationTypes)modificationType;
-	switch (modType) {
-		case SVProjectHandler::AllModified:
-		case SVProjectHandler::ClimateLocationModified:
-		case SVProjectHandler::ClimateLocationAndFileModified:
-		case SVProjectHandler::SolverParametersModified: {
-			updateUi();
-		} break;
-		default:;
-	}
-}
-
-
 void SVSimulationShadingOptions::updateUi() {
 
+
 	// TODO Stephan: Zustand des Dialogs Optionen für Verschattungsberechnung im VICUS Projekt speichern
-	// Comboboxes kurze Beschreibung der Optionen "Ray-Tracing (macht xy)" und "SurfaceClipping (macht das so besser)"
+	// Comboboxes statt RadioButtons, kurze Beschreibung der Optionen "Ray-Tracing (macht xy)" und "SurfaceClipping (macht das so besser)"
 
 	updateShadingFileName();
 
@@ -201,7 +181,7 @@ void SVSimulationShadingOptions::updateUi() {
 
 	// *** simulation time interval ***
 
-	const NANDRAD::SimulationParameter &simuPara = project().m_simulationParameter;
+	const NANDRAD::SimulationParameter &simuPara = *m_simParams;
 	try {
 		simuPara.m_interval.checkParameters();
 	} catch (...) {
@@ -223,7 +203,7 @@ void SVSimulationShadingOptions::updateUi() {
 
 	// *** location ***
 
-	const NANDRAD::Location &loc = project().m_location;
+	const NANDRAD::Location &loc = *m_location;
 	try {
 		// check for valid climate data file path and optionally given (alternative) latitute and longitude
 		loc.checkParameters();
@@ -232,7 +212,6 @@ void SVSimulationShadingOptions::updateUi() {
 										   "a valid climate data file and/or building location.</span>").arg(errorColor) );
 		return;
 	}
-
 	// we need longitude and latitude
 	m_longitudeInDeg = loc.m_para[NANDRAD::Location::P_Longitude].get_value("Deg");
 	m_latitudeInDeg = loc.m_para[NANDRAD::Location::P_Latitude].get_value("Deg");
@@ -245,11 +224,11 @@ void SVSimulationShadingOptions::updateUi() {
 	m_ui->pushButtonCalculate->setEnabled(true);
 
 	// update the shading file infos
-	updatePreviousSimulationFileValues();
+	setPreviousSimulationFileValues();
 }
 
 
-void SVSimulationShadingOptions::updateDefaultShadingSimulationParameters(const DetailType & dt) {
+void SVSimulationShadingOptions::setSimulationParameters(const DetailType & dt) {
 
 	m_ui->lineEditSunCone->setReadOnly(true);
 	m_ui->lineEditGridSize->setReadOnly(true);
@@ -284,7 +263,7 @@ void SVSimulationShadingOptions::updateDefaultShadingSimulationParameters(const 
 }
 
 
-void SVSimulationShadingOptions::updatePreviousSimulationFileValues() {
+void SVSimulationShadingOptions::setPreviousSimulationFileValues() {
 
 	SVProjectHandler &prj = SVProjectHandler::instance();
 	QDir projectDir = QFileInfo(prj.projectFile()).dir();
@@ -300,7 +279,7 @@ void SVSimulationShadingOptions::updatePreviousSimulationFileValues() {
 			m_ui->labelPreviousShadingFile->setText(m_shadingFactorBaseName + fileEndings[i].c_str());
 			QDateTime creationTime = currentFile.lastModified();
 			m_ui->labelPreviousShadingFileCreationDate->setText(creationTime.toString("dd.MM.yyyy hh:mm"));
-			m_ui->toolButtonDeletePreviousShadingFile->setEnabled(true);
+			m_ui->pushButtonDeletePreviousShadingFile->setEnabled(true);
 			return;
 		}
 	}
@@ -308,7 +287,7 @@ void SVSimulationShadingOptions::updatePreviousSimulationFileValues() {
 	// no previous file exists
 	m_ui->labelPreviousShadingFile->setText(tr("No shading file, yet!"));
 	m_ui->labelPreviousShadingFileCreationDate->setText("---");
-	m_ui->toolButtonDeletePreviousShadingFile->setEnabled(false);
+	m_ui->pushButtonDeletePreviousShadingFile->setEnabled(false);
 }
 
 
@@ -332,7 +311,7 @@ void SVSimulationShadingOptions::calculateShadingFactors() {
 	std::vector<SH::StructuralShading::ShadingObject> selObst;
 	std::vector<SH::StructuralShading::ShadingObject> selSurf;
 
-	bool useClipping = m_ui->comboBoxCalculationMethod->currentData().toUInt() == SurfaceClipping;
+	bool useClipping = m_ui->radioButtonSurfaceClipping->isChecked();
 
 	if ( !m_ui->lineEditGridSize->isValid() ) {
 		QMessageBox::critical(this, QString(), tr("Grid size must be > 0 m!"));
@@ -400,7 +379,7 @@ void SVSimulationShadingOptions::calculateShadingFactors() {
 			return;
 	}
 
-	const NANDRAD::Location &loc = project().m_location;
+	const NANDRAD::Location &loc = *m_location;
 	// all checks have been made already in updateUi()
 	// if we have no location yet, read climate data file and extract location
 	if (loc.m_para[NANDRAD::Location::P_Longitude].name.empty()) {
@@ -454,18 +433,17 @@ void SVSimulationShadingOptions::calculateShadingFactors() {
 
 	// hold reference to project
 	VICUS::Project &p = const_cast<VICUS::Project &>(project());
+	SVSettings::instance().m_db.updateEmbeddedDatabase(p);
 	p.updatePointers();
 
-	const SVDatabase &db = SVSettings::instance().m_db;
-
-	// double minArea = 0.1; // 1e-4;
+	// double minArea = 0.1; //1e-4;
 
 	unsigned int skippedSmallSurfaces = 0;
 	unsigned int skippedSurfaceWithoutBCtoSky = 0;
 
 	for (const VICUS::Surface *s: m_selSurfaces) {
 
-		if ( !s->geometry().isValid() )
+		if( !s->geometry().isValid() )
 			continue;
 
 		if ( s->m_componentInstance == nullptr )
@@ -483,14 +461,10 @@ void SVSimulationShadingOptions::calculateShadingFactors() {
 			continue; // skip inside constructions
 
 		// check if this is an surface to outside air and not to ground
-		const VICUS::Component * comp = db.m_components[s->m_componentInstance->m_idComponent];
+		const VICUS::Component * comp = VICUS::element(p.m_embeddedDB.m_components, s->m_componentInstance->m_idComponent);
 
 		// NOTE: we only include a surface in the calculation check, if it is not a ground surfaces.
 		//       Hence, if the surface has no component, or not a BC assigned, we skip the surface.
-
-		// Check whether the surface has a valid side A boundary condition
-		if (hasSideAValidId && comp->m_idSideABoundaryCondition == VICUS::INVALID_ID)
-			continue;
 
 		// find component and boundary condition to check if this is a surface with ground contact
 		if (comp != nullptr) {
@@ -503,7 +477,7 @@ void SVSimulationShadingOptions::calculateShadingFactors() {
 			if (bbId == VICUS::INVALID_ID)
 				continue; // adiabatic surface, skipping this is intentional and does not need to pop-up a warning message
 
-			const VICUS::BoundaryCondition *bb = db.m_boundaryConditions[bbId];
+			const VICUS::BoundaryCondition *bb = VICUS::element(project().m_embeddedDB.m_boundaryConditions, bbId);
 			if (bb == nullptr) {
 				// no BB assigned (adiabatic surface?) or BBID invalid
 				++skippedSurfaceWithoutBCtoSky;
@@ -526,16 +500,16 @@ void SVSimulationShadingOptions::calculateShadingFactors() {
 		}
 
 
-		IBKMK::Polygon3D poly = s->geometry().polygon3D();
+		IBKMK::Polygon3D poly = s->geometry().polygon3D().vertexes();
 		const IBKMK::Polygon3D obstaclePoly = s->geometry().polygon3D().vertexes();
 		if(m_geometryType == Extruded){
 
 			double totalThickness = 0;
 			// calculatwe the total thickness of the corresponding construction of the component
-			const VICUS::Construction *construction = db.m_constructions[comp->m_idConstruction];
+			const VICUS::Construction * construction = VICUS::element(project().m_embeddedDB.m_constructions, comp->m_idConstruction);
 			for (const VICUS::MaterialLayer & layer : construction->m_materialLayers) {
 				// add all the thicknesses of the different MaterialLayers in meters
-				totalThickness += layer.m_para[VICUS::MaterialLayer::P_Thickness].get_value("m");
+				totalThickness += layer.m_thickness.get_value("m");
 			}
 
 			// modify the surface by extruding all surface vertexes
@@ -605,7 +579,7 @@ void SVSimulationShadingOptions::calculateShadingFactors() {
 	if (skippedSurfaceWithoutBCtoSky != 0) {
 		SVSettings::instance().showDoNotShowAgainMessage(this, "shading-calculation-skipped-inside-surfaces", QString(),
 														 tr("%1 surfaces were skipped, because they have no component assignment or have invalid boundary conditions assigned.")
-														 .arg(skippedSmallSurfaces));
+														 .arg(skippedSmallSurfaces).arg(VICUS::MIN_AREA_FOR_EXPORTED_SURFACES));
 	}
 
 	// *** compose vector with selected sub-surfaces
@@ -643,14 +617,14 @@ void SVSimulationShadingOptions::calculateShadingFactors() {
 															 tr("Sub-surfaces are currently moved to the middle of the parent surface component. "
 																"Later there will be a setting in sub-surface database.") );
 
-			const VICUS::Component * comp = db.m_components[s->m_componentInstance->m_idComponent];
+			const VICUS::Component * comp = VICUS::element(p.m_embeddedDB.m_components, s->m_componentInstance->m_idComponent);
 			if(comp != nullptr){
 				double totalThickness = 0;
 				// calculate the total thickness of the corresponding construction of the component
-				const VICUS::Construction * construction = db.m_constructions[comp->m_idConstruction];
+				const VICUS::Construction * construction = VICUS::element(project().m_embeddedDB.m_constructions, comp->m_idConstruction);
 				for (const VICUS::MaterialLayer & layer : construction->m_materialLayers) {
 					// add all the thicknesses of the different MaterialLayers in meters
-					totalThickness += layer.m_para[VICUS::MaterialLayer::P_Thickness].get_value("m");
+					totalThickness += layer.m_thickness.get_value("m");
 				}
 
 				// extrude the window vertexes by half of the total thickness
@@ -719,11 +693,8 @@ void SVSimulationShadingOptions::calculateShadingFactors() {
 
 	// *** compute shading ***
 
-	SVProjectHandler &prj = SVProjectHandler::instance();
-	QDir projectDir = QFileInfo(prj.projectFile()).dir();
-
 	double gridSize = m_ui->lineEditGridSize->value();
-	m_shading->calculateShadingFactors(&progressNotifyer, gridSize, useClipping, IBK::Path(projectDir.absolutePath().toStdString()));
+	m_shading->calculateShadingFactors(&progressNotifyer, gridSize, useClipping);
 
 	if (progressNotifyer.m_aborted) {
 		QMessageBox::information(this, QString(), tr("Calculation of shading factors was aborted."));
@@ -732,10 +703,12 @@ void SVSimulationShadingOptions::calculateShadingFactors() {
 
 	progressDialog.hide();
 
+	SVProjectHandler &prj = SVProjectHandler::instance();
+	QDir projectDir = QFileInfo(prj.projectFile()).dir();
+
 	OutputType outputType = (OutputType)m_ui->comboBoxFileType->currentIndex();
 	IBK::Path exportFile;
 	// remove any existing shading files with the same name
-
 	std::string exportFileBaseName = projectDir.absoluteFilePath(m_shadingFactorBaseName).toStdString();
 	if (IBK::Path(exportFileBaseName + ".tsv").exists())
 		IBK::Path::remove(IBK::Path(exportFileBaseName + ".tsv"));
@@ -764,7 +737,25 @@ void SVSimulationShadingOptions::calculateShadingFactors() {
 	updateShadingFileName();
 
 	// update the shading file infos
-	updatePreviousSimulationFileValues();
+	setPreviousSimulationFileValues();
+}
+
+
+void SVSimulationShadingOptions::on_radioButtonFast_toggled(bool checked) {
+	if (checked)
+		setSimulationParameters(DetailType::Fast);
+}
+
+
+void SVSimulationShadingOptions::on_radioButtonManual_toggled(bool checked) {
+	if (checked)
+		setSimulationParameters(DetailType::Manual);
+}
+
+
+void SVSimulationShadingOptions::on_radioButtonDetailed_toggled(bool checked) {
+	if (checked)
+		setSimulationParameters(DetailType::Detailed);
 }
 
 
@@ -786,30 +777,12 @@ void SVSimulationShadingOptions::updateShadingFileName() {
 }
 
 
-void SVSimulationShadingOptions::on_comboBoxCalculationMethod_activated(int /*index*/) {
-	bool isRayTracing = m_ui->comboBoxCalculationMethod->currentData().toUInt() == RayTracing;
-	m_ui->lineEditGridSize->setEnabled(isRayTracing);
-	m_ui->labelGridSize->setEnabled(isRayTracing);
-}
-
-
-void SVSimulationShadingOptions::on_comboBoxPresets_activated(int /*index*/) {
-	DetailType detailType = (DetailType)m_ui->comboBoxPresets->currentData().toUInt();
-	updateDefaultShadingSimulationParameters(detailType);
-}
-
-
-void SVSimulationShadingOptions::on_comboBoxGeometryMode_activated(int /*index*/) {
-	m_geometryType = (GeometryType)m_ui->comboBoxGeometryMode->currentData().toUInt();
-}
-
-
-void SVSimulationShadingOptions::on_comboBoxFileType_activated(int /*index*/) {
+void SVSimulationShadingOptions::on_comboBoxFileType_currentIndexChanged(int /*index*/) {
 	updateShadingFileName();
 }
 
 
-void SVSimulationShadingOptions::on_toolButtonDeletePreviousShadingFile_clicked() {
+void SVSimulationShadingOptions::on_pushButtonDeletePreviousShadingFile_clicked() {
 	SVProjectHandler &prj = SVProjectHandler::instance();
 	QDir projectDir = QFileInfo(prj.projectFile()).dir();
 
@@ -823,6 +796,20 @@ void SVSimulationShadingOptions::on_toolButtonDeletePreviousShadingFile_clicked(
 		IBK::Path::remove(IBK::Path(exportFileBaseName + ".d6b"));
 
 	// to display the changes in the ui
-	updatePreviousSimulationFileValues();
+	setPreviousSimulationFileValues();
+}
+
+
+void SVSimulationShadingOptions::on_radioButtonFlatGeometry_toggled(bool isFlatType) {
+	if(isFlatType)
+		m_geometryType = Flat;
+	else
+		m_geometryType = Extruded;
+}
+
+
+void SVSimulationShadingOptions::on_radioButtonRayTracing_toggled(bool isRayTracing) {
+	m_ui->lineEditGridSize->setVisible(isRayTracing);
+	m_ui->labelGridSize->setVisible(isRayTracing);
 }
 

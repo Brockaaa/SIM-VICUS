@@ -1,4 +1,4 @@
-﻿/*	SIM-VICUS - Building and District Energy Simulation Tool.
+/*	SIM-VICUS - Building and District Energy Simulation Tool.
 
 	Copyright (c) 2020-today, Institut für Bauklimatik, TU Dresden, Germany
 
@@ -28,8 +28,6 @@
 
 #include <QWidget>
 
-class QSpinBox;
-class ModificationInfo;
 
 namespace QtExt {
 	class ValidatingLineEdit;
@@ -49,7 +47,8 @@ class SVSimulationModelOptions : public QWidget {
 	Q_OBJECT
 public:
 	/*! Constructor, takes solver settings object reference (object is stored in main start dialog). */
-	explicit SVSimulationModelOptions(QWidget *parent);
+	explicit SVSimulationModelOptions(QWidget *parent,
+									  NANDRAD::SimulationParameter & solverParams, NANDRAD::Location & location);
 	~SVSimulationModelOptions();
 
 	/*! Updates user interface with properties from the project data structure.
@@ -58,35 +57,31 @@ public:
 	void updateUi();
 
 private slots:
-
-	void onModified(int modificationType, ModificationInfo */*data*/);
-
 	void on_comboBoxSolarDistributionModeltype_currentIndexChanged(int index);
 
 	void on_lineEditInitialTemperature_editingFinished();
+
+
+	void on_spinBoxSolarRadiationGainsDirectlyToRoomNode_valueChanged(int arg1);
+
+	void on_spinBoxSolarRadiationToFloor_valueChanged(int arg1);
+
+	void on_spinBoxSolarRadiationToRoofCeiling_valueChanged(int arg1);
+
+	void on_spinBoxSolarRadiationToWalls_valueChanged(int arg1);
 
 	void on_checkBoxUsePerez_toggled(bool checked);
 
 	void on_checkBoxEnableMoistureBalance_toggled(bool checked);
 
-	void onStyleChanged();
-
-	void on_spinBoxSolarRadiationToFloor_editingFinished();
-
-	void on_spinBoxSolarRadiationToRoofCeiling_editingFinished();
-
-	void on_spinBoxSolarRadiationToWalls_editingFinished();
-
-	void on_spinBoxSolarRadiationGainsDirectlyToRoomNode_editingFinished();
-
-	void on_pushButtonPrecalculateViewFactors_clicked();
-
 private:
-
-	void modifySolarLoadParameters(int paraEnum, const QSpinBox * spnBox);
 
 	/*! UI pointer. */
 	Ui::SVSimulationModelOptions	*m_ui;
+
+	// Data storage locations, synchronized with user interface.
+	NANDRAD::SimulationParameter	*m_simParams = nullptr;
+	NANDRAD::Location				*m_location = nullptr;
 
 };
 

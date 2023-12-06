@@ -73,7 +73,6 @@ set( APP_SRCS
 # The Qt resource file (*.qrc)
 set( APP_QRCS	
 	${PROJECT_SOURCE_DIR}/../../resources/SIM-VICUS.qrc 
-	${PROJECT_SOURCE_DIR}/../../resources/icons.qrc 
 	${PROJECT_SOURCE_DIR}/../../resources/qdarkstyle/style.qrc
 	${PROJECT_SOURCE_DIR}/../../src/shaders/shaders.qrc 
 )
@@ -151,7 +150,8 @@ target_link_libraries( ${PROJECT_NAME}
 	QuaZIP
 	Nandrad
 	clipper
-    Shading
+        libdxfrw
+	Shading
 	DataIO
 	CCM
 	QtExt

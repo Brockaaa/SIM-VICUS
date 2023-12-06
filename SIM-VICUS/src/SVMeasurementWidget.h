@@ -83,7 +83,7 @@ private slots:
 
 	void on_pushButtonColor_colorChanged();
 
-	void on_checkBoxLocalMeasurement_toggled(bool);
+	void on_checkBoxLocalMeasurement_toggled(bool checked);
 
 private:
 	Ui::SVMeasurementWidget			*m_ui;

@@ -34,7 +34,6 @@ namespace Ui {
 
 class SVDBSubSurfaceComponentTableModel;
 class SVDatabase;
-class QwtPlotCurve;
 
 namespace VICUS {
 	class SubSurfaceComponent;
@@ -95,9 +94,6 @@ private:
 		A nullptr pointer means that there is no subsurface to edit.
 	*/
 	VICUS::SubSurfaceComponent				*m_current;
-
-	/*! Diagram curve for SHGC-plot. */
-	QwtPlotCurve							*m_shgcCurve;
 };
 
 #endif // SVDBSubSurfaceComponentEditWidgetH

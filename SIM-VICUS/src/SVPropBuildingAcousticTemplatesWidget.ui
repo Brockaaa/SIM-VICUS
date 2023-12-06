@@ -13,9 +13,18 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
-    <widget class="QTableWidget" name="tableWidgetAcousticTemplates"/>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Acoustic Templates</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QTableWidget" name="tableWidgetAcousticTemplates"/>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
     <widget class="QGroupBox" name="groupBoxSelectedRooms">

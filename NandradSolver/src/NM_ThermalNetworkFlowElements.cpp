@@ -1128,10 +1128,9 @@ void TNHeatPumpVariable::setInflowTemperature(double Tinflow) {
 			if (m_condenserHeatFlux <= 0) {
 				m_heatLoss = m_condenserHeatFlux;
 			}
-			else {
 
-				// this should work for any mass flux, also negative mass fluxes
-
+			// Normal heat pump mode:  we expect positive mass flux
+			else if (m_massFlux > 0){
 				// cut condenser heat flux
 				if (m_condenserHeatFlux > m_condenserMaximumHeatFlux)
 					m_condenserHeatFlux = m_condenserMaximumHeatFlux;

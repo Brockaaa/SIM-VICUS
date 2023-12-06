@@ -23,7 +23,6 @@
 #include <IBK_LinearSpline.h>
 #include <IBK_Time.h>
 #include <IBK_NotificationHandler.h>
-#include <IBK_Path.h>
 
 #include <IBKMK_Vector3D.h>
 #include <IBKMK_Polygon3D.h>
@@ -131,7 +130,7 @@ public:
 
 		start time and duration = whole number multiple of samplingPeriod; if not -> warning issued
 	*/
-	void calculateShadingFactors(Notification * notify, double gridWidth = 0.1, bool useClippingMethod = false, IBK::Path currentDir = IBK::Path(""));
+	void calculateShadingFactors(Notification * notify, double gridWidth = 0.1, bool useClippingMethod = false);
 
 	// *** functions to retrieve calculation results
 

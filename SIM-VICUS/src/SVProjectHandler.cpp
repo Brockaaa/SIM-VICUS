@@ -37,10 +37,6 @@
 #include <QDialogButtonBox>
 #include <QInputDialog>
 #include <QTimer>
-#include <QCryptographicHash>
-#include <QPushButton>
-
-#include <QtExt_Directories.h>
 
 #include <IBK_Exception.h>
 #include <IBK_FileUtils.h>
@@ -57,7 +53,6 @@
 #include "SVLogFileDialog.h"
 #include "SVViewStateHandler.h"
 #include "SVUndoModifyProject.h"
-#include "SVMainWindow.h"
 
 SVProjectHandler * SVProjectHandler::m_self = nullptr;
 
@@ -183,9 +178,6 @@ bool SVProjectHandler::closeProject(QWidget * parent) {
 
 	} // if (isModified())
 
-	// remove autosave file upon close
-	QFile::remove(m_projectFile + "~"); // remove backup file.
-
 	// saving succeeded, now we can close the project
 	destroyProject();
 
@@ -197,47 +189,17 @@ bool SVProjectHandler::closeProject(QWidget * parent) {
 }
 
 
-void SVProjectHandler::loadProject(QWidget * parent, QString fileName,	bool silent) {
+void SVProjectHandler::loadProject(QWidget * parent, const QString & fileName,	bool silent) {
 	FUNCID(SVProjectHandler::loadProject);
 
 	// we must not have a project loaded
 	IBK_ASSERT(!isValid());
 
-	bool autosaveLoaded = false;
 	do {
 		m_reload = false;
 
 		// create a new project
 		createProject();
-
-		// check for autosave file
-		if (QFile::exists(fileName + "~")) {
-			QDateTime timeBackup = QFileInfo(fileName + "~").lastModified();
-			QDateTime timeProject = QFileInfo(fileName).lastModified();
-			QMessageBox msgbox(QMessageBox::Question, tr("Load autosave backup?"), tr("There exists a backup file for "
-				"the project.\nBackup file date %1,\nproject last saved on %2.\n Load backup file or discard autosave backup?")
-							   .arg(timeBackup.toString("yyyy-MM-dd hh:mm:ss"), timeProject.toString("yyyy-MM-dd hh:mm:ss")),
-							   QMessageBox::Cancel, parent);
-			// add buttons
-			QPushButton * btnLoadBackup = new QPushButton("Load backup");
-			QPushButton * btnRejectBackup = new QPushButton("Discard backup");
-			msgbox.addButton(btnLoadBackup, QMessageBox::YesRole); // dialog takes ownership
-			msgbox.addButton(btnRejectBackup, QMessageBox::NoRole); // dialog takes ownership
-			msgbox.exec(); // ignore return code, as we have custom buttons
-
-			if (msgbox.clickedButton() == btnLoadBackup) {
-				// we load the backup
-				autosaveLoaded = true; // remember to fix the filepath afterwards
-				fileName += "~";
-			}
-			else if (msgbox.clickedButton() == btnRejectBackup) {
-				QFile::remove(fileName + "~"); // remove backup file
-			}
-			else
-				return; // dialog was canceled
-
-
-		}
 
 		try {
 			if (!read(fileName))
@@ -286,15 +248,6 @@ void SVProjectHandler::loadProject(QWidget * parent, QString fileName,	bool sile
 		// fixes above
 		m_modified = have_modified_project;
 
-		// fix project file again if we have read a backup
-		if (autosaveLoaded) {
-			fileName.chop(1); // remove trailing ~
-			m_projectFile.chop(1);
-			// also update time stamp to that of original project, otherwise we get a modified warning here
-			m_lastReadTime = QFileInfo(fileName).lastModified();
-		}
-
-		// this updates the filename in main menu, hence we need to fix the backup file name before this call
 		emit updateActions();
 	}
 	catch (IBK::Exception & ex) {
@@ -335,14 +288,12 @@ void SVProjectHandler::loadProject(QWidget * parent, QString fileName,	bool sile
 	QTimer::singleShot(0, this, SIGNAL(fixProjectAfterRead()));
 }
 
-
 void SVProjectHandler::reloadProject(QWidget * parent) {
 	QString projectFileName = projectFile();
 	m_modified = false; // so that closeProject doesn't ask questions
 	closeProject(parent);
 	loadProject(parent, projectFileName, false); // emits updateActions() if project was successfully loaded
 }
-
 
 void SVProjectHandler::importProject(VICUS::Project & other) {
 	// we must have a project loaded
@@ -465,9 +416,6 @@ SVProjectHandler::SaveResult SVProjectHandler::saveWithNewFilename(QWidget * par
 		return SaveCancelled;
 	}
 
-	// remove previous backup file
-	QFile::remove(m_projectFile + "~"); // remove backup file
-
 	// relay to saveProject() which updates modified flag and emits corresponding signals.
 	if (saveProject(parent, filename) != SaveOK)
 		return SaveFailed; // saving failed
@@ -476,18 +424,12 @@ SVProjectHandler::SaveResult SVProjectHandler::saveWithNewFilename(QWidget * par
 }
 
 
-SVProjectHandler::SaveResult SVProjectHandler::saveProject(QWidget * parent, const QString & fileName, bool addToRecentFilesList, bool autosave) {
+SVProjectHandler::SaveResult SVProjectHandler::saveProject(QWidget * parent, const QString & fileName, bool addToRecentFilesList) {
 
 	// check project file ending, if there is none append it
 	QString fname = fileName;
-	if (autosave) {
-		// Note: for autosave we expect a valid filename and do not modify the passed name
-		fname += "~";
-	}
-	else {
-		if (!fname.endsWith(SVSettings::instance().m_projectFileSuffix))
-			fname.append( SVSettings::instance().m_projectFileSuffix );
-	}
+	if (!fname.endsWith(SVSettings::instance().m_projectFileSuffix))
+		fname.append( SVSettings::instance().m_projectFileSuffix );
 
 	// updated created and lastEdited tags
 	if (m_project->m_projectInfo.m_created.empty())
@@ -503,10 +445,6 @@ SVProjectHandler::SaveResult SVProjectHandler::saveProject(QWidget * parent, con
 
 	// save project file
 	if (!write(fname)) {
-		m_project->m_placeholders.clear(); // clear placeholders again - not really necessary, but helps preventing programming errors
-
-		if (autosave)
-			return SaveFailed;
 
 		QMessageBox::critical(
 				parent,
@@ -514,11 +452,9 @@ SVProjectHandler::SaveResult SVProjectHandler::saveProject(QWidget * parent, con
 				tr("Error while saving project file, see error log file '%1' for details.").arg(QtExt::Directories::globalLogFile())
 				);
 
+		m_project->m_placeholders.clear(); // clear placeholders again - not really necessary, but helps preventing programming errors
 		return SaveFailed;
 	}
-
-	if (autosave)
-		return SaveOK;
 
 	m_project->m_placeholders.clear(); // clear placeholders again - not really necessary, but helps preventing programming errors
 
@@ -614,7 +550,7 @@ void importDBElement(T & e, VICUS::Database<T> & db, std::map<unsigned int, unsi
 		unsigned int oldId = e.m_id;
 		unsigned int newId = db.add(e, oldId); // e.m_id gets modified here!
 		IBK::IBK_Message( IBK::FormatString(importMsg)
-			.arg(e.m_displayName.string(),5,std::ios_base::left).arg(oldId).arg(newId),
+			.arg(e.m_displayName.string(),50,std::ios_base::left).arg(oldId).arg(newId),
 						  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
 		if (newId != oldId)
 			idSubstitutionMap[oldId] = newId;
@@ -625,7 +561,7 @@ void importDBElement(T & e, VICUS::Database<T> & db, std::map<unsigned int, unsi
 			// we need to adjust the ID name of material
 			idSubstitutionMap[e.m_id] = existingElement->m_id;
 			IBK::IBK_Message( IBK::FormatString(existingMsg)
-				.arg(e.m_displayName.string(),5,std::ios_base::left).arg(e.m_id).arg(existingElement->m_id),
+				.arg(e.m_displayName.string(),50,std::ios_base::left).arg(e.m_id).arg(existingElement->m_id),
 							  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
 		}
 	}
@@ -1001,31 +937,6 @@ bool SVProjectHandler::importEmbeddedDB(VICUS::Project & pro) {
 }
 
 
-void SVProjectHandler::onAutoSave() {
-	FUNCID(SVProjectHandler::onAutoSave);
-
-	// no autosave without project
-	if (!isValid())
-		return;
-
-	// no autosave without existing filename
-	if (m_projectFile.isEmpty())
-		return;
-
-	// save backup
-	if (saveProject(nullptr, m_projectFile, false, true) == SaveOK) {
-		// remember to strip the trailing ~ again
-		m_projectFile.chop(1);
-		IBK::IBK_Message( IBK::FormatString("Auto-saved project in file %1\n").arg( (m_projectFile + "~").toStdString()),
-						  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
-	}
-	else
-		IBK::IBK_Message("Error autosaving project", IBK::MSG_ERROR, FUNC_ID, IBK::VL_STANDARD);
-}
-
-
-
-
 // *** PRIVATE MEMBER FUNCTIONS ***
 
 void SVProjectHandler::createProject() {
@@ -1075,6 +986,10 @@ bool SVProjectHandler::read(const QString & fname) {
 
 		m_lastReadTime = QFileInfo(fname).lastModified();
 
+		// update the colors
+		// if project has invalid colors nothing is drawn ...
+		updateSurfaceColors();
+
 		// after reading the project file, we should update the views
 		// this is done in a subsequent call to setModified() from the calling function
 		return true;
@@ -1120,6 +1035,7 @@ bool SVProjectHandler::write(const QString & fname) const {
 
 	try {
 		IBK::Path filename(fname.toStdString());
+		IBK::Path newProjectDir = filename.parentPath();
 		IBK::Path oldProjectDir(m_projectFile.toStdString());
 		std::map<std::string, IBK::Path> pmap;
 		try {
@@ -1182,6 +1098,32 @@ void SVProjectHandler::addToRecentFiles(const QString& fname) {
 
 	// update recent project list
 	emit updateRecentProjects();
+}
+
+
+void SVProjectHandler::updateSurfaceColors() {
+	for (VICUS::Building &b : m_project->m_buildings) {
+		for (VICUS::BuildingLevel & bl : b.m_buildingLevels) {
+			for (VICUS::Room &r : bl.m_rooms) {
+				for (VICUS::Surface &s : r.m_surfaces) {
+					if (!s.m_displayColor.isValid())
+						s.initializeColorBasedOnInclination();
+					s.m_color = s.m_displayColor;
+					for (const VICUS::SubSurface &sub : s.subSurfaces()) {
+						const_cast<VICUS::SubSurface &>(sub).updateColor();
+					}
+				}
+			}
+		}
+	}
+
+	// plain geometry surfaces will be silver
+	for (VICUS::Surface &s : m_project->m_plainGeometry.m_surfaces) {
+		if (s.m_color == QColor::Invalid) {
+			s.m_color = QColor("#C0C0C0");
+		}
+	}
+
 }
 
 

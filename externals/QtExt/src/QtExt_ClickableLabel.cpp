@@ -4,13 +4,6 @@
 
 namespace QtExt {
 
-ClickableLabel::ClickableLabel(QWidget * parent)
-{
-	m_normalStyleSheet = "QLabel { font-weight: normal; }";
-	m_hoverStyleSheet = "QLabel { font-weight: bold; }";
-	QLabel::setStyleSheet(m_normalStyleSheet);
-}
-
 ClickableLabel::ClickableLabel(const QString & text, QWidget* parent):
 	QLabel(text, parent)
 {

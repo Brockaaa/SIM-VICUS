@@ -28,8 +28,6 @@ SVMeasurementWidget::SVMeasurementWidget(QWidget *parent) :
 
 	setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint | Qt::MSWindowsFixedSizeDialogHint);
 
-	setWindowOpacity(0.75);
-
 	SVViewStateHandler::instance().m_measurementWidget = this;
 }
 
@@ -123,7 +121,7 @@ void SVMeasurementWidget::on_pushButtonColor_colorChanged() {
 	SVViewStateHandler::instance().m_coordinateSystemObject->setOrbColor(m_color);
 }
 
-void SVMeasurementWidget::on_checkBoxLocalMeasurement_toggled(bool /*on*/) {
+void SVMeasurementWidget::on_checkBoxLocalMeasurement_toggled(bool on) {
 	showMeasurement();
 }
 
