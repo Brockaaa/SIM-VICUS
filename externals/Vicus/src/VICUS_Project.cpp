@@ -389,7 +389,6 @@ void Project::writeXML(const IBK::Path & filename) const {
 
 
 void Project::readDirectoryPlaceholdersXML(const TiXmlElement * element) {
-
 	// loop over all elements in this XML element
 	for (const TiXmlElement * e=element->FirstChildElement(); e; e = e->NextSiblingElement()) {
 		// get element name
@@ -825,20 +824,24 @@ QString Project::newUniqueSubSurfaceName(const QString & baseName) const {
 }
 
 
+/*! Generates the bounding box for drawing geometries.
+	\returns Weighted Center of all Points
+*/
 template <typename t>
-void drawingBoundingBox(const VICUS::Drawing &d,
-								 const std::vector<t> &drawingObjects,
-								 IBKMK::Vector3D &upperValues,
-								 IBKMK::Vector3D &lowerValues,
-								 const IBKMK::Vector3D &offset = IBKMK::Vector3D(0,0,0),
-								 const IBKMK::Vector3D &xAxis = IBKMK::Vector3D(1,0,0),
-								 const IBKMK::Vector3D &yAxis = IBKMK::Vector3D(0,1,0),
-								 const IBKMK::Vector3D &zAxis = IBKMK::Vector3D(0,0,1)) {
+IBKMK::Vector3D boundingBoxDrawing(const VICUS::Drawing &d,
+						const std::vector<t> &drawingObjects,
+						IBKMK::Vector3D &upperValues,
+						IBKMK::Vector3D &lowerValues,
+						const IBKMK::Vector3D &offset = IBKMK::Vector3D(0,0,0),
+						const IBKMK::Vector3D &xAxis = IBKMK::Vector3D(1,0,0),
+						const IBKMK::Vector3D &yAxis = IBKMK::Vector3D(0,1,0),
+						const IBKMK::Vector3D &zAxis = IBKMK::Vector3D(0,0,1)) {
 	// FUNCID(Project::boundingBox);
+	IBKMK::Vector3D weightedCenter;
 
 	// store selected surfaces
 	if (drawingObjects.empty())
-		return;
+		return IBKMK::Vector3D();
 
 	// process all drawings
 	for (const t &drawObj : drawingObjects) {
@@ -850,7 +853,6 @@ void drawingBoundingBox(const VICUS::Drawing &d,
 			continue;
 
 		const std::vector<IBKMK::Vector3D> &points = d.points3D(drawObj.points2D(), drawObj.m_zPosition, drawObj.m_trans);
-
 		for (const IBKMK::Vector3D &v : points) {
 
 			IBKMK::Vector3D vLocal, point;
@@ -866,8 +868,13 @@ void drawingBoundingBox(const VICUS::Drawing &d,
 			lowerValues.m_x = std::min(lowerValues.m_x, (double)vLocal.m_x);
 			lowerValues.m_y = std::min(lowerValues.m_y, (double)vLocal.m_y);
 			lowerValues.m_z = std::min(lowerValues.m_z, (double)vLocal.m_z);
+
+			weightedCenter += v;
 		}
+		weightedCenter /= points.size();
 	}
+
+	return weightedCenter;
 }
 
 
@@ -898,7 +905,7 @@ IBKMK::Vector3D Project::boundingBox(const std::vector<const Drawing *> & drawin
 		s->geometry().polygon3D().enlargeBoundingBox(lowerValues, upperValues);
 	}
 
-	// process all sub-surfaces
+	// process all sub-surfacess
 	for (const VICUS::SubSurface *sub : subsurfaces ) {
 		const VICUS::Surface *s = dynamic_cast<const VICUS::Surface *>(sub->m_parent);
 		// parent geometry must be valid and correctly triangulated
@@ -920,15 +927,15 @@ IBKMK::Vector3D Project::boundingBox(const std::vector<const Drawing *> & drawin
 	}
 
 	for (const VICUS::Drawing *drawing : drawings) {
-		drawingBoundingBox<VICUS::Drawing::Arc>(*drawing, drawing->m_arcs, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Circle>(*drawing, drawing->m_circles, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Ellipse>(*drawing, drawing->m_ellipses, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Line>(*drawing, drawing->m_lines, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::PolyLine>(*drawing, drawing->m_polylines, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Point>(*drawing, drawing->m_points, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Solid>(*drawing, drawing->m_solids, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Text>(*drawing, drawing->m_texts, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::LinearDimension>(*drawing, drawing->m_linearDimensions, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Arc>(*drawing, drawing->m_arcs, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Circle>(*drawing, drawing->m_circles, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Ellipse>(*drawing, drawing->m_ellipses, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Line>(*drawing, drawing->m_lines, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::PolyLine>(*drawing, drawing->m_polylines, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Point>(*drawing, drawing->m_points, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Solid>(*drawing, drawing->m_solids, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Text>(*drawing, drawing->m_texts, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::LinearDimension>(*drawing, drawing->m_linearDimensions, upperValues, lowerValues);
 	}
 
 	// center point of bounding box
@@ -1060,15 +1067,15 @@ IBKMK::Vector3D Project::boundingBox(std::vector<const Drawing *> & drawings,
 	}
 	for (const VICUS::Drawing *d : drawings ) {
 
-		drawingBoundingBox<VICUS::Drawing::Arc>(*d, d->m_arcs, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Circle>(*d, d->m_circles, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Ellipse>(*d, d->m_ellipses, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Line>(*d, d->m_lines, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::PolyLine>(*d, d->m_polylines, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Point>(*d, d->m_points, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Solid>(*d, d->m_solids, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::Text>(*d, d->m_texts, upperValues, lowerValues);
-		drawingBoundingBox<VICUS::Drawing::LinearDimension>(*d, d->m_linearDimensions, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Arc>(*d, d->m_arcs, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Circle>(*d, d->m_circles, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Ellipse>(*d, d->m_ellipses, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Line>(*d, d->m_lines, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::PolyLine>(*d, d->m_polylines, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Point>(*d, d->m_points, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Solid>(*d, d->m_solids, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::Text>(*d, d->m_texts, upperValues, lowerValues);
+		boundingBoxDrawing<VICUS::Drawing::LinearDimension>(*d, d->m_linearDimensions, upperValues, lowerValues);
 	}
 
 

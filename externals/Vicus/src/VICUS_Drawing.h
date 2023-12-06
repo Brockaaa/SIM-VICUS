@@ -81,12 +81,8 @@ public:
 		void readXML(const TiXmlElement * element);
 
 		unsigned int			m_id;					// unsigned int
-		QString					m_currentBlockName;		// name of block
-		QString					m_parentBlockName;		// name of block
-
-		/* Block Entities that belongs to name. */
-		Block					*m_currentBlock = nullptr;
-		Block					*m_parentBlock = nullptr;
+		QString					m_currentBlockName;		// name of current block
+		QString					m_parentBlockName;		// name of porent block
 
 		double					m_xScale = 1.0;			// scale-factor in x direction
 		double					m_yScale = 1.0;			// scale-factor in y direction
@@ -95,6 +91,10 @@ public:
 		double					m_angle = 0.0;			// angle of rotation
 
 		IBKMK::Vector2D			m_insertionPoint;		// insertion point
+
+		/* Block Entities that belongs to name. */
+		Block					*m_currentBlock = nullptr;
+		Block					*m_parentBlock = nullptr;
 	};
 
 	/* Abstract class for all directly drawable dxf entities */
@@ -153,6 +153,8 @@ public:
 		unsigned int								m_id;
 		/*! Transformation matrix. */
 		QMatrix4x4									m_trans = QMatrix4x4();
+		/*! Insertation object. */
+		bool										m_insertationObject = false;
 
 	protected:
 		/*! Flag to indictate recalculation of points. */
@@ -161,8 +163,7 @@ public:
 		mutable bool								m_dirtyTriangulation = true;
 		/*! Points of objects. */
 		mutable std::vector<IBKMK::Vector2D>		m_pickPoints;
-		/*! Plane Geometries with all triangulated data.
-		*/
+		/*! Plane Geometries with all triangulated data. */
 		mutable std::vector<VICUS::PlaneGeometry>	m_planeGeometries;
 	};
 
@@ -235,6 +236,7 @@ public:
 
 		/*! Point coordinate */
 		IBKMK::Vector2D					m_point1;
+
 		/*! Point coordinate */
 		IBKMK::Vector2D					m_point2;
 	};

@@ -1568,6 +1568,7 @@ void Drawing::updatePlaneGeometries() {
 	m_dirtyPickPoints = true;
 }
 
+/*! ToDo Stephan: Doku. */
 template <typename t>
 void generateObjectFromInsert(unsigned int &nextId, const Drawing::Block &block,
 							  std::vector<t> &objects, const QMatrix4x4 &trans) {
@@ -1586,6 +1587,7 @@ void generateObjectFromInsert(unsigned int &nextId, const Drawing::Block &block,
 		newObj.m_trans = trans;
 		newObj.m_blockName = "";
 		newObj.m_block = nullptr;
+		newObj.m_insertationObject = true;
 
 		newObjects.push_back(newObj);
 	}
@@ -1606,9 +1608,8 @@ void Drawing::transformInsert(QMatrix4x4 &trans, const VICUS::Drawing::Insert &i
 		if (i.m_parentBlock == nullptr)
 			continue;
 
-		if (insert.m_currentBlockName == i.m_parentBlock->m_name) {
+		if (insert.m_currentBlockName == i.m_parentBlock->m_name)
 			transformInsert(trans, i, nextId);
-		}
 	}
 
 	generateObjectFromInsert(nextId, *insert.m_currentBlock, m_points, trans);

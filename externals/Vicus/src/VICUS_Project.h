@@ -216,6 +216,7 @@ public:
 		This is a convenience function which essentially does the same as selectObjects, but
 		only returns visible and selected objects of type Room.
 		Type of wich should be returned can be set with
+		\param rooms Vector with all rooms
 		\returns Returns true if any room is selected (same as rooms.size() > 0).
 	*/
 	bool selectedRooms(std::vector<const Room*> & rooms) const;
