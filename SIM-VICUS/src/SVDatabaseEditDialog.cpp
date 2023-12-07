@@ -49,6 +49,8 @@
 
 #include "SVDBMaterialTableModel.h"
 #include "SVDBMaterialEditWidget.h"
+#include "SVDBEpdTableModel.h"
+#include "SVDBEpdEditWidget.h"
 #include "SVDBConstructionTableModel.h"
 #include "SVDBConstructionEditWidget.h"
 #include "SVDBComponentTableModel.h"
@@ -121,6 +123,14 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 
 	setWindowTitle(title);
 
+	// set initial screen size
+	QScreen *screen = QGuiApplication::primaryScreen();
+	Q_ASSERT(screen!=nullptr);
+	m_screenSize = screen->size();
+
+	// connect to main window to recognise if main screen has changed
+	connect(&SVMainWindow::instance(), &SVMainWindow::screenHasChanged, this, &SVDatabaseEditDialog::onScreenChanged);
+
 	SVStyle::formatDatabaseTableView(m_ui->tableView);
 	m_ui->tableView->horizontalHeader()->setVisible(true);
 
@@ -171,12 +181,14 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 
 	m_ui->tableView->installEventFilter(this);
 
-	m_ui->frameBuildInDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_alternativeBackgroundBright.name()));
-	m_ui->frameBuildInDB->setFrameShape(QFrame::NoFrame);
-	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundBright.name()));
-	m_ui->frameUserDB->setFrameShape(QFrame::NoFrame);
-
 	connect(SVMainWindow::instance().preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged, this, &SVDatabaseEditDialog::onStyleChanged);
+
+	// modify frames and update colors
+	m_ui->frameBuildInDB->setFrameShape(QFrame::NoFrame);
+	m_ui->frameUserDB->setFrameShape(QFrame::NoFrame);
+	// this update colors of frames but also the table view selection color
+	onStyleChanged();
+
 
 	for (int i=0; i<m_dbModel->columnCount(); ++i){
 		QString name = m_dbModel->headerData(i, Qt::Horizontal).toString();
@@ -268,7 +280,7 @@ unsigned int SVDatabaseEditDialog::select(unsigned int initialId, bool resetMode
 
 bool SVDatabaseEditDialog::eventFilter(QObject * obj, QEvent * event) {
 	if(obj == m_ui->tableView && event->type() == QEvent::Resize) {
-		m_ui->tableView->resizeRowsToContents();
+		// m_ui->tableView->resizeRowsToContents();
 	}
 	return QObject::eventFilter(obj, event);
 }
@@ -394,6 +406,7 @@ void SVDatabaseEditDialog::on_pushButtonReloadUserDB_clicked() {
 			case SVDatabase::DT_WindowGlazingSystems:	SVSettings::instance().m_db.m_windowGlazingSystems.removeUserElements(); break;
 			case SVDatabase::DT_BoundaryConditions:		SVSettings::instance().m_db.m_boundaryConditions.removeUserElements(); break;
 			case SVDatabase::DT_Components:				SVSettings::instance().m_db.m_components.removeUserElements(); break;
+			case SVDatabase::DT_EpdDatasets:			SVSettings::instance().m_db.m_epdDatasets.removeUserElements(); break;
 			case SVDatabase::DT_SubSurfaceComponents:	SVSettings::instance().m_db.m_subSurfaceComponents.removeUserElements(); break;
 			case SVDatabase::DT_SurfaceHeating:			SVSettings::instance().m_db.m_surfaceHeatings.removeUserElements(); break;
 			case SVDatabase::DT_Pipes:					SVSettings::instance().m_db.m_pipes.removeUserElements(); break;
@@ -488,6 +501,7 @@ void SVDatabaseEditDialog::on_pushButtonRemoveUnusedElements_clicked() {
 void SVDatabaseEditDialog::onStyleChanged() {
 	m_ui->frameBuildInDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_alternativeBackgroundBright.name()));
 	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundBright.name()));
+	m_ui->tableView->setStyleSheet(QString("QTableView {selection-background-color: %1;}").arg(SVStyle::instance().m_DBSelectionColor.name()));
 }
 
 
@@ -549,7 +563,15 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createMaterialEditDialog(QWidget * 
 		new SVDBMaterialEditWidget(parent),
 		tr("Material Database"), tr("Material properties"), true
 	);
-	resizeDBDialog(dlg);
+	return dlg;
+}
+
+SVDatabaseEditDialog * SVDatabaseEditDialog::createEpdEditDialog(QWidget * parent) {
+	SVDatabaseEditDialog * dlg = new SVDatabaseEditDialog(parent,
+		new SVDBEpdTableModel(parent, SVSettings::instance().m_db),
+		new SVDBEpdEditWidget(parent),
+		tr("EPD Database"), tr("EPD properties"), true
+	);
 	return dlg;
 }
 
@@ -560,7 +582,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createConstructionEditDialog(QWidge
 		new SVDBConstructionEditWidget(parent),
 		tr("Construction Database"), QString(), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -571,7 +592,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createComponentEditDialog(QWidget *
 		new SVDBComponentEditWidget(parent),
 		tr("Component Database"), tr("Component properties"), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -582,7 +602,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createSubSurfaceComponentEditDialog
 		new SVDBSubSurfaceComponentEditWidget(parent),
 		tr("Sub-Surface Component Database"), tr("Sub-Surface properties"), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -593,7 +612,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createWindowEditDialog(QWidget * pa
 		new SVDBWindowEditWidget(parent),
 		tr("Window Database"), tr("Window properties"), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -603,7 +621,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createWindowGlazingSystemEditDialog
 		new SVDBWindowGlazingSystemEditWidget(parent),
 		tr("Window glazing system Database"), tr("Window glazing system properties"), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -613,7 +630,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createBoundaryConditionsEditDialog(
 		new SVDBBoundaryConditionEditWidget(parent),
 		tr("Boundary Condition Database"), tr("Boundary condition properties"), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -624,7 +640,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createScheduleEditDialog(QWidget * 
 		new SVDBScheduleEditWidget(parent),
 		tr("Schedule Database"), tr("Schedule properties"), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -659,7 +674,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createInternalLoadsEditDialog(QWidg
 		default:
 			Q_ASSERT(false);
 	}
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -669,7 +683,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createZoneControlThermostatEditDialo
 		new SVDBZoneControlThermostatEditWidget(parent),
 		tr("Zone Control Thermostat Database"), tr("Zone control thermostat properties"), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -679,7 +692,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createZoneControlVentilationNaturalE
 		new SVDBZoneControlVentilationNaturalEditWidget(parent),
 		tr("Zone Control Natural Ventilation Database"), tr("Zone Control Natural Ventilation properties"), true
 		);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -689,7 +701,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createZoneControlShadingEditDialog(Q
 		new SVDBZoneControlShadingEditWidget(parent),
 		tr("Zone Control Shading Database"), tr("Zone Control Shading properties"), true
 		);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -699,7 +710,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createZoneIdealHeatingCoolingEditDia
 										  new SVDBZoneIdealHeatingCoolingEditWidget(parent),
 										  tr("Zone Ideal Heating/Cooling Database"), tr("Zone Ideal Heating/Cooling properties"), true
 										  );
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -709,7 +719,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createVentilationNaturalEditDialog(Q
 		new SVDBVentilationNaturalEditWidget(parent),
 		tr("Natural Ventilation Database"), tr("Natural Ventilation properties"), true
 		);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -719,7 +728,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createInfiltrationEditDialog(QWidget
 		new SVDBInfiltrationEditWidget(parent),
 		tr("Infiltration Database"), tr("Infiltration properties"), true
 		);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -730,7 +738,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createSurfaceHeatingSystemEditDialog
 										  tr("Surface Heating/Cooling System Database"),
 														  tr("Surface Heating/Cooling System properties"), true
 										  );
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -741,7 +748,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createSupplySystemsEditDialog(QWidg
 		new SVDBSupplySystemEditWidget(parent),
 		tr("Supply System Database"), tr("Supply system properties"), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -752,7 +758,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createPipeEditDialog(QWidget * pare
 		new SVDBPipeEditWidget(parent),
 		tr("Network Pipes Database"), tr("Network Pipes Properties"), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -763,7 +768,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createFluidEditDialog(QWidget *paren
 		new SVDBNetworkFluidEditWidget(parent),
 		tr("Network Fluids Database"), tr("Network Fluids Properties"), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -774,16 +778,16 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createSubNetworkEditDialog(QWidget *
 		new SVDBSubNetworkEditWidget(parent),
 		tr("Sub Networks Database"), tr("Sub Networks Properties"), true
 	);
-	resizeDBDialog(dlg);
 	return dlg;
 }
 
 
-void SVDatabaseEditDialog::resizeDBDialog(QDialog * dlg) {
-	QScreen *screen = QGuiApplication::primaryScreen();
-	Q_ASSERT(screen!=nullptr);
-	QRect rect = screen->geometry();
-	dlg->resize(int(0.8*rect.width()), int(0.8*rect.height()));
+void SVDatabaseEditDialog::resizeDBDialog(double maxShareTableView) {
+	// set dialog size
+	this->resize(int(0.8*m_screenSize.width()), int(0.8*m_screenSize.height()));
+	// set max share that is occupied by table view
+	double w = this->size().width();
+	m_ui->groupBoxTableView->setMaximumWidth(int(w*maxShareTableView));
 }
 
 
@@ -811,5 +815,10 @@ void SVDatabaseEditDialog::on_comboBoxColumn_currentIndexChanged(int /*index*/) 
 
 void SVDatabaseEditDialog::on_lineEditFilter_returnPressed() {
 	on_toolButtonApplyFilter_clicked();
+}
+
+
+void SVDatabaseEditDialog::onScreenChanged(const QScreen *screen) {
+	m_screenSize = screen->size();
 }
 

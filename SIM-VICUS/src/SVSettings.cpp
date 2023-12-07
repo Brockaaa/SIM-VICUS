@@ -129,6 +129,9 @@ void SVSettings::setDefaults() {
 	// initialization of autosave vars
 	m_autosaveInterval = 10; // 10 mins
 	m_autosaveEnabled = true;
+
+	// set max number of recent projects
+	m_maxRecentProjects = 20;
 }
 
 
@@ -174,6 +177,22 @@ void SVSettings::read() {
 #endif
 		if (QFile(tmpCCMExecutable).exists())
 			m_CCMEditorExecutable = tmpCCMExecutable;
+	}
+
+	QString tmpDWDExecutable = settings.value("DWDConverterExecutable", m_DWDConverterExecutable ).toString();
+	if (!tmpDWDExecutable.isEmpty())
+		m_DWDConverterExecutable = tmpDWDExecutable;
+	else {
+		// auto-detect DWD converter in install directory
+#if defined(Q_OS_WIN)
+		tmpDWDExecutable = m_installDir + "\\DWDWeatherDataConverter.exe";
+#elif defined (Q_OS_MAC)
+		tmpDWDExecutable = m_installDir + "/DWDWeatherDataConverter.app/Contents/MacOS/DWDWeatherDataConverterApp";
+#else
+		tmpDWDExecutable = m_installDir + "/DWDWeatherDataConverter";
+#endif
+		if (QFile(tmpDWDExecutable).exists())
+			m_DWDConverterExecutable = tmpDWDExecutable;
 	}
 
 	m_fontPointSize = settings.value("FontPointSize", 0).toUInt();
@@ -222,6 +241,8 @@ void SVSettings::write(QByteArray geometry, QByteArray state) {
 	settings.setValue("VisibleDockWidgets", m_visibleDockWidgets.join(","));
 	settings.setValue("PostProcExecutable", m_postProcExecutable );
 	settings.setValue("CCMEditorExecutable", m_CCMEditorExecutable );
+	settings.setValue("DWDConverterExecutable", m_DWDConverterExecutable );
+
 	settings.setValue("FontPointSize", m_fontPointSize);
 	settings.setValue("InvertYMouseAxis", m_invertYMouseAxis);
 	settings.setValue("TerminalEmulator", m_terminalEmulator);

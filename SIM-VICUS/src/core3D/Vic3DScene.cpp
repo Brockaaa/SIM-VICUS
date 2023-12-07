@@ -31,12 +31,11 @@
 #include <QPalette>
 #include <QApplication>
 #include <QRandomGenerator>
+#include <cmath>
 
 #include <VICUS_Project.h>
-#include <SVConversions.h>
 #include <VICUS_ViewSettings.h>
 #include <VICUS_NetworkLine.h>
-#include <SVConversions.h>
 
 #include <IBKMK_3DCalculations.h>
 
@@ -46,6 +45,7 @@
 #include "Vic3DConstants.h"
 #include "Vic3DSceneView.h"
 
+#include "SVConversions.h"
 #include "SVProjectHandler.h"
 #include "SVPropEditGeometry.h"
 #include "SVViewStateHandler.h"
@@ -59,13 +59,14 @@
 #include "SVGeometryView.h"
 #include "SVPropertyWidget.h"
 #include "SVLocalCoordinateView.h"
+#include "SVStyle.h"
 
 
 const float TRANSLATION_SPEED = 1.2f;
 const float MOUSE_ROTATION_SPEED = 0.5f;
 
 // Size of the local coordinate system window
-const int SUBWINDOWSIZE = 150;
+const int SUBWINDOWSIZE = 400;
 
 /// \todo All: adjust the THRESHOLD based on DPI/Screenresolution or have it as user option
 const float MOUSE_MOVE_DISTANCE_ORBIT_CONTROLLER = 5;
@@ -116,6 +117,7 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 	bool updateGrid = false;
 	bool updateNetwork = false;
 	bool updateBuilding = false;
+	bool updateDrawing = false;
 	bool updateCamera = false;
 	bool updateSelection = false;
 	// filter out all modification types that we handle
@@ -126,6 +128,7 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		updateBuilding = true;
 		updateNetwork = true;
 		updateCamera = true;
+		updateDrawing = true;
 		updateSelection = true;
 		// clear new polygon drawing object
 		m_newGeometryObject.clear();
@@ -204,6 +207,7 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		//        elements are selected, but at least this is very robust
 		updateBuilding = true;
 		updateNetwork = true;
+		updateDrawing = true;
 
 		// Now check if our new selection set is different from the previous selection set.
 		std::set<const VICUS::Object*> selectedObjects;
@@ -226,6 +230,14 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		}
 		SVViewStateHandler::instance().setViewState(vs);
 
+	} break;
+
+	case SVProjectHandler::DrawingModified: {
+		updateBuilding = true;
+		updateDrawing = true;
+		updateSelection = true;
+
+		m_drawingGeometryObject.updateBuffers();
 	} break;
 
 	default:
@@ -281,6 +293,12 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		generateNetworkGeometry();
 	}
 
+	if(updateDrawing){
+		m_drawingGeometryObject.create(m_buildingShader->shaderProgram());
+		generate2DDrawingGeometry();
+	}
+
+
 	// update all GPU buffers (transfer cached data to GPU)
 	if (updateBuilding || updateSelection) {
 		m_buildingGeometryObject.updateBuffers();
@@ -290,6 +308,10 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 
 	if (updateNetwork || updateSelection)
 		m_networkGeometryObject.updateBuffers();
+
+	if(updateDrawing){
+		m_drawingGeometryObject.updateBuffers();
+	}
 
 	// store current coloring mode
 	SVViewState vs = SVViewStateHandler::instance().viewState();
@@ -303,6 +325,7 @@ void Scene::destroy() {
 	m_buildingGeometryObject.destroy();
 	m_transparentBuildingObject.destroy();
 	m_networkGeometryObject.destroy();
+	m_drawingGeometryObject.destroy();
 	m_selectedGeometryObject.destroy();
 	m_measurementObject.destroy();
 	m_coordinateSystemObject.destroy();
@@ -328,12 +351,12 @@ void Scene::resize(int width, int height, qreal retinaScale) {
 				/* far */            farDistance
 				);
 	// Mind: do not use 0.0 for near plane, otherwise depth buffering and depth testing won't work!
-
+//	m_projection.ortho(-.02*width, .02*width, -.02*height, .02*height, -farDistance, farDistance);
 	// the small view projection matrix is constant
 	m_smallViewProjection.setToIdentity();
 	// create projection matrix, i.e. camera lens
 	m_smallViewProjection.perspective(
-				/* vertical angle */ 45.0f,
+				/* vertical angle */ 30.0f,
 				/* aspect ratio */   1, // it's a square window
 				/* near */           0.1f,
 				/* far */            farDistance
@@ -364,7 +387,9 @@ void Scene::updateWorld2ViewMatrix() {
 	// move it into origin
 	m_smallCoordinateSystemObject.m_smallViewCamera.setTranslation(QVector3D(0,0,0));
 	// move 10 units backwards
-	m_smallCoordinateSystemObject.m_smallViewCamera.translate( -6*m_smallCoordinateSystemObject.m_smallViewCamera.forward());
+	m_smallCoordinateSystemObject.m_smallViewCamera.translate( -22*m_smallCoordinateSystemObject.m_smallViewCamera.forward());
+	m_smallCoordinateSystemObject.m_smallViewCamera.translate(   2*m_smallCoordinateSystemObject.m_smallViewCamera.right());
+	m_smallCoordinateSystemObject.m_smallViewCamera.translate(   2*m_smallCoordinateSystemObject.m_smallViewCamera.up());
 	// store in m_smallCoordinateSystemMatrix
 	m_smallCoordinateSystemObject.m_worldToSmallView = m_smallViewProjection * m_smallCoordinateSystemObject.m_smallViewCamera.toMatrix();
 }
@@ -860,6 +885,11 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 		if (!pickObject.m_pickPerformed)
 			pick(pickObject);
 
+		// NOTE: standard mouse wheel delta is either +1 (forward) or -1 (backward)
+		//       some mouse have high-res switch buttons and then the wheel delta is strange... for example
+		//       on Mac the wheel delta is generally 16 or higher and the high-res button turns the sensitivity
+		//       down to 1. We need to figure out the nominal wheel delta for a mouse (without modifier) somehow.
+
 		// move forward along camera's forward vector
 #ifdef Q_OS_MAC
 		if (wheelDelta > 2)
@@ -867,22 +897,35 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 		if (wheelDelta < -2)
 			wheelDelta = -2;
 #endif
-		double transSpeed = 0.05;
+
+		// our default translation speed
+		double translationSpeedFactor = 1;
+
+		// if user presses either Shift or Space for slow/fast speed, we do not apply the "automatic-slowdown-when near"
 		if (keyboardHandler.keyDown(Qt::Key_Shift))
-			transSpeed *= 0.1;
+			translationSpeedFactor = 0.1;
 
 		if (keyboardHandler.keyDown(Qt::Key_Space))
-			transSpeed *= 10;
+			translationSpeedFactor = 10;
 
-		IBKMK::Vector3D moveDist = transSpeed*pickObject.m_candidates.front().m_depth*pickObject.m_lineOfSightDirection;
+		IBKMK::Vector3D moveDist = pickObject.m_candidates.front().m_depth*pickObject.m_lineOfSightDirection;
 
-		const IBKMK::Vector3D &lineOfSight = pickObject.m_candidates.front().m_depth*pickObject.m_lineOfSightDirection;
-		double dampening = std::min(1.0, (80.0 / (lineOfSight.magnitude())));
-		double moveFactor = std::max(1.0, (1.0 / (5 * moveDist.magnitude())));
-		// qDebug() << "Dampening factor: " << dampening;
-		// qDebug() << "Move distance: " << moveDist.magnitude();
-		// move camera along line of sight towards selected object
-		m_camera.translate(IBKVector2QVector(dampening*wheelDelta*moveFactor*moveDist));
+		// normal distance that we move our camera (in meters along our line of sight)
+		// it is large, when our intersection point to first object is far away, and small if we are very close
+		double cameraMoveDistance = moveDist.magnitude();
+
+		// normalize moveDist vector - this is now only a direction
+		moveDist /= cameraMoveDistance;
+
+		cameraMoveDistance *= 0.05; // we move 5 % of our distance to target; with 100 % we would hit the intersection point
+
+		// clip move distance for very large values (when mouse points to emptiness)
+		cameraMoveDistance = std::min(cameraMoveDistance, 100.0);
+		// ensure move distance is at least 1 meter (10 cm with Shift modifier)
+		cameraMoveDistance = std::max(cameraMoveDistance, 1.0); // normally we move by at least 1 meter
+
+		// we move towards the object at adjusted speed selected by user
+		m_camera.translate(IBKVector2QVector(wheelDelta*translationSpeedFactor*cameraMoveDistance*moveDist));
 	}
 
 	// store camera position in view settings, but only if we have a project
@@ -1140,6 +1183,10 @@ void Scene::render() {
 		// render opaque part of new sub-surface object
 		if (vs.m_propertyWidgetMode == SVViewState::PM_AddSubSurfaceGeometry)
 			m_newSubSurfaceObject.renderOpaque(); // might do nothing, if no sub-surface is being created
+
+		// render opaque part of drawing object
+		m_drawingGeometryObject.renderOpaque();
+
 	}
 
 	m_buildingShader->release();
@@ -1821,6 +1868,87 @@ void Scene::generateNetworkGeometry() {
 		qDebug() << t.elapsed() << "ms for network generation";
 }
 
+const QColor objectColor(const VICUS::Drawing::AbstractDrawingObject &obj) {
+	const VICUS::DrawingLayer *layer = obj.m_parentLayer;
+
+	Q_ASSERT(layer != nullptr);
+	QColor color = obj.color().isValid() ? obj.color() : SVStyle::instance().m_defaultDrawingColor;
+
+	if (SVSettings::instance().m_theme == SVSettings::TT_Dark) {
+		//qDebug() << "Lightness: " << color.lightness();
+		if (color.lightness() < 20)
+			color = Qt::white;
+	}
+
+	if (!layer->m_visible || layer->m_selected)
+		color.setAlpha(0);
+
+	return color;
+}
+
+template <typename t>
+void generateDrawingPlanes(const std::vector<t> &objects, const VICUS::Drawing &drawing, unsigned int &currentVertexIndex,
+						   unsigned int &currentElementIndex, OpaqueGeometryObject &opaqueObject) {
+	for (const t & obj : objects){
+
+		const VICUS::DrawingLayer *dl = dynamic_cast<const VICUS::DrawingLayer *>(obj.m_parentLayer);
+
+		if (dl == nullptr)
+			continue;
+
+		const QColor color = objectColor(obj);
+
+		const std::vector<VICUS::PlaneGeometry> &planes = obj.planeGeometries(drawing);
+		for (const VICUS::PlaneGeometry &plane : planes) {
+			addPlane(plane.triangulationData(), color, currentVertexIndex, currentElementIndex,
+					 opaqueObject.m_vertexBufferData,
+					 opaqueObject.m_colorBufferData,
+					 opaqueObject.m_indexBufferData,
+					 false);
+			addPlane(plane.triangulationData(), color, currentVertexIndex, currentElementIndex,
+					 opaqueObject.m_vertexBufferData,
+					 opaqueObject.m_colorBufferData,
+					 opaqueObject.m_indexBufferData,
+					 true);
+		}
+	}
+}
+
+
+void Scene::generate2DDrawingGeometry() {
+
+	// initialise necessary objects to draw OpaqueGeometryObject
+	m_drawingGeometryObject.m_vertexBufferData.clear();
+	m_drawingGeometryObject.m_colorBufferData.clear();
+	m_drawingGeometryObject.m_indexBufferData.clear();
+	m_drawingGeometryObject.m_vertexStartMap.clear();
+
+	m_drawingGeometryObject.m_vertexBufferData.reserve(500000);
+	m_drawingGeometryObject.m_colorBufferData.reserve(500000);
+	m_drawingGeometryObject.m_indexBufferData.reserve(500000);
+
+	m_drawingGeometryObject.m_drawTriangleStrips = false;
+
+	unsigned int currentVertexIndex = 0;
+	unsigned int currentElementIndex = 0;
+
+	const VICUS::Project & p = project();
+
+	// iterate over all AbstractObjects and draw them
+	for (const VICUS::Drawing & drawing : p.m_drawings) {
+		generateDrawingPlanes<VICUS::Drawing::Line>(drawing.m_lines, drawing, currentVertexIndex, currentElementIndex, m_drawingGeometryObject);
+		generateDrawingPlanes<VICUS::Drawing::LinearDimension>(drawing.m_linearDimensions, drawing, currentVertexIndex, currentElementIndex, m_drawingGeometryObject);
+		generateDrawingPlanes<VICUS::Drawing::PolyLine>(drawing.m_polylines, drawing, currentVertexIndex, currentElementIndex, m_drawingGeometryObject);
+		generateDrawingPlanes<VICUS::Drawing::Arc>(drawing.m_arcs, drawing, currentVertexIndex, currentElementIndex, m_drawingGeometryObject);
+		generateDrawingPlanes<VICUS::Drawing::Circle>(drawing.m_circles, drawing, currentVertexIndex, currentElementIndex, m_drawingGeometryObject);
+		generateDrawingPlanes<VICUS::Drawing::Ellipse>(drawing.m_ellipses, drawing, currentVertexIndex, currentElementIndex, m_drawingGeometryObject);
+		generateDrawingPlanes<VICUS::Drawing::Solid>(drawing.m_solids, drawing, currentVertexIndex, currentElementIndex, m_drawingGeometryObject);
+		generateDrawingPlanes<VICUS::Drawing::Text>(drawing.m_texts, drawing, currentVertexIndex, currentElementIndex, m_drawingGeometryObject);
+	}
+
+	m_drawingGeometryObject.m_transparentStartIndex = m_drawingGeometryObject.m_indexBufferData.size();
+}
+
 // Helper to color all child surfaces (recursive)
 void colorSubSurfaces(const VICUS::Surface &surf, const QColor &color) {
 	for(const VICUS::Surface &cs : surf.childSurfaces()) {
@@ -2332,6 +2460,17 @@ void Scene::deselectAll() {
 			objIDs.insert(network.m_id);
 	}
 
+	// now the plain geometry
+	for (const VICUS::Drawing & d : p.m_drawings) {
+		if (d.m_selected)
+			objIDs.insert(d.m_id);
+
+		for (const VICUS::DrawingLayer & dl : d.m_drawingLayers) {
+			if (dl.m_selected)
+				objIDs.insert(dl.m_id);
+		}
+	}
+
 	// if nothing is selected, do nothing
 	if (objIDs.empty())
 		return;
@@ -2572,14 +2711,22 @@ void Scene::pick(PickObject & pickObject) {
 	QElapsedTimer pickTimer;
 	pickTimer.start();
 #endif
-
-
-	// *** intersection with grid plane ***
-
+	// *** intersects x-y-plane ***
 	IBKMK::Vector3D intersectionPoint;
+	IBKMK::Vector2D point;
 	double t;
+
+
+	// *** intersection with grid planes ***
+
+	// NOTE: the vector project().m_viewSettings.m_gridPlanes usually contains our default
+	//       grid plane IBKMK::Vector3D(0,0,0), IBKMK::Vector3D(0,0,1) as first grid plane.
+	//       However, users may delete this plane and add their own, so we do not hard-code this grid plane.
+	//       We may even have no grid plane at all!
+
 	// process all grid planes - being transparent, these are picked from both sides
 	for (unsigned int i=0; i< project().m_viewSettings.m_gridPlanes.size(); ++i) {
+		// Note: intersectsLine() only handles plane if currently set to visible and active, no need to test this extra
 		if (project().m_viewSettings.m_gridPlanes[i].intersectsLine(nearPoint, direction, t, intersectionPoint)) {
 			// got an intersection point, store it
 			PickObject::PickResult r;
@@ -2723,6 +2870,8 @@ void Scene::pick(PickObject & pickObject) {
 		}
 	}
 
+	pickDrawings(pickObject, nearPoint, farPoint, direction);
+
 	// *** local coordinate system pick points ***
 
 	// only do this when not panning/orbiting/first-person-viewing etc.
@@ -2765,6 +2914,93 @@ void Scene::pick(PickObject & pickObject) {
 	pickObject.m_pickPerformed = true;
 }
 
+/*! Add Pick points of drawing objects. */
+template <typename t>
+void addPickPoint(PickObject &pickObject, const std::vector<t> objs,
+				  const VICUS::Drawing &drawing, const IBKMK::Vector3D &nearPoint,
+				  const IBKMK::Vector3D &direction, bool pickLine = false) {
+
+	// process all objects
+	for (const t &abstrObj : objs) {
+		// skip invisible drawing objects
+		Q_ASSERT(abstrObj.m_parentLayer != nullptr);
+		if (!abstrObj.m_parentLayer->m_visible)
+			continue;
+
+		const std::vector<IBKMK::Vector2D> &points = abstrObj.points();
+
+		std::vector<IBKMK::Vector3D> points3d(points.size());
+		for (unsigned int i=0; i<points.size(); ++i) {
+			const IBKMK::Vector2D &v2D = points[i];
+
+			double zCoordinate = abstrObj.m_zPosition * Z_MULTIPLYER + drawing.m_origin.m_z;
+			IBKMK::Vector3D v3D = IBKMK::Vector3D(v2D.m_x + drawing.m_origin.m_x,
+												  v2D.m_y + drawing.m_origin.m_y,
+												  zCoordinate);
+
+			v3D *= drawing.m_scalingFactor;
+			QVector3D qV3D = drawing.m_rotationMatrix.toQuaternion() * IBKVector2QVector(v3D);
+			points3d[i] = QVector2IBKVector(qV3D);
+		}
+
+		for (unsigned int i=0; i<points3d.size(); ++i) {
+
+			const IBKMK::Vector3D &v  = points3d[      i                     ];
+			const IBKMK::Vector3D &vB = points3d[((int)i - 1) % points.size()];
+
+			double depth = 0., depth2 = 0., dist = 0., dist2 = 0., lineFactor;
+			IBKMK::Vector3D closestPoint, closestPoint2;
+
+			if (pickLine) {
+				dist2 = IBKMK::lineToLineDistance(nearPoint, direction, v, vB - v, depth2, closestPoint2, lineFactor);
+
+				// check distance to line
+				if (dist2 < SNAP_DISTANCES_THRESHHOLD && lineFactor > 0.0 && lineFactor < 1.0) {
+					PickObject::PickResult r;
+					r.m_resultType = PickObject::RT_Object;
+					r.m_depth = depth2; // the depth to the point on the line-of-sight that is closest to the point
+					r.m_pickPoint = closestPoint2; // this
+					r.m_objectID = drawing.m_id;
+					r.m_drawingID = abstrObj.m_id;
+					pickObject.m_candidates.push_back(r);
+				}
+			}
+
+			dist = IBKMK::lineToPointDistance(nearPoint, direction, v, depth, closestPoint);
+
+			// check distance against radius of sphere
+			if (dist < SNAP_DISTANCES_THRESHHOLD) {
+				PickObject::PickResult r;
+				r.m_resultType = PickObject::RT_Object;
+				r.m_depth = depth; // the depth to the point on the line-of-sight that is closest to the point
+				r.m_pickPoint = closestPoint; // this
+				r.m_objectID = drawing.m_id;
+				r.m_drawingID = abstrObj.m_id;
+				pickObject.m_candidates.push_back(r);
+			}
+		}
+	}
+}
+
+void Scene::pickDrawings(PickObject &pickObject,
+						 const IBKMK::Vector3D &nearPoint,
+						 const IBKMK::Vector3D &/*farPoint*/,
+						 const IBKMK::Vector3D &direction) {
+
+	for (const VICUS::Drawing & d : project().m_drawings) {
+		addPickPoint<VICUS::Drawing::Point>(pickObject, d.m_points, d, nearPoint, direction, false);
+		addPickPoint<VICUS::Drawing::Arc>(pickObject, d.m_arcs, d, nearPoint, direction, false);
+		addPickPoint<VICUS::Drawing::Circle>(pickObject, d.m_circles, d, nearPoint, direction, false);
+		addPickPoint<VICUS::Drawing::Ellipse>(pickObject, d.m_ellipses, d, nearPoint, direction, false);
+		addPickPoint<VICUS::Drawing::Line>(pickObject, d.m_lines, d, nearPoint, direction, true);
+		addPickPoint<VICUS::Drawing::PolyLine>(pickObject, d.m_polylines, d, nearPoint, direction, true);
+		addPickPoint<VICUS::Drawing::Solid>(pickObject, d.m_solids, d, nearPoint, direction, false);
+		addPickPoint<VICUS::Drawing::LinearDimension>(pickObject, d.m_linearDimensions, d, nearPoint, direction, false);
+		addPickPoint<VICUS::Drawing::Text>(pickObject, d.m_texts, d, nearPoint, direction, false);
+	}
+}
+
+
 void Scene::pickChildSurfaces() {
 
 }
@@ -2785,7 +3021,7 @@ struct SnapCandidate {
 void Scene::snapLocalCoordinateSystem(const PickObject & pickObject) {
 	const SVViewState & vs = SVViewStateHandler::instance().viewState();
 
-	const float SNAP_DISTANCES_THRESHHOLD = 2; // in m, should be enough, right?
+	const float SNAP_DISTANCES_THRESHHOLD = 1.5; // in m, should be enough, right?
 
 
 	SVViewState::Locks actualLockOption = vs.m_locks;
@@ -3062,6 +3298,93 @@ void Scene::snapLocalCoordinateSystem(const PickObject & pickObject) {
 				snapInfo = "snap to object";
 			} // if (s != nullptr)
 
+
+			const VICUS::Drawing * d = dynamic_cast<const VICUS::Drawing *>(obj);
+			if (d != nullptr) {
+
+				// a surface object might have several snap points which we collect first in a vector
+				std::vector<SnapCandidate> snapCandidates;
+				float closestDepthSoFar = SNAP_DISTANCES_THRESHHOLD;
+
+				// we always add the intersection point with the surface as fall-back snappoint,
+				// but with a large distance so that it is only used as last resort
+				SnapCandidate sc;
+				sc.m_distToLineOfSight = (double)SNAP_DISTANCES_THRESHHOLD*2;
+				sc.m_pickPoint = r.m_pickPoint;
+				snapCandidates.push_back(sc);
+
+				const VICUS::Drawing::AbstractDrawingObject *obj = d->objectByID(r.m_drawingID);
+
+				bool linePick = false;
+				const VICUS::Drawing::Line *line = dynamic_cast<const VICUS::Drawing::Line *>(obj);
+				const VICUS::Drawing::PolyLine *polyline = dynamic_cast<const VICUS::Drawing::PolyLine *>(obj);
+
+				if (line != nullptr || polyline != nullptr)
+					linePick = true;
+
+				if (snapOptions & SVViewState::Snap_ObjectVertex) {
+
+					std::vector<IBKMK::Vector3D> points3d(obj->points().size());
+					for (unsigned int i=0; i<obj->points().size(); ++i) {
+						const IBKMK::Vector2D &v2D = obj->points()[i];
+
+						double zCoordinate = obj->m_zPosition * Z_MULTIPLYER + d->m_origin.m_z;
+						IBKMK::Vector3D v3D = IBKMK::Vector3D(v2D.m_x + d->m_origin.m_x,
+															  v2D.m_y + d->m_origin.m_y,
+															  zCoordinate);
+
+						QVector3D qV3D = d->m_rotationMatrix.toQuaternion() * IBKVector2QVector(v3D);
+						qV3D *= d->m_scalingFactor;
+
+						points3d[i] = QVector2IBKVector(qV3D);
+					}
+
+					for (unsigned int i=0; i<points3d.size(); ++i) {
+
+						const IBKMK::Vector3D & v3D  = points3d[i];
+
+						float dist = (IBKVector2QVector(v3D) - pickPoint).lengthSquared();
+						// Only add if close enough (< SNAP_DISTANCES_THRESHHOLD) and if there isn't yet
+						// another snap point that's closer.
+						if (dist < closestDepthSoFar && dist < SNAP_DISTANCES_THRESHHOLD) {
+							// for now we snap to the vertexes of the outer polygon and all holes
+							sc.m_distToLineOfSight = (double)dist;
+							sc.m_pickPoint = v3D;
+							snapCandidates.push_back(sc);
+							closestDepthSoFar = dist;
+						}
+
+						if (linePick) {
+							const IBKMK::Vector3D & v3DB = points3d[((int)i - 1) % points3d.size()];
+
+							IBKMK::Vector3D pickPoint;
+							double lineFactor;
+							double dist2 = IBKMK::lineToPointDistance(v3D, v3DB - v3D, r.m_pickPoint, lineFactor, pickPoint);
+
+//							qDebug() << "Line-pick | Distance: " << dist2 << " X: " << pickPoint.m_x << " Y: " << pickPoint.m_y << " Z: " << pickPoint.m_z << " Line-factor: " << lineFactor;
+
+							// Only add if close enough (< SNAP_DISTANCES_THRESHHOLD) and if there isn't yet
+							// another snap point that's closer.
+							if (dist2 < closestDepthSoFar && dist2 < SNAP_DISTANCES_THRESHHOLD && lineFactor > 0. && lineFactor < 1.) {
+								// for now we snap to the vertexes of the outer polygon and all holes
+								sc.m_distToLineOfSight = (double)dist2;
+								sc.m_pickPoint = pickPoint;
+								snapCandidates.push_back(sc);
+								closestDepthSoFar = dist2;
+
+//								qDebug() << "PICKED";
+							}
+						}
+					}
+				}
+
+				// now we take the snap point that's closest - even if all the snap options of an object are
+				// turned off, we still get the intersection point as last straw to pick.
+				std::sort(snapCandidates.begin(), snapCandidates.end());
+				snapPoint = snapCandidates.front().m_pickPoint;
+				snapInfo = "snap to drawing object";
+
+			}
 
 			// currently there is such snapping to nodes, yet
 
@@ -3367,7 +3690,9 @@ void Scene::setDefaultViewState() {
 		vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;
 		SVViewStateHandler::instance().setViewState(vs);
 		return;
-	} // switch
+	case SVViewState::PM_BuildingAcousticProperties:
+		break;
+	} // switchd
 }
 
 const QMatrix4x4 & Scene::worldToView() const {

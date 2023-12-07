@@ -17,7 +17,7 @@
      <x>0</x>
      <y>0</y>
      <width>1112</width>
-     <height>22</height>
+     <height>17</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -114,8 +114,9 @@
     <property name="title">
      <string>&amp;Tools</string>
     </property>
-    <addaction name="actionToolsExternalPostProcessing"/>
+    <addaction name="actionExternal_Post_Processor"/>
     <addaction name="actionToolsCCMeditor"/>
+    <addaction name="actionDWD_Weather_Data_Converter"/>
    </widget>
    <widget class="QMenu" name="menuDatabases">
     <property name="title">
@@ -148,6 +149,7 @@
     <addaction name="actionDBMaterials"/>
     <addaction name="actionDBConstructions"/>
     <addaction name="actionDBComponents"/>
+    <addaction name="actionEPDElements"/>
     <addaction name="actionDBSubSurfaceComponents"/>
     <addaction name="actionDBWindows"/>
     <addaction name="actionDBWindowGlazingSystems"/>
@@ -169,23 +171,6 @@
     <addaction name="separator"/>
     <addaction name="actionDBRemoveDuplicates"/>
    </widget>
-   <widget class="QMenu" name="menuSimulation">
-    <property name="title">
-     <string>&amp;Simulation</string>
-    </property>
-    <widget class="QMenu" name="menuCoSimulation">
-     <property name="title">
-      <string>Co-Simulation</string>
-     </property>
-     <addaction name="actionSimulationCO2Balance"/>
-    </widget>
-    <addaction name="actionSimulationNANDRAD"/>
-    <addaction name="separator"/>
-    <addaction name="actionCalculateViewFactors"/>
-    <addaction name="actionSimulationExportFMI"/>
-    <addaction name="separator"/>
-    <addaction name="menuCoSimulation"/>
-   </widget>
    <widget class="QMenu" name="menuBuildings">
     <property name="title">
      <string>&amp;Buildings</string>
@@ -204,7 +189,6 @@
    <addaction name="menuDatabases"/>
    <addaction name="menuBuildings"/>
    <addaction name="menuView"/>
-   <addaction name="menuSimulation"/>
    <addaction name="menuTools"/>
    <addaction name="menuPlugins"/>
    <addaction name="menuHelp"/>
@@ -235,11 +219,14 @@
    <addaction name="actionFileOpen"/>
    <addaction name="actionFileSave"/>
    <addaction name="separator"/>
+   <addaction name="actionGeometryView"/>
+   <addaction name="actionSimulationSettings"/>
+   <addaction name="actionOpenPostProcessing"/>
   </widget>
   <action name="actionFileNew">
    <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/32x32/filenew_32x32.png</normaloff>:/gfx/actions/32x32/filenew_32x32.png</iconset>
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-new-file-80.png</normaloff>:/gfx/icons8/icons8-new-file-80.png</iconset>
    </property>
    <property name="text">
     <string>&amp;New...</string>
@@ -250,8 +237,8 @@
   </action>
   <action name="actionFileOpen">
    <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/32x32/fileopen_32x32.png</normaloff>:/gfx/actions/32x32/fileopen_32x32.png</iconset>
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-ordner-oeffnen-80.png</normaloff>:/gfx/icons8/icons8-ordner-oeffnen-80.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Open...</string>
@@ -262,8 +249,8 @@
   </action>
   <action name="actionFileSave">
    <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/32x32/filesave_32x32.png</normaloff>:/gfx/actions/32x32/filesave_32x32.png</iconset>
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-save-80.png</normaloff>:/gfx/icons8/icons8-save-80.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Save</string>
@@ -301,8 +288,8 @@
   </action>
   <action name="actionFileQuit">
    <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/32x32/exit_32x32.png</normaloff>:/gfx/actions/32x32/exit_32x32.png</iconset>
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-close-80.png</normaloff>:/gfx/icons8/icons8-close-80.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Quit</string>
@@ -326,8 +313,8 @@
   </action>
   <action name="actionFileReload">
    <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/24x24/reload.png</normaloff>:/gfx/actions/24x24/reload.png</iconset>
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-verfuegbare-updates-80.png</normaloff>:/gfx/icons8/icons8-verfuegbare-updates-80.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Reload project</string>
@@ -346,8 +333,8 @@
   </action>
   <action name="actionEditTextEditProject">
    <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/24x24/edit.png</normaloff>:/gfx/actions/24x24/edit.png</iconset>
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-create-80.png</normaloff>:/gfx/icons8/icons8-create-80.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Open project in text editor</string>
@@ -358,8 +345,8 @@
   </action>
   <action name="actionEditPreferences">
    <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/64x64/projectProperties.png</normaloff>:/gfx/actions/64x64/projectProperties.png</iconset>
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-dienstleistungen-80.png</normaloff>:/gfx/icons8/icons8-dienstleistungen-80.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Preferences...</string>
@@ -376,22 +363,10 @@
     <string>Ctrl+Shift+C</string>
    </property>
   </action>
-  <action name="actionToolsExternalPostProcessing">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/32x32/PostProcApp_32x32.png</normaloff>:/gfx/actions/32x32/PostProcApp_32x32.png</iconset>
-   </property>
-   <property name="text">
-    <string>External Post-Processing...</string>
-   </property>
-   <property name="toolTip">
-    <string>Launches the external Post-Processing</string>
-   </property>
-  </action>
   <action name="actionToolsCCMeditor">
    <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/32x32/CCMEditor_32.png</normaloff>:/gfx/actions/32x32/CCMEditor_32.png</iconset>
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-rain-cloud-80.png</normaloff>:/gfx/icons8/icons8-rain-cloud-80.png</iconset>
    </property>
    <property name="text">
     <string>External Climate Editor...</string>
@@ -444,35 +419,6 @@
     <string>Network hydraulic components</string>
    </property>
   </action>
-  <action name="actionNetworkEdit">
-   <property name="text">
-    <string>Edit Network...</string>
-   </property>
-  </action>
-  <action name="actionNetworkImport">
-   <property name="text">
-    <string>Import Network...</string>
-   </property>
-  </action>
-  <action name="actionSimulationNANDRAD">
-   <property name="text">
-    <string>Building Energy Simulation (NANDRAD)...</string>
-   </property>
-   <property name="toolTip">
-    <string>Opens the simulation start dialog</string>
-   </property>
-   <property name="shortcut">
-    <string>F9</string>
-   </property>
-  </action>
-  <action name="actionSimulationHydraulicNetwork">
-   <property name="text">
-    <string>Hydraulic network calculation...</string>
-   </property>
-   <property name="toolTip">
-    <string>Opens the simulation start dialog</string>
-   </property>
-  </action>
   <action name="actionHelpKeyboardAndMouseControls">
    <property name="text">
     <string>Keyboard and mouse controls...</string>
@@ -496,8 +442,8 @@
   </action>
   <action name="actionHelpAbout">
    <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/32x32/info_32x32.png</normaloff>:/gfx/actions/32x32/info_32x32.png</iconset>
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-info-80.png</normaloff>:/gfx/icons8/icons8-info-80.png</iconset>
    </property>
    <property name="text">
     <string>&amp;About SIM-VICUS...</string>
@@ -616,23 +562,6 @@
   <action name="actionDBInternalLoadsOther">
    <property name="text">
     <string>Other...</string>
-   </property>
-  </action>
-  <action name="actionSimulationExportFMI">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/32x32/FMU_32x32.png</normaloff>:/gfx/actions/32x32/FMU_32x32.png</iconset>
-   </property>
-   <property name="text">
-    <string>Export Functional Mock-Up Unit (NANDRAD FMU)...</string>
-   </property>
-   <property name="toolTip">
-    <string>Opens the FMU export dialog</string>
-   </property>
-  </action>
-  <action name="actionFileExportView3D">
-   <property name="text">
-    <string>Export geometry in View3D format...</string>
    </property>
   </action>
   <action name="actionDBWindowGlazingSystems">
@@ -795,8 +724,8 @@
   </action>
   <action name="actionEditApplicationLog">
    <property name="icon">
-    <iconset>
-     <normaloff>:/gfx/actions/24x24/edit.png</normaloff>:/gfx/actions/24x24/edit.png</iconset>
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-create-80.png</normaloff>:/gfx/icons8/icons8-create-80.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Open application log in editor</string>
@@ -860,13 +789,79 @@
     <string>Export network as geoJSON...</string>
    </property>
   </action>
-  <action name="actionCalculateViewFactors">
+  <action name="actionGeometryView">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-wuerfel-80.png</normaloff>:/gfx/icons8/icons8-wuerfel-80.png</iconset>
+   </property>
    <property name="text">
-    <string>Precalculate view factors</string>
+    <string>Geometry View</string>
+   </property>
+   <property name="toolTip">
+    <string>Geometry View</string>
+   </property>
+  </action>
+  <action name="actionSimulationSettings">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-einstellungen-80.png</normaloff>:/gfx/icons8/icons8-einstellungen-80.png</iconset>
+   </property>
+   <property name="text">
+    <string>Simulation Settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Simulation Settings</string>
+   </property>
+   <property name="shortcut">
+    <string>F10</string>
+   </property>
+  </action>
+  <action name="actionOpenPostProcessing">
+   <property name="icon">
+    <iconset resource="../resources/icons.qrc">
+     <normaloff>:/gfx/icons8/icons8-graph-80.png</normaloff>:/gfx/icons8/icons8-graph-80.png</iconset>
+   </property>
+   <property name="text">
+    <string>External post processing</string>
+   </property>
+   <property name="toolTip">
+    <string>External post processing</string>
+   </property>
+  </action>
+  <action name="actionEPDElements">
+   <property name="text">
+    <string>EPD elements...</string>
+   </property>
+  </action>
+  <action name="actionDWD_Weather_Data_Converter">
+   <property name="icon">
+    <iconset resource="../resources/SIM-VICUS.qrc">
+     <normaloff>:/gfx/actions/DWDWeatherDataConverter.png</normaloff>:/gfx/actions/DWDWeatherDataConverter.png</iconset>
+   </property>
+   <property name="text">
+    <string>DWD Weather Data Download...</string>
+   </property>
+  </action>
+  <action name="actionExternal_Post_Processor">
+   <property name="icon">
+    <iconset resource="../resources/SIM-VICUS.qrc">
+     <normaloff>:/gfx/actions/32x32/PostProcApp_32x32.png</normaloff>:/gfx/actions/32x32/PostProcApp_32x32.png</iconset>
+   </property>
+   <property name="text">
+    <string>External Post Processor...</string>
    </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="../resources/SIM-VICUS.qrc"/>
+  <include location="../resources/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

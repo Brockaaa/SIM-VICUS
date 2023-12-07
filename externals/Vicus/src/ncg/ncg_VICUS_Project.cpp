@@ -88,6 +88,18 @@ void Project::readXML(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
+			else if (cName == "Drawings") {
+				const TiXmlElement * c2 = c->FirstChildElement();
+				while (c2) {
+					const std::string & c2Name = c2->ValueStr();
+					if (c2Name != "Drawing")
+						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+					Drawing obj;
+					obj.readXML(c2);
+					m_drawings.push_back(obj);
+					c2 = c2->NextSiblingElement();
+				}
+			}
 			else if (cName == "IfcFilePath")
 				m_ifcFilePath = IBK::Path(c->GetText());
 			else if (cName == "SolverParameter")
@@ -100,6 +112,10 @@ void Project::readXML(const TiXmlElement * element) {
 				m_outputs.readXML(c);
 			else if (cName == "ViewSettings")
 				m_viewSettings.readXML(c);
+			else if (cName == "LcaSettings")
+				m_lcaSettings.readXML(c);
+			else if (cName == "LccSettings")
+				m_lccSettings.readXML(c);
 			else if (cName == "PlainGeometry")
 				m_plainGeometry.readXML(c);
 			else if (cName == "EmbeddedDatabase")
@@ -134,6 +150,10 @@ TiXmlElement * Project::writeXML(TiXmlElement * parent) const {
 	m_outputs.writeXML(e);
 
 	m_viewSettings.writeXML(e);
+
+	m_lcaSettings.writeXML(e);
+
+	m_lccSettings.writeXML(e);
 
 	if (!m_geometricNetworks.empty()) {
 		TiXmlElement * child = new TiXmlElement("GeometricNetworks");
@@ -184,6 +204,18 @@ TiXmlElement * Project::writeXML(TiXmlElement * parent) const {
 
 
 	m_plainGeometry.writeXML(e);
+
+	if (!m_drawings.empty()) {
+		TiXmlElement * child = new TiXmlElement("Drawings");
+		e->LinkEndChild(child);
+
+		for (std::vector<Drawing>::const_iterator it = m_drawings.begin();
+			it != m_drawings.end(); ++it)
+		{
+			it->writeXML(child);
+		}
+	}
+
 
 	m_embeddedDB.writeXML(e);
 

@@ -63,8 +63,12 @@ public:
 	enum ModificationTypes {
 		/*! Used whenever a solver/model parameter (NANDRAD::SolverParameters) has changed. */
 		SolverParametersModified,
-		/*! Used when a climate location parameter (CCM file path, longitude, latitude, timezone) has changed. */
+		/*! Used when a climate location parameter (longitude, latitude, timezone) has changed. */
 		ClimateLocationModified,
+		/*! Used when a climate file path has changed. */
+		ClimateLocationAndFileModified,
+		/*! Used when outouts have been changed. */
+		OutputsModified,
 		/*! Grid properties changed. */
 		GridModified,
 		/*! Network geometry has changed (e.g. modfied/added nodes or edges). */
@@ -100,6 +104,10 @@ public:
 		NodeStateModified,
 		/*! An object's display name was renamed. Modification data is a pointer to the modified object. */
 		ObjectRenamed,
+		/*! Drawings have been added / removed from project */
+		DrawingModified,
+		/*! LCA / LCC settings have been modified. */
+		LcaLccModified,
 		/*! Used whenever the project data changes completely (new project created, project loaded etc.)
 			and a complete reset of all views and models is needed.
 		*/
@@ -364,7 +372,7 @@ private:
 		Access to the project instance is strictly forbidden and should only be granted
 		to undo actions via a suitable mechanism.
 	*/
-	VICUS::Project		*m_project;
+	VICUS::Project			*m_project;
 
 	/*! Holds the time stamp of the last time the project was read.
 		This time stamp is updated in read() and used to check for external project modifications.

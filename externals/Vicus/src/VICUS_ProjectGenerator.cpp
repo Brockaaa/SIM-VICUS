@@ -10,6 +10,7 @@
 #include <IBK_FluidPhysics.h>
 #include <IBK_UnitVector.h>
 #include <IBK_StringUtils.h>
+#include <IBK_FileUtils.h>
 
 #include <DataIO>
 
@@ -632,9 +633,7 @@ bool Project::generateShadingFactorsFile(const std::map<unsigned int, unsigned i
 
 		// write file
 		std::ofstream out;
-		out.open(shadingFactorFilePath.str());
-
-		if (!out.is_open()) {
+		if (!IBK::open_ofstream(out, shadingFactorFilePath) ) {
 			IBK::IBK_Message(IBK::FormatString("Error writing shading file '%1'.").arg(shadingFactorFilePath), IBK::MSG_ERROR, FUNC_ID);
 			return false;
 		}
@@ -725,14 +724,7 @@ bool Project::exportMappingTable(const IBK::Path &filepath, const std::vector<Ro
 	IBK::Path basePath(filepath.withoutExtension() + "_mappingTable.txt");
 
 	std::ofstream out;
-	// write file
-#if defined(_WIN32)
-	out.open(IBK::WstringToANSI(basePath.wstr(), false));
-#else
-	out.open(basePath.str());
-#endif
-
-	if (!out.is_open()) {
+	if (!IBK::open_ofstream(out, basePath)) {
 		IBK::IBK_Message(IBK::FormatString("Error writing mapping file '%1'.").arg(basePath), IBK::MSG_ERROR, FUNC_ID);
 		return false;
 	}
@@ -768,7 +760,7 @@ bool Project::exportAreaAndVolume() {
 }
 
 void Project::addViewFactorsToNandradZones(NANDRAD::Project & p, const std::vector<Project::RoomMapping> &roomMappings, const std::map<unsigned int, unsigned int> &componentInstanceMapping,
-										   std::map<unsigned int, unsigned int> &subSurfaceMapping, QStringList & errorStack) const {
+										   const std::map<unsigned int, unsigned int> &vicusToNandradIdMapping, QStringList & errorStack) const {
 	for(NANDRAD::Zone & z : p.m_zones){
 		RoomMapping rM;
 		// select the correct mapping
@@ -790,6 +782,7 @@ void Project::addViewFactorsToNandradZones(NANDRAD::Project & p, const std::vect
 				continue; // skip too small surfaces
 
 			unsigned int compInstId1 = surfaces[i].m_componentInstance->m_id;
+
 			// get the nandrad ids
 			if(componentInstanceMapping.find(compInstId1) == componentInstanceMapping.end()) {
 				errorStack.append(tr("Could not find component instance #%1 for view-factor generation!").arg(compInstId1));
@@ -797,6 +790,27 @@ void Project::addViewFactorsToNandradZones(NANDRAD::Project & p, const std::vect
 			}
 
 			unsigned int constInstId1Nandrad = componentInstanceMapping.at(compInstId1);
+			const NANDRAD::ConstructionInstance *constInst1 = nullptr;
+			for (const NANDRAD::ConstructionInstance &ci : p.m_constructionInstances) {
+				if (ci.m_id == constInstId1Nandrad) {
+					constInst1 = &ci;
+					break;
+				}
+			}
+
+			if (constInst1 == nullptr)
+				continue;
+
+			const NANDRAD::Interface &interfaceA = constInst1->m_interfaceA;
+			const NANDRAD::Interface &interfaceB = constInst1->m_interfaceB;
+
+			bool hasA = (interfaceA.m_longWaveEmission.m_modelType != NANDRAD::InterfaceLongWaveEmission::NUM_MT) &&
+					(interfaceA.m_zoneId != 0);
+			bool hasB = (interfaceB.m_longWaveEmission.m_modelType != NANDRAD::InterfaceLongWaveEmission::NUM_MT) &&
+					(interfaceB.m_zoneId != 0);
+
+			if (!hasA && !hasB)
+				continue;
 
 			for(unsigned int j = 0; j < surfaces.size(); j++){
 
@@ -811,7 +825,31 @@ void Project::addViewFactorsToNandradZones(NANDRAD::Project & p, const std::vect
 				}
 				unsigned int compInstId2 = surfaces[j].m_componentInstance->m_id;
 
+
 				if(compInstId1 == compInstId2)
+					continue;
+
+				unsigned int constInstId2Nandrad = componentInstanceMapping.at(compInstId2);
+				const NANDRAD::ConstructionInstance *constInst2 = nullptr;
+				for (const NANDRAD::ConstructionInstance &ci : p.m_constructionInstances) {
+					if (ci.m_id == constInstId2Nandrad) {
+						constInst2 = &ci;
+						break;
+					}
+				}
+
+				if (constInst2 == nullptr)
+					continue;
+
+				const NANDRAD::Interface &interfaceA = constInst2->m_interfaceA;
+				const NANDRAD::Interface &interfaceB = constInst2->m_interfaceB;
+
+				bool hasA = (interfaceA.m_longWaveEmission.m_modelType != NANDRAD::InterfaceLongWaveEmission::NUM_MT) &&
+						(interfaceA.m_zoneId != 0);
+				bool hasB = (interfaceB.m_longWaveEmission.m_modelType != NANDRAD::InterfaceLongWaveEmission::NUM_MT) &&
+						(interfaceB.m_zoneId != 0);
+
+				if (!hasA && !hasB)
 					continue;
 
 				if(surfaces[i].m_viewFactors.m_values.empty()) {
@@ -836,15 +874,15 @@ void Project::addViewFactorsToNandradZones(NANDRAD::Project & p, const std::vect
 					return;
 				}
 
-				unsigned int constInstId2Nandrad = componentInstanceMapping.at(compInstId2);
 
-				NANDRAD::Zone::viewFactorPair idPair = std::pair<unsigned int, unsigned int>(constInstId1Nandrad, constInstId2Nandrad);
-				z.m_viewFactors.push_back(std::pair<NANDRAD::Zone::viewFactorPair, double>(idPair, vF));
+				NANDRAD::Zone::viewFactorPair idPair1 = std::pair<unsigned int, unsigned int>(constInstId1Nandrad, constInstId2Nandrad);
+				z.m_viewFactors.push_back(std::pair<NANDRAD::Zone::viewFactorPair, double>(idPair1, vF));
 
 				// First we scan all concections between sub-surface and its parent wall (always 0)
 				// Than we also scan for other sub-surfaces inside walls
 				for(unsigned int l=0; l < surfaces[j].subSurfaces().size(); ++l) {
 					const VICUS::SubSurface &subSurf1 = surfaces[j].subSurfaces()[l];
+
 					// All sub-surfaces <-> sub-surfaces have to be connected
 					for (unsigned int k=0; k < surfaces[i].subSurfaces().size(); ++k) {
 						const VICUS::SubSurface &subSurf2 = surfaces[i].subSurfaces()[k];
@@ -865,8 +903,8 @@ void Project::addViewFactorsToNandradZones(NANDRAD::Project & p, const std::vect
 
 						double vFSubSurf2 = itSubSurf2->second[0];
 
-						NANDRAD::Zone::viewFactorPair idPair = std::pair<unsigned int, unsigned int>(subSurfaceMapping[subSurf1.m_id], subSurfaceMapping[subSurf2.m_id]);
-						z.m_viewFactors.push_back(std::pair<NANDRAD::Zone::viewFactorPair, double>(idPair, vFSubSurf2));
+						NANDRAD::Zone::viewFactorPair idPair2 = std::pair<unsigned int, unsigned int>(vicusToNandradIdMapping.at(subSurf1.m_id), vicusToNandradIdMapping.at(subSurf2.m_id));
+						z.m_viewFactors.push_back(std::pair<NANDRAD::Zone::viewFactorPair, double>(idPair2, vFSubSurf2));
 					}
 
 					if(surfaces[i].m_viewFactors.m_values.empty())
@@ -884,8 +922,8 @@ void Project::addViewFactorsToNandradZones(NANDRAD::Project & p, const std::vect
 
 					double vFSubSurf1 = itSubSurf1->second[0];
 
-					NANDRAD::Zone::viewFactorPair idPair = std::pair<unsigned int, unsigned int>(constInstId1Nandrad, subSurfaceMapping[subSurf1.m_id]);
-					z.m_viewFactors.push_back(std::pair<NANDRAD::Zone::viewFactorPair, double>(idPair, vFSubSurf1));
+					NANDRAD::Zone::viewFactorPair idPair3 = std::pair<unsigned int, unsigned int>(constInstId1Nandrad, vicusToNandradIdMapping.at(subSurf1.m_id));
+					z.m_viewFactors.push_back(std::pair<NANDRAD::Zone::viewFactorPair, double>(idPair3, vFSubSurf1));
 				}
 			}
 		}
@@ -914,7 +952,7 @@ void Project::generateBuildingProjectData(const QString &modelName, NANDRAD::Pro
 	}
 	for (const Schedule & sched : m_embeddedDB.m_schedules) {
 		std::string err;
-		if (!sched.isValid(err, true, p.m_placeholders))
+		if (sched.m_isReferenced && !sched.isValid(err, true, p.m_placeholders))
 			errorStack.append(tr("Schedule #%1 '%2' is invalid.").arg(sched.m_id).arg(MultiLangString2QString(sched.m_displayName)));
 	}
 	if (!errorStack.isEmpty())	return;
@@ -951,21 +989,7 @@ void Project::generateBuildingProjectData(const QString &modelName, NANDRAD::Pro
 	constrInstaModelGenerator.generateMaterials();
 	constrInstaModelGenerator.generateConstructions(errorStack);
 
-	bool haveLongWaveEmission = false;
-	for (NANDRAD::ConstructionInstance &ci : p.m_constructionInstances) {
-		double valueA = ci.m_interfaceA.m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
-		double valueB = ci.m_interfaceB.m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
-
-		if (valueA > 0.0 || valueB > 0.0) {
-			haveLongWaveEmission = true;
-			break;
-		}
-	}
-	if(haveLongWaveEmission)
-		addViewFactorsToNandradZones(p, roomMappings, componentInstanceMapping, constrInstaModelGenerator.m_surfaceIdsVicusToNandrad, errorStack);
-
 	surfaceIdsVicusToNandrad.swap(constrInstaModelGenerator.m_surfaceIdsVicusToNandrad);
-
 
 	// *** Ideal Surface Heating Systems ***
 
@@ -1035,8 +1059,10 @@ void Project::generateBuildingProjectData(const QString &modelName, NANDRAD::Pro
 
 	// *** InternalLoads ***
 	p.m_models.m_internalLoadsModels = internalLoads.m_internalLoadObjects;
+	p.m_models.m_internalMoistureLoadsModels = internalLoads.m_internalMoistLoadObjects;
 	p.m_objectLists.insert(p.m_objectLists.end(), internalLoads.m_intLoadObjLists.begin(), internalLoads.m_intLoadObjLists.end());
 	p.m_objectLists.insert(p.m_objectLists.end(), internalLoads.m_intMoistLoadObjLists.begin(), internalLoads.m_intMoistLoadObjLists.end());
+
 	for (unsigned int i=0; i<internalLoads.m_intLoadSchedules.size(); ++i)
 		p.m_schedules.m_scheduleGroups[internalLoads.m_intLoadObjLists[i].m_name] = internalLoads.m_intLoadSchedules[i];
 	// Note: if moisture is not enabled, m_intMoistLoadSchedules will be empty
@@ -1123,6 +1149,22 @@ void Project::generateBuildingProjectData(const QString &modelName, NANDRAD::Pro
 			p.m_fmiDescription.m_modelName = modelName.toStdString();
 		p.m_fmiDescription.m_outputVariables.insert(p.m_fmiDescription.m_outputVariables.end(), supplySystemNetworkModelGenerator.m_outputVariables.begin(), supplySystemNetworkModelGenerator.m_outputVariables.end());
 	}
+
+
+	bool haveLongWaveEmission = false;
+	for (NANDRAD::ConstructionInstance &ci : p.m_constructionInstances) {
+		double valueA = ci.m_interfaceA.m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
+		double valueB = ci.m_interfaceB.m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
+
+		if ((ci.m_interfaceA.m_zoneId != 0 && valueA > 0.0) ||
+				(ci.m_interfaceB.m_zoneId != 0 && valueB > 0.0)) {
+			haveLongWaveEmission = true;
+			break;
+		}
+	}
+	if (haveLongWaveEmission)
+		addViewFactorsToNandradZones(p, roomMappings, componentInstanceMapping, surfaceIdsVicusToNandrad, errorStack);
+
 }
 
 
@@ -1410,9 +1452,7 @@ void InternalLoadsModelGenerator::generate(const Room * r, std::vector<unsigned 
 	// we only need an all day schedule if we miss at least one of the schedules
 	if (!dc.m_values.m_values.empty()) {
 		loadScheds.push_back(allDays);
-		moistScheds.push_back(allDays);
 	}
-
 
 	// initialize load fractions with 0
 	double personRadiationFraction = 0;
@@ -2096,6 +2136,10 @@ void ConstructionInstanceModelGenerator::exportSubSurfaces(QStringList & errorSt
 	double area = surf->geometry().area();
 
 	for(const SubSurface &ss : subSurfs){
+
+		if(ss.m_polygon2D.area() < VICUS::MIN_AREA_FOR_EXPORTED_SURFACES)
+			continue; // Skip too small surfaces
+
 		NANDRAD::EmbeddedObject emb;
 		emb.m_id = VICUS::uniqueId(idSet);
 		idSet.insert(emb.m_id);	//add new id to set
@@ -2256,7 +2300,7 @@ void ConstructionInstanceModelGenerator::exportSubSurfaces(QStringList & errorSt
 									shading.m_modelType = NANDRAD::WindowShading::MT_Controlled;
 									//TODO give user possibility to set Reductionfactor in UI, right now its set default to 0.6
 									NANDRAD::KeywordList::setParameter(shading.m_para, "WindowShading::para_t",
-																	   NANDRAD::WindowShading::P_ReductionFactor, winV.m_para[Window::P_ReductionFactor].get_value());
+																	   NANDRAD::WindowShading::P_ReductionFactor, ssc.m_para[SubSurfaceComponent::P_ReductionFactor].value);
 									//calc the sensor orientation
 									const VICUS::Surface *s = dynamic_cast<const VICUS::Surface*>(ss.m_parent);
 									ControlledShadingModelGenerator::SensorOrientation ori = ControlledShadingModelGenerator::calculateSensorOrientation(s->geometry().normal(), zcs->m_category);
@@ -2398,7 +2442,7 @@ NANDRAD::Interface ConstructionInstanceModelGenerator::generateInterface(const V
 				// create a new ground zone
 				gze.m_groundZ.m_id = VICUS::uniqueId(gze.m_idSet);
 				gze.m_idSet.insert(gze.m_groundZ.m_id);
-				gze.m_groundZ.m_displayName = "GroundZone" + IBK::val2string(gze.m_groundZ.m_id);
+				gze.m_groundZ.m_displayName = "GroundZone(ID=" + IBK::val2string(gze.m_groundZ.m_id) + ")";
 				gze.m_groundZ.m_type = NANDRAD::Zone::ZT_Constant;
 				NANDRAD::KeywordList::setParameter(gze.m_groundZ.m_para, "Zone::para_t",
 												   NANDRAD::Zone::P_Temperature, temperature/10.0);
@@ -2750,7 +2794,7 @@ void ConstructionInstanceModelGenerator::generateConstructions(QStringList &erro
 			for (const VICUS::MaterialLayer & ml : c.m_materialLayers) {
 				NANDRAD::MaterialLayer mlayer;
 				mlayer.m_matId = ml.m_idMaterial;
-				mlayer.m_thickness = ml.m_thickness.value;
+				mlayer.m_thickness = ml.m_para[MaterialLayer::P_Thickness].value;
 				conType.m_materialLayers.push_back(mlayer);
 			}
 			if(actLayer.m_activeLayers[i] != -1)
@@ -4031,18 +4075,8 @@ void IdealHeatingCoolingModelGenerator::generate(const Room * r,std::vector<unsi
 
 // *** NETWORK STUFF ***
 
-void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &errorStack, const std::string & nandradProjectPath) const {
+void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &errorStack, const std::string & nandradProjectPath, unsigned int networkId) const {
 	FUNCID(Project::generateNetworkProjectData);
-
-	// get selected Vicus Network
-	unsigned int networkId = VICUS::INVALID_ID;
-	for (const VICUS::Network &net: m_geometricNetworks) {
-		if (net.m_selectedForSimulation) {
-			networkId = net.m_id;
-			// TODO Hauke, multiple (connected) networks?
-			break;
-		}
-	}
 
 	// if there is no network selected return - this is not an error, but the usual case for simple building energy
 	// simulations
@@ -4688,7 +4722,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 			e.m_cumulativeTempChangeIndicator = -1;
 		}
 
-		// iterate over paths and cumTempChangeindicator and min/max values
+		// iterate over paths and calculate cumTempChangeindicator and min/max values
 		double cumTempChangeindicatorMax = 0;
 		double cumTempChangeindicatorMin = std::numeric_limits<double>::max();
 		for (auto it = shortestPaths.begin(); it != shortestPaths.end(); ++it){
@@ -4749,37 +4783,37 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 		if (!additionalFilesDir.exists())
 			IBK::Path::makePath(additionalFilesDir);
 
-		std::ofstream f;
+		std::ofstream out;
 		IBK::Path filePath = additionalFilesDir / projectName + ".mapping";
-		f.open(filePath.str(), std::ofstream::out | std::ofstream::trunc);
-		f << "soilId" << "\t" << "supplyPipeIds" << "\t" << "returnPipeIds" << std::endl;
+		IBK::open_ofstream(out, filePath);
+		out << "soilId" << "\t" << "supplyPipeIds" << "\t" << "returnPipeIds" << std::endl;
 		for (auto it=mapSoil2SupplyPipes.begin(); it!=mapSoil2SupplyPipes.end(); ++it ){
 			unsigned int soilId = it->first;
-			f << soilId << "\t";
+			out << soilId << "\t";
 			for (unsigned int supplyId: mapSoil2SupplyPipes.at(soilId))
-				f << supplyId << ",";
-			f << "\t";
+				out << supplyId << ",";
+			out << "\t";
 			for (unsigned int returnId: mapSoil2ReturnPipes.at(soilId))
-				f << returnId << ",";
-			f << std::endl;
+				out << returnId << ",";
+			out << std::endl;
 		}
-		f.close();
+		out.close();
 
 		vicusNetwork.writeNetworkNodesCSV(additionalFilesDir / projectName + "_NetworkNodes.csv");
 		vicusNetwork.writeNetworkEdgesCSV(additionalFilesDir / projectName + "_NetworkEdges.csv");
 
 		// write NANDRAD ids for the path of each building
 		filePath = additionalFilesDir / projectName + ".paths";
-		f.open(filePath.str(), std::ofstream::out | std::ofstream::trunc);
+		IBK::open_ofstream(out, filePath);
 		for (auto it = shortestPaths.begin(); it != shortestPaths.end(); ++it){
-			f << vicusNetwork.nodeById(it->first)->m_displayName.toStdString() << std::endl;
+			out << vicusNetwork.nodeById(it->first)->m_displayName.toStdString() << std::endl;
 			std::vector<NetworkEdge *> &shortestPath = it->second; // for readability
 			for (const NetworkEdge * edge: shortestPath){
-				f << edge->m_idNodeInlet << ',' << edge->m_idNodeOutlet << "\t";
+				out << edge->m_id << "\t";
 			}
-			f << std::endl;
+			out << std::endl;
 		}
-		f.close();
+		out.close();
 
 	}
 

@@ -54,23 +54,36 @@ class SVNavigationTreeWidget;
 class SVNetworkImportDialog;
 class SVNetworkExportDialog;
 class SVImportIDFDialog;
+class SVImportDXFDialog;
 class SVNetworkEditDialog;
 class SVViewStateHandler;
 class SVSimulationStartNandrad;
 class SVSimulationStartNetworkSim;
 class SVSimulationShadingOptions;
 class SVCoSimCO2VentilationDialog;
+class SVLcaLccSettingsWidget;
 
 class SVDatabaseEditDialog;
 class SVDBZoneTemplateEditDialog;
 class SVDBDuplicatesDialog;
 class SVPluginLoader;
+class SVSimulationSettingsView;
 
 
 /*! Main window class. */
 class SVMainWindow : public QMainWindow {
 	Q_OBJECT
 public:
+
+
+	enum MainViewMode {
+		/*! None of the main views is shown, the welcome screen should then be present */
+		MV_None,
+		/*! 3d scene geometry view */
+		MV_GeometryView,
+		/*! Simulation settings and simulation start view */
+		MV_SimulationView
+	};
 
 	/*! Returns a pointer to the SVMainWindow instance.
 		Only access this function during the lifetime of the
@@ -125,6 +138,8 @@ public:
 
 	/*! Returns the material edit dialog. */
 	SVDatabaseEditDialog * dbMaterialEditDialog();
+	/*! Returns the EPD edit dialog. */
+	SVDatabaseEditDialog * dbEpdEditDialog();
 	/*! Returns the construction edit dialog. */
 	SVDatabaseEditDialog * dbConstructionEditDialog();
 	/*! Returns the component edit dialog. */
@@ -191,6 +206,11 @@ protected:
 	/*! Called when the window is moved. Repositions measurement widget. */
 	void moveEvent(QMoveEvent *event) override;
 
+signals:
+
+	void screenHasChanged(const QScreen *screen);
+
+
 private slots:
 	/*! Does the entire UI initialization.
 		Triggered with slight delay from the event loop. Make sure no other events kick in before setup has
@@ -244,8 +264,6 @@ private slots:
 	/*! Triggered whenever a project was read successfully. */
 	void onFixProjectAfterRead();
 
-	/*! Connected to SVPreferencesPageStyle */
-	void onStyleChanged();
 	/*! Connected to SVPreferencesPageMisc */
 	void onAutosaveSettingsChanged();
 
@@ -312,9 +330,7 @@ private slots:
 	void on_actionBuildingFloorManager_triggered();
 	void on_actionBuildingSurfaceHeatings_triggered();
 
-	void on_actionToolsExternalPostProcessing_triggered();
 	void on_actionToolsCCMeditor_triggered();
-
 
 	void on_actionViewShowSurfaceNormals_toggled(bool visible);
 	void on_actionViewShowGrid_toggled(bool visible);
@@ -330,8 +346,6 @@ private slots:
 	void on_actionViewBirdsEyeViewSouthWest_triggered();
 	void on_actionViewBirdsEyeViewSouthEast_triggered();
 
-	void on_actionSimulationNANDRAD_triggered();
-	void on_actionSimulationExportFMI_triggered();
 	void on_actionSimulationCO2Balance_triggered();
 
 	void on_actionHelpAboutQt_triggered();
@@ -349,9 +363,25 @@ private slots:
 
 	void on_actionExportNetworkAsGeoJSON_triggered();
 
-	void on_actionCalculateViewFactors_triggered();
+
+	void on_actionGeometryView_triggered();
+
+	void on_actionSimulationSettings_triggered();
+
+	void on_actionOpenPostProcessing_triggered();
+
+	void onShortCutStartSimulation();
+
+	void on_actionEPDElements_triggered();
+
+	void on_actionExternal_Post_Processor_triggered();
+
+	void on_actionDWD_Weather_Data_Converter_triggered();
 
 private:
+
+	void updateMainView();
+
 	/*! Sets up all dock widgets with definition lists. */
 	void setupDockWidgets();
 
@@ -425,6 +455,9 @@ private:
 	*/
 	std::map<QDockWidget*, bool>	m_dockWidgetVisibility;
 
+	/*! Stores the current main view mode (Geometry, Simulation Start, ...) */
+	MainViewMode					m_mainViewMode										= MV_GeometryView;
+
 	/*! Main user interface pointer. */
 	Ui::SVMainWindow			*m_ui													= nullptr;
 	/*! The global undo stack in the program. */
@@ -457,6 +490,9 @@ private:
 	/*! Splitter that contains navigation tree widget and geometry view. */
 	QSplitter					*m_geometryViewSplitter									= nullptr;
 
+	/*! View with simulation settings, climate data, ouptuts and so on */
+	SVSimulationSettingsView	*m_simulationSettingsView								= nullptr;
+
 	/*! Navigation tree widget (left of 3D scene view). */
 	SVNavigationTreeWidget		*m_navigationTreeWidget									= nullptr;
 
@@ -472,16 +508,6 @@ private:
 	/*! Network export dialog */
 	SVNetworkExportDialog		*m_networkExportDialog									= nullptr;
 
-	/*! Network edit dialog */
-	SVNetworkEditDialog			*m_networkEditDialog									= nullptr;
-
-	/*! Simulation start dialog. */
-	SVSimulationStartNandrad	*m_simulationStartNandrad								= nullptr;
-	SVSimulationStartNetworkSim	*m_simulationStartNetworkSim							= nullptr;
-
-	/*! FMI Export dialog. */
-	SVSimulationShadingOptions	*m_shadingCalculationDialog								= nullptr;
-
 
 	/*! Contains the 3D scene view (and tool buttons and stuff). */
 	SVGeometryView				*m_geometryView											= nullptr;
@@ -493,9 +519,10 @@ private:
 	SVPostProcHandler			*m_postProcHandler										= nullptr;
 
 	/*! Central handler for the user interface state. */
-	SVViewStateHandler			*m_viewStateHandler										= nullptr;
+	SVViewStateHandler					*m_viewStateHandler								= nullptr;
 
 	SVDatabaseEditDialog				*m_dbMaterialEditDialog							= nullptr;
+	SVDatabaseEditDialog				*m_dbEpdEditDialog								= nullptr;
 	SVDatabaseEditDialog				*m_dbConstructionEditDialog						= nullptr;
 	SVDatabaseEditDialog				*m_dbWindowEditDialog							= nullptr;
 	SVDatabaseEditDialog				*m_dbWindowGlazingSystemEditDialog				= nullptr;
@@ -529,7 +556,9 @@ private:
 	SVCoSimCO2VentilationDialog			*m_coSimCO2VentilationDialog					= nullptr;
 
 	/*! Timer for auto-save periods. */
-	QTimer								*m_autoSaveTimer = nullptr;
+	QTimer								*m_autoSaveTimer 								= nullptr;
+
+	SVLcaLccSettingsWidget				*m_lcaLccSettingsDialog							= nullptr;
 
 	friend class SVThreadBase;
 };

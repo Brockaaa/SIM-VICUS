@@ -28,6 +28,8 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/../../../externals/CCM/src
 	${PROJECT_SOURCE_DIR}/../../../externals/RoomClipper/src
 	${PROJECT_SOURCE_DIR}/../../../externals/clipper/src
+        ${PROJECT_SOURCE_DIR}/../../../externals/libdxfrw/src
+        ${PROJECT_SOURCE_DIR}/../../../externals/libdxfrw/src/intern
 	${PROJECT_SOURCE_DIR}/../../../externals/Shading/src
 	${PROJECT_SOURCE_DIR}/../../../externals/IDFReader/src
 	${PROJECT_SOURCE_DIR}/../../../externals/clipper/src
@@ -71,6 +73,7 @@ set( APP_SRCS
 # The Qt resource file (*.qrc)
 set( APP_QRCS	
 	${PROJECT_SOURCE_DIR}/../../resources/SIM-VICUS.qrc 
+	${PROJECT_SOURCE_DIR}/../../resources/icons.qrc 
 	${PROJECT_SOURCE_DIR}/../../resources/qdarkstyle/style.qrc
 	${PROJECT_SOURCE_DIR}/../../src/shaders/shaders.qrc 
 )
@@ -148,7 +151,7 @@ target_link_libraries( ${PROJECT_NAME}
 	QuaZIP
 	Nandrad
 	clipper
-	Shading
+    Shading
 	DataIO
 	CCM
 	QtExt

@@ -41,17 +41,17 @@
 #include <NANDRAD_Schedules.h>
 
 #include "VICUS_CodeGenMacros.h"
-#include "VICUS_SupplySystem.h"
 #include "VICUS_Network.h"
 #include "VICUS_Building.h"
 #include "VICUS_ViewSettings.h"
-#include "VICUS_NetworkFluid.h"
-#include "VICUS_NetworkPipe.h"
 #include "VICUS_Outputs.h"
+#include "VICUS_LcaSettings.h"
+#include "VICUS_LccSettings.h"
 #include "VICUS_ComponentInstance.h"
 #include "VICUS_SubSurfaceComponentInstance.h"
 #include "VICUS_EmbeddedDatabase.h"
 #include "VICUS_PlainGeometry.h"
+#include "VICUS_Drawing.h"
 
 
 namespace VICUS {
@@ -70,7 +70,8 @@ public:
 		SG_Building			= 0x001,
 		SG_Network			= 0x002,
 		SG_Obstacle			= 0x004,
-		SG_All				= SG_Building | SG_Network | SG_Obstacle,
+		SG_Drawing			= 0x008,
+		SG_All				= SG_Building | SG_Network | SG_Obstacle | SG_Drawing,
 		NUM_SG
 	};
 
@@ -236,7 +237,7 @@ public:
 	*/
 	void generateNandradProject(NANDRAD::Project & p, QStringList & errorStack, const std::string & nandradProjectPath) const;
 //	void generateBuildingProjectData(NANDRAD::Project & p) const;
-	void generateNetworkProjectData(NANDRAD::Project & p, QStringList & errorStack, const std::string & nandradProjectPath) const;
+	void generateNetworkProjectData(NANDRAD::Project & p, QStringList & errorStack, const std::string & nandradProjectPath, unsigned int networkId) const;
 
 	void generateHeatLoadExport();
 
@@ -245,14 +246,17 @@ public:
 	/*! This function computes the global bounding box of all selected surfaces and the center point in global coordinates.
 		\returns Returns the dimensions of the bounding box and its center point in argument 'center' in global coordinates.
 	*/
-	static IBKMK::Vector3D boundingBox(std::vector<const Surface*> &surfaces,
-									   std::vector<const SubSurface*> &subsurfaces,
-									   IBKMK::Vector3D &center);
+	static IBKMK::Vector3D boundingBox(const std::vector<const Drawing *> &drawings,
+									   const std::vector<const Surface *> &surfaces,
+									   const std::vector<const SubSurface *> &subsurfaces,
+									   IBKMK::Vector3D &center,
+									   bool transformPoints = true);
 
-	/*! This function computes the global bounding box of all selected surfaces and the center point in global coordinates.
+	/*! This function computes the global bounding box of all selected edges & nodes and the center point in global coordinates.
 		\returns Returns the dimensions of the bounding box and its center point in argument 'center' in global coordinates.
 	*/
-	static IBKMK::Vector3D boundingBox(const std::vector<const NetworkEdge*> &edges,
+	static IBKMK::Vector3D boundingBox(const std::vector<const Drawing *> & drawings,
+									   const std::vector<const NetworkEdge*> &edges,
 									   const std::vector<const NetworkNode*> &nodes,
 									   IBKMK::Vector3D &center);
 
@@ -297,9 +301,13 @@ public:
 
 	ViewSettings										m_viewSettings;				// XML:E
 
+	LcaSettings											m_lcaSettings;				// XML:E
+
+	LccSettings											m_lccSettings;				// XML:E
+
 	std::vector<Network>								m_geometricNetworks;		// XML:E
 
-	std::vector<Building>								m_buildings;				// XML:E
+	std::vector<Building>								m_buildings;	 			// XML:E
 
 	/*! All components actually placed in the geometry.
 		This vector is outside buildings, so that two building parts can be connected with
@@ -310,6 +318,9 @@ public:
 
 	/*! Vector with plain (dumb) geometry. */
 	PlainGeometry										m_plainGeometry;			// XML:E
+
+	std::vector<Drawing>								m_drawings;					// XML:E
+
 
 	/*! Path placeholder mappings used to substitute placeholders for database and user databases.
 		These placeholders are read from the path placeholders section of the project file and hold
@@ -355,8 +366,6 @@ public:
 
 
 private:
-
-
 	// Functions below are implemented in VICUS_ProjectGenerator.cpp
 
 	void generateBuildingProjectData(const QString &modelName,
@@ -395,8 +404,11 @@ private:
 	*/
 	void addAndCheckForUniqueness(VICUS::Object* o);
 
+	/*! Adds view factors to the nandrad project.
+		If there are conflicts Exceptions are thrown.
+	*/
 	void addViewFactorsToNandradZones(NANDRAD::Project & p, const std::vector<Project::RoomMapping> &roomMappings, const std::map<unsigned int, unsigned int> &componentInstanceMapping,
-									  std::map<unsigned int, unsigned int> &subSurfaceMapping, QStringList & errorStack) const;
+									  const std::map<unsigned int, unsigned int> &subSurfaceMapping, QStringList & errorStack) const;
 
 	/*! Cached unique-ID -> object ptr map. Greatly speeds up objectByID() and any other lookup functions.
 		This map is updated in updatePointers().

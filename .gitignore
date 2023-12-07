@@ -63,5 +63,9 @@ moc_*
 *.lyx\#
 *.odg\#
 *.ilk
-*.txt
+
+# build
 /build/Qt/.qtc_clangd/
+/release/
+/build-*/
+/SIM-VICUS/projects/build-*/

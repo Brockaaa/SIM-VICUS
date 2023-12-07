@@ -56,9 +56,18 @@ public:
 	/*! Updates the welcome page content. */
 	void updateWelcomePage();
 
+	/*! Set page type. */
+	void setPageType(PageType pType){
+		m_pageType = pType;
+	}
+
+	void setLabelColors(QString color);
+
 public slots:
 	/*! Triggered when user clicks on a project file or external link. */
 	void onAnchorClicked( const QUrl & link );
+
+	void onStyleChanged();
 
 signals:
 	/*! Emitted when user clicked on the file name of a recently used file. */
@@ -83,6 +92,11 @@ private slots:
 
 	/*! Triggered by update manager. */
 	void onUpdateInfoRetrieved(int, QString);
+
+	void on_labelRecentClicked();
+	void on_labelExampleClicked();
+
+
 
 private:
 	Ui::SVWelcomeScreen	*m_ui;

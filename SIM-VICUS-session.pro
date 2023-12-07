@@ -2,6 +2,8 @@
 
 TEMPLATE = subdirs
 
+#EXTRA_LIBS += dxfrw
+
 SUBDIRS = \
 		CO2ComfortVentilation \
 		DummyDatabasePlugin \
@@ -90,3 +92,12 @@ RoomClipper.depends = IBK Nandrad IBKMK TiCPP CCM clipper Vicus
 DummyDatabasePlugin.depends = Vicus
 DummyImportPlugin.depends = Vicus
 
+# only build dxfrw if enabled
+
+contains(EXTRA_LIBS,dxfrw) {
+	SUBDIRS += dxfrw
+
+	dxfrw.file = externals/dxfrw/projects/Qt/dxfrw.pro
+
+	Vicus.depends += dxfrw
+}

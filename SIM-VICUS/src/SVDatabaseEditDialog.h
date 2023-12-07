@@ -31,7 +31,7 @@
 #include <VICUS_InternalLoad.h>
 
 namespace Ui {
-	class SVDatabaseEditDialog;
+class SVDatabaseEditDialog;
 }
 
 class SVAbstractDatabaseTableModel;
@@ -108,6 +108,8 @@ private slots:
 
 	void on_lineEditFilter_returnPressed();
 
+	void onScreenChanged(const QScreen * screen);
+
 private:
 	/*! If table contains an element with matching ID, this row is made current.
 		Signals are blocked in this function.
@@ -117,9 +119,12 @@ private:
 	 */
 	void writeUserDB();
 
+	/*! Adjusts size of dialog and share that is occupied by table view */
+	void resizeDBDialog(double maxShareTableView=0.6);
 
 	// Factory functions to create all the individual dialogs
 	static SVDatabaseEditDialog * createMaterialEditDialog(QWidget * parent);
+	static SVDatabaseEditDialog * createEpdEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createConstructionEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createComponentEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createSubSurfaceComponentEditDialog(QWidget * parent);
@@ -140,8 +145,6 @@ private:
 	static SVDatabaseEditDialog * createFluidEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createSubNetworkEditDialog(QWidget * parent);
 
-	static void resizeDBDialog(QDialog *dlg);
-
 	Ui::SVDatabaseEditDialog *m_ui;
 
 	/*! The sort filter model (owned). */
@@ -153,6 +156,8 @@ private:
 	QWidget							*m_editWidgetContainerWidget = nullptr;
 
 	QString							m_currentFilter = "";
+
+	QSize							m_screenSize;
 
 	friend class SVMainWindow;
 };
