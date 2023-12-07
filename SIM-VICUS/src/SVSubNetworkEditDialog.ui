@@ -169,8 +169,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>345</width>
-            <height>462</height>
+            <width>315</width>
+            <height>463</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="scrollAreaLayout">
@@ -533,7 +533,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="openControllerWidgetButton">
+                 <widget class="QToolButton" name="openControllerWidgetButton">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -558,7 +558,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="removeControllerButton">
+                 <widget class="QToolButton" name="removeControllerButton">
                   <property name="icon">
                    <iconset resource="../resources/SIM-VICUS.qrc">
                     <normaloff>:/gfx/actions/24x24/minus.png</normaloff>:/gfx/actions/24x24/minus.png</iconset>
