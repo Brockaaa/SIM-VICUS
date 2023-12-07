@@ -17,7 +17,7 @@
      <x>0</x>
      <y>0</y>
      <width>1112</width>
-     <height>17</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -165,9 +165,7 @@
     <addaction name="separator"/>
     <addaction name="actionDBNetworkPipes"/>
     <addaction name="actionDBFluids"/>
-    <addaction name="actionDBHydraulicComponents"/>
     <addaction name="actionDBSubNetworks"/>
-    <addaction name="actionDBControllers"/>
     <addaction name="separator"/>
     <addaction name="actionDBRemoveDuplicates"/>
    </widget>
@@ -841,7 +839,7 @@
   </action>
   <action name="actionDWD_Weather_Data_Converter">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/DWDWeatherDataConverter.png</normaloff>:/gfx/actions/DWDWeatherDataConverter.png</iconset>
    </property>
    <property name="text">
@@ -850,7 +848,7 @@
   </action>
   <action name="actionExternal_Post_Processor">
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
+    <iconset>
      <normaloff>:/gfx/actions/32x32/PostProcApp_32x32.png</normaloff>:/gfx/actions/32x32/PostProcApp_32x32.png</iconset>
    </property>
    <property name="text">
@@ -860,7 +858,6 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="../resources/SIM-VICUS.qrc"/>
   <include location="../resources/icons.qrc"/>
  </resources>
  <connections/>
