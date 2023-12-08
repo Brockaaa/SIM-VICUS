@@ -9,6 +9,9 @@
 #include "SVDatabase.h"
 #include "SVSettings.h"
 #include "SVProjectHandler.h"
+#include "SVMainWindow.h"
+#include "SVPreferencesDialog.h"
+#include "SVPreferencesPageStyle.h"
 #include "SVStyle.h"
 
 #include <queue>
@@ -62,7 +65,7 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	}
 
 	resize(width, height);
-	m_ui->scrollArea->setMaximumHeight(height-20);
+	m_ui->scrollArea->setMaximumHeight(height - 20);
 
 
 	m_sceneManager = qobject_cast<SVBMSceneManager*>(m_ui->viewWidget->scene());
@@ -103,6 +106,8 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &SVSubNetworkEditDialog::on_buttonBox_rejected);
 	connect(m_ui->nameLineEdit, &QLineEdit::textChanged, this, &SVSubNetworkEditDialog::on_NameTextChanged);
 	connect(&SVProjectHandler::instance(), &SVProjectHandler::updateSubnetworkThumbnails, this, &SVSubNetworkEditDialog::on_projectSaved);
+	connect(SVMainWindow::instance().preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged, m_ui->tbox, &QtExt::ToolBox::updatePageBackgroundColorFromStyle);
+	connect(SVMainWindow::instance().preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged, this, &SVSubNetworkEditDialog::on_styleChanged);
 
 }
 
@@ -678,6 +683,9 @@ void SVSubNetworkEditDialog::convertSubnetwork()
 			m_subNetwork->m_controllers.push_back(controller);
 		}
 	}
+
+	m_db->removeNotReferencedLocalElements(SVDatabase::DT_NetworkComponents, SVProjectHandler::instance().project());
+	m_db->removeNotReferencedLocalElements(SVDatabase::DT_NetworkControllers, SVProjectHandler::instance().project());
 }
 
 void SVSubNetworkEditDialog::openDBComponentNamingDialog(VICUS::NetworkComponent* component)
@@ -941,12 +949,12 @@ void SVSubNetworkEditDialog::createNewScene()
 	bentry.m_name = VICUS::SUBNETWORK_INLET_NAME;
 	bentry.m_mode = VICUS::BMBlockType::GlobalInlet;
 	bentry.m_size = QSizeF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT);
-	bentry.m_pos = QPointF(0,400);
+	bentry.m_pos = QPointF(0, 400);
 
 	bexit.m_name = VICUS::SUBNETWORK_OUTLET_NAME;
 	bexit.m_mode = VICUS::BMBlockType::GlobalOutlet;
 	bexit.m_size = QSizeF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT);
-	bexit.m_pos = QPointF(1102,400);
+	bexit.m_pos = QPointF(1102, 400);
 
 	VICUS::BMSocket outlet, inlet;
 	inlet.m_name = VICUS::INLET_NAME;
@@ -1057,7 +1065,7 @@ void SVSubNetworkEditDialog::createNewScene()
 		for(unsigned int j = 0; j < outletNodeBlocks.size(); j++){
 			VICUS::BMBlock *block = outletNodeBlocks[j];
 			if(!isBlockAlreadyPlacedOnScene[block->m_name.toUInt()]){
-				block->m_pos = QPointF(VICUS::ENTRANCEEXITBLOCK_WIDTH + (i) * distancePerBlock, 120 * j + 400  - 120 * ( outletNodeBlocks.size() / 2));
+				block->m_pos = QPointF(VICUS::ENTRANCEEXITBLOCK_WIDTH + (i) * distancePerBlock, 120 * j + 392  - 120 * ( outletNodeBlocks.size() / 2));
 				m_sceneManager->addBlock(*block);
 				isBlockAlreadyPlacedOnScene[block->m_name.toUInt()] = true;
 			}
@@ -1066,7 +1074,7 @@ void SVSubNetworkEditDialog::createNewScene()
 		for(unsigned int j = 0; j < inletNodeBlocks.size(); j++){
 			VICUS::BMBlock *block = inletNodeBlocks[j];
 			if(!isBlockAlreadyPlacedOnScene[block->m_name.toUInt()]){
-				block->m_pos = QPointF(VICUS::BLOCK_WIDTH + (i+1) * distancePerBlock, 120 * (j) + 400 - 120 * ( inletNodeBlocks.size() / 2));
+				block->m_pos = QPointF(VICUS::BLOCK_WIDTH + (i+1) * distancePerBlock, 120 * (j) + 392 - 120 * ( inletNodeBlocks.size() / 2));
 				m_sceneManager->addBlock(*block);
 				isBlockAlreadyPlacedOnScene[block->m_name.toUInt()] = true;
 			}
@@ -1080,7 +1088,7 @@ void SVSubNetworkEditDialog::createNewScene()
 			// calculate position in the center between source and target block
 			VICUS::BMBlock connectorBlock(VICUS::CONNECTORBLOCK_NAME + QString::number(nodeId),
 										  outletNodeBlocks[0]->m_pos.x() + VICUS::BLOCK_WIDTH + (inletNodeBlocks[0]->m_pos.x() - outletNodeBlocks[0]->m_pos.x() - VICUS::BLOCK_WIDTH ) / 2,
-										  400 + VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
+										  392 + VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
 			connectorBlock.m_mode = VICUS::BMBlockType::ConnectorBlock;
 			connectorBlock.m_size = QSizeF(VICUS::CONNECTORBLOCK_WIDTH, VICUS::CONNECTORBLOCK_HEIGHT);
 			VICUS::BMSocket inlet(VICUS::INLET_NAME, QPointF(0, connectorBlock.m_size.height() / 2), Qt::Horizontal, true);
@@ -1112,7 +1120,7 @@ void SVSubNetworkEditDialog::createNewScene()
 		if(isBlockAlreadyPlacedOnScene[blocksConnectedToGlobalOutlet[i]]){
 			continue;
 		}
-		mapWithAllBlocks[blocksConnectedToGlobalOutlet[i]].m_pos = QPointF(1102 / 2, 120 * (i) + 400 - 120 * ( blocksConnectedToGlobalOutlet.size() / 2));
+		mapWithAllBlocks[blocksConnectedToGlobalOutlet[i]].m_pos = QPointF(1102 / 2, 120 * (i) + 392 - 120 * ( blocksConnectedToGlobalOutlet.size() / 2));
 		m_sceneManager->addBlock(mapWithAllBlocks[blocksConnectedToGlobalOutlet[i]]);
 		isBlockAlreadyPlacedOnScene[blocksConnectedToGlobalOutlet[i]] = true;
 	}
@@ -1122,8 +1130,8 @@ void SVSubNetworkEditDialog::createNewScene()
 		// Create connector block and socket
 		// calculate position in the center between source and target block
 		VICUS::BMBlock connectorBlock(VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::EXIT_ID),(
-									  bexit.m_pos.x() - mapWithAllBlocks[blocksConnectedToGlobalOutlet[0]].m_pos.x() - VICUS::BLOCK_WIDTH ) / 2 + mapWithAllBlocks[blocksConnectedToGlobalOutlet[0]].m_pos.x(),
-									  400 + VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
+																										bexit.m_pos.x() - mapWithAllBlocks[blocksConnectedToGlobalOutlet[0]].m_pos.x() - VICUS::BLOCK_WIDTH ) / 2 + mapWithAllBlocks[blocksConnectedToGlobalOutlet[0]].m_pos.x(),
+									  392 + VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
 		connectorBlock.m_mode = VICUS::BMBlockType::ConnectorBlock;
 		connectorBlock.m_size = QSizeF(VICUS::CONNECTORBLOCK_WIDTH, VICUS::CONNECTORBLOCK_HEIGHT);
 		VICUS::BMSocket inlet(VICUS::INLET_NAME, QPointF(0, connectorBlock.m_size.height() / 2), Qt::Horizontal, true);
@@ -1158,7 +1166,7 @@ void SVSubNetworkEditDialog::createNewScene()
 		if(isBlockAlreadyPlacedOnScene[blocksConnectedToGlobalInlet[i]]){
 			continue;
 		}
-		mapWithAllBlocks[blocksConnectedToGlobalInlet[i]].m_pos = QPointF(1102 / 2, 120 * (i) - 400 - 120 * ( blocksConnectedToGlobalInlet.size() / 2));
+		mapWithAllBlocks[blocksConnectedToGlobalInlet[i]].m_pos = QPointF(1102 / 2, 120 * (i) - 392 - 120 * ( blocksConnectedToGlobalInlet.size() / 2));
 		m_sceneManager->addBlock(mapWithAllBlocks[blocksConnectedToGlobalInlet[i]]);
 		isBlockAlreadyPlacedOnScene[blocksConnectedToGlobalInlet[i]] = true;
 	}
@@ -1168,8 +1176,8 @@ void SVSubNetworkEditDialog::createNewScene()
 		// Create connector block and socket
 		// calculate position in the center between source and target block
 		VICUS::BMBlock connectorBlock(VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::ENTRANCE_ID),(
-																									mapWithAllBlocks[blocksConnectedToGlobalInlet[0]].m_pos.x()) / 2,
-									  400 + VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
+																											mapWithAllBlocks[blocksConnectedToGlobalInlet[0]].m_pos.x()) / 2,
+									  392 + VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
 		connectorBlock.m_mode = VICUS::BMBlockType::ConnectorBlock;
 		connectorBlock.m_size = QSizeF(VICUS::CONNECTORBLOCK_WIDTH, VICUS::CONNECTORBLOCK_HEIGHT);
 		VICUS::BMSocket inlet(VICUS::INLET_NAME, QPointF(0, connectorBlock.m_size.height() / 2), Qt::Horizontal, true);
@@ -1394,4 +1402,13 @@ void SVSubNetworkEditDialog::on_projectSaved()
 		directory.remove(file);
 		directory.rename(oldFileName, file);
 	}
+}
+
+void SVSubNetworkEditDialog::on_styleChanged()
+{
+	qDebug() << "SVSubNetworkEditDialog::on_styleChanged()";
+	m_ui->frameBuiltIn->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(QtExt::Style::ToolBoxPageBackground));
+	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundBright.name()));
+	m_ui->tbox->layout()->setMargin(0);
+	m_ui->tbox->layout()->setSpacing(0);
 }

@@ -9,9 +9,10 @@
 #include <QHBoxLayout>
 
 
-SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filename, QString text, QString tooltip, int height, QWidget *parent, bool subCategory) :
+SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filename, QString text, QString tooltip, int height, QWidget *parent, bool subCategory, bool inBuild) :
 	QWidget(parent),
-	ui(new Ui::SVSubNetworkEditDialogTableItem)
+	ui(new Ui::SVSubNetworkEditDialogTableItem),
+	m_inbuild(inBuild)
 {
 	ui->setupUi(this);
 	if(!subCategory){
@@ -29,7 +30,7 @@ SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filenam
 		layout->addWidget(iconLabel);
 		layout->addWidget(textLabel);
 		layout->setContentsMargins(0,0,0,0);
-		layout->setSpacing(5);
+		layout->setSpacing(0);
 		layout->setStretchFactor(iconLabel, 0);
 		layout->setStretchFactor(textLabel, 1);
 		setToolTip(tooltip);
@@ -47,6 +48,9 @@ SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filenam
 		setToolTip(tooltip);
 		setLayout(layout);
 	}
+
+	setToolTip(QString("<p style='color: #000000; background-color: #ffffff; border: 1px solid black;'>%1</p>").arg(tooltip));
+
 	this->setAutoFillBackground(true);
 
 }

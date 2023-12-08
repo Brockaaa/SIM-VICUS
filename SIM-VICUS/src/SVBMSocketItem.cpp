@@ -37,6 +37,7 @@
 #include <QStyleOptionGraphicsItem>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsScene>
+#include <QGraphicsItem>
 #include <QFontMetrics>
 #include <QDebug>
 #include <QGraphicsView>
@@ -267,7 +268,12 @@ void SVBMSocketItem::paint(QPainter *painter, const QStyleOptionGraphicsItem * /
 
 
 void SVBMSocketItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-	if(m_socket->m_isSocketOfConnector) return;
+	// if the socket belongs to a ConnectorBlock, we let the click pass through
+	if(m_socket->m_isSocketOfConnector){
+		QGraphicsItem::mousePressEvent(event);
+		return;
+	}
+
 	// starting a connection?
 	// ignore clicks on inlet sockets
 	if (!m_socket->m_isInlet) {

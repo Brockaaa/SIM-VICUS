@@ -174,8 +174,6 @@ void SVNetworkComponentEditWidget::update()
 	updatePolynomPlot();
 }
 
-
-
 void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 	FUNCID(SVNetworkComponentEditWidget::updateParameterTableWidget);
 
@@ -208,7 +206,7 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 	else
 		m_ui->groupBoxModelParameters->setEnabled(true);
 
-	m_ui->tableWidgetParameters->setMaximumHeight(rowCount * m_ui->tableWidgetParameters->rowHeight(0));
+	m_ui->tableWidgetParameters->setMaximumHeight(rowCount * m_ui->tableWidgetParameters->rowHeight(0)+2);
 	m_ui->tableWidgetParameters->blockSignals(true);
 
 	int rowCounter = 0;

@@ -56,7 +56,12 @@ public:
 private:
 
 	void startDrag(Qt::DropActions supportedActions) override;
+
 	void focusOutEvent(QFocusEvent *event) override;
+	/* sets proper marking color when item selected */
+	void on_itemSelectionChanged();
+
+	void on_styleChanged();
 
 public:
 

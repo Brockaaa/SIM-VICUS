@@ -12,8 +12,15 @@
 #include <QMimeData>
 #include <QDrag>
 
+#include <QtExt_Style.h>
+
 #include <VICUS_NetworkController.h>
 #include <VICUS_KeywordListQt.h>
+
+#include "SVMainWindow.h"
+#include "SVPreferencesDialog.h"
+#include "SVPreferencesPageStyle.h"
+#include "SVSettings.h"
 
 
 SVSubNetworkEditDialogTable::SVSubNetworkEditDialogTable(QWidget *parent) :
@@ -21,7 +28,7 @@ SVSubNetworkEditDialogTable::SVSubNetworkEditDialogTable(QWidget *parent) :
 	m_ui(new Ui::SVSubNetworkEditDialogTable)
 {
 	m_ui->setupUi(this);
-	setFrameStyle(0);
+	setFrameStyle(QFrame::NoFrame);
 	setShowGrid(false);
 	setDragEnabled(true);
 	setDropIndicatorShown(true);
@@ -34,7 +41,7 @@ SVSubNetworkEditDialogTable::SVSubNetworkEditDialogTable(QWidget *parent) :
 	m_zoomMeshGraphicsView = dynamic_cast<SVSubNetworkEditDialog*>(parent)->zoomMeshGraphicsView();
 
 	QPalette palette = this->palette();
-	palette.setColor(QPalette::Highlight, palette.color(QPalette::Base));
+	palette.setColor(QPalette::Highlight, palette.color(QPalette::Dark));
 	setPalette(palette);
 
 	QHeaderView *vheader = verticalHeader();
@@ -43,6 +50,7 @@ SVSubNetworkEditDialogTable::SVSubNetworkEditDialogTable(QWidget *parent) :
 	QHeaderView *hheader = horizontalHeader();
 	hheader->setSectionResizeMode(0, QHeaderView::Stretch);
 	hheader->setVisible(false);
+	connect(this, &SVSubNetworkEditDialogTable::itemSelectionChanged, this, &SVSubNetworkEditDialogTable::on_itemSelectionChanged);
 }
 
 SVSubNetworkEditDialogTable::~SVSubNetworkEditDialogTable()
@@ -62,13 +70,16 @@ void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent::ModelType 
 	QString generatedString = entry.toText();
 	m_elementList.push_back(generatedString);
 	m_rowSize++;
+
 }
 
 void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent &component){
 	const int rowHeight = 35;
-	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(component.m_modelType),  QString::fromStdString(component.m_displayName.string("en")), VICUS::KeywordListQt::Description("NetworkComponent::ModelType", component.m_modelType), m_defaultRowHeight, this, true);
+	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(component.m_modelType),
+		QString::fromStdString(component.m_displayName.string("en")), VICUS::KeywordListQt::Description("NetworkComponent::ModelType", component.m_modelType),
+		m_defaultRowHeight, this, true, component.m_builtIn);
 	if(!component.m_builtIn){
-		bmItem1->setStyleSheet(QString("background-color: %1;").arg(SVStyle::instance().m_userDBBackgroundBright.name()));
+		bmItem1->setStyleSheet(QString("background-color: %1;").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
 	}
 	setFixedHeight(height() + rowHeight);
 	insertRow(m_rowSize);
@@ -80,6 +91,7 @@ void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent &component)
 	QString generatedString = entry.toText();
 	m_elementList.push_back(generatedString);
 	m_rowSize++;
+
 }
 
 void SVSubNetworkEditDialogTable::clear()
@@ -90,7 +102,10 @@ void SVSubNetworkEditDialogTable::clear()
 		removeRow(i);
 	}
 	m_rowSize = 0;
-	setFixedHeight(0);
+	if(SVSettings::instance().m_theme == SVSettings::TT_Dark)
+		setFixedHeight(6);
+	else
+		setFixedHeight(0);
 }
 
 
@@ -124,4 +139,20 @@ void SVSubNetworkEditDialogTable::focusOutEvent(QFocusEvent */*event*/)
 	setCurrentCell(-1, -1);
 }
 
+void SVSubNetworkEditDialogTable::on_itemSelectionChanged()
+{
 
+	for(int i = 0; i < rowCount(); i++){
+		SVSubNetworkEditDialogTableItem *item = dynamic_cast<SVSubNetworkEditDialogTableItem*>(cellWidget(i, 0));
+		if(item->m_inbuild){
+			item->setStyleSheet(QString("background-color: %1; ").arg(QtExt::Style::ToolBoxPageBackground));
+		} else{
+			item->setStyleSheet(QString("background-color: %1; ").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
+		}
+	}
+	QModelIndexList selected = selectedIndexes();
+	for(auto index : selected){
+		SVSubNetworkEditDialogTableItem *item = dynamic_cast<SVSubNetworkEditDialogTableItem*>(cellWidget(index.row(), 0));
+		item->setStyleSheet(QString("background-color: %1; QToolTip { color: #000000; background-color: #ffffff; border: 1px solid black; }").arg(SVStyle::instance().m_alternativeBackgroundDark.name()));
+	}
+}

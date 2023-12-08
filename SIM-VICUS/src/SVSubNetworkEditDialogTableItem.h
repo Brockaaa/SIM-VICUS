@@ -12,8 +12,10 @@ class SVSubNetworkEditDialogTableItem : public QWidget
     Q_OBJECT
 
 public:
-    explicit SVSubNetworkEditDialogTableItem(QString filename, QString typeName, QString tooltip, int height, QWidget *parent = nullptr, bool subCategory = false);
+    explicit SVSubNetworkEditDialogTableItem(QString filename, QString typeName, QString tooltip, int height, QWidget *parent = nullptr, bool subCategory = false, bool inbuild = true);
     ~SVSubNetworkEditDialogTableItem();
+
+    bool m_inbuild;
 
 private:
     Ui::SVSubNetworkEditDialogTableItem *ui;

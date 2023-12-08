@@ -34,7 +34,6 @@ INCLUDEPATH = \
 DEPENDPATH = $${INCLUDEPATH}
 
 HEADERS += \
-	../../src/BM_XMLHelpers.h \
 	../../src/VICUS_AbstractDBElement.h \
 	../../src/VICUS_AcousticTemplate.h \
 	../../src/VICUS_ArgsParser.h \
@@ -114,7 +113,6 @@ HEADERS += \
 	../../src/VICUS_utilities.h
 
 SOURCES += \
-	../../src/BM_XMLHelpers.cpp \
 	../../src/VICUS_AbstractDBElement.cpp \
 	../../src/VICUS_AcousticTemplate.cpp \
 	../../src/VICUS_ArgsParser.cpp \
@@ -122,7 +120,6 @@ SOURCES += \
     ../../src/VICUS_BMConnector.cpp \
     ../../src/VICUS_BMGlobals.cpp \
     ../../src/VICUS_BMNetwork.cpp \
-    ../../src/VICUS_BMSocket.cpp \
 	../../src/VICUS_BTFReader.cpp \
 	../../src/VICUS_BoundaryCondition.cpp \
 	../../src/VICUS_Component.cpp \

@@ -78,12 +78,6 @@ public:
 	{
 	}
 
-	/*! Reads content of the block from XML stream. */
-	void readXML(QXmlStreamReader & reader);
-
-	/*! Dumps out content of block to stream writer. */
-	void writeXML(QXmlStreamWriter & writer) const;
-
 	/*! Socket direction indicates into which direction a socket is pointing. */
 	enum SocketDirection {
 		Left,

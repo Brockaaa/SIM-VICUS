@@ -22,6 +22,9 @@
   <property name="windowTitle">
    <string>SubNetwork Editor</string>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
     <widget class="QSplitter" name="splitter">
@@ -68,7 +71,7 @@
          <item>
           <widget class="QLabel" name="labelBuiltIn">
            <property name="text">
-            <string> builtIn Elements </string>
+            <string> built-in elements </string>
            </property>
           </widget>
          </item>
@@ -103,7 +106,7 @@
          <item>
           <widget class="QLabel" name="labelUserDB">
            <property name="text">
-            <string> UserDB elements </string>
+            <string>  user db elements </string>
            </property>
           </widget>
          </item>

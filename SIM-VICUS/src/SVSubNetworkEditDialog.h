@@ -65,6 +65,8 @@ private slots:
 	void on_changeDBElementNameButton_clicked();
 	/*! updates names of screenshots of subnetworks when project is saved */
 	void on_projectSaved();
+	/*! Connected to styleChanged signal of SVPreferencesDialog */
+	void on_styleChanged();
 
 private:
 	/*! Connected to slot newBlockSelected() in SVBMSceneManager, updates the widgets displaying informations of selected Block.
