@@ -291,7 +291,7 @@ signals:
 	void updateActions();
 
 	/*! Emitted from saveProject(), connected to SVSubNetworkEditDialog to update screenshots of Subnetworks */
-	void updateSubnetworkThumbnails();
+	void projectSaved();
 
 	/*! A signal emitted from addToRecentFiles()
 

@@ -105,9 +105,9 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &SVSubNetworkEditDialog::on_buttonBox_accepted);
 	connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &SVSubNetworkEditDialog::on_buttonBox_rejected);
 	connect(m_ui->nameLineEdit, &QLineEdit::textChanged, this, &SVSubNetworkEditDialog::on_NameTextChanged);
-	connect(&SVProjectHandler::instance(), &SVProjectHandler::updateSubnetworkThumbnails, this, &SVSubNetworkEditDialog::on_projectSaved);
 	connect(SVMainWindow::instance().preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged, m_ui->tbox, &QtExt::ToolBox::updatePageBackgroundColorFromStyle);
 	connect(SVMainWindow::instance().preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged, this, &SVSubNetworkEditDialog::on_styleChanged);
+	connect(&SVProjectHandler::instance(), &SVProjectHandler::projectSaved, this, &SVSubNetworkEditDialog::on_projectSaved);
 
 }
 
@@ -417,7 +417,7 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 
 	// create splash screen
 	QPixmap p = m_sceneManager->generatePixmap(QSize(815, 480));
-	QString thumbNailPath = QtExt::Directories::userDataDir()  + "/thumbs";
+	QString thumbNailPath = QtExt::Directories::userDataDir()  + "/thumbs/subnetworks/";
 	if (!QDir(thumbNailPath).exists())
 		QDir().mkdir(thumbNailPath);
 
@@ -425,7 +425,7 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 	thumbName.replace("/", "_");
 	thumbName.replace("\\", "_");
 	thumbName.replace(":", "_");
-	QString thumbPath = QtExt::Directories::userDataDir()  + "/thumbs/" + "~SN" + thumbName + QString::number(m_subNetwork->m_id) + ".png";
+	QString thumbPath = thumbNailPath + QString("~SN%1%2.png").arg(thumbName).arg(m_subNetwork->m_id);
 	p.save(thumbPath);
 	qDebug() << "Saved at: " << thumbPath;
 
@@ -470,7 +470,7 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 		}
 	}
 
-	this->close();
+//	this->close();
 }
 
 void SVSubNetworkEditDialog::on_buttonBox_rejected()
@@ -657,26 +657,29 @@ unsigned int SVSubNetworkEditDialog::newControllerID(){
 	return id;
 }
 
-void SVSubNetworkEditDialog::convertSubnetwork()
-{
+void SVSubNetworkEditDialog::convertSubnetwork() {
 	FUNCID(SVSubNetworkEditDialog::convertSubnetwork);
 	// iterates over every element and copies component into Subnetwork and create new IDs
 	for(VICUS::NetworkElement &element : m_subNetwork->m_elements){
 		if(element.m_componentId != VICUS::INVALID_ID){
 			VICUS::NetworkComponent *componentPtr = m_db->m_networkComponents[element.m_componentId];
-			Q_ASSERT(componentPtr != nullptr);
+			if (componentPtr == nullptr)
+				throw IBK::Exception(tr("Could not find network component #%1.")
+										 .arg(element.m_componentId).toStdString(), FUNC_ID);
 			VICUS::NetworkComponent component = *componentPtr;
 			component.m_id = VICUS::largestUniqueId(m_subNetwork->m_components);
 			element.m_componentId = component.m_id;
 			m_subNetwork->m_components.push_back(component);
 		} else {
-			throw IBK::Exception(tr("Invalid networkComponent ID %1  in subnetwork")
+			throw IBK::Exception(tr("Invalid network component #%1.")
 									 .arg(element.m_componentId).toStdString(), FUNC_ID);
 		}
 		// checks if element has a controller, if yes, copy it into subNetwork and create new IDs
 		if(element.m_controlElementId != VICUS::INVALID_ID){
 			VICUS::NetworkController *controllerPtr = m_db->m_networkControllers[element.m_controlElementId];
-			Q_ASSERT(controllerPtr != nullptr);
+			if (controllerPtr == nullptr)
+				throw IBK::Exception(tr("Could not find network controller #%1.")
+										 .arg(element.m_controlElementId).toStdString(), FUNC_ID);
 			VICUS::NetworkController controller = *controllerPtr;
 			controller.m_id = VICUS::largestUniqueId(m_subNetwork->m_controllers);
 			element.m_controlElementId = controller.m_id;
@@ -1389,7 +1392,7 @@ void SVSubNetworkEditDialog::on_changeDBElementNameButton_clicked()
 
 void SVSubNetworkEditDialog::on_projectSaved()
 {
-	QDir directory = QtExt::Directories::userDataDir() + "/thumbs/";
+	QDir directory = QtExt::Directories::userDataDir() + "/thumbs/subnetworks/";
 	QStringList filter;
 	filter << "~SN*";
 	directory.setNameFilters(filter);

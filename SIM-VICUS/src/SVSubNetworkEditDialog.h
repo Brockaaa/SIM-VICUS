@@ -74,7 +74,7 @@ private:
 	void blockSelectedEvent();
 	/*! Connected to slot newConnectorSelected(). Evaluates if Connector is deletable, if yes, activate removeButton */
 	void connectorSelectedEvent(const QString & sourceSocketName, const QString & targetSocketName);
-	/*/ Connected to selectionCleared() in SVBMSceneManager, resets all widgets and buttons that were activated when selcting Blocks or Connectors */
+	/*! Connected to selectionCleared() in SVBMSceneManager, resets all widgets and buttons that were activated when selcting Blocks or Connectors */
 	void selectionClearedEvent();
 	/*! Creates the ToolBox, also used to update the ToolBox */
 	void updateToolBoxPages();
