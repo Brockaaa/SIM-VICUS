@@ -513,6 +513,7 @@ void SVBMSceneManager::setControllerID(const VICUS::BMBlock * block, unsigned in
 
 void SVBMSceneManager::createConnection(const VICUS::BMBlock * startBlock, const VICUS::BMBlock * targetBlock,
 										const VICUS::BMSocket * startSocket, const VICUS::BMSocket * targetSocket) {
+	Q_ASSERT(startBlock && targetBlock && startSocket && targetSocket);
 	VICUS::BMConnector newConnector;
 	newConnector.m_name = VICUS::CONNECTOR_NAME;
 	newConnector.m_sourceSocket = startBlock->m_name + "." + startSocket->m_name;

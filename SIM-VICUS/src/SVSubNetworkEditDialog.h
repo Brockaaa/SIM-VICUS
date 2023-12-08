@@ -110,7 +110,7 @@ private:
 	/*! Opens a dialog to change or assign the name of a component */
 	void openDBComponentNamingDialog(VICUS::NetworkComponent* component);
 	/*! Checks for validity of NetworkElements */
-	bool checkValidityOfNetworkElements();
+	void checkValidityOfNetworkElements();
 	/*! Checks if the data in NetworkElement is compatible with the data in BMNetwork, called in updateNetwork() */
 	bool checkValidityOfNetworkElementsAndGraphicalNetwork();
 	/*! erases previous graphical Network and fills scene with blocks and connectors */
