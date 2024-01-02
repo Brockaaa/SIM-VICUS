@@ -273,14 +273,13 @@ void SVProjectHandler::loadProject(QWidget * parent, QString fileName,	bool sile
 	try {
 
 		// delete temporary Subnetwork thumbnails
-		QDir directory = QtExt::Directories::userDataDir() + "/thumbs/";
+		QDir directory = QtExt::Directories::userDataDir() + "/thumbs/subnetworks/";
 		QStringList filter;
 		filter << "~SN*";
 		directory.setNameFilters(filter);
 
 		QStringList fileList = directory.entryList();
 		for(QString file : fileList){
-			qDebug() << "Files found: " << file;
 			directory.remove(file);
 		}
 

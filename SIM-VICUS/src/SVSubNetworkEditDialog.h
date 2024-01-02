@@ -34,9 +34,6 @@ public:
 	void setupSubNetwork(VICUS::SubNetwork * subNetwork);
 	/*! opens window, sets appropriate height and weight values for the Splitter and the Scene */
 	void open();
-	/*! Gets called whenever the QDialog Window is resized, sets appropriate height values for a wrapper Widget of a QtExtToolBox */
-	void resize(int w, int h);
-
 
 private slots:
 	/*! gets called when removeBlockOrConnectorButton is clicked, checks if Block or Connector is selected, then forwards request to SVBMSceneManager */
@@ -62,7 +59,10 @@ private slots:
 	void on_removeFromUserDBButton_clicked();
 	/*! get called when changeDBElementNameButton is cliclked
 	 * calls small dialog to change name */
-	void on_changeDBElementNameButton_clicked();
+	void on_toolButtonRename_clicked();
+	/*! gets called when an element in the QtExtToolBox is double clicked
+	 *  opens a dialog to edit the Component */
+	void on_componentDoubleClicked();
 	/*! updates names of screenshots of subnetworks when project is saved */
 	void on_projectSaved();
 	/*! Connected to styleChanged signal of SVPreferencesDialog */

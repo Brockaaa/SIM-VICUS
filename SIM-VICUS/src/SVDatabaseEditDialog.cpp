@@ -778,6 +778,7 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createSubNetworkEditDialog(QWidget *
 		new SVDBSubNetworkEditWidget(parent),
 		tr("Sub Networks Database"), tr("Sub Networks Properties"), true
 	);
+	connect(dlg->m_ui->tableView, &QTableView::doubleClicked, (SVDBSubNetworkEditWidget*)dlg->m_editWidget, &SVDBSubNetworkEditWidget::on_ItemDoubleClicked);
 	return dlg;
 }
 

@@ -109,6 +109,7 @@ HEADERS += \
 	../../src/QtExt_Splitter.h \
 	../../src/QtExt_StackedWidgetResizable.h \
 	../../src/QtExt_Style.h \
+	../../src/QtExt_SubNetworkHoverToSelect.h \
 	../../src/QtExt_Table.h \
 	../../src/QtExt_TableCell.h \
 	../../src/QtExt_TableWidget.h \
@@ -190,6 +191,7 @@ SOURCES += \
 	../../src/QtExt_Splitter.cpp \
 	../../src/QtExt_StackedWidgetResizable.cpp \
 	../../src/QtExt_Style.cpp \
+	../../src/QtExt_SubNetworkHoverToSelect.cpp \
 	../../src/QtExt_Table.cpp \
 	../../src/QtExt_TableCell.cpp \
 	../../src/QtExt_TableWidget.cpp \

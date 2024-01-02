@@ -206,7 +206,10 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 	else
 		m_ui->groupBoxModelParameters->setEnabled(true);
 
-	m_ui->tableWidgetParameters->setMaximumHeight(rowCount * m_ui->tableWidgetParameters->rowHeight(0)+2);
+	if(SVSettings::instance().m_theme == SVSettings::TT_Dark)
+		m_ui->tableWidgetParameters->setMaximumHeight(rowCount * m_ui->tableWidgetParameters->rowHeight(0)+6);
+	else
+		m_ui->tableWidgetParameters->setMaximumHeight(rowCount * m_ui->tableWidgetParameters->rowHeight(0)+2);
 	m_ui->tableWidgetParameters->blockSignals(true);
 
 	int rowCounter = 0;

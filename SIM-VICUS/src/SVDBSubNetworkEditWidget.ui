@@ -58,41 +58,29 @@
      <property name="autoFillBackground">
       <bool>true</bool>
      </property>
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
+     <property name="lineWidth">
+      <number>0</number>
      </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <widget class="QLabel" name="label">
+     <widget class="QtExt_SubNetworkHoverToSelect" name="widgetHoverToSelect" native="true">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>10</y>
-        <width>815</width>
-        <height>480</height>
+        <x>0</x>
+        <y>0</y>
+        <width>835</width>
+        <height>500</height>
        </rect>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
       </property>
       <property name="minimumSize">
        <size>
-        <width>815</width>
-        <height>480</height>
+        <width>835</width>
+        <height>500</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>815</width>
-        <height>480</height>
+        <width>835</width>
+        <height>500</height>
        </size>
-      </property>
-      <property name="text">
-       <string/>
       </property>
      </widget>
     </widget>
@@ -129,6 +117,12 @@
    <class>QtExt::LanguageStringEditWidget1</class>
    <extends>QLineEdit</extends>
    <header location="global">QtExt_LanguageStringEditWidget1.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QtExt_SubNetworkHoverToSelect</class>
+   <extends>QWidget</extends>
+   <header location="global">QtExt_SubNetworkHoverToSelect.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

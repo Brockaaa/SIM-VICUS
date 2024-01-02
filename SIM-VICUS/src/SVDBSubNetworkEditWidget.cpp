@@ -26,7 +26,9 @@ SVDBSubNetworkEditWidget::SVDBSubNetworkEditWidget(QWidget *parent) :
 
 	//set background color of frame to white
 	m_ui->previewFrame->setFrameShape(QFrame::Box);
-	m_ui->previewFrame->setStyleSheet("QFrame { background-color: white; }");
+	// no padding or margins
+	m_ui->previewFrame->setStyleSheet("QFrame { background-color: white; border: 0px; padding: 0px; margin: 0px; }");
+	connect(m_ui->widgetHoverToSelect, &QtExt_SubNetworkHoverToSelect::thumbNailClicked, this, &SVDBSubNetworkEditWidget::on_ThumbNailClicked);
 
 }
 
@@ -51,7 +53,7 @@ void SVDBSubNetworkEditWidget::updateInput(int id) {
 		m_ui->lineEditSubNetworkName->setText(QString());
 
 		// remove any QPixmap in the Subnetwork preview label
-		m_ui->label->setPixmap(QPixmap());
+		m_ui->widgetHoverToSelect->setThumbnail(QPixmap());
 
 		// Note: color button is disabled, hence color is gray
 		return;
@@ -92,17 +94,18 @@ void SVDBSubNetworkEditWidget::updateTableWidget() {
 	thumbName.replace("\\", "_");
 	thumbName.replace(":", "_");
 
-	QString thumbNameWithTilde = "~SN" + thumbName + QString::number(m_currentSubNet->m_id) + ".png";
-	QString iconPath = QtExt::Directories::userDataDir()  + "/thumbs/" + thumbNameWithTilde;
+	QString thumbNameWithTilde = "~SN" + thumbName + QString("#") +  QString::number(m_currentSubNet->m_id) + ".png";
+	QString iconPath = QtExt::Directories::userDataDir()  + "/thumbs/subnetworks/" + thumbNameWithTilde;
 
+	qDebug() << "iconPath: " << iconPath;
 	QFileInfo thumbFileInfo(iconPath);
 	if (!thumbFileInfo.exists()){
-		QString thumbNameWithoutTilde = "SN" + thumbName + QString::number(m_currentSubNet->m_id) + ".png";
-		iconPath = QtExt::Directories::userDataDir()  + "/thumbs/" + thumbNameWithoutTilde;
+		QString thumbNameWithoutTilde = thumbNameWithTilde.remove(0,1);
+		iconPath = QtExt::Directories::userDataDir()  + "/thumbs/subnetworks/" + thumbNameWithoutTilde;
 		thumbFileInfo.setFile(iconPath);
-	} else if (!thumbFileInfo.exists()){
+	}
+	if (!thumbFileInfo.exists()){
 		iconPath =":/gfx/modeltypeicons/defaultSplashscreen.png";
-
 	}
 	QPixmap pixmap(iconPath);
 	if (pixmap.isNull())
@@ -111,8 +114,7 @@ void SVDBSubNetworkEditWidget::updateTableWidget() {
 	pixmap = pixmap.scaled(815, 480, Qt::KeepAspectRatio);
 
 	// Create a label to show the image
-	m_ui->label->setPixmap(pixmap);
-	m_ui->label->setAlignment(Qt::AlignCenter);
+	m_ui->widgetHoverToSelect->setThumbnail(pixmap);
 }
 
 
@@ -157,3 +159,13 @@ void SVDBSubNetworkEditWidget::on_subNetworkEditDialog_closed(int result)
 	updateTableWidget();
 }
 
+void SVDBSubNetworkEditWidget::on_ItemDoubleClicked(const QModelIndex &index)
+{
+	on_editSubNetworkButton_clicked();
+}
+
+
+void SVDBSubNetworkEditWidget::on_ThumbNailClicked()
+{
+	on_editSubNetworkButton_clicked();
+}

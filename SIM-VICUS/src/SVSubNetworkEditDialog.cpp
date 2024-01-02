@@ -51,30 +51,13 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 
 	m_db = db;
 
-	// resize window
-	QScreen *screen = QGuiApplication::primaryScreen();
-	Q_ASSERT(screen!=nullptr);
-	QRect rect = screen->geometry();
-	int width = int(rect.width()* 0.95);
-	int height = int(0.8*rect.height());
-
-	if(width < MINIMUMDIALOGWIDTH){
-		width = MINIMUMDIALOGWIDTH;
-	}
-	if(height < MINIMUMDIALOGHEIGHT){
-		height = MINIMUMDIALOGHEIGHT;
-	}
-
-	resize(width, height);
-	m_ui->scrollArea->setMaximumHeight(height - 20);
-
-
 	m_sceneManager = qobject_cast<SVBMSceneManager*>(m_ui->viewWidget->scene());
 	setupSubNetwork(subNetwork);
 
 	for(unsigned int i = 0; i < VICUS::NetworkComponent::ComponentCategory::NUM_CC; i++){
 		m_tables.push_back(new SVSubNetworkEditDialogTable(this));
 		connect(m_tables[i], &SVSubNetworkEditDialogTable::itemSelectionChanged, this, &SVSubNetworkEditDialog::on_componentSelected);
+		connect(m_tables[i], &SVSubNetworkEditDialogTable::cellDoubleClicked, this, &SVSubNetworkEditDialog::on_componentDoubleClicked);
 	}
 
 	// populate tool box
@@ -131,6 +114,22 @@ void SVSubNetworkEditDialog::open()
 {
 	QDialog::open();
 
+	// resize window
+	QScreen *screen = QGuiApplication::primaryScreen();
+	Q_ASSERT(screen!=nullptr);
+	QRect rect = screen->geometry();
+	int width = int(rect.width()* 0.95);
+	int height = int(0.8*rect.height());
+
+	if(width < MINIMUMDIALOGWIDTH){
+		width = MINIMUMDIALOGWIDTH;
+	}
+	if(height < MINIMUMDIALOGHEIGHT){
+		height = MINIMUMDIALOGHEIGHT;
+	}
+
+	resize(width, height);
+
 	QList<int> ratio;
 	ratio << 300 << m_ui->splitter->width()-300;
 	m_ui->splitter->setSizes(ratio);
@@ -145,17 +144,12 @@ void SVSubNetworkEditDialog::open()
 	selectionClearedEvent();
 	m_sceneManager->update();
 	updateToolBoxPages();
-}
 
-void SVSubNetworkEditDialog::resize(int w, int h)
-{
-	QDialog::resize(QSize(w,h));
-	m_ui->scrollArea->setMaximumHeight(h-20);
 }
 
 void SVSubNetworkEditDialog::updateToolBoxPages(){
 
-	for (SVSubNetworkEditDialogTable *table : m_tables){
+	for(SVSubNetworkEditDialogTable *table : m_tables) {
 		table->clearSelection();
 		table->clear();
 	}
@@ -215,7 +209,38 @@ void SVSubNetworkEditDialog::updateNetwork() {
 	bool keepGraphicalNetwork = checkValidityOfNetworkElementsAndGraphicalNetwork();
 	if (!keepGraphicalNetwork)
 		createNewScene();
-	else
+	else if(m_subNetwork->m_graphicalNetwork.m_blocks.size() == 0){
+		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
+
+		VICUS::BMBlock bentry, bexit;
+		bentry.m_name = VICUS::SUBNETWORK_INLET_NAME;
+		bentry.m_mode = VICUS::BMBlockType::GlobalInlet;
+		bentry.m_size = QSizeF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT);
+		bentry.m_pos = QPointF(0,400);
+
+		bexit.m_name = VICUS::SUBNETWORK_OUTLET_NAME;
+		bexit.m_mode = VICUS::BMBlockType::GlobalOutlet;
+		bexit.m_size = QSizeF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT);
+		bexit.m_pos = QPointF(1102,400);
+
+		VICUS::BMSocket outlet, inlet;
+		inlet.m_name = VICUS::INLET_NAME;
+		inlet.m_isInlet = true;
+		inlet.m_id = VICUS::EXIT_ID;
+		inlet.m_orientation = Qt::Horizontal;
+		inlet.m_pos = QPointF(0,VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
+		bexit.m_sockets.append(inlet);
+
+		outlet.m_name = VICUS::OUTLET_NAME;
+		outlet.m_isInlet = false;
+		outlet.m_id = VICUS::ENTRANCE_ID;
+		outlet.m_orientation = Qt::Horizontal;
+		outlet.m_pos = QPointF(VICUS::ENTRANCEEXITBLOCK_WIDTH,VICUS::ENTRANCEEXITBLOCK_HEIGHT / 2);
+		bentry.m_sockets.append(outlet);
+
+		m_sceneManager->addBlock(bentry);
+		m_sceneManager->addBlock(bexit);
+	} else
 		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
 
 	// add Controller displayName to BlockItem
@@ -340,7 +365,7 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 	thumbName.replace("/", "_");
 	thumbName.replace("\\", "_");
 	thumbName.replace(":", "_");
-	QString thumbPath = thumbNailPath + QString("~SN_%1_#%2.png").arg(thumbName).arg(m_subNetwork->m_id);
+	QString thumbPath = thumbNailPath + QString("~SN%1#%2.png").arg(thumbName).arg(m_subNetwork->m_id);
 	p.save(thumbPath);
 	qDebug() << "Saved at: " << thumbPath;
 
@@ -608,10 +633,6 @@ void SVSubNetworkEditDialog::openDBComponentNamingDialog(VICUS::NetworkComponent
 {
 	FUNCID(SVSubNetworkEditDialog::openDBComponentNamingDialog);
 
-	// TODO Maik: simpler? Default buttonbox vom QDialog?
-	// default name init
-	// update name in table
-
 	// open dialog
 	QDialog *namingDialog = new QDialog(this);
 	namingDialog->setWindowTitle(tr("Set Component Name"));
@@ -624,9 +645,10 @@ void SVSubNetworkEditDialog::openDBComponentNamingDialog(VICUS::NetworkComponent
 	layout->addWidget(buttonBox);
 	connect(buttonBox, SIGNAL(accepted()), namingDialog, SLOT(accept()));
 	connect(buttonBox, SIGNAL(rejected()), namingDialog, SLOT(reject()));
+
 	// get name from DB
-	QString name = QString::fromStdString(component->m_displayName.string(IBK::MultiLanguageString::m_language));
-	editWidget->setText(name);
+	editWidget->setString(component->m_displayName);
+
 	// show dialog
 	if(namingDialog->exec() == QDialog::Accepted){
 		// save name to DB
@@ -1218,16 +1240,16 @@ void SVSubNetworkEditDialog::on_componentSelected()
 
 	if(row == -1){
 		m_ui->removeFromUserDBButton->setEnabled(false);
-		m_ui->changeDBElementNameButton->setEnabled(false);
+		m_ui->toolButtonRename->setEnabled(false);
 		return;
 	}
 	SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry entry = SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry(m_senderTable->m_elementList[(unsigned int)row]);
 	if(entry.m_id != VICUS::INVALID_ID){
 		m_ui->removeFromUserDBButton->setEnabled(!m_db->m_networkComponents[entry.m_id]->m_builtIn);
-		m_ui->changeDBElementNameButton->setEnabled(!m_db->m_networkComponents[entry.m_id]->m_builtIn);
+		m_ui->toolButtonRename->setEnabled(!m_db->m_networkComponents[entry.m_id]->m_builtIn);
 	} else {
 		m_ui->removeFromUserDBButton->setEnabled(false);
-		m_ui->changeDBElementNameButton->setEnabled(false);
+		m_ui->toolButtonRename->setEnabled(false);
 	}
 }
 
@@ -1264,7 +1286,7 @@ void SVSubNetworkEditDialog::on_removeFromUserDBButton_clicked()
 	updateToolBoxPages();
 }
 
-void SVSubNetworkEditDialog::on_changeDBElementNameButton_clicked()
+void SVSubNetworkEditDialog::on_toolButtonRename_clicked()
 {
 
 	if(m_senderTable == nullptr)
@@ -1277,6 +1299,26 @@ void SVSubNetworkEditDialog::on_changeDBElementNameButton_clicked()
 
 	VICUS::NetworkComponent* component = m_db->m_networkComponents[entry.m_id];
 	Q_ASSERT(component != nullptr);
+	openDBComponentNamingDialog(component);
+	updateToolBoxPages();
+}
+
+void SVSubNetworkEditDialog::on_componentDoubleClicked()
+{
+	if(m_senderTable == nullptr)
+		return;
+	int row = m_senderTable->currentRow();
+	if(row == -1)
+		return;
+
+	SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry entry = SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry(m_senderTable->m_elementList[(unsigned int)row]);
+
+	if(entry.m_id == VICUS::INVALID_ID)
+		return;
+	VICUS::NetworkComponent* component = m_db->m_networkComponents[entry.m_id];
+	Q_ASSERT(component != nullptr);
+	if(component->m_builtIn)
+		return;
 	openDBComponentNamingDialog(component);
 	updateToolBoxPages();
 }

@@ -625,15 +625,22 @@ void SVBMSceneManager::removeBlock(unsigned int blockIndex) {
 		} else if(checkOneConnectionPerSocket(block)){
 			VICUS::BMConnector newConnector;
 			for(VICUS::BMConnector * con : m_blockConnectorMap[block]){
-				if(con->m_sourceSocket.contains(block->m_name)){
-					newConnector.m_targetSocket = con->m_targetSocket;
-				} else {
-					newConnector.m_sourceSocket = con->m_sourceSocket;
+				if(!con->m_sourceSocket.contains(block->m_name)){
+					if(con->m_sourceSocket.contains(".inlet"))
+						newConnector.m_targetSocket = con->m_sourceSocket;
+					else
+						newConnector.m_sourceSocket = con->m_sourceSocket;
+				} else if(!con->m_targetSocket.contains(block->m_name)){
+					if(con->m_targetSocket.contains(".inlet"))
+						newConnector.m_targetSocket = con->m_targetSocket;
+					else
+						newConnector.m_sourceSocket = con->m_targetSocket;
 				}
 			}
-			removeConnectorBlock(block);
 
-			unsigned int id = newConnector.m_sourceSocket.split(".")[1].toInt();
+			QString blockName = block->m_name;
+			unsigned int id = blockName.remove(0, VICUS::CONNECTORBLOCK_NAME.length()).toUInt();
+			removeConnectorBlock(block);
 
 			newConnector.m_name = VICUS::CONNECTOR_NAME;
 			m_network->m_connectors.push_back(newConnector);
@@ -655,7 +662,6 @@ void SVBMSceneManager::removeBlock(unsigned int blockIndex) {
 			} else {
 				const_cast<VICUS::BMSocket*>(targetSocket)->m_id = VICUS::EXIT_ID;
 				const_cast<VICUS::BMSocket*>(sourceSocket)->m_id = VICUS::EXIT_ID;
-				return;
 			}
 			if(sourceBlock->m_mode != VICUS::BMBlockType::GlobalInlet){
 				const_cast<VICUS::BMSocket*>(sourceSocket)->m_id = id;
@@ -1006,6 +1012,9 @@ bool SVBMSceneManager::evaluateNewConnection(QString startSocketName, QString ta
 	}
 	/* if sourceBlock not connected and targetBlock is connected, expects that targetBlock is connected */
 	if(startSocket->m_id == VICUS::INVALID_ID && targetSocket->m_id != VICUS::INVALID_ID){
+		// if connection directly connects the inlet and outletsockets of the startBlock, return
+		if(startBlock->m_sockets[0].m_id == targetSocket->m_id) return false;
+
 		startSocket->m_id = targetSocket->m_id;
 		// if targetBlock is a ConnectorBlock
 		if(targetBlock->m_mode == VICUS::BMBlockType::ConnectorBlock){
@@ -1034,6 +1043,8 @@ bool SVBMSceneManager::evaluateNewConnection(QString startSocketName, QString ta
 
 	// if sourceBlock is connected and targetBlock is not connected
 	else if(startSocket->m_id != VICUS::INVALID_ID && targetSocket->m_id == VICUS::INVALID_ID){
+		// if connection directly connects the inlet and outletsockets of the targetSocket, return
+		if(targetBlock->m_sockets[1].m_id == startSocket->m_id) return false;
 		targetSocket->m_id = startSocket->m_id;
 		if(startBlock->m_mode == VICUS::BMBlockType::ConnectorBlock){
 			createConnection(startBlock, targetBlock, startSocket, targetSocket);
@@ -1084,19 +1095,19 @@ void SVBMSceneManager::triggerItemChange()
 
 bool SVBMSceneManager::checkOneConnectionPerSocket(const VICUS::BMBlock *block)
 {
+	int outletConnectionCounter = 0;
 	int inletConnectionCounter = 0;
-	int outputConnectionCounter = 0;
 	// iterates over all Connectors and counts the number of connections
 	for(VICUS::BMConnector *con : m_blockConnectorMap[block]){
-		if(con->m_sourceSocket == QString(block->m_name) + "." + VICUS::OUTLET_NAME){
+		if(con->m_sourceSocket == QString(block->m_name) + "." + VICUS::OUTLET_NAME || con->m_targetSocket == QString(block->m_name) + "." + VICUS::OUTLET_NAME){
+			outletConnectionCounter++;
+		} else if(con->m_targetSocket == QString(block->m_name) + "." + VICUS::INLET_NAME || con->m_sourceSocket == QString(block->m_name) + "." + VICUS::INLET_NAME){
 			inletConnectionCounter++;
-		} else if(con->m_targetSocket == QString(block->m_name) + "." + VICUS::INLET_NAME){
-			outputConnectionCounter++;
-		}
 
+		} // TODO Edge case connectorblock mit globaloutlet verbunden!
 	}
 	// if both sockets have exactly one connection, return true, else false
-	if(inletConnectionCounter != 1 || outputConnectionCounter != 1){
+	if(outletConnectionCounter != 1 || inletConnectionCounter != 1){
 		return false;
 	}
 	return true;
