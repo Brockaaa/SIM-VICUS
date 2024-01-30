@@ -98,6 +98,7 @@ void Scene::create(SceneView * parent, std::vector<ShaderProgram> & shaderProgra
 	m_newGeometryObject.create(m_fixedColorTransformShader);
 	m_newSubSurfaceObject.create(m_buildingShader->shaderProgram());
 	m_measurementObject.create(m_measurementShader);
+	m_trimmingObject.create(m_buildingShader);
 
 	// create surface normals object already, though we update vertex buffer object later when we actually have geometry
 	m_surfaceNormalsObject.create(m_surfaceNormalsShader);
@@ -304,6 +305,7 @@ void Scene::destroy() {
 	m_networkGeometryObject.destroy();
 	m_selectedGeometryObject.destroy();
 	m_measurementObject.destroy();
+	m_trimmingObject.destroy();
 	m_coordinateSystemObject.destroy();
 	m_smallCoordinateSystemObject.destroy();
 	m_newGeometryObject.destroy();
@@ -761,7 +763,6 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 					// now set this in the wireframe object as translation
 					m_selectedGeometryObject.localScaling(m_coordinateSystemObject.m_originalTranslation, m_coordinateSystemObject.m_originalRotation, scaleVector);
 				} break;// interactive translation active
-
 				} // switch
 			} // mouse dragged
 		}
@@ -910,94 +911,18 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 			m_measurementWidget->showEndPoint(m_coordinateSystemObject.translation() );
 		}
 	}
+
+	// *** TRIMMING ***
+
+	if (wheelDelta < 1e-4 && SVViewStateHandler::instance().viewState().m_sceneOperationMode == SVViewState::OM_PolygonTrimming) {
+
+	}
+
+	// *** ALIGN COORDINATE SYSTEM ***
+
 	// if in "align coordinate system mode" perform picking operation and update local coordinate system orientation
 	if (SVViewStateHandler::instance().viewState().m_sceneOperationMode == SVViewState::OM_AlignLocalCoordinateSystem) {
-		// follow line of sign and determine possible objects to hit
-		if (!pickObject.m_pickPerformed)
-			pick(pickObject);
-		needRepaint = true;
-
-
-		// get nearest match; look for an object
-		IBKMK::Vector3D nearestPoint;
-		bool found = false;
-		unsigned int uniqueID = 0;
-		for (const PickObject::PickResult & r : pickObject.m_candidates) {
-			if (r.m_resultType == PickObject::RT_Object) {
-				nearestPoint = r.m_pickPoint;
-				uniqueID = r.m_objectID;
-				found = true;
-				break;
-			}
-		}
-		// no object found, try a plane
-		if (!found) {
-			for (const PickObject::PickResult & r : pickObject.m_candidates) {
-				if (r.m_resultType == PickObject::RT_GridPlane) {
-					nearestPoint = r.m_pickPoint;
-					uniqueID = r.m_objectID;
-					found = true;
-					break;
-				}
-			}
-		}
-		// did we hit anything?
-		if (found) {
-			// object found?
-			if (uniqueID != 0) {
-				// lookup object
-				const VICUS::Object * obj = project().objectById(uniqueID);
-				// should be a surface
-				const VICUS::Surface * s = dynamic_cast<const VICUS::Surface *>(obj);
-				// but maybe a nullptr, if we hit a sphere/cylinder from a network object
-				if (s != nullptr) {
-					// now get normal vector
-					IBKMK::Vector3D n = s->geometry().normal();
-					// get also local X and Y vectors
-					IBKMK::Vector3D localX = s->geometry().localX();
-					IBKMK::Vector3D localY = s->geometry().localY();
-					// compose rotation angle from global to local system via the following math:
-					// we have local system axes x,y,z and global axes g1, g2, g3
-					// and the rotation matrix R should do:
-					//  R(g1) = x,  R(g2) = y, R(g3) = z
-					//
-					// now, if we describe a body axis like:
-					//  x = B11.g1 + B21.g2 + B31.g3
-					//  y = B11.g1 + B21.g2 + B31.g3
-					//  z = B11.g1 + B21.g2 + B31.g3
-					//
-					// or in matrix writing
-					//  R[1,0,0] = [B11, B21, B31]
-					//
-					// each of the columns of the rotation matrix is the normalized local coordinate axis
-					//
-					// now build the rotation matrix
-					//			QMatrix3x3 R;
-					//			float * r = R.data();
-					//			*(QVector3D*)r = IBKVector2QVector(localX.normalized());
-					//			r+=3;
-					//			*(QVector3D*)r = IBKVector2QVector(localY.normalized());
-					//			r+=3;
-					//			*(QVector3D*)r = IBKVector2QVector(n.normalized());
-					//			qDebug() << R;
-					//			QQuaternion q = QQuaternion::fromRotationMatrix(R);
-					//			qDebug() << q;
-
-					// or use the ready-made Qt function (which surprisingly gives the same result :-)
-					QQuaternion q2 = QQuaternion::fromAxes(IBKVector2QVector(localX.normalized()),
-														   IBKVector2QVector(localY.normalized()),
-														   IBKVector2QVector(n.normalized()));
-					//			qDebug() << q2;
-					m_coordinateSystemObject.setRotation(q2);
-				}
-			}
-			else {
-				// restore to global orientation
-				m_coordinateSystemObject.setRotation(QQuaternion());
-			}
-
-			m_coordinateSystemObject.setTranslation( IBKVector2QVector(nearestPoint) );
-		}
+		alignLCS2Object(pickObject, needRepaint);
 	}
 
 
@@ -1150,6 +1075,11 @@ void Scene::render() {
 		}
 		if (vs.m_propertyWidgetMode == SVViewState::PM_AddSubSurfaceGeometry)
 			m_newSubSurfaceObject.renderTransparent(); // might do nothing, if no subsurface is being constructed
+
+		// Render trimming object
+		if (vs.m_sceneOperationMode == SVViewState::OM_PolygonTrimming)
+			m_trimmingObject.render();
+
 		m_buildingShader->release();
 
 
@@ -1184,11 +1114,12 @@ void Scene::render() {
 	// *** movable coordinate system  ***
 
 	bool drawLocalCoordinateSystem =
-			 vs.m_sceneOperationMode == SVViewState::OM_PlaceVertex ||
-			 vs.m_sceneOperationMode == SVViewState::OM_SelectedGeometry ||
-			 vs.m_sceneOperationMode == SVViewState::OM_AlignLocalCoordinateSystem ||
-			 vs.m_sceneOperationMode == SVViewState::OM_MoveLocalCoordinateSystem ||
-			 vs.m_sceneOperationMode == SVViewState::OM_MeasureDistance ;
+			vs.m_sceneOperationMode == SVViewState::OM_PlaceVertex ||
+			vs.m_sceneOperationMode == SVViewState::OM_SelectedGeometry ||
+			vs.m_sceneOperationMode == SVViewState::OM_AlignLocalCoordinateSystem ||
+			vs.m_sceneOperationMode == SVViewState::OM_MoveLocalCoordinateSystem ||
+			vs.m_sceneOperationMode == SVViewState::OM_MeasureDistance ||
+			vs.m_sceneOperationMode == SVViewState::OM_PolygonTrimming;
 
 	// do not draw LCS if we are in sub-surface mode
 	if (vs.m_propertyWidgetMode == SVViewState::PM_AddSubSurfaceGeometry)
@@ -1634,8 +1565,6 @@ void Scene::generateTransparentBuildingGeometry() {
 		}
 	}
 
-
-
 	if (t.elapsed() > 20)
 		qDebug() << t.elapsed() << "ms for transparent geometry generation";
 }
@@ -1710,6 +1639,96 @@ void Scene::generateNetworkGeometry() {
 
 	if (t.elapsed() > 20)
 		qDebug() << t.elapsed() << "ms for network generation";
+}
+
+void Scene::alignLCS2Object(PickObject &pickObject, bool &needRepaint) {
+
+	// follow line of sign and determine possible objects to hit
+	if (!pickObject.m_pickPerformed)
+		pick(pickObject);
+
+	needRepaint = true;
+
+	// get nearest match; look for an object
+	IBKMK::Vector3D nearestPoint;
+	bool found = false;
+	unsigned int uniqueID = 0;
+	for (const PickObject::PickResult & r : pickObject.m_candidates) {
+		if (r.m_resultType == PickObject::RT_Object) {
+			nearestPoint = r.m_pickPoint;
+			uniqueID = r.m_objectID;
+			found = true;
+			break;
+		}
+	}
+	// no object found, try a plane
+	if (!found) {
+		for (const PickObject::PickResult & r : pickObject.m_candidates) {
+			if (r.m_resultType == PickObject::RT_GridPlane) {
+				nearestPoint = r.m_pickPoint;
+				uniqueID = r.m_objectID;
+				found = true;
+				break;
+			}
+		}
+	}
+	// did we hit anything?
+	if (found) {
+		// object found?
+		if (uniqueID != 0) {
+			// lookup object
+			const VICUS::Object * obj = project().objectById(uniqueID);
+			// should be a surface
+			const VICUS::Surface * s = dynamic_cast<const VICUS::Surface *>(obj);
+			// but maybe a nullptr, if we hit a sphere/cylinder from a network object
+			if (s != nullptr) {
+				// now get normal vector
+				IBKMK::Vector3D n = s->geometry().normal();
+				// get also local X and Y vectors
+				IBKMK::Vector3D localX = s->geometry().localX();
+				IBKMK::Vector3D localY = s->geometry().localY();
+				// compose rotation angle from global to local system via the following math:
+				// we have local system axes x,y,z and global axes g1, g2, g3
+				// and the rotation matrix R should do:
+				//  R(g1) = x,  R(g2) = y, R(g3) = z
+				//
+				// now, if we describe a body axis like:
+				//  x = B11.g1 + B21.g2 + B31.g3
+				//  y = B11.g1 + B21.g2 + B31.g3
+				//  z = B11.g1 + B21.g2 + B31.g3
+				//
+				// or in matrix writing
+				//  R[1,0,0] = [B11, B21, B31]
+				//
+				// each of the columns of the rotation matrix is the normalized local coordinate axis
+				//
+				// now build the rotation matrix
+				//			QMatrix3x3 R;
+				//			float * r = R.data();
+				//			*(QVector3D*)r = IBKVector2QVector(localX.normalized());
+				//			r+=3;
+				//			*(QVector3D*)r = IBKVector2QVector(localY.normalized());
+				//			r+=3;
+				//			*(QVector3D*)r = IBKVector2QVector(n.normalized());
+				//			qDebug() << R;
+				//			QQuaternion q = QQuaternion::fromRotationMatrix(R);
+				//			qDebug() << q;
+
+				// or use the ready-made Qt function (which surprisingly gives the same result :-)
+				QQuaternion q2 = QQuaternion::fromAxes(IBKVector2QVector(localX.normalized()),
+													   IBKVector2QVector(localY.normalized()),
+													   IBKVector2QVector(n.normalized()));
+				//			qDebug() << q2;
+				m_coordinateSystemObject.setRotation(q2);
+			}
+		}
+		else {
+			// restore to global orientation
+			m_coordinateSystemObject.setRotation(QQuaternion());
+		}
+
+		m_coordinateSystemObject.setTranslation( IBKVector2QVector(nearestPoint) );
+	}
 }
 
 
@@ -2925,72 +2944,106 @@ void Scene::handleLeftMouseClick(const KeyboardMouseHandler & keyboardHandler, P
 
 	switch (SVViewStateHandler::instance().viewState().m_sceneOperationMode) {
 
-	// *** place a vertex ***
-	case SVViewState::NUM_OM :
-	case SVViewState::OM_SelectedGeometry : {
-		// selection handling
-		handleSelection(keyboardHandler, o);
-		return;
-	}
+		// *** place a vertex ***
 
-	case SVViewState::OM_MeasureDistance : {
-		// we start a new measurement when:
-		// a) no start and no end point have been set yet (i.e. mode has just started)
-		// b) last measurement is complete, i.e. both start and end point are set
+		case SVViewState::NUM_OM :
+		case SVViewState::OM_SelectedGeometry :
+		case SVViewState::OM_RubberbandSelection:
+		case SVViewState::OM_ThreePointRotation: {
+			// selection handling
+			handleSelection(keyboardHandler, o);
+			return;
+		}
 
-		// new starting point for measurement selected
-		if (m_measurementObject.m_startPoint == INVALID_POINT)
-		{
-			// if we start from "initial mode", show the distance widget
-			// store new start point
-			m_measurementObject.m_startPoint = m_coordinateSystemObject.translation();
-			m_measurementWidget->showStartPoint(m_measurementObject.m_startPoint);
-			m_coordinateSystemObject.m_originalTranslation = m_coordinateSystemObject.translation();
+		// *** MEASURE DISTANCE ***
+		case SVViewState::OM_MeasureDistance : {
+			// we start a new measurement when:
+			// a) no start and no end point have been set yet (i.e. mode has just started)
+			// b) last measurement is complete, i.e. both start and end point are set
+
+			// new starting point for measurement selected
+			if (m_measurementObject.m_startPoint == INVALID_POINT)
+			{
+				// if we start from "initial mode", show the distance widget
+				// store new start point
+				m_measurementObject.m_startPoint = m_coordinateSystemObject.translation();
+				m_measurementWidget->showStartPoint(m_measurementObject.m_startPoint);
+				m_coordinateSystemObject.m_originalTranslation = m_coordinateSystemObject.translation();
+			}
+			else if (m_measurementObject.m_startPoint != INVALID_POINT && m_measurementObject.m_endPoint != INVALID_POINT) {
+				// first reset object and widget
+				m_measurementObject.reset();
+				m_measurementWidget->reset();
+				// then start next measurement from current LCS position
+				m_measurementObject.m_startPoint = m_coordinateSystemObject.translation();
+				m_measurementWidget->showStartPoint(m_measurementObject.m_startPoint);
+				m_coordinateSystemObject.m_originalTranslation = m_coordinateSystemObject.translation();
+			}
+			else {
+				// finish measurement mode by fixing the end point
+				m_measurementObject.m_endPoint = m_coordinateSystemObject.translation();
+			}
+			return;
 		}
-		else if (m_measurementObject.m_startPoint != INVALID_POINT && m_measurementObject.m_endPoint != INVALID_POINT) {
-			// first reset object and widget
-			m_measurementObject.reset();
-			m_measurementWidget->reset();
-			// then start next measurement from current LCS position
-			m_measurementObject.m_startPoint = m_coordinateSystemObject.translation();
-			m_measurementWidget->showStartPoint(m_measurementObject.m_startPoint);
-			m_coordinateSystemObject.m_originalTranslation = m_coordinateSystemObject.translation();
-		}
-		else {
-			// finish measurement mode by fixing the end point
-			m_measurementObject.m_endPoint = m_coordinateSystemObject.translation();
-		}
-		return;
-	}
 
 		// *** place a vertex ***
-	case SVViewState::OM_PlaceVertex : {
-		// get current coordinate system's position
-		IBKMK::Vector3D p = QVector2IBKVector(m_coordinateSystemObject.translation());
-		// append a vertex (this will automatically update the draw buffer) and also
-		// modify the vertexListWidget.
-		m_newGeometryObject.appendVertex(p);
-		return;
-	}
+		case SVViewState::OM_PlaceVertex : {
+			// get current coordinate system's position
+			IBKMK::Vector3D p = QVector2IBKVector(m_coordinateSystemObject.translation());
+			// append a vertex (this will automatically update the draw buffer) and also
+			// modify the vertexListWidget.
+			m_newGeometryObject.appendVertex(p);
+			return;
+		}
 
 		// *** align coordinate system ***
-	case SVViewState::OM_AlignLocalCoordinateSystem : {
-		// finish aligning coordinate system and keep selected rotation in coordinate system
-		// but restore origin of local coordinate system object
-		m_coordinateSystemObject.setTranslation(m_oldCoordinateSystemTransform.translation());
-		// switch back to previous view state
-		leaveCoordinateSystemAdjustmentMode(false);
-		return;
-	}
+		case SVViewState::OM_AlignLocalCoordinateSystem : {
+			// finish aligning coordinate system and keep selected rotation in coordinate system
+			// but restore origin of local coordinate system object
+			m_coordinateSystemObject.setTranslation(m_oldCoordinateSystemTransform.translation());
+			// switch back to previous view state
+			leaveCoordinateSystemAdjustmentMode(false);
+			return;
+		}
 
 		// *** move coordinate system ***
-	case SVViewState::OM_MoveLocalCoordinateSystem : {
-		// finish moving coordinate system and current local coordinate system location
-		leaveCoordinateSystemTranslationMode(false);
-		return;
-	}
-	}
+		case SVViewState::OM_MoveLocalCoordinateSystem : {
+			// finish moving coordinate system and current local coordinate system location
+			leaveCoordinateSystemTranslationMode(false);
+			return;
+		}
 
+		// *** UPDATE PLANE FOR TRIMMING ***
+		case SVViewState::OM_PolygonTrimming: {
+
+			// Align lcs
+			bool needRepaint;
+			alignLCS2Object(o, needRepaint);
+
+			// now we handle the snapping rules and also the locking; updates local coordinate system location
+			snapLocalCoordinateSystem(o);
+
+			const VICUS::Project &prj = SVProjectHandler::instance().project();
+
+			std::vector<const VICUS::Surface *> surfs;
+			std::vector<const VICUS::SubSurface *> subSurfs;
+			prj.selectedSurfaces(surfs, VICUS::Project::SG_All);
+			prj.selectedSubSurfaces(subSurfs, VICUS::Project::SG_All);
+
+			IBKMK::Vector3D center;
+			IBKMK::Vector3D bb = prj.boundingBox(surfs, subSurfs, center);
+
+			m_trimmingObject.setBoundingBoxDimension(center, bb);
+
+			if (m_trimmingObject.planeNormal() == IBKMK::Vector3D(0,0,1))
+				m_trimmingObject.setTrimmingPlaneNormal(QVector2IBKVector(m_coordinateSystemObject.localXAxis()));
+			m_trimmingObject.setTrimmingPlanePoint(QVector2IBKVector(m_coordinateSystemObject.translation()));
+
+			m_trimmingObject.updateTrimmingPlane();
+
+			return;
+		}
+	}
 }
 
 
@@ -3130,6 +3183,9 @@ void Scene::setDefaultViewState() {
 			vs.m_sceneOperationMode = SVViewState::NUM_OM;
 			if (vs.m_propertyWidgetMode == SVViewState::PM_EditGeometry)
 				vs.m_propertyWidgetMode = SVViewState::PM_AddGeometry;
+		}
+		else if (SVViewStateHandler::instance().m_geometryView) {
+
 		}
 		else
 			vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;

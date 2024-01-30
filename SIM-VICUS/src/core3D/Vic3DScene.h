@@ -41,6 +41,7 @@
 #include "Vic3DOrbitControllerObject.h"
 #include "Vic3DCoordinateSystemObject.h"
 #include "Vic3DSmallCoordinateSystemObject.h"
+#include "Vic3DTrimmingObject.h"
 #include "Vic3DWireFrameObject.h"
 #include "Vic3DNewGeometryObject.h"
 #include "Vic3DNewSubSurfaceObject.h"
@@ -161,6 +162,12 @@ private:
 	void generateTransparentBuildingGeometry();
 	void generateNetworkGeometry();
 
+	/*! Aligns the local coordinate system object (LCS) to the object specified by object
+		index unique id.
+		\param uniqueId Id of vicus object where LCS should align to.
+	*/
+	void alignLCS2Object(PickObject &pickObject, bool &needRepaint);
+
 	/*! Processes all surfaces and assigns colors based on current object color mode. */
 	void recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) const;
 
@@ -272,6 +279,8 @@ private:
 	NewSubSurfaceObject		m_newSubSurfaceObject;
 	/*! The measurement object. */
 	MeasurementObject		m_measurementObject;
+	/*! The measurement object. */
+	TrimmingObject			m_trimmingObject;
 
 	/*! Pointer to measurement widget */
 	SVMeasurementWidget		*m_measurementWidget = nullptr;
