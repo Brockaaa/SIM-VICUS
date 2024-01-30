@@ -91,7 +91,7 @@ public:
 
 private:
 	/*! Shader program (not owned). */
-	ShaderProgram					*m_shaderProgram = nullptr;
+	ShaderProgram				*m_shaderProgram = nullptr;
 
 };
 
