@@ -405,7 +405,6 @@ void Polygon3D::updateLocalCoordinateSystem(const std::vector<IBKMK::Vector3D> &
 }
 
 
-
 void Polygon3D::update2DPolyline(const std::vector<Vector3D> & verts) {
 	// NOTE: DO NOT ACCESS m_vertexes IN THIS FUNCTION!
 
@@ -435,8 +434,12 @@ void Polygon3D::update2DPolyline(const std::vector<Vector3D> & verts) {
 	//       and thus also cause the polygon to be invalid
 	m_polyline.setVertexes(poly);
 }
-bool pointInEdge(const Vector3D point, const Vector3D edgeA, const Vector3D edgeB) {
+
+
+bool Polygon3D::pointInEdge(const Vector3D &point, const Vector3D &edgeA, const Vector3D &edgeB) {
+
 	IBK::NearEqual<double> near_equal5(1e-5);
+
 	return ((point.m_x > std::min(edgeA.m_x, edgeB.m_x) || near_equal5(point.m_x, std::min(edgeA.m_x, edgeB.m_x)))
 	 && (point.m_x < std::max(edgeA.m_x, edgeB.m_x) || near_equal5(point.m_x, std::max(edgeA.m_x, edgeB.m_x)))
 	 && (point.m_y > std::min(edgeA.m_y, edgeB.m_y) || near_equal5(point.m_y, std::min(edgeA.m_y, edgeB.m_y)))
@@ -445,9 +448,13 @@ bool pointInEdge(const Vector3D point, const Vector3D edgeA, const Vector3D edge
 	 && (point.m_z < std::max(edgeA.m_z, edgeB.m_z) || near_equal5(point.m_z, std::max(edgeA.m_z, edgeB.m_z))));
 }
 
-bool dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vector3D trimPlaneNormal, const double offset, std::vector<std::vector<Vector3D>> & outputVerts) {
+bool Polygon3D::dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vector3D trimPlaneNormal,
+								 const double offset, std::vector<std::vector<Vector3D>> & outputVerts) {
+
 	IBK::NearEqual<double> near_equal5(1e-5);
+
 	if (verts.size() > 3) {
+
 		// we test for edges on the trimPlane that are contained within each other, which means the polygon needs to be divided
 		for (unsigned int i = 0, count = verts.size(); i<count; ++i ) {
 			// j+3 because we dont need to match the same edge, neither the neighbouring edges
@@ -561,11 +568,13 @@ bool dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vector3D trimP
 	return false;
 }
 
-void polyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsArray, const IBKMK::Vector3D trimPlaneNormal, const double offset) {
+void Polygon3D::polyCyclesAfterTrimming(std::vector<IBKMK::Polygon3D> &vertsArray, const IBKMK::Vector3D &trimPlaneNormal,
+										const double offset) {
+
 	std::list<int> indicesToBeRemovedAfter = {};
 
 	for (unsigned int vertsIterator = 0, count = vertsArray.size(); vertsIterator<count; ++vertsIterator ) {
-		std::vector<Vector3D> verts = vertsArray[vertsIterator];
+		std::vector<Vector3D> verts = vertsArray[vertsIterator].vertexes();
 		std::vector<std::vector<Vector3D>> outputVerts = {};
 
 		if (dividePolyCycles(verts, trimPlaneNormal, offset, outputVerts)) {
@@ -581,21 +590,25 @@ void polyCyclesAfterTrim(std::vector<std::vector<Vector3D>> & vertsArray, const 
 	indicesToBeRemovedAfter.reverse();
 	for (int index : indicesToBeRemovedAfter) {
 		vertsArray.erase(vertsArray.begin()+index);
-
 	}
 }
 
-bool polyTrim(std::vector<std::vector<Vector3D>> & vertsInput, const std::vector<Vector3D> & vertsB) {
-	std::vector<Vector3D> vertsA = vertsInput.back();
-	IBK_ASSERT(vertsA.size() >= 3);
+bool Polygon3D::trimByPlane(const IBKMK::Polygon3D &plane, std::vector<IBKMK::Polygon3D> &trimmedPolygons) {
+	const std::vector<Vector3D> &vertsA = vertexes();
+	const std::vector<Vector3D> &vertsB = plane.vertexes();
+
+	IBK_ASSERT(vertsA.size() > 2);
+
 	int vertsSize = vertsA.size();
-	IBK_ASSERT(vertsB.size() >= 3);
+
+	IBK_ASSERT(plane.vertexes().size() >= 3);
 
 	IBK::NearEqual<double> near_equal5(1e-5);
 	IBK::NearEqual<double> near_equal1(1e-1);
 
 	// get arbitrary base vectors for polygon A and B's planes
-	// TODO: error handling in case polygon is malformatted and first 3 points are located on a straight line .. eliminateCollinearPoints?
+	// ToDo Moritz: error handling in case polygon is malformatted and first 3 points are located on a straight line ..
+	// eliminateCollinearPoints?
 	// compensating for different sizes of span vectors to have later calculations in the same order of magnitude
 	IBKMK::Vector3D vectorA1 = vertsA[1] - vertsA[0];
 	vectorA1 = vectorA1 * (10/vectorA1.magnitude());
@@ -699,19 +712,21 @@ bool polyTrim(std::vector<std::vector<Vector3D>> & vertsInput, const std::vector
 
 		if (vertsPos.size() == 0 || vertsNeg.size() == 0) {
 			IBK::IBK_Message("Plane does not intersect polygon", IBK::MSG_ERROR);
+
 			return false;
-		} else {
+
+		}
+		else {
 			// we need to detect if Pos / Neg side is divided into multiple polygons
-			std::vector<std::vector<Vector3D>> tempPolygons;
+			std::vector<IBKMK::Polygon3D> tempPolygons;
 			tempPolygons.push_back(vertsPos);
 			tempPolygons.push_back(vertsNeg);
 
-			polyCyclesAfterTrim(tempPolygons, normalVectorB, offsetB);
+			polyCyclesAfterTrimming(tempPolygons, normalVectorB, offsetB);
 
-			vertsInput.pop_back();
-			for (std::vector<Vector3D> polygon : tempPolygons) {
-				vertsInput.push_back(polygon);
-			}
+			for (const IBKMK::Polygon3D &polygon : tempPolygons)
+				trimmedPolygons.push_back(polygon);
+
 			return true;
 		}
 	}
