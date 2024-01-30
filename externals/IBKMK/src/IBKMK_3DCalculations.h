@@ -111,10 +111,22 @@ void pointProjectedOnPlane(const Vector3D & a, const Vector3D & normal,
 /*! Eleminates colinear points in a polygon. */
 void eliminateCollinearPoints(std::vector<IBKMK::Vector3D> & polygon, double epsilon = 1e-5);
 
-/*! Returns the inner Angle between two Vectors of a Polygon in Degree (0..360). */
+/*! Returns the inner Angle between two Vectors of a Polygon in Degree (0..180). */
 inline double angleBetweenVectorsDeg ( const IBKMK::Vector3D &v1, const IBKMK::Vector3D &v2) {
 	return std::acos( v1.scalarProduct(v2) / sqrt(v1.magnitude() * v2.magnitude() ) ) / IBK::DEG2RAD;
 }
+
+/*! Returns the inner Angle between two Vectors of a Polygon in Degree (0..360). */
+inline double angleBetweenVectorsDeg360(const IBKMK::Vector3D &v1, const IBKMK::Vector3D &v2, const IBKMK::Vector3D &normal) {
+	double angle = std::acos(std::max(-1.0, std::min(1.0, v1.scalarProduct(v2) / sqrt(v1.magnitude() * v2.magnitude())))) / IBK::DEG2RAD;
+
+	IBKMK::Vector3D cross = v1.crossProduct(v2);
+	if (normal.scalarProduct(cross) < 0) {
+		angle = 360 - angle;
+	}
+	return angle;
+}
+
 
 /*! Takes the vector v and enlarges the current bounding box defined through 'minVec' and 'maxVec'. */
 void enlargeBoundingBox(const IBKMK::Vector3D & v, IBKMK::Vector3D & minVec, IBKMK::Vector3D & maxVec);
