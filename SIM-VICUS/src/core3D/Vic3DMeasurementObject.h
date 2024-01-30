@@ -66,13 +66,13 @@ public:
 	ShaderProgram				*m_measurementShader = nullptr;
 
 	/*! Holds the number of vertices (2 for each line), updated in create(), used in render().
-		If zero, grid is disabled.
+		If zero, no measurement line are created.
 	*/
 	GLsizei						m_vertexCount;
 
 	/*! Wraps an OpenGL VertexArrayObject, that references the vertex coordinates. */
 	QOpenGLVertexArrayObject	m_vao;
-	/*! Holds positions of grid lines. */
+	/*! Holds positions of measurement lines. */
 	QOpenGLBuffer				m_vbo;
 
 	/*! Starting point of the line distance measurement. */

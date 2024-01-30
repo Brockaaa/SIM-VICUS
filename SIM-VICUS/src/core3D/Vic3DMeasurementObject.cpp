@@ -121,7 +121,7 @@ void MeasurementObject::setMeasureLine(const QVector3D & end, const QVector3D & 
 
 
 void MeasurementObject::render() {
-	// grid disabled?
+	// measurement hidden
 	if (m_vertexCount == 0)
 		return;
 
