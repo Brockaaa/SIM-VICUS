@@ -97,11 +97,11 @@ public:
 			to the points). When the third point was placed, all selected objects are rotated accordingly.
 		*/
 		OM_ThreePointRotation,
-		/*! The scene is in passive mode - user can navigate and click on object to change selection. */
-
-		/*! In this Mode trimming of polygons will be performed. */
+		/*! In this mode trimming of polygons will be performed. A transparent plane is drawn and can be manipulated.
+			The LCS Object is visible and the transparent trimming plane is manipulated in a seperate property widget.
+			The scene is in passive mode - user can navigate and click on object to change selection.
+		*/
 		OM_PolygonTrimming,
-
 		NUM_OM
 	};
 
