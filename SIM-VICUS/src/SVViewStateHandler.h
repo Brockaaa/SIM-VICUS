@@ -35,6 +35,7 @@ namespace Vic3D {
 	class NewSubSurfaceObject;
 	class CoordinateSystemObject;
 	class WireFrameObject;
+	class TrimmingObject;
 }
 
 class SVNavigationTreeWidget;
@@ -99,6 +100,12 @@ public:
 		DO NOT DELETE the object or do any other crazy stuff with this pointer!
 	*/
 	Vic3D::WireFrameObject				*m_selectedGeometryObject = nullptr;
+
+	/*! Caches pointer to the trimming object, to allow direct access to trimming plane, when being modified in
+		SVGeometryEdit. The pointer is set in constructor of Vic3D::WireFrameObject, object is not owned.
+		DO NOT DELETE the object or do any other crazy stuff with this pointer!
+	*/
+	Vic3D::TrimmingObject				*m_trimmingObject = nullptr;
 
 	/*! Pointer to navigation tree widget - can be used to retrieve the currently selected node
 		from property widgets.
