@@ -34,10 +34,10 @@
 #include <VICUS_Project.h>
 
 SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
-									 std::map<unsigned int, std::vector<VICUS::Polygon3D>> trimmedPolygons,
+									 std::map<unsigned int, std::vector<IBKMK::Polygon3D> > trimmedPolygons,
 									 // trimSurfaces is a vector of tuples, each containing a reference to the selected surface of one trim, and the polyInput vector
 									 // which was handed over to the polyTrim method, and therefore contains the trim result surfaces
-									 std::map<unsigned int, std::vector<VICUS::Polygon3D>> trimmedSubsurfaces,
+									 std::map<unsigned int, std::vector<IBKMK::Polygon3D> > trimmedSubsurfaces,
 									 const VICUS::Project & oldProject):
 	m_trimmedPolygons(trimmedPolygons),
 	m_trimmedSubsurfaces(trimmedSubsurfaces),
@@ -57,7 +57,7 @@ void SVUndoTrimObjects::undo() {
 
 void SVUndoTrimObjects::redo() {
 	// iterate over different trims
-	for (std::map<unsigned int, std::vector<VICUS::Polygon3D>>::iterator it = m_trimmedPolygons.begin();
+	for (std::map<unsigned int, std::vector<IBKMK::Polygon3D>>::iterator it = m_trimmedPolygons.begin();
 		 it != m_trimmedPolygons.end(); ++it )
 	{
 
@@ -74,7 +74,7 @@ void SVUndoTrimObjects::redo() {
 		const VICUS::Room* room = dynamic_cast<const VICUS::Room*>(s->m_parent);
 		unsigned int nextId = m_project.nextUnusedID();
 
-		std::vector<VICUS::Polygon3D> &polys = it->second;
+		std::vector<IBKMK::Polygon3D> &polys = it->second;
 
 		// copy these because the properties of surfToBeDeleted are unaccessible after pushing the first object into m_surfaces
 		std::string surfDisplayName = s->m_displayName.toStdString();
@@ -91,7 +91,7 @@ void SVUndoTrimObjects::redo() {
 			std::vector<VICUS::SubSurface> tempSubsurfaces;
 
 			// iterate over all subsurfaces that were trimmed
-			for (std::map<unsigned int, std::vector<VICUS::Polygon3D>>::iterator ssit = m_trimmedSubsurfaces.begin();
+			for (std::map<unsigned int, std::vector<IBKMK::Polygon3D>>::iterator ssit = m_trimmedSubsurfaces.begin();
 				 ssit != m_trimmedSubsurfaces.end(); ++ssit )
 			{
 				const VICUS::Object *oo = m_project.objectById(ssit->first);
@@ -136,6 +136,8 @@ void SVUndoTrimObjects::redo() {
 							tempSubsurface.m_color = ss->m_color;
 							tempSubsurface.m_id = nextId++;
 							tempSubsurfaces.push_back(tempSubsurface);
+
+							break;
 						}
 					}
 				}
