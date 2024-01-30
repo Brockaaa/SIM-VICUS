@@ -32,7 +32,6 @@
 
 #include <Vic3DGridObject.h>
 #include <Vic3DTransform3D.h>
-#include "VICUS_GridPlane.h"
 
 namespace VICUS {
 	class Project;
@@ -190,26 +189,24 @@ private slots:
 	void on_pushButtonApply_clicked();
 
 	void on_pushButtonTrimGridXY_clicked();
-
 	void on_pushButtonTrimGridYZ_clicked();
-
 	void on_pushButtonTrimGridXZ_clicked();
-
 	void on_pushButtonTrimPolygons_clicked();
 
 	void on_pushButtonTrimGridLocalXY_clicked();
-
 	void on_pushButtonTrimGridLocalYZ_clicked();
-
 	void on_pushButtonTrimGridLocalXZ_clicked();
 
-	void on_lineEditRotateX_2_editingFinishedSuccessfully();
+	void on_lineEditRotateXTrimming_editingFinishedSuccessfully();
+	void on_lineEditRotateYTrimming_editingFinishedSuccessfully();
+	void on_lineEditRotateZTrimming_editingFinishedSuccessfully();
 
-	void on_lineEditRotateY_2_editingFinishedSuccessfully();
-
-	void on_lineEditRotateZ_2_editingFinishedSuccessfully();
+	void on_lineEditTranslateTrimmingX_editingFinishedSuccessfully();
+	void on_lineEditTranslateTrimmingY_editingFinishedSuccessfully();
+	void on_lineEditTranslateTrimmingZ_editingFinishedSuccessfully();
 
 	void on_pushButtonApplyRotation_clicked();
+	void on_pushButtonApplyTrimmingRotation_clicked();
 
 private:
 	/*! Updates the property widget regarding to all geometry data.
@@ -260,7 +257,7 @@ private:
 	void updateCoordinateSystemLook();
 
 	/*! If Trimming is selected, we create a trimming grid, otherwise delete if necessary. */
-	void updateTrimmingGrid();
+	void updateTrimmingPlane();
 
 	/*! Update Trimming Grid position if LCS changed */
 	void updateTrimmingGridLcs();
@@ -308,13 +305,12 @@ private:
 	std::set<QString>					m_buildingLevelNames;
 	std::set<QString>					m_buildingNames;
 
+	/*! Trimming plane normal. */
+	IBKMK::Vector3D						m_trimingPlaneNormal;
+
 	/*! Pointer to UI */
 	Ui::SVPropEditGeometry				*m_ui;
 
-	/*! Grid for trimming */
-	VICUS::GridPlane					*m_trimGrid = nullptr;
-	/*! Previous TrimGrid Transformation Matrix to calculate change */
-	VICUS::GridPlane					m_previousRotation;
 };
 
 #endif // SVPropEditGeometryH
