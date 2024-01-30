@@ -643,7 +643,8 @@ void SVGeometryView::on_actionCopyGeometry_triggered() {
 	m_ui->actionCopyGeometry->setChecked(true);
 
 	SVViewState vs = SVViewStateHandler::instance().viewState();
-	// switch to geometry mode, show addGeometry property widget
+	// switch to geometry edit mode, show editGeometry property widget
+	// with trimming
 	if (vs.m_propertyWidgetMode != SVViewState::PM_EditGeometry ||
 		vs.inPropertyEditingMode())
 	{
@@ -667,7 +668,7 @@ void SVGeometryView::on_actionTrimGeometry_triggered() {
 	m_ui->actionTrimGeometry->setChecked(true);
 
 	SVViewState vs = SVViewStateHandler::instance().viewState();
-	// switch to geometry mode, show addGeometry property widget
+	// switch to trimming mode, show trimGeometry property widget
 	if (vs.m_propertyWidgetMode != SVViewState::PM_EditGeometry ||
 		vs.inPropertyEditingMode())
 	{
@@ -679,10 +680,11 @@ void SVGeometryView::on_actionTrimGeometry_triggered() {
 		if (sel.empty())
 			vs.m_sceneOperationMode = SVViewState::NUM_OM;
 		else
-			vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;
+			vs.m_sceneOperationMode = SVViewState::OM_PolygonTrimming;
 		SVViewStateHandler::instance().setViewState(vs);
 	}
 	Q_ASSERT(SVViewStateHandler::instance().m_propEditGeometryWidget != nullptr);
+	// Show trimming page
 	SVViewStateHandler::instance().m_propEditGeometryWidget->setModificationType(SVPropEditGeometry::MT_Trim);
 }
 
