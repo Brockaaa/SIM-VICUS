@@ -168,6 +168,7 @@ SOURCES += \
 	../../src/core3D/Vic3DSurfaceNormalsObject.cpp \
 	../../src/core3D/Vic3DTransform3D.cpp \
 	../../src/core3D/Vic3DTransparentBuildingObject.cpp \
+	../../src/core3D/Vic3DTrimmingObject.cpp \
 	../../src/core3D/Vic3DWireFrameObject.cpp \
 	../../src/main.cpp \
 	../../src/SVAboutDialog.cpp \
@@ -368,6 +369,7 @@ HEADERS  += \
 	../../src/core3D/Vic3DSurfaceNormalsObject.h \
 	../../src/core3D/Vic3DTransform3D.h \
 	../../src/core3D/Vic3DTransparentBuildingObject.h \
+	../../src/core3D/Vic3DTrimmingObject.h \
 	../../src/core3D/Vic3DVertex.h \
 	../../src/core3D/Vic3DWireFrameObject.h \
 	../../src/SVAboutDialog.h \
