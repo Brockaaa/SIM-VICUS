@@ -914,9 +914,29 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 
 	// *** TRIMMING ***
 
-	if (wheelDelta < 1e-4 && SVViewStateHandler::instance().viewState().m_sceneOperationMode == SVViewState::OM_PolygonTrimming) {
+//	if (SVViewStateHandler::instance().viewState().m_sceneOperationMode == SVViewState::OM_PolygonTrimming) {
+//		// Align lcs
+//		alignLCS2Object(pickObject, needRepaint);
 
-	}
+//		// now we handle the snapping rules and also the locking; updates local coordinate system location
+//		snapLocalCoordinateSystem(pickObject);
+
+//		const VICUS::Project &prj = SVProjectHandler::instance().project();
+
+//		std::vector<const VICUS::Surface *> surfs;
+//		std::vector<const VICUS::SubSurface *> subSurfs;
+//		prj.selectedSurfaces(surfs, VICUS::Project::SG_All);
+//		prj.selectedSubSurfaces(subSurfs, VICUS::Project::SG_All);
+
+//		IBKMK::Vector3D center;
+//		IBKMK::Vector3D bb = prj.boundingBox(surfs, subSurfs, center);
+
+//		m_trimmingObject.setBoundingBoxDimension(center, bb);
+
+//		if (m_trimmingObject.planeNormal() == IBKMK::Vector3D(0,0,1))
+//			m_trimmingObject.setTrimmingPlaneNormal(QVector2IBKVector(m_coordinateSystemObject.localXAxis()));
+//		m_trimmingObject.setTrimmingPlanePoint(QVector2IBKVector(m_coordinateSystemObject.translation()));
+//	}
 
 	// *** ALIGN COORDINATE SYSTEM ***
 
@@ -1076,9 +1096,8 @@ void Scene::render() {
 		if (vs.m_propertyWidgetMode == SVViewState::PM_AddSubSurfaceGeometry)
 			m_newSubSurfaceObject.renderTransparent(); // might do nothing, if no subsurface is being constructed
 
-		// Render trimming object
-		if (vs.m_sceneOperationMode == SVViewState::OM_PolygonTrimming)
-			m_trimmingObject.render();
+		// Always render trimming object, visibility is handled in object
+		m_trimmingObject.render();
 
 		m_buildingShader->release();
 
@@ -3016,32 +3035,7 @@ void Scene::handleLeftMouseClick(const KeyboardMouseHandler & keyboardHandler, P
 		// *** UPDATE PLANE FOR TRIMMING ***
 		case SVViewState::OM_PolygonTrimming: {
 
-			// Align lcs
-			bool needRepaint;
-			alignLCS2Object(o, needRepaint);
 
-			// now we handle the snapping rules and also the locking; updates local coordinate system location
-			snapLocalCoordinateSystem(o);
-
-			const VICUS::Project &prj = SVProjectHandler::instance().project();
-
-			std::vector<const VICUS::Surface *> surfs;
-			std::vector<const VICUS::SubSurface *> subSurfs;
-			prj.selectedSurfaces(surfs, VICUS::Project::SG_All);
-			prj.selectedSubSurfaces(subSurfs, VICUS::Project::SG_All);
-
-			IBKMK::Vector3D center;
-			IBKMK::Vector3D bb = prj.boundingBox(surfs, subSurfs, center);
-
-			m_trimmingObject.setBoundingBoxDimension(center, bb);
-
-			if (m_trimmingObject.planeNormal() == IBKMK::Vector3D(0,0,1))
-				m_trimmingObject.setTrimmingPlaneNormal(QVector2IBKVector(m_coordinateSystemObject.localXAxis()));
-			m_trimmingObject.setTrimmingPlanePoint(QVector2IBKVector(m_coordinateSystemObject.translation()));
-
-			m_trimmingObject.updateTrimmingPlane();
-
-			return;
 		}
 	}
 }

@@ -34,6 +34,7 @@
 #include <VICUS_ViewSettings.h>
 
 #include "Vic3DShaderProgram.h"
+#include "Vic3DTrimmingObject.h"
 #include "Vic3DVertex.h"
 #include "Vic3DGeometryHelpers.h"
 #include "Vic3DCamera.h"
@@ -292,10 +293,12 @@ bool CoordinateSystemObject::pick(const IBKMK::Vector3D & nearPoint, const IBKMK
 	IBKMK::Vector3D lotPoint;
 	switch (m_geometryTransformMode) {
 		case Vic3D::CoordinateSystemObject::TM_Translate : {
-			bool hit = IBKMK::lineShereIntersection(nearPoint, direction,  // line of sight
-													QVector2IBKVector(translation()), TRANSLATION_CENTER_SPHERE_FACTOR, // sphere
-													lineFactor, // lineFactor (lineFactor*d = distance to intersection point with sphere)
-													lotPoint // closest point on line-of-sight to sphere center
+			bool hit = IBKMK::lineShereIntersection(nearPoint,
+													direction,							// line of sight
+													QVector2IBKVector(translation()),
+													TRANSLATION_CENTER_SPHERE_FACTOR,	// sphere
+													lineFactor,							// lineFactor (lineFactor*d = distance to intersection point with sphere)
+													lotPoint							// closest point on line-of-sight to sphere center
 													);
 			// check distance against radius of sphere
 			if (hit) {

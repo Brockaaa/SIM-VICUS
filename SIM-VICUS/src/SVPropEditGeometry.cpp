@@ -217,6 +217,8 @@ void SVPropEditGeometry::setModificationType(ModificationType modType) {
 		updateTrimmingPlane();
 		adjustLocalCoordinateSystemForRotateToAngle();
 	}
+
+	SVViewStateHandler::instance().m_trimmingObject->m_trimmingPlaneVisible = modType == MT_Trim;
 }
 
 
@@ -285,6 +287,9 @@ void SVPropEditGeometry::onViewStateChanged() {
 	const SVViewState & vs = SVViewStateHandler::instance().viewState();
 	if (vs.m_sceneOperationMode == SVViewState::NUM_OM) {
 		SVViewStateHandler::instance().m_selectedGeometryObject->resetTransformation();
+	}
+	else if (vs.m_sceneOperationMode == SVViewState::OM_PolygonTrimming) {
+		updateTrimmingPlane();
 	}
 }
 
@@ -1109,14 +1114,25 @@ void SVPropEditGeometry::updateTrimmingPlane() {
 	double newZ = m_ui->lineEditTranslateTrimmingZ->value();
 	QVector3D translation = QVector3D((float)newX, (float)newY, (float)newZ);
 
-	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
+	const VICUS::Project &prj = SVProjectHandler::instance().project();
+
+	std::vector<const VICUS::Surface *> surfs;
+	std::vector<const VICUS::SubSurface *> subSurfs;
+	prj.selectedSurfaces(surfs, VICUS::Project::SG_All);
+	prj.selectedSubSurfaces(subSurfs, VICUS::Project::SG_All);
+
+	IBKMK::Vector3D center;
+	IBKMK::Vector3D bb = prj.boundingBox(surfs, subSurfs, center);
+
 	Vic3D::CoordinateSystemObject &cso = *SVViewStateHandler::instance().m_coordinateSystemObject;
 	cso.setTranslation(translation);
 
+	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
+	to.setBoundingBoxDimension(center, bb);
 	to.setTrimmingPlanePoint(QVector2IBKVector(translation));
-	to.updateTrimmingPlane();
-	SVViewStateHandler::instance().m_geometryView->refreshSceneView();
+//	to.updateTrimmingPlane();
 
+	SVViewStateHandler::instance().m_geometryView->refreshSceneView();
 }
 
 
@@ -1391,7 +1407,7 @@ void SVPropEditGeometry::on_pushButtonTrimGridXY_clicked() {
 
 	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
 	to.setTrimmingPlaneNormal(IBKMK::Vector3D(0,0,1));
-	to.updateTrimmingPlane();
+//	to.updateTrimmingPlane();
 
 	const_cast<Vic3D::SceneView*>(SVViewStateHandler::instance().m_geometryView->sceneView())->renderLater();
 }
@@ -1404,7 +1420,7 @@ void SVPropEditGeometry::on_pushButtonTrimGridYZ_clicked() {
 
 	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
 	to.setTrimmingPlaneNormal(IBKMK::Vector3D(1,0,0));
-	to.updateTrimmingPlane();
+//	to.updateTrimmingPlane();
 
 	const_cast<Vic3D::SceneView*>(SVViewStateHandler::instance().m_geometryView->sceneView())->renderLater();
 }
@@ -1417,7 +1433,7 @@ void SVPropEditGeometry::on_pushButtonTrimGridXZ_clicked() {
 
 	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
 	to.setTrimmingPlaneNormal(IBKMK::Vector3D(0,1,0));
-	to.updateTrimmingPlane();
+//	to.updateTrimmingPlane();
 
 	const_cast<Vic3D::SceneView*>(SVViewStateHandler::instance().m_geometryView->sceneView())->renderLater();
 }
@@ -1430,7 +1446,7 @@ void SVPropEditGeometry::on_pushButtonTrimGridLocalXY_clicked() {
 	Vic3D::CoordinateSystemObject *cso = SVViewStateHandler::instance().m_coordinateSystemObject;
 	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
 	to.setTrimmingPlaneNormal(QVector2IBKVector(cso->localZAxis()));
-	to.updateTrimmingPlane();
+//	to.updateTrimmingPlane();
 
 	const_cast<Vic3D::SceneView*>(SVViewStateHandler::instance().m_geometryView->sceneView())->renderLater();
 }
@@ -1444,7 +1460,7 @@ void SVPropEditGeometry::on_pushButtonTrimGridLocalYZ_clicked() {
 	Vic3D::CoordinateSystemObject *cso = SVViewStateHandler::instance().m_coordinateSystemObject;
 	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
 	to.setTrimmingPlaneNormal(QVector2IBKVector(cso->localXAxis()));
-	to.updateTrimmingPlane();
+//	to.updateTrimmingPlane();
 
 	const_cast<Vic3D::SceneView*>(SVViewStateHandler::instance().m_geometryView->sceneView())->renderLater();
 }
@@ -1458,7 +1474,7 @@ void SVPropEditGeometry::on_pushButtonTrimGridLocalXZ_clicked() {
 	Vic3D::CoordinateSystemObject *cso = SVViewStateHandler::instance().m_coordinateSystemObject;
 	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
 	to.setTrimmingPlaneNormal(QVector2IBKVector(cso->localYAxis()));
-	to.updateTrimmingPlane();
+//	to.updateTrimmingPlane();
 
 	const_cast<Vic3D::SceneView*>(SVViewStateHandler::instance().m_geometryView->sceneView())->renderLater();
 }
