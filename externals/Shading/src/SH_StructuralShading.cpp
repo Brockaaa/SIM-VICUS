@@ -25,6 +25,7 @@
 #include <IBK_physics.h>
 #include <IBK_StopWatch.h>
 #include <IBK_math.h>
+#include <IBK_FileUtils.h>
 
 #include <IBKMK_Vector3D.h>
 #include <IBKMK_3DCalculations.h>
@@ -119,13 +120,16 @@ void StructuralShading::setGeometry(const std::vector<ShadingObject> & surfaces,
 	}
 }
 
-void StructuralShading::calculateShadingFactors(Notification * notify, double gridWidth, bool useClippingMethod) {
+void StructuralShading::calculateShadingFactors(Notification * notify, double gridWidth, bool useClippingMethod, IBK::Path currentDir) {
 	FUNCID(StructuralShading::calculateShadingFactors);
 
 	// TODO Stephan, input data check
 	m_gridWidth = gridWidth;
 	if (gridWidth <= 0)
 		throw IBK::Exception("Invalid grid width, must be > 0 m.", FUNC_ID);
+
+	if (m_timeZone < -11 || m_timeZone > 12)
+		throw IBK::Exception("Invalid time zone, must be >= -11 and <= 12.", FUNC_ID);
 
 	// if we didn't do a sun normal calculation, yet, do it now!
 	if (m_sunConeNormals.empty())
@@ -176,7 +180,7 @@ void StructuralShading::calculateShadingFactors(Notification * notify, double gr
 
 #ifdef WRITE_OUTPUT
 	// Create Shading debugging path
-	IBK::Path path ("shading_debugging/");
+	IBK::Path path (currentDir + "/shading_debugging");
 	if(path.exists())
 		IBK::Path::remove(path);
 	IBK::Path::makePath(path);
@@ -216,9 +220,12 @@ void StructuralShading::calculateShadingFactors(Notification * notify, double gr
 			for (unsigned int i=0; i<m_sunConeNormals.size(); ++i) {
 
 #ifdef WRITE_OUTPUT
-				std::ofstream out(QString("C:/shading/shading_info_%1_%2.txt")
+
+
+				std::ofstream out(QString("%3/shading_info_%1_%2.txt")
 								  .arg(QString::fromStdString(so.m_name))
-								  .arg(i).toStdString());
+								  .arg(i)
+								  .arg(QString::fromStdString(path.absolutePath().str())).toStdString());
 				out << "Shading calculation for surface " << so.m_name << std::endl;
 				out << "Sun normal: X:" << m_sunConeNormals[i].m_x << " Y: " << m_sunConeNormals[i].m_y << "Z: " << m_sunConeNormals[i].m_z;
 				out << std::endl;
@@ -262,7 +269,7 @@ void StructuralShading::calculateShadingFactors(Notification * notify, double gr
 				if ( omp_get_thread_num() == 0) {
 #endif
 					// only notify every second or so
-					if (!notify->m_aborted && w.difference() > 100) {
+					if (!notify->m_aborted && w.difference() > 1000) {
 						notify->notify(double(surfacesCompleted*m_sunConeNormals.size() + i) / (m_surfaces.size()*m_sunConeNormals.size()) );
 						w.start();
 					}
@@ -336,11 +343,13 @@ void StructuralShading::writeShadingFactorsToTSV(const IBK::Path & path, const s
 							 .arg(path).arg(fname_wo_ext), FUNC_ID);
 	}
 
-	std::ofstream tsvFile ( path.str() );
+	std::ofstream tsvFile;
 
-	if ( !tsvFile.is_open() )
+	if ( !IBK::open_ofstream(tsvFile, path) )
 		throw IBK::Exception(IBK::FormatString("Could not open output file '%1'\n").arg(path.str() ), FUNC_ID );
 
+	if( tsvFile.fail() )
+		throw IBK::Exception(IBK::FormatString("Could not open output file '%1'\n").arg(path.str() ), FUNC_ID );
 
 	// we have a map of different sunConeNormals to sunPositions i.e. time points in vector m_indexesOfSimilarNormals
 	// we now generate the reverse mapping by creating a vector of sunConeNormal indexes corresponding to each sampling
@@ -556,23 +565,25 @@ int StructuralShading::findSimilarNormals(const IBKMK::Vector3D &sunNormal) cons
 void StructuralShading::findVisibleSurfaces(bool useClipping) {
 	// Finding shading partners for all surfaces
 	for(ShadingObject &surf : m_surfaces) {
-		// iterate through all vertex points of surface
-		for(const ShadingObject &obst : m_obstacles) {
 
-			for (size_t i=0; i<surf.m_polygon.vertexes().size(); ++i) {
+		// iterate through all vertex points of surface
+		for (const ShadingObject &obst : m_obstacles) {
+
 			// iterate through all possible shading objects
+			for (size_t i=0; i<surf.m_polygon.vertexes().size(); ++i) {
+
 				bool obstAdded = false;
 
 				// skip parent objects (wall surface) of sub-surfaces such as windows
-				if(!useClipping && (surf.m_idParent == obst.m_idVicus))
+				if (!useClipping && (surf.m_idParent == obst.m_idVicus))
 					continue;
 
 				// skip parent objects (wall surface) of sub-surfaces such as windows
-				if((obst.m_idParent != INVALID_ID) && (surf.m_idVicus != obst.m_idParent))
+				if ((obst.m_idParent != INVALID_ID) && (surf.m_idVicus != obst.m_idParent))
 					continue;
 
 				// iterate through all vertexes of shading objects
-				for(const IBKMK::Vector3D v : obst.m_polygon.vertexes()) {
+				for (const IBKMK::Vector3D v : obst.m_polygon.vertexes()) {
 					double linefactor = 0;
 					IBKMK::Vector3D p;
 
@@ -580,14 +591,14 @@ void StructuralShading::findVisibleSurfaces(bool useClipping) {
 					IBKMK::lineToPointDistance(surf.m_polygon.vertexes()[i], surf.m_polygon.normal(), v, linefactor, p);
 
 					// Tolerance to skip all possible windows that are inside our window
-					if (linefactor>1e-4) {
+					if (linefactor > 1e-4) {
 						// store the surface that lies in front
 						surf.m_visibleSurfaces.insert(obst.m_id);
 						obstAdded = true; // we store that we already added the
 						break;
 					}
 				}
-				if(obstAdded)
+				if (obstAdded)
 					break; // Do not handle all the other surface vertexes
 			}
 		}

@@ -32,11 +32,9 @@
 
 #include <QtExt_Directories.h>
 
-#include  <QMessageBox>
+#include <QMessageBox>
 
 #include "SVProjectHandler.h"
-
-const unsigned int USER_ID_SPACE_START = 10000;
 
 /*
 - Materialien: 1010000-1020000
@@ -44,6 +42,8 @@ const unsigned int USER_ID_SPACE_START = 10000;
 - Components: 1000001-1010000
 - BC: 1030000-1031000
 - WindowGlazingSystems: 1031000-1035000
+- AcousticBoundaryConditions 1085001-1090000
+- AcousticSoundAbsorption 1090001-1950000
 - Windows: 1035000-1040000
 - SubSurfaceComponents: 1040000-1042000
 - SurfaceHeatings: 1050000-1050500
@@ -56,6 +56,7 @@ const unsigned int USER_ID_SPACE_START = 10000;
 - VentilationNatural: 1077500-1080000
 - Infiltration: 1080000-1082500
 - ZoneTemplates: 1082500-1085000
+- SoundAbsorptions: 1085001-1090000
 ToDo Hauke prüfen bitte Network würde ich dann bei ID-Space 1100000 anfangen lassen
 - Pipes: 1100000-1102500
 - Fluids: 1102500-1105000
@@ -69,6 +70,7 @@ SVDatabase::SVDatabase() :
 	m_constructions(1020000),
 	m_windows(1035000),
 	m_windowGlazingSystems(1031000),
+	m_acousticBoundaryConditions(1085001),
 	m_boundaryConditions(1030000),
 	m_components(1000001),
 	m_subSurfaceComponents(1040000),
@@ -79,7 +81,7 @@ SVDatabase::SVDatabase() :
 	m_networkControllers(1107500),
 	m_subNetworks(1110000),
 	m_supplySystems(1085000),
-//	m_EPDElements(USER_ID_SPACE_START),
+	m_epdDatasets(1090000),
 	m_schedules(1060000),
 	m_internalLoads(1065000),
 	m_zoneControlThermostat(1067500),
@@ -88,9 +90,18 @@ SVDatabase::SVDatabase() :
 	m_zoneIdealHeatingCooling(1075000),
 	m_ventilationNatural(1077500),
 	m_infiltration(1080000),
-	m_zoneTemplates(1082500)
-{
-}
+	m_zoneTemplates(1082500),
+	//	SubNetworks: 1110000-1112500
+	m_acousticTemplates(1400100),
+	m_acousticSoundProtectionTemplates(507000),
+	m_acousticSoundAbsorptions(1035000),
+	m_acousticReferenceComponents(1600000),
+	m_acousticBuildingTemplates(407000)
+
+  //TODO Anton Start Id ist glaube ich nicht richtig implementiert
+  //	 wird beachtet für VICUS::DB.add(), aber beim lesen der XML Dateien werden die in XML Dateinen angegebenen Ids genommen
+  //	 davon starten manche bei 1 und manche bei 10.000.000 ???
+{}
 
 
 void SVDatabase::readDatabases(DatabaseTypes t) {
@@ -104,6 +115,8 @@ void SVDatabase::readDatabases(DatabaseTypes t) {
 		m_constructions.readXML(			dbDir / "db_constructions.xml", "Constructions", "Construction", true);
 		m_windows.readXML(					dbDir / "db_windows.xml", "Windows", "Window", true);
 		m_windowGlazingSystems.readXML(		dbDir / "db_windowGlazingSystems.xml", "WindowGlazingSystems", "WindowGlazingSystem", true);
+		m_acousticBoundaryConditions.readXML(dbDir / "db_acousticBoundaryConditions.xml", "AcousticBoundaryConditions", "AcousticBoundaryCondition", true);
+		m_acousticSoundAbsorptions.readXML(	dbDir / "db_acousticSoundAbsorptions.xml", "AcousticSoundAbsorptions", "AcousticSoundAbsorption", true);
 		m_boundaryConditions.readXML(		dbDir / "db_boundaryConditions.xml", "BoundaryConditions", "BoundaryCondition", true);
 		m_components.readXML(				dbDir / "db_components.xml", "Components", "Component", true);
 		m_subSurfaceComponents.readXML(		dbDir / "db_subSurfaceComponents.xml", "SubSurfaceComponents", "SubSurfaceComponent", true);
@@ -123,7 +136,12 @@ void SVDatabase::readDatabases(DatabaseTypes t) {
 		m_infiltration.readXML(				dbDir / "db_infiltration.xml", "Infiltrations", "Infiltration", true);
 		m_zoneTemplates.readXML(			dbDir / "db_zoneTemplates.xml", "ZoneTemplates", "ZoneTemplate", true);
 		m_supplySystems.readXML(			dbDir / "db_supplySystems.xml", "SupplySystems", "SupplySystem", true);
-
+		m_acousticTemplates.readXML(		dbDir / "db_acousticTemplates.xml", "AcousticTemplates", "AcousticTemplate", true);
+		m_supplySystems.readXML(			dbDir / "db_supplySystems.xml", "SupplySystems", "SupplySystem", true);
+		m_epdDatasets.readXML(				dbDir / "db_epdDatasets.xml", "EpdDatasets", "EpdDataset", true);
+		m_acousticReferenceComponents.readXML(	dbDir / "db_acousticReferenceComponents.xml", "AcousticReferenceComponents", "AcousticReferenceComponent", true);
+		m_acousticBuildingTemplates.readXML(	dbDir / "db_acousticBuildingTemplates.xml", "AcousticBuildingTemplates", "AcousticBuildingTemplate", true);
+		m_acousticSoundProtectionTemplates.readXML(		dbDir / "db_acousticSoundProtectionTemplates.xml", "AcousticSoundProtectionTemplates", "AcousticSoundProtectionTemplate", true);
 	}
 
 	// user databases
@@ -140,6 +158,10 @@ void SVDatabase::readDatabases(DatabaseTypes t) {
 		m_windows.readXML(					userDbDir / "db_windows.xml", "Windows", "Window", false);
 	if (t == NUM_DT || t == DT_WindowGlazingSystems)
 		m_windowGlazingSystems.readXML(		userDbDir / "db_windowGlazingSystems.xml", "WindowGlazingSystems", "WindowGlazingSystem", false);
+	if (t == NUM_DT || t == DT_AcousticBoundaryConditions)
+		m_acousticBoundaryConditions.readXML(		userDbDir / "db_acousticBoundaryConditions.xml", "AcousticBoundaryConditions", "AcousticBoundaryCondition", false);
+	if (t == NUM_DT || t == DT_AcousticSoundAbsorptions)
+		m_acousticSoundAbsorptions.readXML(		userDbDir / "db_acousticSoundAbsorptions.xml", "AcousticSoundAbsorptions", "AcousticSoundAbsorption", false);
 	if (t == NUM_DT || t == DT_BoundaryConditions)
 		m_boundaryConditions.readXML(		userDbDir / "db_boundaryConditions.xml", "BoundaryConditions", "BoundaryCondition", false);
 	if (t == NUM_DT || t == DT_Components)
@@ -159,7 +181,9 @@ void SVDatabase::readDatabases(DatabaseTypes t) {
 	if (t == NUM_DT || t == DT_SubNetworks)
 		m_subNetworks.readXML(				userDbDir / "db_subNetworks.xml", "SubNetworks", "SubNetwork", false);
 	if (t == NUM_DT || t == DT_SupplySystems)
-		m_supplySystems.readXML(				userDbDir / "db_supplySystems.xml", "SupplySystems", "SupplySystem", false);
+		m_supplySystems.readXML(			userDbDir / "db_supplySystems.xml", "SupplySystems", "SupplySystem", false);
+	if (t == NUM_DT || t == DT_EpdDatasets)
+		m_epdDatasets.readXML(				userDbDir / "db_epdDatasets.xml", "EpdDatasets", "EpdDataset", false);
 	if (t == NUM_DT || t == DT_Schedules)
 		m_schedules.readXML(				userDbDir / "db_schedules.xml", "Schedules", "Schedule", false);
 	if (t == NUM_DT || t == DT_InternalLoads)
@@ -178,40 +202,73 @@ void SVDatabase::readDatabases(DatabaseTypes t) {
 		m_infiltration.readXML(				userDbDir / "db_infiltration.xml", "Infiltrations", "Infiltration", false);
 	if (t == NUM_DT || t == DT_ZoneTemplates)
 		m_zoneTemplates.readXML(			userDbDir / "db_zoneTemplates.xml", "ZoneTemplates", "ZoneTemplate", false);
+	if (t == NUM_DT || t == DT_AcousticTemplates)
+		m_acousticTemplates.readXML(			userDbDir / "db_acousticTemplates.xml", "AcousticTemplates", "AcousticTemplate", false);
+
 }
 
 
-void SVDatabase::writeDatabases() {
+void SVDatabase::writeDatabases(DatabaseTypes t) const {
 	// we only write user databases
-
-	// At this point the project is closed and we must not have any local DB elements anylonger.
-	// There is no easy way to test this.
 
 	IBK::Path userDbDir(QtExt::Directories::userDataDir().toStdString());
 
-	m_materials.writeXML(			userDbDir / "db_materials.xml", "Materials");
-	m_constructions.writeXML(		userDbDir / "db_constructions.xml", "Constructions");
-	m_windows.writeXML(				userDbDir / "db_windows.xml", "Windows");
-	m_windowGlazingSystems.writeXML(userDbDir / "db_windowGlazingSystems.xml", "WindowGlazingSystems");
-	m_boundaryConditions.writeXML(	userDbDir / "db_boundaryConditions.xml", "BoundaryConditions");
-	m_components.writeXML(			userDbDir / "db_components.xml", "Components");
-	m_subSurfaceComponents.writeXML(userDbDir / "db_subSurfaceComponents.xml", "SubSurfaceComponents");
-	m_surfaceHeatings.writeXML(		userDbDir / "db_surfaceHeatings.xml", "SurfaceHeatings");
-	m_pipes.writeXML(				userDbDir / "db_pipes.xml", "NetworkPipes");
-	m_fluids.writeXML(				userDbDir / "db_fluids.xml", "NetworkFluids");
-	m_networkComponents.writeXML(	userDbDir / "db_networkComponents.xml", "NetworkComponents");
-	m_networkControllers.writeXML(	userDbDir / "db_networkControllers.xml", "NetworkControllers");
-	m_subNetworks.writeXML		(	userDbDir / "db_subNetworks.xml", "SubNetworks");
-	m_schedules.writeXML(			userDbDir / "db_schedules.xml", "Schedules");
-	m_internalLoads.writeXML(		userDbDir / "db_internalLoads.xml", "InternalLoads");
-	m_zoneControlThermostat.writeXML(userDbDir / "db_zoneControlThermostat.xml", "ZoneControlThermostats");
-	m_zoneControlShading.writeXML(	userDbDir / "db_zoneControlShading.xml", "ZoneControlShadings");
-	m_zoneControlVentilationNatural.writeXML(userDbDir / "db_zoneControlVentilationNatural.xml", "ZoneControlVentilationNaturals");
-	m_zoneIdealHeatingCooling.writeXML(	userDbDir / "db_zoneIdealHeatingCooling.xml", "ZoneIdealHeatingCoolings");
-	m_ventilationNatural.writeXML(	userDbDir / "db_ventilationNatural.xml", "VentilationNaturals");
-	m_infiltration.writeXML(		userDbDir / "db_infiltration.xml", "Infiltrations");
-	m_zoneTemplates.writeXML(		userDbDir / "db_zoneTemplates.xml", "ZoneTemplates");
-	m_supplySystems.writeXML(		userDbDir / "db_supplySystems.xml", "SupplySystems");
+	if (t == NUM_DT || t == DT_Materials)
+		m_materials.writeXML(			userDbDir / "db_materials.xml", "Materials");
+	if (t == NUM_DT || t == DT_Constructions)
+		m_constructions.writeXML(		userDbDir / "db_constructions.xml", "Constructions");
+	if (t == NUM_DT || t == DT_Windows)
+		m_windows.writeXML(				userDbDir / "db_windows.xml", "Windows");
+	if (t == NUM_DT || t == DT_WindowGlazingSystems)
+		m_windowGlazingSystems.writeXML(userDbDir / "db_windowGlazingSystems.xml", "WindowGlazingSystems");
+	if (t == NUM_DT || t == DT_AcousticBoundaryConditions)
+		m_acousticBoundaryConditions.writeXML(	userDbDir / "db_acousticBoundaryConditions.xml", "AcousticBoundaryConditions");
+	if (t == NUM_DT || t == DT_AcousticSoundAbsorptions)
+		m_acousticSoundAbsorptions.writeXML(	userDbDir / "db_acousticSoundAbsorptions.xml", "AcousticSoundAbsorptions");
+	if (t == NUM_DT || t == DT_BoundaryConditions)
+		m_boundaryConditions.writeXML(	userDbDir / "db_boundaryConditions.xml", "BoundaryConditions");
+	if (t == NUM_DT || t == DT_Components)
+		m_components.writeXML(			userDbDir / "db_components.xml", "Components");
+	if (t == NUM_DT || t == DT_SubSurfaceComponents)
+		m_subSurfaceComponents.writeXML(userDbDir / "db_subSurfaceComponents.xml", "SubSurfaceComponents");
+	if (t == NUM_DT || t == DT_SurfaceHeating)
+		m_surfaceHeatings.writeXML(		userDbDir / "db_surfaceHeatings.xml", "SurfaceHeatings");
+	if (t == NUM_DT || t == DT_Pipes)
+		m_pipes.writeXML(				userDbDir / "db_pipes.xml", "NetworkPipes");
+	if (t == NUM_DT || t == DT_Fluids)
+		m_fluids.writeXML(				userDbDir / "db_fluids.xml", "NetworkFluids");
+	if (t == NUM_DT || t == DT_NetworkComponents)
+		m_networkComponents.writeXML(	userDbDir / "db_networkComponents.xml", "NetworkComponents");
+	if (t == NUM_DT || t == DT_NetworkControllers)
+		m_networkControllers.writeXML(	userDbDir / "db_networkControllers.xml", "NetworkControllers");
+	if (t == NUM_DT || t == DT_SubNetworks)
+		m_subNetworks.writeXML		(	userDbDir / "db_subNetworks.xml", "SubNetworks");
+	if (t == NUM_DT || t == DT_SupplySystems)
+		m_supplySystems.writeXML(		userDbDir / "db_supplySystems.xml", "SupplySystems");
+	if (t == NUM_DT || t == DT_Schedules)
+		m_schedules.writeXML(			userDbDir / "db_schedules.xml", "Schedules");
+	if (t == NUM_DT || t == DT_InternalLoads)
+		m_internalLoads.writeXML(		userDbDir / "db_internalLoads.xml", "InternalLoads");
+	if (t == NUM_DT || t == DT_ZoneControlThermostat)
+		m_zoneControlThermostat.writeXML(userDbDir / "db_zoneControlThermostat.xml", "ZoneControlThermostats");
+	if (t == NUM_DT || t == DT_ZoneControlShading)
+		m_zoneControlShading.writeXML(	userDbDir / "db_zoneControlShading.xml", "ZoneControlShadings");
+	if (t == NUM_DT || t == DT_ZoneControlNaturalVentilation)
+		m_zoneControlVentilationNatural.writeXML(userDbDir / "db_zoneControlVentilationNatural.xml", "ZoneControlVentilationNaturals");
+	if (t == NUM_DT || t == DT_ZoneIdealHeatingCooling)
+		m_zoneIdealHeatingCooling.writeXML(	userDbDir / "db_zoneIdealHeatingCooling.xml", "ZoneIdealHeatingCoolings");
+	if (t == NUM_DT || t == DT_VentilationNatural)
+		m_ventilationNatural.writeXML(	userDbDir / "db_ventilationNatural.xml", "VentilationNaturals");
+	if (t == NUM_DT || t == DT_Infiltration)
+		m_infiltration.writeXML(		userDbDir / "db_infiltration.xml", "Infiltrations");
+	if (t == NUM_DT || t == DT_ZoneTemplates)
+		m_zoneTemplates.writeXML(		userDbDir / "db_zoneTemplates.xml", "ZoneTemplates");
+	if (t == NUM_DT || t == DT_EpdDatasets)
+		m_epdDatasets.writeXML(			userDbDir / "db_epdDatasets.xml", "EpdDatasets");
+	if (t == NUM_DT || t == DT_AcousticSoundProtectionTemplates)
+		m_acousticSoundProtectionTemplates.writeXML(	userDbDir / "db_acousticSoundProtectionTemplates.xml", "AcousticSoundProtectionTemplates");
+
+
 }
 
 
@@ -221,7 +278,9 @@ void SVDatabase::mergeDatabases(const SVDatabase & db) {
 	m_constructions.import(db.m_constructions);
 	m_windows.import(db.m_windows);
 	m_windowGlazingSystems.import(db.m_windowGlazingSystems);
+	m_acousticBoundaryConditions.import(db.m_acousticBoundaryConditions);
 	m_boundaryConditions.import(db.m_boundaryConditions);
+	m_acousticSoundAbsorptions.import(db.m_acousticSoundAbsorptions);
 	m_components.import(db.m_components);
 	m_subSurfaceComponents.import(db.m_subSurfaceComponents);
 	m_surfaceHeatings.import(db.m_surfaceHeatings);
@@ -240,7 +299,10 @@ void SVDatabase::mergeDatabases(const SVDatabase & db) {
 	m_ventilationNatural.import(db.m_ventilationNatural);
 	m_infiltration.import(db.m_infiltration);
 	m_zoneTemplates.import(db.m_zoneTemplates);
-
+	m_acousticTemplates.import(db.m_acousticTemplates);
+	m_acousticReferenceComponents.import(db.m_acousticReferenceComponents);
+	m_acousticBuildingTemplates.import(db.m_acousticBuildingTemplates);
+	m_acousticSoundProtectionTemplates.import(db.m_acousticSoundProtectionTemplates);
 }
 
 
@@ -292,6 +354,8 @@ void SVDatabase::updateEmbeddedDatabase(VICUS::Project & p) {
 	storeVector(p.m_embeddedDB.m_constructions, m_constructions);
 	storeVector(p.m_embeddedDB.m_windows, m_windows);
 	storeVector(p.m_embeddedDB.m_windowGlazingSystems, m_windowGlazingSystems);
+	storeVector(p.m_embeddedDB.m_acousticBoundaryConditions, m_acousticBoundaryConditions);
+	storeVector(p.m_embeddedDB.m_acousticSoundAbsorptions, m_acousticSoundAbsorptions);
 	storeVector(p.m_embeddedDB.m_boundaryConditions, m_boundaryConditions);
 	storeVector(p.m_embeddedDB.m_components, m_components);
 	storeVector(p.m_embeddedDB.m_subSurfaceComponents, m_subSurfaceComponents);
@@ -302,6 +366,7 @@ void SVDatabase::updateEmbeddedDatabase(VICUS::Project & p) {
 	storeVector(p.m_embeddedDB.m_networkControllers, m_networkControllers);
 	storeVector(p.m_embeddedDB.m_subNetworks, m_subNetworks);
 	storeVector(p.m_embeddedDB.m_supplySystems, m_supplySystems);
+	storeVector(p.m_embeddedDB.m_EPDDatasets, m_epdDatasets);
 	storeVector(p.m_embeddedDB.m_schedules, m_schedules);
 	storeVector(p.m_embeddedDB.m_internalLoads, m_internalLoads);
 	storeVector(p.m_embeddedDB.m_zoneControlThermostats, m_zoneControlThermostat);
@@ -324,6 +389,10 @@ void SVDatabase::updateReferencedElements(const VICUS::Project &p) {
 	for (auto it=m_windows.begin(); it!=m_windows.end(); ++it)
 		it->second.m_isReferenced = false;
 	for (auto it=m_windowGlazingSystems.begin(); it!=m_windowGlazingSystems.end(); ++it)
+		it->second.m_isReferenced = false;
+	for (auto it=m_acousticBoundaryConditions.begin(); it!=m_acousticBoundaryConditions.end(); ++it)
+		it->second.m_isReferenced = false;
+	for (auto it=m_acousticSoundAbsorptions.begin(); it!=m_acousticSoundAbsorptions.end(); ++it)
 		it->second.m_isReferenced = false;
 	for (auto it=m_boundaryConditions.begin(); it!=m_boundaryConditions.end(); ++it)
 		it->second.m_isReferenced = false;
@@ -362,6 +431,10 @@ void SVDatabase::updateReferencedElements(const VICUS::Project &p) {
 	for (auto it=m_zoneTemplates.begin(); it!=m_zoneTemplates.end(); ++it)
 		it->second.m_isReferenced = false;
 	for (auto it=m_supplySystems.begin(); it!=m_supplySystems.end(); ++it)
+		it->second.m_isReferenced = false;
+	for (auto it=m_epdDatasets.begin(); it!=m_epdDatasets.end(); ++it)
+		it->second.m_isReferenced = false;
+	for (auto it=m_acousticSoundProtectionTemplates.begin(); it!=m_acousticSoundProtectionTemplates.end(); ++it)
 		it->second.m_isReferenced = false;
 
 
@@ -429,6 +502,8 @@ void SVDatabase::updateElementChildren() {
 	m_constructions.clearChildren();
 	m_windows.clearChildren();
 	m_windowGlazingSystems.clearChildren();
+	m_acousticBoundaryConditions.clearChildren();
+	m_acousticSoundAbsorptions.clearChildren();
 	m_boundaryConditions.clearChildren();
 	m_components.clearChildren();
 	m_subSurfaceComponents.clearChildren();
@@ -448,6 +523,10 @@ void SVDatabase::updateElementChildren() {
 	m_infiltration.clearChildren();
 	m_zoneTemplates.clearChildren();
 	m_supplySystems.clearChildren();
+	m_epdDatasets.clearChildren();
+	m_acousticSoundProtectionTemplates.clearChildren();
+	m_acousticTemplates.clearChildren();
+	m_acousticBuildingTemplates.clearChildren();
 
 
 	// Now set all children relations
@@ -484,11 +563,31 @@ void SVDatabase::updateElementChildren() {
 		}
 
 		VICUS::BoundaryCondition *bcB = m_boundaryConditions[c.m_idSideBBoundaryCondition];
-		c.m_childrenRefs.insert(bcB);
 		if (bcB != nullptr) {
+			c.m_childrenRefs.insert(bcB);
 			// schedules
 			if(bcB->m_heatConduction.m_otherZoneType == VICUS::InterfaceHeatConduction::OZ_Scheduled)
 				bcB->m_childrenRefs.insert(m_schedules[bcB->m_heatConduction.m_idSchedule]);
+		}
+
+		VICUS::AcousticBoundaryCondition *abcA = m_acousticBoundaryConditions[c.m_idSideAAcousticBoundaryCondition];
+		if (abcA != nullptr) {
+			c.m_childrenRefs.insert(abcA);
+
+			for (const VICUS::AcousticSoundAbsorptionPartition &asap : abcA->m_acousticSoundAbsorptionPartitions) {
+				VICUS::AcousticSoundAbsorption *asa = m_acousticSoundAbsorptions[asap.m_idSoundAbsorption];
+				c.m_childrenRefs.insert(asa);
+			}
+		}
+
+		VICUS::AcousticBoundaryCondition *abcB = m_acousticBoundaryConditions[c.m_idSideBAcousticBoundaryCondition];
+		if (abcB != nullptr) {
+			c.m_childrenRefs.insert(abcB);
+
+			for (const VICUS::AcousticSoundAbsorptionPartition &asap : abcB->m_acousticSoundAbsorptionPartitions) {
+				VICUS::AcousticSoundAbsorption *asa = m_acousticSoundAbsorptions[asap.m_idSoundAbsorption];
+				c.m_childrenRefs.insert(asa);
+			}
 		}
 	}
 
@@ -526,6 +625,7 @@ void SVDatabase::updateElementChildren() {
 			VICUS::Infiltration *inf = m_infiltration[idType];
 			VICUS::VentilationNatural *ventiNat = m_ventilationNatural[idType];
 			VICUS::ZoneControlShading *ctrlShad = m_zoneControlShading[idType];
+			VICUS::ZoneControlNaturalVentilation *ctrlNatVent = m_zoneControlVentilationNatural[idType];
 			if (intLoad	!= nullptr) {
 				zt.m_childrenRefs.insert(intLoad);
 				VICUS::ZoneTemplate::SubTemplateType tempType = (VICUS::ZoneTemplate::SubTemplateType)i;
@@ -570,6 +670,8 @@ void SVDatabase::updateElementChildren() {
 				zt.m_childrenRefs.insert(idealHeatCool);
 			else if(ctrlShad != nullptr)
 				zt.m_childrenRefs.insert(ctrlShad);
+			else if(ctrlNatVent != nullptr)
+				zt.m_childrenRefs.insert(ctrlNatVent);
 		}
 	}
 
@@ -634,11 +736,12 @@ void findDublicates(const VICUS::Database<T> & db, std::vector<SVDatabase::Dupli
 
 			// are we sufficiently similar
 			VICUS::AbstractDBElement::ComparisonResult compRes = it->second.equal(&it2->second);
-			if (compRes != VICUS::AbstractDBElement::Different) {
+			if (compRes == VICUS::AbstractDBElement::Equal) {
 				SVDatabase::DuplicateInfo info;
 				info.m_idFirst = it->first;
 				info.m_idSecond = it2->first;
-				info.m_identical = (compRes == VICUS::AbstractDBElement::Equal);
+				// we compare wether both are builtIn or not, this avoids replacing builtin elements
+				info.m_identical = it->second.m_builtIn == it2->second.m_builtIn;
 				dupInfos.push_back(info);
 				duplicateIDs.insert(it->first);
 				duplicateIDs.insert(it2->first);
@@ -658,6 +761,8 @@ void SVDatabase::determineDuplicates(std::vector<std::vector<SVDatabase::Duplica
 	findDublicates(m_constructions, duplicatePairs[DT_Constructions]);
 	findDublicates(m_windows, duplicatePairs[DT_Windows]);
 	findDublicates(m_windowGlazingSystems, duplicatePairs[DT_WindowGlazingSystems]);
+	findDublicates(m_acousticBoundaryConditions, duplicatePairs[DT_AcousticBoundaryConditions]);
+	findDublicates(m_acousticSoundAbsorptions, duplicatePairs[DT_AcousticSoundAbsorptions]);
 	findDublicates(m_boundaryConditions, duplicatePairs[DT_BoundaryConditions]);
 	findDublicates(m_components, duplicatePairs[DT_Components]);
 	findDublicates(m_subSurfaceComponents, duplicatePairs[DT_SubSurfaceComponents]);
@@ -668,6 +773,7 @@ void SVDatabase::determineDuplicates(std::vector<std::vector<SVDatabase::Duplica
 	findDublicates(m_networkControllers, duplicatePairs[DT_NetworkControllers]);
 	findDublicates(m_subNetworks, duplicatePairs[DT_SubNetworks]);
 	findDublicates(m_supplySystems, duplicatePairs[DT_SupplySystems]);
+	//findDublicates(m_epdDatasets, duplicatePairs[DT_EPDDatasets]);
 	findDublicates(m_schedules, duplicatePairs[DT_Schedules]);
 	findDublicates(m_internalLoads, duplicatePairs[DT_InternalLoads]);
 	findDublicates(m_zoneControlThermostat, duplicatePairs[DT_ZoneControlThermostat]);
@@ -677,6 +783,8 @@ void SVDatabase::determineDuplicates(std::vector<std::vector<SVDatabase::Duplica
 	findDublicates(m_ventilationNatural, duplicatePairs[DT_VentilationNatural]);
 	findDublicates(m_infiltration, duplicatePairs[DT_Infiltration]);
 	findDublicates(m_zoneTemplates, duplicatePairs[DT_ZoneTemplates]);
+	findDublicates(m_acousticTemplates, duplicatePairs[DT_AcousticTemplates]);
+	findDublicates(m_acousticSoundProtectionTemplates, duplicatePairs[DT_AcousticSoundProtectionTemplates]);
 }
 
 
@@ -766,6 +874,20 @@ void SVDatabase::removeDBElement(SVDatabase::DatabaseTypes dbType, unsigned int 
 			}
 			m_boundaryConditions.remove(elementID);
 			m_boundaryConditions.m_modified = true;
+		} break;
+
+		case SVDatabase::DT_AcousticSoundAbsorptions: {
+			// Acoustic Sound Absorptions are referenced in AcousticBoundaryConditions via Acoustic Sound Absorption Partiions
+			for(const auto & p : m_acousticBoundaryConditions) {
+				VICUS::AcousticBoundaryCondition & abc = const_cast<VICUS::AcousticBoundaryCondition &>(p.second); // const-cast is ok here
+				for (VICUS::AcousticSoundAbsorptionPartition & asap : abc.m_acousticSoundAbsorptionPartitions)
+					if (asap.m_idSoundAbsorption == elementID) {
+						asap.m_idSoundAbsorption = replacementElementID;
+					}
+
+				}
+			m_acousticSoundAbsorptions.remove(elementID);
+			m_acousticSoundAbsorptions.m_modified = true;
 		} break;
 
 		case SVDatabase::DT_Components: {
@@ -888,6 +1010,16 @@ void SVDatabase::removeDBElement(SVDatabase::DatabaseTypes dbType, unsigned int 
 		} break;
 
 
+		case SVDatabase::DT_EpdDatasets: {
+			for (const auto & p : m_epdDatasets) {
+				VICUS::EpdDataset & c = const_cast<VICUS::EpdDataset &>(p.second); // const-cast is ok here
+				replaceID(elementID, replacementElementID, c.m_id, m_epdDatasets);
+			}
+			m_epdDatasets.remove(elementID);
+			m_epdDatasets.m_modified = true;
+		} break;
+
+
 		case SVDatabase::DT_Schedules:
 			for (const auto & p : m_internalLoads) {
 				VICUS::InternalLoad & c = const_cast<VICUS::InternalLoad &>(p.second); // const-cast is ok here
@@ -945,9 +1077,9 @@ void SVDatabase::removeDBElement(SVDatabase::DatabaseTypes dbType, unsigned int 
 
 		case SVDatabase::DT_ZoneControlShading:  {
 			for (const auto & p : m_zoneTemplates) {
-				VICUS::ZoneTemplate & c = const_cast<VICUS::ZoneTemplate &>(p.second); // const-cast is ok here
 				// TODO Dirk : add as soon as available
-				//replaceID(elementID, replacementElementID, c.m_idReferences[VICUS::ZoneTemplate::ST_], m_zoneTemplates);
+				// 	VICUS::ZoneTemplate & c = const_cast<VICUS::ZoneTemplate &>(p.second); // const-cast is ok here
+				// replaceID(elementID, replacementElementID, c.m_idReferences[VICUS::ZoneTemplate::ST_], m_zoneTemplates);
 			}
 			m_zoneControlShading.remove(elementID);
 			m_zoneControlShading.m_modified = true;
@@ -1004,9 +1136,52 @@ void SVDatabase::removeDBElement(SVDatabase::DatabaseTypes dbType, unsigned int 
 			m_zoneTemplates.m_modified = true;
 		break;
 
-		case SVDatabase::NUM_DT: ; // just to make compiler happy
-	}
+		case DT_AcousticBoundaryConditions:
+			m_acousticBoundaryConditions.remove(elementID);
+			m_acousticBoundaryConditions.m_modified = true;
+		break;
 
+		case DT_AcousticTemplates:
+			// AcousticTemplates are referenced from project
+			if (SVProjectHandler::instance().isValid()) {
+				for (const VICUS::Building & b : project().m_buildings)
+					for (const VICUS::BuildingLevel & bl : b.m_buildingLevels)
+						for (const VICUS::Room & r : bl.m_rooms) {
+							VICUS::Room & c = const_cast<VICUS::Room &>(r); // const-cast is ok here
+							if (c.m_idAcousticBuildingType == elementID)
+								c.m_idAcousticBuildingType = replacementElementID;
+						}
+			}
+		break;
+
+		case DT_AcousticBuildingTemplates:
+			// AcousticTemplates are referenced from project
+			if (SVProjectHandler::instance().isValid()) {
+				for (const VICUS::Building & b : project().m_buildings)
+					for (const VICUS::BuildingLevel & bl : b.m_buildingLevels)
+						for (const VICUS::Room & r : bl.m_rooms) {
+							VICUS::Room & c = const_cast<VICUS::Room &>(r); // const-cast is ok here
+							if (c.m_idAcousticTemplate == elementID)
+								c.m_idAcousticTemplate = replacementElementID;
+						}
+			}
+		break;
+
+		case DT_AcousticSoundProtectionTemplates:
+			// SoundProtectionTemplates are referenced from project
+			if (SVProjectHandler::instance().isValid()) {
+				for (const VICUS::Building & b : project().m_buildings)
+					for (const VICUS::BuildingLevel & bl : b.m_buildingLevels)
+						for (const VICUS::Room & r : bl.m_rooms) {
+							VICUS::Room & c = const_cast<VICUS::Room &>(r); // const-cast is ok here
+							if (c.m_idSoundProtectionTemplate == elementID)
+								c.m_idSoundProtectionTemplate = replacementElementID;
+						}
+			}
+		break;
+		case SVDatabase::NUM_DT: ; // just to make compiler happy
+		break;
+	}
 }
 
 
@@ -1014,7 +1189,10 @@ void SVDatabase::removeLocalElements() {
 	m_materials.removeLocalElements();
 	m_constructions.removeLocalElements();
 	m_windows.removeLocalElements();
+	m_epdDatasets.removeLocalElements();
 	m_windowGlazingSystems.removeLocalElements();
+	m_acousticBoundaryConditions.removeLocalElements();
+	m_acousticSoundAbsorptions.removeLocalElements();
 	m_boundaryConditions.removeLocalElements();
 	m_components.removeLocalElements();
 	m_subSurfaceComponents.removeLocalElements();
@@ -1032,7 +1210,9 @@ void SVDatabase::removeLocalElements() {
 	m_zoneIdealHeatingCooling.removeLocalElements();
 	m_ventilationNatural.removeLocalElements();
 	m_infiltration.removeLocalElements();
-	m_zoneTemplates.removeLocalElements();
+	m_acousticTemplates.removeLocalElements();
+	m_acousticSoundProtectionTemplates.removeLocalElements();
+	m_acousticSoundAbsorptions.removeLocalElements();
 }
 
 
@@ -1048,6 +1228,10 @@ void SVDatabase::removeNotReferencedLocalElements(SVDatabase::DatabaseTypes dbTy
 			m_windows.removeNotReferencedLocalElements(); break;
 		case DT_WindowGlazingSystems:
 			m_windowGlazingSystems.removeNotReferencedLocalElements(); break;
+		case DT_AcousticBoundaryConditions:
+			m_acousticBoundaryConditions.removeNotReferencedLocalElements(); break;
+		case DT_AcousticSoundAbsorptions:
+			m_acousticSoundAbsorptions.removeNotReferencedLocalElements(); break;
 		case DT_BoundaryConditions:
 			m_boundaryConditions.removeNotReferencedLocalElements(); break;
 		case DT_Components:
@@ -1064,6 +1248,8 @@ void SVDatabase::removeNotReferencedLocalElements(SVDatabase::DatabaseTypes dbTy
 			m_subNetworks.removeNotReferencedLocalElements(); break;
 		case DT_SupplySystems:
 			m_supplySystems.removeNotReferencedLocalElements(); break;
+		case DT_EpdDatasets:
+			m_epdDatasets.removeNotReferencedLocalElements(); break;
 		case DT_NetworkControllers:
 			m_networkControllers.removeNotReferencedLocalElements();  break;
 		case DT_NetworkComponents:
@@ -1086,8 +1272,17 @@ void SVDatabase::removeNotReferencedLocalElements(SVDatabase::DatabaseTypes dbTy
 			m_infiltration.removeNotReferencedLocalElements(); break;
 		case DT_ZoneTemplates:
 			m_zoneTemplates.removeNotReferencedLocalElements(); break;
+		break;
+		case DT_AcousticTemplates:
+			m_acousticTemplates.removeNotReferencedLocalElements(); break;
+		break;
+		case DT_AcousticSoundProtectionTemplates:
+			m_acousticSoundProtectionTemplates.removeNotReferencedLocalElements(); break;
+		case DT_AcousticBuildingTemplates:
+			m_acousticBuildingTemplates.removeNotReferencedLocalElements(); break;
+		break;
 		case NUM_DT:
-			break;
+		break;
 	}
 }
 
@@ -1136,6 +1331,12 @@ void SVDatabase::findLocalChildren(DatabaseTypes dbType, unsigned int id,
 		case DT_WindowGlazingSystems:
 			Q_ASSERT(m_windowGlazingSystems[id] != nullptr);
 			m_windowGlazingSystems[id]->collectLocalChildren(localChildren); break;
+		case DT_AcousticBoundaryConditions:
+			Q_ASSERT(m_acousticBoundaryConditions[id] != nullptr);
+			m_acousticBoundaryConditions[id]->collectLocalChildren(localChildren); break;
+		case DT_AcousticSoundAbsorptions:
+			Q_ASSERT(m_acousticSoundAbsorptions[id] != nullptr);
+			m_acousticSoundAbsorptions[id]->collectLocalChildren(localChildren); break;
 		case DT_BoundaryConditions:
 			Q_ASSERT(m_boundaryConditions[id] != nullptr);
 			m_boundaryConditions[id]->collectLocalChildren(localChildren); break;
@@ -1160,6 +1361,9 @@ void SVDatabase::findLocalChildren(DatabaseTypes dbType, unsigned int id,
 		case DT_SupplySystems:
 			Q_ASSERT(m_supplySystems[id] != nullptr);
 			m_supplySystems[id]->collectLocalChildren(localChildren); break;
+		case DT_EpdDatasets:
+			Q_ASSERT(m_epdDatasets[id] != nullptr);
+			m_epdDatasets[id]->collectLocalChildren(localChildren); break;
 		case DT_NetworkControllers:
 			Q_ASSERT(m_networkControllers[id] != nullptr);
 			m_networkControllers[id]->collectLocalChildren(localChildren);  break;
@@ -1193,8 +1397,19 @@ void SVDatabase::findLocalChildren(DatabaseTypes dbType, unsigned int id,
 		case DT_ZoneTemplates:
 			Q_ASSERT(m_zoneTemplates[id] != nullptr);
 			m_zoneTemplates[id]->collectLocalChildren(localChildren); break;
+		case DT_AcousticTemplates:
+			Q_ASSERT(m_acousticTemplates[id] != nullptr);
+			m_acousticTemplates[id]->collectLocalChildren(localChildren); break;
+		case DT_AcousticSoundProtectionTemplates:
+			Q_ASSERT(m_acousticSoundProtectionTemplates[id] != nullptr);
+			m_acousticSoundProtectionTemplates[id]->collectLocalChildren(localChildren); break;
+		case DT_AcousticBuildingTemplates:
+			Q_ASSERT(m_acousticBuildingTemplates[id] != nullptr);
+			m_acousticBuildingTemplates[id]->collectLocalChildren(localChildren); break;
+		break;
 		case NUM_DT:
-			break;
+
+		break;
 	}
 }
 

@@ -166,7 +166,6 @@ add_subdirectory( ../../externals/sundials/src sundials)
 add_subdirectory( ../../externals/SuiteSparse/projects/cmake_local SuiteSparse )
 add_subdirectory( ../../externals/DataIO/projects/cmake_local DataIO )
 add_subdirectory( ../../externals/CCM/projects/cmake_local CCM )
-add_subdirectory( ../../externals/Shading/projects/cmake_local SHADING )
 add_subdirectory( ../../externals/IBK/projects/cmake_local IBK )
 add_subdirectory( ../../externals/IBKMK/projects/cmake_local IBKMK )
 add_subdirectory( ../../externals/Nandrad/projects/cmake_local Nandrad )
@@ -179,7 +178,9 @@ add_subdirectory( ../../externals/IDFReader/projects/cmake_local IDFReader )
 
 if (NOT DISABLE_QT)
 	message("*** Building Qt-based libs ***")
-	
+
+	add_subdirectory( ../../externals/Shading/projects/cmake_local SHADING )
+	add_subdirectory( ../../externals/RoomClipper/projects/cmake_local RoomClipper )
 	add_subdirectory( ../../externals/Vicus/projects/cmake_local Vicus )
 	add_subdirectory( ../../externals/qwt/projects/cmake_local qwt )
 	add_subdirectory( ../../externals/QtExt/projects/cmake_local QtExt )
@@ -197,6 +198,7 @@ add_subdirectory( ../../View3D/projects/cmake_local View3D)
 
 add_subdirectory( ../../NandradSolver/projects/cmake_local NandradSolver)
 add_subdirectory( ../../NandradSolverFMI/projects/cmake_local NandradSolverFMI)
+add_subdirectory( ../..//FMUs/CO2ComfortVentilation/projects/cmake CO2ComfortVentilation)
 
 if (NOT DISABLE_QT)
 	add_subdirectory( ../../SIM-VICUS/projects/cmake_local SIM-VICUS)

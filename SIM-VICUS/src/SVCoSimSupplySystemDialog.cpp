@@ -49,8 +49,6 @@ int SVCoSimSupplySystemDialog::exec() {
 
 
 bool SVCoSimSupplySystemDialog::checkProjectData() const {
-	const VICUS::Project & p = project();
-
 	QString errorColor = SVSettings::instance().m_theme == SVSettings::TT_Dark ? "red" : "darkRed";
 	QString successColor = SVSettings::instance().m_theme == SVSettings::TT_Dark ? "lime" : "darkGreen";
 
@@ -533,8 +531,6 @@ void SVCoSimSupplySystemDialog::on_pushButtonGenerate_clicked() {
 	const VICUS::Project &project = SVProjectHandler::instance().project();
 
 
-	bool success = true;
-
 	// NANDRAD FMU
 
 	NANDRAD::Project nandradProject;
@@ -635,13 +631,6 @@ void SVCoSimSupplySystemDialog::on_pushButtonLaunchMasterSim_clicked() {
 																  "MASTERSIM in the preferences dialog!"));
 
 		SVMainWindow::instance().preferencesDialog()->edit(0);
-		// TODO Andreas, find a way to show a mode-less window within a dialog's event loop
-		QEventLoop loop;
-		connect(SVMainWindow::instance().preferencesDialog(), &SVPreferencesDialog::closed, &loop, &QEventLoop::quit);
-		loop.exec();
-
-		// ensure that preferences dialog is in foreground
-//		stackUnder(SVMainWindow::instance().preferencesDialog());
 
 		masterSimPath = SVSettings::instance().m_masterSimExecutable;
 

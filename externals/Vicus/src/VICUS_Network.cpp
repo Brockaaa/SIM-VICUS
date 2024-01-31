@@ -27,9 +27,7 @@
 #include "VICUS_NetworkLine.h"
 #include "VICUS_NetworkFluid.h"
 #include "VICUS_NetworkPipe.h"
-#include "VICUS_Project.h"
 #include "VICUS_KeywordList.h"
-#include "VICUS_utilities.h"
 
 #include <QFile>
 #include <QJsonParseError>
@@ -43,12 +41,10 @@
 #include <IBK_Path.h>
 #include <IBK_FileReader.h>
 #include <IBK_FluidPhysics.h>
+#include <IBK_FileUtils.h>
 
 #include <IBKMK_3DCalculations.h>
 #include <IBKMK_UTM.h>
-
-
-
 
 #include <fstream>
 #include <algorithm>
@@ -74,6 +70,8 @@ Network::Network() {
 	KeywordList::setParameter(m_para, "Network::para_t", Network::para_t::P_InitialFluidTemperature, 20);
 	KeywordList::setParameter(m_para, "Network::para_t", Network::para_t::P_ReferencePressure, 0);
 
+	// sets the default simultaneity function
+	setDefaultSimultaneity(m_simultaneity);
 }
 
 
@@ -98,7 +96,7 @@ unsigned int Network::addNode(unsigned int preferedId, const IBKMK::Vector3D &v,
 	// if there is an existing node with identical coordinates, return its id and dont add a new one
 	if (consistentCoordinates){
 		for (NetworkNode &n: m_nodes){
-			if (n.m_position.distanceTo(v) < GeometricResolution){
+			if (n.m_position.distanceTo(v) < NetworkGeometricResolution){
 				if(n.m_type != type){
 					n.m_type = type;
 				}
@@ -136,7 +134,10 @@ void Network::addEdge(const NetworkEdge &edge) {
 
 
 void Network::updateNodeEdgeConnectionPointers() {
+	FUNCID(Network::updateNodeEdgeConnectionPointers);
+
 	// resolve all node and edge pointers
+	// check for valid node IDs and throws exceptions, if any check fails
 
 	// first clear edge pointers in all nodes
 	for (NetworkNode & n : m_nodes)
@@ -144,9 +145,28 @@ void Network::updateNodeEdgeConnectionPointers() {
 
 	// loop over all edges
 	for (NetworkEdge & e : m_edges) {
+		// an edge must have 2 valid node IDs
+		if (e.nodeId1() == VICUS::INVALID_ID || e.nodeId2() == VICUS::INVALID_ID)
+			throw IBK::Exception(IBK::FormatString("Network edge #%1 does not have to valid node IDs.").arg(e.m_id), FUNC_ID);
+
+		// an edge must not reference the same node twice
+		if (e.nodeId1() == e.nodeId2())
+			throw IBK::Exception(IBK::FormatString("Network edge #%1 referenced the same node #%2 on both sides.")
+								 .arg(e.m_id).arg(e.nodeId1()), FUNC_ID);
+
 		// store pointers to connected nodes
-		e.m_node1 = nodeById(e.nodeId1());
-		e.m_node2 = nodeById(e.nodeId2());
+		try {
+			e.m_node1 = nodeById(e.nodeId1());
+		} catch (...) {
+			throw IBK::Exception(IBK::FormatString("Network edge #%1 references invalid node #%2.")
+								 .arg(e.m_id).arg(e.nodeId1()), FUNC_ID);
+		}
+		try {
+			e.m_node2 = nodeById(e.nodeId2());
+		} catch (...) {
+			throw IBK::Exception(IBK::FormatString("Network edge #%1 references invalid node #%2.")
+								 .arg(e.m_id).arg(e.nodeId2()), FUNC_ID);
+		}
 
 		// now also store pointer to this edge into connected nodes
 		e.m_node1->m_edges.push_back(&e);
@@ -186,13 +206,13 @@ void Network::updateVisualizationRadius(const VICUS::Database<VICUS::NetworkPipe
 			case NetworkNode::NT_SubStation: {
 				// scale node by heating demand - 1 mm / 1000 W; 4800 W -> 48 * 0.01 = radius = 0.48
 				if (no.m_maxHeatingDemand.value > 0)
-					radius *= no.m_maxHeatingDemand.value / 1000;
+					radius = m_scaleNodes / 50 * (1 + std::sqrt(no.m_maxHeatingDemand.value / 1000) );
 			} break;
 			case NetworkNode::NT_Source:
 			case NetworkNode::NT_Mixer: {
 				// if we have connected pipes, compute max radius of adjacent pipes (our node should be larger than the pipes)
 				for (const VICUS::NetworkEdge * edge: no.m_edges)
-					radius = std::max(radius, edge->m_visualizationRadius*1.2); // enlarge by 20 %  over edge diameter
+					radius = std::max(radius, edge->m_visualizationRadius*1.2);// enlarge by 20 %  over edge diameter
 			} break;
 			default:;
 		}
@@ -231,33 +251,58 @@ void Network::setVisible(bool visible) {
 }
 
 
+void Network::setDefaultSimultaneity(IBK::LinearSpline & simultaneity) {
+	simultaneity.clear();
+	// function according to Winter et al., Euroheat & Power 2001
+	double a = 0.449677646267461;
+	double b = 0.551234688;
+	double c = 53.84382392;
+	double d = 1.762743268;
+	unsigned int nmax = 300;
+	std::vector<double> num;
+	std::vector<double> sim;
+	unsigned int i = 1;
+	while (i<nmax) {
+		num.push_back(i);
+		sim.push_back( std::min(1.0, a + (b / (1 + std::pow(i/c, d))) ));
+		if (i<5)
+			i++;
+		else //if (i<50)
+			i+=5;
+//		else
+//			i+=10;
+	}
+	simultaneity.setValues(num, sim);
+}
+
+
 NetworkNode *Network::nodeById(unsigned int id) {
+	FUNCID(Network::nodeById);
 	for (NetworkNode &n: m_nodes){
 		if (n.m_id == id)
 			return &n;
 	}
-	IBK_ASSERT(false);
-	return nullptr;
+	throw IBK::Exception(IBK::FormatString("Invalid/unknown node ID #%1").arg(id), FUNC_ID);
 }
 
 
 const NetworkNode *Network::nodeById(unsigned int id) const {
+	FUNCID(Network::nodeById() const);
 	for (const NetworkNode &n: m_nodes){
 		if (n.m_id == id)
 			return &n;
 	}
-	IBK_ASSERT(false);
-	return nullptr;
+	throw IBK::Exception(IBK::FormatString("Invalid/unknown node ID #%1").arg(id), FUNC_ID);
 }
 
 
 unsigned int Network::indexOfNode(unsigned int id) const {
+	FUNCID(Network::indexOfNode);
 	for (unsigned int i=0; i<m_nodes.size(); ++i){
 		if (m_nodes[i].m_id == id)
 			return i;
 	}
-	IBK_ASSERT(false);
-	return 99999;
+	throw IBK::Exception(IBK::FormatString("Invalid/unknown node ID #%1").arg(id), FUNC_ID);
 }
 
 
@@ -279,6 +324,8 @@ QColor Network::colorHeatExchangeType(NANDRAD::HydraulicNetworkHeatExchange::Mod
 			return QColor("#90BE6D");
 		case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureConstructionLayer:
 			return QColor("#34836c");
+		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatingDemandSpaceHeating:
+			return QColor("#8B68a9");
 		case NANDRAD::HydraulicNetworkHeatExchange::NUM_T:
 			return QColor("#5B4869");
 	}
@@ -624,24 +671,50 @@ FUNCID(Network::sizePipeDimensions);
 																   std::numeric_limits<double>::lowest(), true,
 																   std::numeric_limits<double>::max(), true, nullptr);
 		} catch (IBK::Exception &ex) {
-			throw IBK::Exception(ex, "Error in sizing pipes algorithm!", FUNC_ID);
+			throw IBK::Exception(ex, "Invalid parameters in pipes sizing algorithm!", FUNC_ID);
 		}
 	}
 
-	// set all edges heating demand = 0
-	for (NetworkEdge &edge: m_edges)
+	// check simultaneity
+	std::string errMsg;
+	m_simultaneity.makeSpline(errMsg);
+	if (!errMsg.empty())
+		throw IBK::Exception(IBK::FormatString("Invalid simultaneity function.\n%1").arg(errMsg), FUNC_ID);
+	for (unsigned int i=0; i<m_simultaneity.size(); ++i) {
+		if (m_simultaneity.x()[i] < 1)
+			errMsg += IBK::FormatString("\nx must be >=1 but is '%1', found in row %2").arg(m_simultaneity.x()[i]).arg(i).str();
+		if (m_simultaneity.y()[i] > 1 || m_simultaneity.y()[i] <= 0 )
+			errMsg += IBK::FormatString("\ny must  be 0 < y <= 1 but is '%1', found in row %2").arg(m_simultaneity.y()[i]).arg(i).str();
+		if (!errMsg.empty())
+			throw IBK::Exception(IBK::FormatString("Invalid simultaneity function.\n%1").arg(errMsg), FUNC_ID);
+	}
+
+	// init all edges
+	for (NetworkEdge &edge: m_edges) {
 		edge.m_nominalHeatingDemand = 0;
+		edge.m_numberDownStreamBuildings = 0;
+	}
 
 	// find shortest path for each building node to closest source node
 	std::map<unsigned int, std::vector<NetworkEdge *> > shortestPaths;
 	findShortestPathForBuildings(shortestPaths);
 
+	// set number of connected buildings to each edge
+	for (auto it = shortestPaths.begin(); it != shortestPaths.end(); ++it){
+		std::vector<NetworkEdge *> &shortestPath = it->second; // for readability
+		for (NetworkEdge * edge: shortestPath) {
+			++edge->m_numberDownStreamBuildings;
+		}
+	}
+
 	// now for each building node: go along shortest path and add the nodes heating demand to each edge along that path
 	for (auto it = shortestPaths.begin(); it != shortestPaths.end(); ++it){
 		NetworkNode *building = nodeById(it->first);			// get pointer to building node
 		std::vector<NetworkEdge *> &shortestPath = it->second; // for readability
-		for (NetworkEdge * edge: shortestPath)
-			edge->m_nominalHeatingDemand += building->m_maxHeatingDemand.value;
+		for (NetworkEdge * edge: shortestPath) {
+			edge->m_nominalHeatingDemand += building->m_maxHeatingDemand.value
+											* m_simultaneity.value(edge->m_numberDownStreamBuildings); // interpolated simultaneity
+		}
 	}
 
 	// in case there is a pipe which is not part of any path (e.g. in circular grid): assign the adjacent heating demand
@@ -894,52 +967,52 @@ size_t Network::numberOfBuildings() const {
 }
 
 void Network::writeNetworkNodesCSV(const IBK::Path &file) const {
-	std::ofstream f;
-	f.open(file.str(), std::ofstream::out | std::ofstream::trunc);
+	std::ofstream out;
+	IBK::open_ofstream(out, file);
 	for (const NetworkNode &n: m_nodes){
-		f.precision(0);
-		f << std::fixed << n.m_id << "\t";
-		f.precision(10);
-		f << std::fixed << n.m_position.m_x << "\t" << n.m_position.m_y << "\t" << std::endl;
+		out.precision(0);
+		out << std::fixed << n.m_id << "\t";
+		out.precision(10);
+		out << std::fixed << n.m_position.m_x << "\t" << n.m_position.m_y << "\t" << std::endl;
 	}
-	f.close();
+	out.close();
 }
 
 void Network::writeNetworkEdgesCSV(const IBK::Path &file) const {
-	std::ofstream f;
-	f.open(file.str(), std::ofstream::out | std::ofstream::trunc);
-	f.precision(0);
+	std::ofstream out;
+	IBK::open_ofstream(out, file);
+	out.precision(0);
 	for (const NetworkEdge &e: m_edges){
-		f << std::fixed << e.m_idNodeInlet << "\t" <<e.m_idNodeOutlet << "\t" << e.m_idSoil;
-		f.precision(10);
-		f << "\t" << e.m_cumulativeTempChangeIndicator << "\t" << e.length() << std::endl;
+		out << std::fixed << e.m_id << "\t" << e.m_idSoil;
+		out.precision(10);
+		out << "\t" << e.m_cumulativeTempChangeIndicator << "\t" << e.length() << std::endl;
 	}
-	f.close();
+	out.close();
 }
 
 
 void Network::writePathCSV(const IBK::Path &file, const NetworkNode & node, const std::vector<NetworkEdge *> &path) const {
-	std::ofstream f;
-	f.open(file.str(), std::ofstream::out | std::ofstream::trunc);
-	f.precision(10);
-	f << std::fixed << node.m_position.m_x << "\t" << node.m_position.m_y << std::endl;
+	std::ofstream out;
+	IBK::open_ofstream(out, file);
+	out.precision(10);
+	out << std::fixed << node.m_position.m_x << "\t" << node.m_position.m_y << std::endl;
 	for (const NetworkEdge *e: path){
-		f << std::fixed << e->m_node1->m_position.m_x << "\t" << e->m_node1->m_position.m_y << "\t"
+		out << std::fixed << e->m_node1->m_position.m_x << "\t" << e->m_node1->m_position.m_y << "\t"
 		  << e->m_node2->m_position.m_x << "\t" << e->m_node2->m_position.m_y << "\t" << e->length() << std::endl;
 	}
-	f.close();
+	out.close();
 }
 
 
 void Network::writeBuildingsCSV(const IBK::Path &file) const {
-	std::ofstream f;
-	f.open(file.str(), std::ofstream::out | std::ofstream::trunc);
-	f.precision(10);
+	std::ofstream out;
+	IBK::open_ofstream(out, file);
+	out.precision(10);
 	for (const NetworkNode &n: m_nodes){
 		if (n.m_type==NetworkNode::NT_SubStation)
-			f << std::fixed << n.m_position.m_x << "\t" << n.m_position.m_y << "\t" << n.m_maxHeatingDemand.value << std::endl;
+			out << std::fixed << n.m_position.m_x << "\t" << n.m_position.m_y << "\t" << n.m_maxHeatingDemand.value << std::endl;
 	}
-	f.close();
+	out.close();
 }
 
 

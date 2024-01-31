@@ -57,7 +57,7 @@ const QColor ConstructionView::ColorList[12] = {
 
 ConstructionView::ConstructionView(QWidget *parent) :
 	QGraphicsView(parent),
-	m_device(0),
+	m_device(nullptr),
 	m_diagramScene(new ConstructionGraphicsScene(true, this)),
 	m_margins(5),
 	m_resolution(1.0),
@@ -80,7 +80,6 @@ ConstructionView::ConstructionView(QWidget *parent) :
 						 | QGraphicsView::DontSavePainterState
 						 | QGraphicsView::DontAdjustForAntialiasing);
 	setAlignment(Qt::AlignLeft | Qt::AlignBottom);
-
 
 }
 
@@ -223,6 +222,8 @@ void ConstructionView::createSvg(QIODevice * outputDevice) {
 }
 
 void ConstructionView::mousePressEvent(QMouseEvent *event) {
+	if (m_isReadOnly)
+		return;
 	if(event->button() == Qt::LeftButton) {
 		QPointF pos = event->localPos();
 		QGraphicsItem* item = itemAt(pos.toPoint());
@@ -242,6 +243,8 @@ void ConstructionView::mousePressEvent(QMouseEvent *event) {
 }
 
 void ConstructionView::mouseDoubleClickEvent(QMouseEvent *event) {
+	if (m_isReadOnly)
+		return;
 	QPointF pos = event->localPos();
 	QGraphicsItem* item = itemAt(pos.toPoint());
 	QGraphicsRectItem* rectItem = dynamic_cast<QGraphicsRectItem*>(item);
@@ -298,6 +301,8 @@ void ConstructionView::sceneSelectionChanged() {
 }
 
 void ConstructionView::sceneDoubleClicked() {
+	if (m_isReadOnly)
+		return;
 	QList<QGraphicsItem *> items = m_diagramScene->selectedItems();
 	int index = -1;
 	if(items.size() == 1)

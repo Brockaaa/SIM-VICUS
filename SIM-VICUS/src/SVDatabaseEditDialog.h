@@ -31,7 +31,7 @@
 #include <VICUS_InternalLoad.h>
 
 namespace Ui {
-	class SVDatabaseEditDialog;
+class SVDatabaseEditDialog;
 }
 
 class SVAbstractDatabaseTableModel;
@@ -69,10 +69,12 @@ public:
 				pressed, the function returns the ID of the selected item. Otherwise, if the
 				dialog was aborted, the function returns VICUS::INVALID_ID.
 	*/
-	unsigned int select(unsigned int initialId);
+	unsigned int select(unsigned int initialId, bool resetModel = true, QString filterText = "", int filterColumn = -1);
 
 	/*! Event filter for resizing events in order to resize row to its contents. */
 	bool eventFilter(QObject * obj, QEvent * event) override;
+
+	SVAbstractDatabaseTableModel * dbModel() const;
 
 private slots:
 	void on_pushButtonSelect_clicked();
@@ -98,20 +100,38 @@ private slots:
 
 	void on_pushButtonRemoveUnusedElements_clicked();
 
+	void onStyleChanged();
+
+	void on_toolButtonApplyFilter_clicked();
+
+	void on_comboBoxColumn_currentIndexChanged(int /*index*/);
+
+	void on_lineEditFilter_returnPressed();
+
+	void onScreenChanged(const QScreen * screen);
+
 private:
 	/*! If table contains an element with matching ID, this row is made current.
 		Signals are blocked in this function.
 	*/
 	void selectItemById(unsigned int id);
+	/*! Writes the user DB in case it was modified
+	 */
+	void writeUserDB();
 
+	/*! Adjusts size of dialog and share that is occupied by table view */
+	void resizeDBDialog(double maxShareTableView=0.6);
 
 	// Factory functions to create all the individual dialogs
 	static SVDatabaseEditDialog * createMaterialEditDialog(QWidget * parent);
+	static SVDatabaseEditDialog * createEpdEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createConstructionEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createComponentEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createSubSurfaceComponentEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createWindowEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createWindowGlazingSystemEditDialog(QWidget * parent);
+	static SVDatabaseEditDialog * createAcousticBoundaryConditionEditDialog(QWidget * parent);
+	static SVDatabaseEditDialog * createAcousticSoundAbsorptionEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createBoundaryConditionsEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createScheduleEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createInternalLoadsEditDialog(QWidget * parent, VICUS::InternalLoad::Category category);
@@ -123,13 +143,11 @@ private:
 	static SVDatabaseEditDialog * createSurfaceHeatingSystemEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createVentilationNaturalEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createSupplySystemsEditDialog(QWidget * parent);
-
 	static SVDatabaseEditDialog * createNetworkComponentEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createPipeEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createFluidEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createNetworkControllerEditDialog(QWidget * parent);
 	static SVDatabaseEditDialog * createSubNetworkEditDialog(QWidget * parent);
-
 
 	Ui::SVDatabaseEditDialog *m_ui;
 
@@ -140,6 +158,10 @@ private:
 	/*! The edit widget (owned). */
 	SVAbstractDatabaseEditWidget	*m_editWidget	= nullptr;
 	QWidget							*m_editWidgetContainerWidget = nullptr;
+
+	QString							m_currentFilter = "";
+
+	QSize							m_screenSize;
 
 	friend class SVMainWindow;
 };

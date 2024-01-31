@@ -14,7 +14,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>3</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="pageVertexes">
       <layout class="QGridLayout" name="gridLayout_8">
@@ -184,7 +184,7 @@
            </widget>
           </item>
           <item row="9" column="3">
-           <widget class="QToolButton" name="toolButtonEditComponents1">
+           <widget class="QToolButton" name="toolButtonEditComponents">
             <property name="text">
              <string>...</string>
             </property>
@@ -200,7 +200,7 @@
           <item row="5" column="3">
            <widget class="QToolButton" name="toolButtonAddBuildingLevel">
             <property name="icon">
-             <iconset resource="../resources/SIM-VICUS.qrc">
+             <iconset>
               <normaloff>:/gfx/actions/24x24/plus.png</normaloff>:/gfx/actions/24x24/plus.png</iconset>
             </property>
            </widget>
@@ -228,7 +228,7 @@
           <item row="4" column="3">
            <widget class="QToolButton" name="toolButtonAddBuilding">
             <property name="icon">
-             <iconset resource="../resources/SIM-VICUS.qrc">
+             <iconset>
               <normaloff>:/gfx/actions/24x24/plus.png</normaloff>:/gfx/actions/24x24/plus.png</iconset>
             </property>
            </widget>
@@ -310,7 +310,7 @@
           <item row="6" column="3">
            <widget class="QToolButton" name="toolButtonAddZone">
             <property name="icon">
-             <iconset resource="../resources/SIM-VICUS.qrc">
+             <iconset>
               <normaloff>:/gfx/actions/24x24/plus.png</normaloff>:/gfx/actions/24x24/plus.png</iconset>
             </property>
            </widget>
@@ -415,7 +415,7 @@
            </widget>
           </item>
           <item row="5" column="2">
-           <widget class="QToolButton" name="toolButtonEditComponents2">
+           <widget class="QToolButton" name="toolButtonEditComponentsFloor">
             <property name="text">
              <string>...</string>
             </property>
@@ -441,7 +441,7 @@
           <item row="3" column="2">
            <widget class="QToolButton" name="toolButtonAddBuildingLevel2">
             <property name="icon">
-             <iconset resource="../resources/SIM-VICUS.qrc">
+             <iconset>
               <normaloff>:/gfx/actions/24x24/plus.png</normaloff>:/gfx/actions/24x24/plus.png</iconset>
             </property>
            </widget>
@@ -456,13 +456,13 @@
           <item row="2" column="2">
            <widget class="QToolButton" name="toolButtonAddBuilding2">
             <property name="icon">
-             <iconset resource="../resources/SIM-VICUS.qrc">
+             <iconset>
               <normaloff>:/gfx/actions/24x24/plus.png</normaloff>:/gfx/actions/24x24/plus.png</iconset>
             </property>
            </widget>
           </item>
           <item row="6" column="2">
-           <widget class="QToolButton" name="toolButtonEditComponents3">
+           <widget class="QToolButton" name="toolButtonEditComponentsCeiling">
             <property name="text">
              <string>...</string>
             </property>
@@ -529,7 +529,7 @@
            </widget>
           </item>
           <item row="7" column="2">
-           <widget class="QToolButton" name="toolButtonEditComponents4">
+           <widget class="QToolButton" name="toolButtonEditComponentsWalls">
             <property name="text">
              <string>...</string>
             </property>
@@ -657,14 +657,14 @@
            </widget>
           </item>
           <item row="5" column="2">
-           <widget class="QToolButton" name="toolButtonEditComponents5">
+           <widget class="QToolButton" name="toolButtonEditComponentsRoof3">
             <property name="text">
              <string>...</string>
             </property>
            </widget>
           </item>
           <item row="7" column="2">
-           <widget class="QToolButton" name="toolButtonEditComponents8">
+           <widget class="QToolButton" name="toolButtonEditComponentsFloor3">
             <property name="text">
              <string>...</string>
             </property>
@@ -743,7 +743,7 @@
           <item row="3" column="2">
            <widget class="QToolButton" name="toolButtonAddBuildingLevel3">
             <property name="icon">
-             <iconset resource="../resources/SIM-VICUS.qrc">
+             <iconset>
               <normaloff>:/gfx/actions/24x24/plus.png</normaloff>:/gfx/actions/24x24/plus.png</iconset>
             </property>
            </widget>
@@ -795,7 +795,7 @@
            </widget>
           </item>
           <item row="6" column="2">
-           <widget class="QToolButton" name="toolButtonEditComponents7">
+           <widget class="QToolButton" name="toolButtonEditComponentsWall3">
             <property name="text">
              <string>...</string>
             </property>
@@ -917,7 +917,7 @@
           <item row="2" column="2">
            <widget class="QToolButton" name="toolButtonAddBuilding3">
             <property name="icon">
-             <iconset resource="../resources/SIM-VICUS.qrc">
+             <iconset>
               <normaloff>:/gfx/actions/24x24/plus.png</normaloff>:/gfx/actions/24x24/plus.png</iconset>
             </property>
            </widget>
@@ -1010,7 +1010,7 @@
           <item row="0" column="2">
            <widget class="QToolButton" name="toolButtonAddNetwork">
             <property name="icon">
-             <iconset resource="../resources/SIM-VICUS.qrc">
+             <iconset>
               <normaloff>:/gfx/actions/24x24/plus.png</normaloff>:/gfx/actions/24x24/plus.png</iconset>
             </property>
            </widget>
@@ -1138,7 +1138,7 @@
           <item row="0" column="2">
            <widget class="QToolButton" name="toolButtonAddNetwork_2">
             <property name="icon">
-             <iconset resource="../resources/SIM-VICUS.qrc">
+             <iconset>
               <normaloff>:/gfx/actions/24x24/plus.png</normaloff>:/gfx/actions/24x24/plus.png</iconset>
             </property>
            </widget>
@@ -1146,7 +1146,7 @@
           <item row="3" column="0">
            <widget class="QLabel" name="label_18">
             <property name="text">
-             <string>Maximum Heating Demand [W]</string>
+             <string>Maximum Heating Demand:</string>
             </property>
            </widget>
           </item>
@@ -1154,6 +1154,13 @@
            <widget class="QtExt::ValidatingLineEdit" name="lineEditSubStationMaxHeatingDemand">
             <property name="text">
              <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>kW</string>
             </property>
            </widget>
           </item>
@@ -1198,11 +1205,11 @@
   <tabstop>comboBoxBuildingLevel2</tabstop>
   <tabstop>toolButtonAddBuildingLevel2</tabstop>
   <tabstop>comboBoxComponentFloor</tabstop>
-  <tabstop>toolButtonEditComponents2</tabstop>
+  <tabstop>toolButtonEditComponentsFloor</tabstop>
   <tabstop>comboBoxComponentCeiling</tabstop>
-  <tabstop>toolButtonEditComponents3</tabstop>
+  <tabstop>toolButtonEditComponentsCeiling</tabstop>
   <tabstop>comboBoxComponentWalls</tabstop>
-  <tabstop>toolButtonEditComponents4</tabstop>
+  <tabstop>toolButtonEditComponentsWalls</tabstop>
   <tabstop>lineEditZoneHeight</tabstop>
   <tabstop>pushButtonPickZoneHeight</tabstop>
   <tabstop>pushButtonCreateZone</tabstop>
@@ -1213,9 +1220,9 @@
   <tabstop>comboBoxBuildingLevel3</tabstop>
   <tabstop>toolButtonAddBuildingLevel3</tabstop>
   <tabstop>comboBoxComponentRoof3</tabstop>
-  <tabstop>toolButtonEditComponents5</tabstop>
+  <tabstop>toolButtonEditComponentsRoof3</tabstop>
   <tabstop>comboBoxComponentWall3</tabstop>
-  <tabstop>toolButtonEditComponents7</tabstop>
+  <tabstop>toolButtonEditComponentsWall3</tabstop>
   <tabstop>comboBoxRoofType</tabstop>
   <tabstop>radioButtonRoofHeight</tabstop>
   <tabstop>lineEditRoofHeight</tabstop>
@@ -1226,8 +1233,6 @@
   <tabstop>pushButtonCreateRoof</tabstop>
   <tabstop>pushButtonCancel4</tabstop>
  </tabstops>
- <resources>
-  <include location="../resources/SIM-VICUS.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

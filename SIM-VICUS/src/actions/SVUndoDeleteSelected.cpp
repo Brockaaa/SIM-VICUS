@@ -40,13 +40,20 @@ public:
 	unsigned int m_uID;
 };
 
+void selectChildSurfaces(const VICUS::Surface &surf, std::set<unsigned int> &selectedUniqueIDs) {
+	for (const VICUS::Surface &cs : surf.childSurfaces()) {
+		selectedUniqueIDs.insert(cs.m_id);
+		selectChildSurfaces(cs, selectedUniqueIDs);
+	}
+}
+
 
 SVUndoDeleteSelected::SVUndoDeleteSelected(const QString & label,
 										   const std::set<const VICUS::Object *> & objectsToBeRemoved)
 {
 	setText( label );
 
-	std::set<unsigned int>						selectedUniqueIDs;
+	std::set<unsigned int>	selectedUniqueIDs;
 	for (const VICUS::Object * p : objectsToBeRemoved)
 		selectedUniqueIDs.insert(p->m_id);
 
@@ -63,15 +70,23 @@ SVUndoDeleteSelected::SVUndoDeleteSelected(const QString & label,
 				VICUS::Room & r = bl.m_rooms[rIdx];
 				for (unsigned int sIdx = 0; sIdx < r.m_surfaces.size(); /* no counter increase here */) {
 					// is surface selected for deletion?
-					if (selectedUniqueIDs.find(r.m_surfaces[sIdx].m_id) != selectedUniqueIDs.end())
+					if (selectedUniqueIDs.find(r.m_surfaces[sIdx].m_id) != selectedUniqueIDs.end()) {
+						for(const VICUS::SubSurface &sub : r.m_surfaces[sIdx].subSurfaces())
+							selectedUniqueIDs.insert(sub.m_id);
+						selectChildSurfaces(r.m_surfaces[sIdx], selectedUniqueIDs);
 						r.m_surfaces.erase(r.m_surfaces.begin() + sIdx); // remove surface, keep counter
+					}
 					else {
 						// search through all subsurfaces of current surface and remove those
 						std::vector<VICUS::SubSurface> remainingSubSurfaces;
 						for (const VICUS::SubSurface & sub : r.m_surfaces[sIdx].subSurfaces())
 							if (selectedUniqueIDs.find(sub.m_id) == selectedUniqueIDs.end() )
 								remainingSubSurfaces.push_back(sub); // keep only those that are not selected
-						r.m_surfaces[sIdx].setSubSurfaces(remainingSubSurfaces); // keep remaining subs
+						std::vector<VICUS::Surface> remainingChildSurfaces;
+						for (const VICUS::Surface & child : r.m_surfaces[sIdx].childSurfaces())
+							if (selectedUniqueIDs.find(child.m_id) == selectedUniqueIDs.end() )
+								remainingChildSurfaces.push_back(child); // keep only those that are not selected
+						r.m_surfaces[sIdx].setChildAndSubSurfaces(remainingSubSurfaces, remainingChildSurfaces); // keep remaining subs
 						++sIdx; // go to next surface
 					}
 				}
@@ -113,15 +128,15 @@ SVUndoDeleteSelected::SVUndoDeleteSelected(const QString & label,
 		const VICUS::Surface * sideBSurf = ci.m_sideBSurface;
 
 		// if side A references a surface marked for deletion, clear the ID
-		if (ci.m_sideASurface != nullptr &&
-				objectsToBeRemoved.find(ci.m_sideASurface) != objectsToBeRemoved.end())
+		if (ci.m_idSideASurface != VICUS::INVALID_ID &&
+				selectedUniqueIDs.find(ci.m_idSideASurface) != selectedUniqueIDs.end())
 		{
 			sideASurf = nullptr;
 			modCi.m_idSideASurface = VICUS::INVALID_ID;
 		}
 		// same for side B
-		if (ci.m_sideBSurface != nullptr &&
-				objectsToBeRemoved.find(ci.m_sideBSurface) != objectsToBeRemoved.end())
+		if (ci.m_idSideBSurface != VICUS::INVALID_ID &&
+				selectedUniqueIDs.find(ci.m_idSideBSurface) != selectedUniqueIDs.end())
 		{
 			sideBSurf = nullptr;
 			modCi.m_idSideBSurface = VICUS::INVALID_ID;
@@ -140,15 +155,15 @@ SVUndoDeleteSelected::SVUndoDeleteSelected(const QString & label,
 
 		VICUS::SubSurfaceComponentInstance modCi(ci);
 		// if side A references a surface marked for deletion, clear the ID
-		if (ci.m_sideASubSurface != nullptr &&
-				objectsToBeRemoved.find(ci.m_sideASubSurface) != objectsToBeRemoved.end())
+		if (ci.m_idSideASurface != VICUS::INVALID_ID &&
+				selectedUniqueIDs.find(ci.m_idSideASurface) != selectedUniqueIDs.end())
 		{
 			sideASurf = nullptr;
 			modCi.m_idSideASurface = VICUS::INVALID_ID;
 		}
 		// same for side B
-		if (ci.m_sideBSubSurface != nullptr &&
-				objectsToBeRemoved.find(ci.m_sideBSubSurface) != objectsToBeRemoved.end())
+		if (ci.m_idSideBSurface != VICUS::INVALID_ID &&
+				selectedUniqueIDs.find(ci.m_idSideBSurface) != selectedUniqueIDs.end())
 		{
 			sideBSurf = nullptr;
 			modCi.m_idSideBSurface = VICUS::INVALID_ID;
@@ -210,6 +225,46 @@ SVUndoDeleteSelected::SVUndoDeleteSelected(const QString & label,
 		else
 			++idxNet;
 	}
+
+
+	// *** Drawings
+
+	m_drawings = project().m_drawings;
+	for (unsigned int idxDraw=0; idxDraw<m_drawings.size();  ) {
+		VICUS::Drawing &draw = m_drawings[idxDraw];
+		// an entire drawing?
+		if (selectedUniqueIDs.find(draw.m_id) != selectedUniqueIDs.end())
+			m_drawings.erase( m_drawings.begin() + idxDraw );
+		else
+			++idxDraw;
+	}
+
+	for (unsigned int idxDraw=0; idxDraw<m_drawings.size(); ++idxDraw ) {
+		VICUS::Drawing &draw = m_drawings[idxDraw];
+		// delete layers and collect their names
+		std::set<QString> deletedLayers;
+		for (unsigned int idxLayer=0; idxLayer<draw.m_drawingLayers.size();  ) {
+			VICUS::DrawingLayer drawLayer = draw.m_drawingLayers[idxLayer];
+			if (selectedUniqueIDs.find(drawLayer.m_id) != selectedUniqueIDs.end()) {
+				deletedLayers.insert(drawLayer.m_displayName);
+				draw.m_drawingLayers.erase( draw.m_drawingLayers.begin() + idxLayer );
+			}
+			else
+				++idxLayer;
+		}
+
+		// now also delete objects with according layer names
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_arcs);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_points);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_lines);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_polylines);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_circles);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_ellipses);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_solids);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_texts);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_linearDimensions);
+	}
+
 }
 
 
@@ -226,12 +281,14 @@ void SVUndoDeleteSelected::redo() {
 	prj.m_componentInstances.swap(m_compInstances);
 	prj.m_subSurfaceComponentInstances.swap(m_subCompInstances);
 	prj.m_geometricNetworks.swap(m_networks);
+	prj.m_drawings.swap(m_drawings);
 
 	// rebuild pointer hierarchy
-	theProject().updatePointers();
+	prj.updatePointers();
 
 	// tell project that the network has changed
 	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingGeometryChanged);
 	SVProjectHandler::instance().setModified( SVProjectHandler::NetworkGeometryChanged);
+	SVProjectHandler::instance().setModified( SVProjectHandler::DrawingModified);
 }
 

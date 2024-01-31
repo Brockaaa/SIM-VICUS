@@ -27,20 +27,30 @@
 
 namespace VICUS {
 
-const char * const VERSION = "0.9";
-const char * const LONG_VERSION = "0.9.2";
+const char * const VERSION = "1.1";
+const char * const LONG_VERSION = "1.1.0";
 
 unsigned int INVALID_ID = 0xFFFFFFFF;
 
 const double MIN_AREA_FOR_EXPORTED_SURFACES = 0.1;
 
-const char * XML_READ_ERROR = "Error in XML file, line %1: %2";
+const char * XML_READ_ERROR				= "Error in XML file, line %1: %2";
 const char * XML_READ_UNKNOWN_ATTRIBUTE = "Unknown/unsupported attribute '%1' in line %2.";
-const char * XML_READ_UNKNOWN_ELEMENT = "Unknown/unsupported tag '%1' in line %2.";
-const char * XML_READ_UNKNOWN_NAME = "Name '%1' for tag '%2' in line %3 is invalid/unknown.";
+const char * XML_READ_UNKNOWN_ELEMENT	= "Unknown/unsupported tag '%1' in line %2.";
+const char * XML_READ_UNKNOWN_NAME		= "Name '%1' for tag '%2' in line %3 is invalid/unknown.";
 
 const char * DATABASE_PLACEHOLDER_NAME			= "Database";
 const char * USER_DATABASE_PLACEHOLDER_NAME		= "User Database";
+
+const unsigned int SEGMENT_COUNT_ARC		= 30;
+const unsigned int SEGMENT_COUNT_CIRCLE		= 15;
+const unsigned int SEGMENT_COUNT_ELLIPSE	= 15;
+
+// Multiplyer for different layers and their heights
+const double Z_MULTIPLYER					= 0.000001;
+// Default scaling of fonts in DXF
+const double DEFAULT_FONT_SCALING			= 0.1;
+const double DEFAULT_FONT_SIZE				= 50;
 
 } // namespace VICUS
 

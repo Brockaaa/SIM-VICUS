@@ -162,19 +162,32 @@ void ConstructionStatesModel::setup(const NANDRAD::ConstructionInstance & con,
 
 	// *** now resize the memory cache for results
 
-	unsigned int skalarResultCount = R_LongWaveRadiationFluxB+1;
-	if (m_moistureBalanceEnabled) {
+	// for thermal balance only, we have 6 outputs = R_EmittedLongWaveRadiationFluxB+1
+	unsigned int skalarResultCount = R_FluxEmittedLongWaveRadiationB+1;
+	// add scalar outputs for rh calculation only if balance equation is enabled
+	if (m_moistureBalanceConstruction) {
 		/// \todo hygrothermal code
 	}
-	m_results.resize(skalarResultCount);
-	m_vectorValuedResults.resize(1);
+	m_results.resize(skalarResultCount); // NOTE: for now the same as m_results.resize(NUM_R)
+
+	m_vectorValuedResults.resize(NUM_VVR);
 	m_vectorValuedResults[VVR_ElementTemperature] = VectorValuedQuantity(nPrimaryStateResults(), 0);
+
+	// we access long wave emission fluxes via construction ID, hence we need to compose a vector of construction IDs
+	std::vector<unsigned int> indexKeys;
+	for (auto it=m_con->m_interfaceA.m_connectedInterfaces.begin(); it!=m_con->m_interfaceA.m_connectedInterfaces.end(); ++it)
+		indexKeys.push_back(it->first);
+	m_vectorValuedResults[VVR_EmittedLongWaveRadiationA] = VectorValuedQuantity(indexKeys, 0);
+	indexKeys.clear();
+	for (auto it=m_con->m_interfaceB.m_connectedInterfaces.begin(); it!=m_con->m_interfaceB.m_connectedInterfaces.end(); ++it)
+		indexKeys.push_back(it->first);
+	m_vectorValuedResults[VVR_EmittedLongWaveRadiationB] = VectorValuedQuantity(indexKeys, 0);
 }
 
 
 void ConstructionStatesModel::resultDescriptions(std::vector<QuantityDescription> & resDesc) const {
-	int skalarResultCount = R_LongWaveRadiationFluxB+1;
-	if (m_moistureBalanceEnabled) {
+	int skalarResultCount = R_FluxLongWaveRadiationBalanceB+1;
+	if (m_moistureBalanceConstruction) {
 		/// \todo hygrothermal implementation
 //		varCount = 2; // more variables for hygrothermal calculation
 	}
@@ -190,25 +203,79 @@ void ConstructionStatesModel::resultDescriptions(std::vector<QuantityDescription
 	}
 
 	// add vector valued quantities
-	QuantityDescription res;
-	res.m_constant = true;
-	res.m_description = NANDRAD_MODEL::KeywordList::Description("ConstructionStatesModel::VectorValuedResults", VVR_ElementTemperature);
-	res.m_name = NANDRAD_MODEL::KeywordList::Keyword("ConstructionStatesModel::VectorValuedResults", VVR_ElementTemperature);
-	res.m_unit = NANDRAD_MODEL::KeywordList::Unit("ConstructionStatesModel::VectorValuedResults", VVR_ElementTemperature);
-	// this is a vector-valued quantity with as many elements as material layers
-	// and the temperatures returned are actually mean temperatures of the individual elements of the material layer
-	res.resize(m_con->m_constructionType->m_materialLayers.size());
-	resDesc.push_back(res);
+	{
+		QuantityDescription res;
+		res.m_constant = true;
+		res.m_description = NANDRAD_MODEL::KeywordList::Description("ConstructionStatesModel::VectorValuedResults", VVR_ElementTemperature);
+		res.m_name = NANDRAD_MODEL::KeywordList::Keyword("ConstructionStatesModel::VectorValuedResults", VVR_ElementTemperature);
+		res.m_unit = NANDRAD_MODEL::KeywordList::Unit("ConstructionStatesModel::VectorValuedResults", VVR_ElementTemperature);
+		// this is a vector-valued quantity with as many elements as material layers
+		// and the temperatures returned are actually mean temperatures of the individual elements of the material layer
+		res.resize(m_con->m_constructionType->m_materialLayers.size());
+		resDesc.push_back(res);
+	}
 
-	// in the case of an actiev construction add active temparture layer
+	// in the case of an actiev construction add active temperature layer
 	if (m_con->m_constructionType->m_activeLayerIndex != NANDRAD::INVALID_ID) {
 		QuantityDescription result;
 		result.m_constant = true;
 		result.m_description = "Temperature of the active material layer";
 		result.m_name = "ActiveLayerTemperature";
 		result.m_unit = "C";
-
 		resDesc.push_back(result);
+	}
+
+	if (m_con->m_interfaceA.m_zoneId != 0) {
+		// emitted inner long wave radiation of surface A
+		if (m_con->m_interfaceA.m_longWaveEmission.m_modelType != NANDRAD::InterfaceLongWaveEmission::NUM_MT) {
+			// first publish individual emitted long wave radiation fluxes to all connected surfaces
+			QuantityDescription res;
+			res.m_referenceType = NANDRAD::ModelInputReference::MRT_CONSTRUCTIONINSTANCE;
+			res.m_id = m_id; // id of emmitting instance (ourself)
+
+			res.m_description = NANDRAD_MODEL::KeywordList::Description("ConstructionStatesModel::VectorValuedResults", VVR_EmittedLongWaveRadiationA);
+			res.m_name = NANDRAD_MODEL::KeywordList::Keyword("ConstructionStatesModel::VectorValuedResults", VVR_EmittedLongWaveRadiationA);
+			res.m_unit = NANDRAD_MODEL::KeywordList::Unit("ConstructionStatesModel::VectorValuedResults", VVR_EmittedLongWaveRadiationA);
+
+			const std::map<unsigned int, const NANDRAD::Interface*>	&connectedInterfacesA = m_con->m_interfaceA.m_connectedInterfaces;
+			for (auto it = connectedInterfacesA.begin(); it!=connectedInterfacesA.end(); ++it)
+				res.m_indexKeys.push_back(it->first); // id of targeted instance (the absorbing construction instance)
+			res.m_indexKeyType = VectorValuedQuantityIndex::IK_ModelID;
+			resDesc.push_back(res);
+
+			// publish sum of emitted radiation flux density
+			res.m_description = NANDRAD_MODEL::KeywordList::Description("ConstructionStatesModel::Results", R_FluxEmittedLongWaveRadiationA);
+			res.m_name = NANDRAD_MODEL::KeywordList::Keyword("ConstructionStatesModel::Results", R_FluxEmittedLongWaveRadiationA);
+			res.m_unit = NANDRAD_MODEL::KeywordList::Unit("ConstructionStatesModel::Results", R_FluxEmittedLongWaveRadiationA);
+			res.m_indexKeys.clear();
+			resDesc.push_back(res);
+		}
+	}
+
+	if (m_con->m_interfaceB.m_zoneId != 0) {
+		// emitted long wave radiation of surface B
+		if (m_con->m_interfaceB.m_longWaveEmission.m_modelType != NANDRAD::InterfaceLongWaveEmission::NUM_MT) {
+			QuantityDescription res;
+			res.m_referenceType = NANDRAD::ModelInputReference::MRT_CONSTRUCTIONINSTANCE;
+			res.m_id = m_id; // id of emmitting instance (ourself)
+
+			res.m_description = NANDRAD_MODEL::KeywordList::Description("ConstructionStatesModel::VectorValuedResults", VVR_EmittedLongWaveRadiationB);
+			res.m_name = NANDRAD_MODEL::KeywordList::Keyword("ConstructionStatesModel::VectorValuedResults", VVR_EmittedLongWaveRadiationB);
+			res.m_unit = NANDRAD_MODEL::KeywordList::Unit("ConstructionStatesModel::VectorValuedResults", VVR_EmittedLongWaveRadiationB);
+
+			const std::map<unsigned int, const NANDRAD::Interface*>	&connectedInterfacesB = m_con->m_interfaceB.m_connectedInterfaces;
+			for (auto it = connectedInterfacesB.begin(); it!=connectedInterfacesB.end(); ++it)
+				res.m_indexKeys.push_back(it->first); // id of targeted instance (the absorbing construction instance)
+			res.m_indexKeyType = VectorValuedQuantityIndex::IK_ModelID;
+			resDesc.push_back(res);
+
+			// publish sum of emitted radiation flux density
+			res.m_description = NANDRAD_MODEL::KeywordList::Description("ConstructionStatesModel::Results", R_FluxEmittedLongWaveRadiationB);
+			res.m_name = NANDRAD_MODEL::KeywordList::Keyword("ConstructionStatesModel::Results", R_FluxEmittedLongWaveRadiationB);
+			res.m_unit = NANDRAD_MODEL::KeywordList::Unit("ConstructionStatesModel::Results", R_FluxEmittedLongWaveRadiationB);
+			res.m_indexKeys.clear();
+			resDesc.push_back(res);
+		}
 	}
 }
 
@@ -257,7 +324,7 @@ const double * ConstructionStatesModel::resultValueRef(const InputReference & qu
 
 
 unsigned int ConstructionStatesModel::nPrimaryStateResults() const {
-	if (!m_moistureBalanceEnabled) {
+	if (!m_moistureBalanceConstruction) {
 		// *** thermal transport ***
 		return m_nElements;
 	}
@@ -269,7 +336,7 @@ unsigned int ConstructionStatesModel::nPrimaryStateResults() const {
 
 
 void ConstructionStatesModel::stateDependencies(std::vector<std::pair<const double *, const double *> > & resultInputValueReferences) const {
-	if (m_moistureBalanceEnabled) {
+	if (m_moistureBalanceConstruction) {
 		/// \todo hygrothermal
 	}
 	else {
@@ -300,6 +367,17 @@ void ConstructionStatesModel::stateDependencies(std::vector<std::pair<const doub
 			for (unsigned int i = elemIdxStart; i < elemIdxEnd; ++i)
 				resultInputValueReferences.push_back(std::make_pair(&m_activeLayerMeanTemperature, &m_vectorValuedResults[VVR_ElementTemperature].data()[i] ) );
 		}
+
+		// emitted long-wave radiation fluxes depend exclusively on surface temperature
+		resultInputValueReferences.push_back(std::make_pair(&m_results[R_FluxEmittedLongWaveRadiationA], &m_results[R_SurfaceTemperatureA]) );
+		resultInputValueReferences.push_back(std::make_pair(&m_results[R_FluxEmittedLongWaveRadiationB], &m_results[R_SurfaceTemperatureB]) );
+
+		// the individal emitted fluxes also depend on surface temperature
+		for (unsigned int i=0; i<m_vectorValuedResults[VVR_EmittedLongWaveRadiationA].size(); ++i)
+			resultInputValueReferences.push_back(std::make_pair(&m_vectorValuedResults[VVR_EmittedLongWaveRadiationA].data()[i], &m_results[R_SurfaceTemperatureA]) );
+		for (unsigned int i=0; i<m_vectorValuedResults[VVR_EmittedLongWaveRadiationB].size(); ++i)
+			resultInputValueReferences.push_back(std::make_pair(&m_vectorValuedResults[VVR_EmittedLongWaveRadiationB].data()[i], &m_results[R_SurfaceTemperatureB]) );
+
 	}
 }
 
@@ -314,8 +392,7 @@ unsigned int ConstructionStatesModel::interfaceBZoneID() const {
 }
 
 
-void ConstructionStatesModel::
-yInitial(double * y) const {
+void ConstructionStatesModel::yInitial(double * y) const {
 	// retrieve initial temperature, which has already been checked for valid values
 	double T_initial = m_simPara->m_para[NANDRAD::SimulationParameter::P_InitialTemperature].value;
 	for (unsigned i=0; i<m_nElements; ++i) {
@@ -332,7 +409,7 @@ int ConstructionStatesModel::update(const double * y) {
 	// here we compute all temperatures from conserved quantities (i.e. energy densities) and
 	// also compute all thermal fluxes across elements
 
-	if (!m_moistureBalanceEnabled) {
+	if (!m_moistureBalanceConstruction) {
 
 		/// \todo switch between different loop kernels when PCM materials are in the construction
 
@@ -375,6 +452,7 @@ int ConstructionStatesModel::update(const double * y) {
 	// *** hygrothermal transport ***
 	else {
 		/// \todo hygrothermal
+
 	}
 
 	// compute surface temperatures
@@ -442,7 +520,7 @@ int ConstructionStatesModel::update(const double * y) {
 		m_activeLayerMeanTemperature /= m_con->m_constructionType->m_materialLayers[m_activeLayerIndex].m_thickness;
 	}
 
-	// *** Ambient Boundary Conditions ***
+	// *** Boundary Conditions ***
 
 	// left side (A)
 	if (m_con->m_interfaceA.m_id != NANDRAD::INVALID_ID) {
@@ -456,16 +534,45 @@ int ConstructionStatesModel::update(const double * y) {
 			m_results[R_SolarRadiationFluxA] = m_con->m_interfaceA.m_solarAbsorption.radFlux(qRadGlobal);
 		}
 
-		// long wave radiation
-		if (m_con->m_interfaceA.m_zoneId == 0 && m_con->m_interfaceA.m_longWaveEmission.m_modelType != NANDRAD::InterfaceLongWaveEmission::NUM_MT) {
-			double eps = m_con->m_interfaceA.m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
-			double incomingLWRadiation = m_loads->qLWRad(m_con->m_id);
-			double TsA2 = m_TsA * m_TsA;
-			double radiationBalance = eps * (incomingLWRadiation - IBK::BOLTZMANN * TsA2 * TsA2);
-			// store absorbed flux
-			m_results[R_LongWaveRadiationFluxA] = radiationBalance;
-		}
+		// long wave radiation exchange enabled? (for now only constant)
+		if (m_con->m_interfaceA.m_longWaveEmission.m_modelType != NANDRAD::InterfaceLongWaveEmission::NUM_MT) {
 
+			// to ambient?
+			if (m_con->m_interfaceA.m_zoneId == 0) {
+				if (m_con->m_interfaceA.m_longWaveEmission.m_modelType != NANDRAD::InterfaceLongWaveEmission::NUM_MT) {
+					double eps = m_con->m_interfaceA.m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
+					double incomingLWRadiation = m_loads->qLWRad(m_con->m_id);
+					double TsA2 = m_TsA * m_TsA;
+					double radiationBalance = eps * (incomingLWRadiation - IBK::BOLTZMANN * TsA2 * TsA2);
+					// store absorbed flux
+					m_results[R_FluxLongWaveRadiationBalanceA] = radiationBalance;
+				}
+			}
+			// emitted long wave radiation to other construction instance
+			else {
+				double sourceEps = m_con->m_interfaceA.m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
+				double TsA2 = m_TsA * m_TsA;
+				double area = m_con->m_netHeatTransferArea;
+				// loop over all connected constructions; NOTE: the ids in the m_vectorValuedResults[VVR_EmittedLongWaveRadiationA] are stored
+				// in the order of the m_connectedInterfaces
+				unsigned int i=0;
+				double emittedFluxSum = 0;
+				double * longWaveRadVector = m_vectorValuedResults[VVR_EmittedLongWaveRadiationA].dataPtr();
+				for (auto it=m_con->m_interfaceA.m_connectedInterfaces.begin(); it!=m_con->m_interfaceA.m_connectedInterfaces.end(); ++it, ++i) {
+					unsigned int targetId = it->first; // id of targeted construction instance
+					double viewFactor = m_con->m_interfaceA.m_viewFactors.at(targetId);
+					double targetEps = it->second->m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
+					double emittedFlux = viewFactor * sourceEps * targetEps * IBK::BOLTZMANN * TsA2 * TsA2;
+					longWaveRadVector[i] = area * emittedFlux;
+					emittedFluxSum += emittedFlux;
+				}
+				// TODO calculate emitted radiation to window
+//				for (auto it=m_con->m_interfaceA.m_connectedWindows.begin(); it!=m_con->m_interfaceA.m_connectedWindows.end(); ++it, ++i) {
+
+//				}
+				m_results[R_FluxEmittedLongWaveRadiationA] = emittedFluxSum;
+			}
+		}
 	}
 
 	// right side (B)
@@ -481,15 +588,42 @@ int ConstructionStatesModel::update(const double * y) {
 		}
 
 		// long wave radiation
-		if (m_con->m_interfaceB.m_zoneId == 0 && m_con->m_interfaceB.m_longWaveEmission.m_modelType != NANDRAD::InterfaceLongWaveEmission::NUM_MT) {
-			double eps = m_con->m_interfaceB.m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
-			double incomingLWRadiation = m_loads->qLWRad(m_con->m_id);
-			double TsB2 = m_TsB * m_TsB;
-			double radiationBalance = eps * (incomingLWRadiation - IBK::BOLTZMANN * TsB2 * TsB2);
-			// store absorbed flux
-			m_results[R_LongWaveRadiationFluxB] = radiationBalance;
-		}
+		if (m_con->m_interfaceB.m_longWaveEmission.m_modelType != NANDRAD::InterfaceLongWaveEmission::NUM_MT) {
 
+			// to ambient?
+			if (m_con->m_interfaceB.m_zoneId == 0) {
+				double eps = m_con->m_interfaceB.m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
+				double incomingLWRadiation = m_loads->qLWRad(m_con->m_id);
+				double TsB2 = m_TsB * m_TsB;
+				double radiationBalance = eps * (incomingLWRadiation - IBK::BOLTZMANN * TsB2 * TsB2);
+				// store absorbed flux
+				m_results[R_FluxLongWaveRadiationBalanceB] = radiationBalance;
+			}
+			// emitted long wave radiation to other construction instance
+			else {
+				IBK_ASSERT(m_con->m_interfaceB.m_viewFactors.size() == m_con->m_interfaceB.m_connectedInterfaces.size() + m_con->m_interfaceB.m_connectedWindows.size());
+				double sourceEps = m_con->m_interfaceB.m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
+				double TsB2 = m_TsB * m_TsB;
+				double area = m_con->m_netHeatTransferArea;
+				// loop over all connected constructions; NOTE: the ids in the m_vectorValuedResults[VVR_EmittedLongWaveRadiationA] are stored
+				// in the order of the m_connectedInterfaces
+				unsigned int i=0;
+				double emittedFluxSum = 0;
+				double * longWaveRadVector = m_vectorValuedResults[VVR_EmittedLongWaveRadiationB].dataPtr();
+				for (auto it=m_con->m_interfaceB.m_connectedInterfaces.begin(); it!=m_con->m_interfaceB.m_connectedInterfaces.end(); ++it, ++i) {
+					unsigned int targetId = it->first; // id of targeted construction instance
+					double viewFactor = m_con->m_interfaceB.m_viewFactors.at(targetId);
+					double targetEps = it->second->m_longWaveEmission.m_para[NANDRAD::InterfaceLongWaveEmission::P_Emissivity].value;
+					double emittedFlux = viewFactor * sourceEps * targetEps * IBK::BOLTZMANN * TsB2 * TsB2;
+					longWaveRadVector[i] = area * emittedFlux;
+					emittedFluxSum += emittedFlux;
+				}
+				// TODO calculate emitted radiation to window
+//				for (auto it=m_con->m_interfaceB.m_connectedWindows.begin(); it!=m_con->m_interfaceB.m_connectedWindows.end(); ++it, ++i) {
+//				}
+				m_results[R_FluxEmittedLongWaveRadiationB] = emittedFluxSum;
+			}
+		}
 	}
 
 	return 0; // signal success
@@ -653,7 +787,7 @@ void ConstructionStatesModel::generateGrid() {
 	m_nElements = dx_vec.size();
 	IBK_ASSERT(mat_vec.size() == m_nElements);
 	// total number of unkowns
-	if (m_moistureBalanceEnabled)
+	if (m_moistureBalanceConstruction)
 		m_n = m_nElements*2;
 	else
 		m_n = m_nElements;

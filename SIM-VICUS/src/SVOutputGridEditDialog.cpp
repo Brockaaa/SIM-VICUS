@@ -180,6 +180,8 @@ bool SVOutputGridEditDialog::checkIntervals() {
 
 
 void SVOutputGridEditDialog::storeIntervals(std::vector<NANDRAD::Interval> & intervals) const {
+	// Note: we have checked parseTable() results before allowing to save data, so
+	//       the parseTable() call must return true
 	int success = parseTable(intervals, false);
 	Q_ASSERT(success);
 }
@@ -270,6 +272,16 @@ bool SVOutputGridEditDialog::parseTable(std::vector<NANDRAD::Interval> & interva
 				return false;
 			}
 		}
+		if (intervals[i-1].m_para[NANDRAD::Interval::P_Start].value >= intervals[i].m_para[NANDRAD::Interval::P_Start].value) {
+			if (showMessageOnError)
+				showError(0,(int)i,tr("Invalid interval definition, start point of successive interval must be a later time than start point of preceeding interval."));
+			return false;
+		}
+		if (intervals[i].m_para[NANDRAD::Interval::P_Start].value > intervals[i-1].endTime()) {
+			if (showMessageOnError)
+				showError(0,(int)i,tr("Output interval must not start prior to previous output interval end."));
+			return false;
+		}
 	}
 
 	return success;
@@ -282,20 +294,3 @@ void SVOutputGridEditDialog::showError(int row, int col, const QString & text) c
 	QMessageBox::critical(const_cast<SVOutputGridEditDialog*>(this), tr("Invalid input"), text);
 }
 
-
-void SVOutputGridEditDialog::on_tableWidget_cellChanged(int row, int column) {
-//	IBK::Parameter p;
-//	// if a valid start time has been entered and the previous interval's end edit is empty, update
-//	// the "autotext" properties
-//	if (QtExt::QString2Parameter(m_ui->tableWidget->item(row, column)->text(), "start", p) && row == 0) {
-//		if (column > 0 && m_ui->tableWidget->item(1,column-1)->text().isEmpty()) {
-//			QLineEdit * le = qobject_cast<QLineEdit *>(m_ui->tableWidget->cellWidget(2,column-1));
-//			if (le == nullptr) {
-//				le = new QLineEdit(m_ui->tableWidget);
-//				m_ui->tableWidget->setCellWidget(2,column-1,le);
-//			}
-//			le->setPlaceholderText(QString::fromStdString(p.toString()));
-//		}
-//	}
-
-}

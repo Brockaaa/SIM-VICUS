@@ -31,12 +31,14 @@
 #include "Vic3DSceneView.h"
 
 namespace Vic3D {
-	class SceneView;
+class SceneView;
 }
 
 class SVPropertyWidget;
 class SVLocalCoordinateView;
 class SVMeasurementWidget;
+class SVColorLegend;
+class SVSnapOptionsDialog;
 class QSplitter;
 class QToolBar;
 class QAction;
@@ -45,7 +47,7 @@ class QDockWidget;
 class ModificationInfo;
 
 namespace Ui {
-	class SVGeometryView;
+class SVGeometryView;
 }
 
 /*! The main geometry view.
@@ -99,10 +101,13 @@ public:
 			  that legitimately accepts all character inputs.
 		\return Returns true, if the key was accepted and handled.
 	*/
-	bool handleGlobalKeyPress(Qt::Key k);
+	bool handleGlobalKeyPressEvent(QKeyEvent * ke);
+
+	bool handleGlobalKeyRelease(QKeyEvent * ke);
 
 	/*! Moves the measurement Widget to the bottom right of the scene view. */
-	void moveMeasurementWidget();
+	void moveTransparentSceneWidgets();
+
 	/*! Hides measurement widget and untoggles the button. */
 	void hideMeasurementWidget();
 
@@ -115,6 +120,15 @@ public:
 	/*! Sets all actions in button bar to unchecked state */
 	void uncheckAllActionsInButtonBar();
 
+	SVColorLegend * colorLegend();
+
+	/*! This set stores all parent widgets that may have focus themselves or their children in order to
+		receive navigation key events for the scene.
+		Usually this is the geometryview itself, and the log dock widget and the navigation panel.
+		Pointers are in inserted by the individual classes in their constructors.
+	*/
+	QSet<const QWidget*>	m_focusRootWidgets;
+
 public slots:
 	/*! Handles selection changes and enables/disables button states. */
 	void onModified(int modificationType, ModificationInfo *);
@@ -126,6 +140,12 @@ public slots:
 
 	/*! Called when user types in numbers while placing vertexes. */
 	void onNumberKeyPressed(Qt::Key k);
+
+	/*! Triggered when style is changed in Preferences handled by SVSettings. */
+	void onStyleChanged();
+
+	/*! Triggered from main window */
+	void onScreenChanged(const QScreen * screen);
 
 private slots:
 	/*! Triggered when the user pressed enter while the line edit is active, or when the place vertex button
@@ -147,12 +167,13 @@ private slots:
 	void on_actionZLock_triggered(bool checked);
 
 	void on_actionBuildingParametrization_triggered();
-
 	void on_actionAddGeometry_triggered();
-
 	void on_actionNetworkParametrization_triggered();
-
 	void on_actionSiteParametrization_triggered();
+	void on_actionAcousticParametrization_triggered();
+	void on_actionShowResults_triggered();
+
+	void on_actionStructuralUnits_triggered();
 
 	void on_actionTrimGeometry_triggered();
 
@@ -161,8 +182,6 @@ protected:
 		without changing scene size (by moving left splitter).
 	*/
 	void resizeEvent(QResizeEvent *event);
-
-	bool eventFilter(QObject *obj, QEvent *event);
 
 private:
 	Ui::SVGeometryView			*m_ui;
@@ -176,6 +195,11 @@ private:
 	/*! Pointer to measurement widget */
 	SVMeasurementWidget			*m_measurementWidget = nullptr;
 
+	/*! Pointer to color legend widget */
+	SVColorLegend				*m_colorLegend = nullptr;
+
+	/*! Pointer to snap option widget */
+	SVSnapOptionsDialog			*m_snapOptionsDialog = nullptr;
 
 	QLineEdit					*m_lineEditCoordinateInput					= nullptr;
 	QAction						*m_actionCoordinateInput					= nullptr;

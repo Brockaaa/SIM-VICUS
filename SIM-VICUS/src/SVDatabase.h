@@ -43,6 +43,7 @@ public:
 		DT_Constructions,
 		DT_Windows,
 		DT_WindowGlazingSystems,
+		DT_AcousticBoundaryConditions,
 		DT_BoundaryConditions,
 		DT_Components,
 		DT_SubSurfaceComponents,
@@ -53,6 +54,7 @@ public:
 		DT_NetworkControllers,
 		DT_SubNetworks,
 		DT_SupplySystems,
+		DT_EpdDatasets,
 		DT_Schedules,
 		DT_InternalLoads,
 		DT_ZoneControlThermostat,
@@ -62,6 +64,10 @@ public:
 		DT_VentilationNatural,
 		DT_Infiltration,
 		DT_ZoneTemplates,
+		DT_AcousticTemplates,
+		DT_AcousticBuildingTemplates,
+		DT_AcousticSoundProtectionTemplates,
+		DT_AcousticSoundAbsorptions,
 		NUM_DT // used for "all"
 	};
 
@@ -75,7 +81,7 @@ public:
 	void readDatabases(DatabaseTypes t = NUM_DT);
 
 	/*! Writes user-defined database. */
-	void writeDatabases();
+	void writeDatabases(DatabaseTypes t = NUM_DT) const;
 
 	/*! Import DB elements from other database into our database, but only if the IDs of the imported
 		DB elements to not yet exist. Import errors are logged to IBK::IBK_message()
@@ -150,6 +156,9 @@ public:
 	/*! Map of all database glazing systems. */
 	VICUS::Database<VICUS::WindowGlazingSystem>			m_windowGlazingSystems;
 
+	/*! Map of all database acoustic boundary conditions */
+	VICUS::Database<VICUS::AcousticBoundaryCondition>   m_acousticBoundaryConditions;
+
 	/*! Map of all database boundary conditions. */
 	VICUS::Database<VICUS::BoundaryCondition>			m_boundaryConditions;
 
@@ -181,7 +190,7 @@ public:
 	VICUS::Database<VICUS::SupplySystem>				m_supplySystems;
 
 	/*! Map of all database EPD elements */
-//	VICUS::Database<VICUS::EPDDataset>					m_EPDElements;
+	VICUS::Database<VICUS::EpdDataset>					m_epdDatasets;
 
 	/*! Map of all database schedules */
 	VICUS::Database<VICUS::Schedule>					m_schedules;
@@ -209,6 +218,22 @@ public:
 
 	/*! Map of all database Zone templates. */
 	VICUS::Database<VICUS::ZoneTemplate>				m_zoneTemplates;
+
+	/*! Map of all database Acoustic templates. */
+	VICUS::Database<VICUS::AcousticTemplate>			m_acousticTemplates;
+
+	/*! Map of all database sound protection templates. */
+	VICUS::Database<VICUS::AcousticSoundProtectionTemplate>	m_acousticSoundProtectionTemplates;
+
+	/*! Map of all database acoustic sound absorption templates. */
+	VICUS::Database<VICUS::AcousticSoundAbsorption>		m_acousticSoundAbsorptions;
+
+    /*! Map of all database Acoustic reference components. */
+    VICUS::Database<VICUS::AcousticReferenceComponent>	m_acousticReferenceComponents;
+
+    /*! Map of all database Acoustic Building Templates. */
+    VICUS::Database<VICUS::AcousticBuildingTemplate>	m_acousticBuildingTemplates;
+
 };
 
 

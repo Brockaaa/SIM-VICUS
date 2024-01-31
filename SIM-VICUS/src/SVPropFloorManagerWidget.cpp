@@ -56,7 +56,6 @@ SVPropFloorManagerWidget::SVPropFloorManagerWidget(QWidget *parent) :
 	m_ui->setupUi(this);
 
 	m_ui->verticalLayout->setMargin(0);
-	m_ui->verticalLayoutPage->setMargin(0);
 	QStringList header;
 	header << tr("Building/Floor") << tr("Elevation [m]") << tr("Height [m]");
 	m_ui->treeWidget->setHeaderLabels(header);
@@ -94,6 +93,13 @@ void SVPropFloorManagerWidget::onModified(int modificationType, ModificationInfo
 		case SVProjectHandler::BuildingGeometryChanged:
 		case SVProjectHandler::BuildingTopologyChanged:
 		case SVProjectHandler::AllModified:
+		case SVProjectHandler::ClimateLocationAndFileModified:
+		case SVProjectHandler::OutputsModified:
+		case SVProjectHandler::SubSurfaceComponentInstancesModified:
+		case SVProjectHandler::StructuralUnitsModified:
+		case SVProjectHandler::ObjectRenamed:
+		case SVProjectHandler::DrawingModified:
+		case SVProjectHandler::LcaLccModified:
 		break;
 	}
 

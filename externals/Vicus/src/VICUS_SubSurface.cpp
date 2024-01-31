@@ -24,6 +24,7 @@
 */
 
 #include "VICUS_SubSurface.h"
+#include <tinyxml.h>
 
 namespace VICUS {
 

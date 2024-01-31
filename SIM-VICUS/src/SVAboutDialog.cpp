@@ -30,7 +30,11 @@
 
 #include <QtExt_LanguageHandler.h>
 
+#include <QRandomGenerator>
+#include <QIcon>
+
 #include "SVStyle.h"
+#include "SVSettings.h"
 
 SVAboutDialog::SVAboutDialog(QWidget *parent) :
 	QDialog(parent),
@@ -40,24 +44,8 @@ SVAboutDialog::SVAboutDialog(QWidget *parent) :
 
 	setWindowTitle(QString("SIM-VICUS %1").arg(VICUS::LONG_VERSION));
 
-	m_ui->label->setPixmap( QPixmap(":/gfx/splashscreen/SIMVICUS-Logo-Startscreen.png"));
-	QString labelStyle(
-				"font-size:12pt; color: ${STYLE_LINKTEXT_COLOR}; text-decoration:none"
-				);
-
-	SVStyle::formatWelcomePage(labelStyle);
-
-	QLabel * linkLabel = new QLabel( QString("<a href=\"https://sim-vicus.de\"><span style=\"%1\">https://sim-vicus.de</span></a>").arg(labelStyle));
-	linkLabel->setParent(this);
-	linkLabel->resize(400,25);
-	linkLabel->setAutoFillBackground(false);
-	linkLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-	linkLabel->setOpenExternalLinks(true);
-	linkLabel->move(130,700);
-	linkLabel->setAttribute(Qt::WA_TranslucentBackground);
-
-	layout()->setMargin(0);
-	layout()->setSizeConstraint( QLayout::SetFixedSize );
+	QPixmap pixmap = QIcon::fromTheme("simvicus_logo").pixmap(300);
+	m_ui->label->setPixmap(pixmap);
 }
 
 

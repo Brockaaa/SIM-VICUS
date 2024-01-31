@@ -1,9 +1,9 @@
 # SIM-VICUS
+_NEXT LEVEL BUILDING AND DISTRICT ENERGY SIMULATION_
 
 SIM-VICUS is a 3D modeling environment for building and district networks and an innovative dynamic simulation engine (NANDRAD). https://sim-vicus.de hosts the official webpage with user-centered information. Development-related information is stored and handled on github.
 
-![SIM-VICUS_fristfoerster](https://user-images.githubusercontent.com/6892676/131216469-553f0b81-d61a-470d-ae02-194ab0d82641.png)
-
+![SIM-VICUS 1.1.0](https://github.com/ghorwin/SIM-VICUS/assets/58851829/22ccd189-15f3-4dbc-a7a6-ed2bef33d8ae)
 
 ## Quality Assurance
 
@@ -31,6 +31,7 @@ All extensive documentation is written in AsciiDoctor format inside the doc dire
 Source code documentation is done with Doxygen, which generates its documentation for the _entire_ source code and stores
 the output in `docs/api`. For this purpose run the `NandradSolver.doxyfile` in the `NandradSolver/doc` directory through Doxygen.
 
+General documentation can be also found inside the [overview](https://ghorwin.github.io/SIM-VICUS/).
 
 ## Mailing List 
 
@@ -41,9 +42,7 @@ https://www.listserv.dfn.de/sympa/info/sim-vicus
 
 ## Developer Info
 
-Any developer might (=should) read the developer documentation in:
-
-https://ghorwin.github.io/SIM-VICUS/Developer-Documentation
+Every developer has to read the [developer documentation](https://ghorwin.github.io/SIM-VICUS/Developer-Documentation) carefully!
 
 ### Directory Structure
 
@@ -72,12 +71,14 @@ NANDRAD Solver and SIM-VICUS use a bunch of common libraries from IBK and extern
 
 * **CCM** - _Climate Calculation Module_ (CCM), implements climate data loading and calculation of solar radiation loads
 * **clipper** - implements robust clipping calculation for two-dimensional polygons
+* **RoomClipper** - implements robust clipping and connection generation via component instances of VICUS rooms and their surfaces
 * **DataIO** - utility lib for writing DataIO output containers (needed when profiles across wall constructions are written)
 * **IBK** - core utility library, extends c++ standard library by useful functions (so we do not need boost and other heavy libs)
 * **IBKMK** - IBK math kernel lib, low level optimized routines for efficient number crunching
 * **IDFReader** - library for IDF file parsing and data import to VICUS
 * **IntegratorFramework** - library that includes several numerical integration libraries and provides a convenient framework to error-controlled time integration
 * **ITSOL2** - implements ILUT preconditioner (included in IntegratorFramework, this directory contains the original sources)
+* **libdxfrw** - library to read and write DXF files in both formats, ascii and binary form. It also has rudimentary capabilities to read DWG files
 * **Nandrad** - the NANDRAD data model library (holds the project data for the NANDRAD solver)
 * **QtExt** - Qt extension library from IBK, lots of utility functions and widgets to assist with UI development
 * **QuaZIP** - zip-support (needed for creating FMU archives)

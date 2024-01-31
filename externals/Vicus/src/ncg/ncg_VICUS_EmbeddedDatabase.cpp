@@ -88,6 +88,30 @@ void EmbeddedDatabase::readXML(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
+			else if (cName == "AcousticBoundaryConditions") {
+				const TiXmlElement * c2 = c->FirstChildElement();
+				while (c2) {
+					const std::string & c2Name = c2->ValueStr();
+					if (c2Name != "AcousticBoundaryCondition")
+						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+					VICUS::AcousticBoundaryCondition obj;
+					obj.readXML(c2);
+					m_acousticBoundaryConditions.push_back(obj);
+					c2 = c2->NextSiblingElement();
+				}
+			}
+			else if (cName == "AcousticSoundAbsorptions") {
+				const TiXmlElement * c2 = c->FirstChildElement();
+				while (c2) {
+					const std::string & c2Name = c2->ValueStr();
+					if (c2Name != "AcousticSoundAbsorption")
+						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+					VICUS::AcousticSoundAbsorption obj;
+					obj.readXML(c2);
+					m_acousticSoundAbsorptions.push_back(obj);
+					c2 = c2->NextSiblingElement();
+				}
+			}
 			else if (cName == "BoundaryConditions") {
 				const TiXmlElement * c2 = c->FirstChildElement();
 				while (c2) {
@@ -208,15 +232,15 @@ void EmbeddedDatabase::readXML(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
-			else if (cName == "EPDElements") {
+			else if (cName == "EPDDatasets") {
 				const TiXmlElement * c2 = c->FirstChildElement();
 				while (c2) {
 					const std::string & c2Name = c2->ValueStr();
-					if (c2Name != "EPDDataset")
+					if (c2Name != "EpdDataset")
 						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
-					VICUS::EPDDataset obj;
+					VICUS::EpdDataset obj;
 					obj.readXML(c2);
-					m_EPDElements.push_back(obj);
+					m_EPDDatasets.push_back(obj);
 					c2 = c2->NextSiblingElement();
 				}
 			}
@@ -395,6 +419,30 @@ TiXmlElement * EmbeddedDatabase::writeXML(TiXmlElement * parent) const {
 	}
 
 
+	if (!m_acousticBoundaryConditions.empty()) {
+		TiXmlElement * child = new TiXmlElement("AcousticBoundaryConditions");
+		e->LinkEndChild(child);
+
+		for (std::vector<VICUS::AcousticBoundaryCondition>::const_iterator it = m_acousticBoundaryConditions.begin();
+			it != m_acousticBoundaryConditions.end(); ++it)
+		{
+			it->writeXML(child);
+		}
+	}
+
+
+	if (!m_acousticSoundAbsorptions.empty()) {
+		TiXmlElement * child = new TiXmlElement("AcousticSoundAbsorptions");
+		e->LinkEndChild(child);
+
+		for (std::vector<VICUS::AcousticSoundAbsorption>::const_iterator it = m_acousticSoundAbsorptions.begin();
+			it != m_acousticSoundAbsorptions.end(); ++it)
+		{
+			it->writeXML(child);
+		}
+	}
+
+
 	if (!m_boundaryConditions.empty()) {
 		TiXmlElement * child = new TiXmlElement("BoundaryConditions");
 		e->LinkEndChild(child);
@@ -515,12 +563,12 @@ TiXmlElement * EmbeddedDatabase::writeXML(TiXmlElement * parent) const {
 	}
 
 
-	if (!m_EPDElements.empty()) {
-		TiXmlElement * child = new TiXmlElement("EPDElements");
+	if (!m_EPDDatasets.empty()) {
+		TiXmlElement * child = new TiXmlElement("EPDDatasets");
 		e->LinkEndChild(child);
 
-		for (std::vector<VICUS::EPDDataset>::const_iterator it = m_EPDElements.begin();
-			it != m_EPDElements.end(); ++it)
+		for (std::vector<VICUS::EpdDataset>::const_iterator it = m_EPDDatasets.begin();
+			it != m_EPDDatasets.end(); ++it)
 		{
 			it->writeXML(child);
 		}

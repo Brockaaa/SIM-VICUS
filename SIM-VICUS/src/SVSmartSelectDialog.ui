@@ -77,6 +77,26 @@
          </item>
         </layout>
        </item>
+       <item row="3" column="0">
+        <layout class="QFormLayout" name="formLayout_3">
+         <item row="1" column="0">
+          <widget class="QCheckBox" name="checkBoxFilterBoundaryCondition">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>boundary condition filter</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="comboBoxBoundaryCondition"/>
+         </item>
+        </layout>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tabNetworkObjects">
@@ -99,7 +119,7 @@
           <attribute name="title">
            <string>Nodes</string>
           </attribute>
-          <layout class="QFormLayout" name="formLayout_2">
+          <layout class="QGridLayout" name="gridLayout">
            <item row="0" column="0">
             <widget class="QLabel" name="label">
              <property name="text">
@@ -113,24 +133,51 @@
            <item row="1" column="0">
             <widget class="QCheckBox" name="checkBoxMaxHeatingDemandBelow">
              <property name="text">
-              <string>Max heating demand [W] &lt;</string>
+              <string>Max heating demand &lt;</string>
              </property>
             </widget>
            </item>
            <item row="1" column="1">
             <widget class="QtExt::ValidatingLineEdit" name="lineEditMaxHeatingDemandBelow"/>
            </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>W</string>
+             </property>
+            </widget>
+           </item>
            <item row="2" column="0">
             <widget class="QCheckBox" name="checkBoxMaxHeatingDemandAbove">
              <property name="text">
-              <string>Max heating demand [W] &gt;</string>
+              <string>Max heating demand &gt;</string>
              </property>
             </widget>
            </item>
            <item row="2" column="1">
             <widget class="QtExt::ValidatingLineEdit" name="lineEditMaxHeatingDemandAbove"/>
            </item>
-           <item row="6" column="1">
+           <item row="3" column="0">
+            <widget class="QCheckBox" name="checkBoxMaxHeatingDemandEqualTo">
+             <property name="text">
+              <string>Max heating demand =</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QtExt::ValidatingLineEdit" name="lineEditMaxHeatingDemandEqualTo"/>
+           </item>
+           <item row="4" column="0">
+            <widget class="QCheckBox" name="checkBoxNodeId">
+             <property name="text">
+              <string>ID=</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QtExt::ValidatingLineEdit" name="lineEditNodeId"/>
+           </item>
+           <item row="5" column="1">
             <spacer name="verticalSpacer">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
@@ -143,35 +190,19 @@
              </property>
             </spacer>
            </item>
-           <item row="5" column="1">
-            <widget class="QtExt::ValidatingLineEdit" name="lineEditNodeId"/>
-           </item>
-           <item row="5" column="0">
-            <widget class="QCheckBox" name="checkBoxNodeId">
+           <item row="2" column="2">
+            <widget class="QLabel" name="label_3">
              <property name="text">
-              <string>ID=</string>
+              <string>W</string>
              </property>
             </widget>
            </item>
-           <item row="3" column="0">
-            <widget class="QCheckBox" name="checkBoxMaxHeatingDemandEqualTo">
+           <item row="3" column="2">
+            <widget class="QLabel" name="label_4">
              <property name="text">
-              <string>Max heating demand [W] =</string>
+              <string>W</string>
              </property>
             </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QtExt::ValidatingLineEdit" name="lineEditMaxHeatingDemandEqualTo"/>
-           </item>
-           <item row="4" column="0">
-            <widget class="QCheckBox" name="checkBoxNodeDisplayName">
-             <property name="text">
-              <string>name =</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QLineEdit" name="lineEditNodeDisplayName"/>
            </item>
           </layout>
          </widget>
@@ -179,26 +210,53 @@
           <attribute name="title">
            <string>Pipes</string>
           </attribute>
-          <layout class="QFormLayout" name="formLayout">
+          <layout class="QGridLayout" name="gridLayout_2">
            <item row="0" column="0">
             <widget class="QCheckBox" name="checkBoxLengthBelow">
              <property name="text">
-              <string>Length [m] &lt;</string>
+              <string>Length &lt;</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
             <widget class="QtExt::ValidatingLineEdit" name="lineEditLengthBelow"/>
            </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>m</string>
+             </property>
+            </widget>
+           </item>
            <item row="1" column="0">
             <widget class="QCheckBox" name="checkBoxLengthAbove">
              <property name="text">
-              <string>Length [m] &gt;</string>
+              <string>Length &gt;</string>
              </property>
             </widget>
            </item>
            <item row="1" column="1">
             <widget class="QtExt::ValidatingLineEdit" name="lineEditLengthAbove"/>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>m</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <spacer name="verticalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>314</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -209,31 +267,15 @@
     </widget>
    </item>
    <item>
-    <layout class="QFormLayout" name="formLayout_3">
-     <item row="1" column="0">
-      <widget class="QCheckBox" name="checkBoxFilterBoundaryCondition">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>boundary condition filter</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QComboBox" name="comboBoxBoundaryCondition"/>
-     </item>
-     <item row="0" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
       <widget class="QCheckBox" name="checkBoxFilterName">
        <property name="text">
         <string>name filter</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
+     <item>
       <widget class="QLineEdit" name="lineEditFilterName"/>
      </item>
     </layout>

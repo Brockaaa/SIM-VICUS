@@ -29,14 +29,18 @@
 #include <QOpenGLShaderProgram>
 #include <QElapsedTimer>
 
+#include <IBK_physics.h>
+
 #include <VICUS_Project.h>
 #include <SVConversions.h>
 
 #include "SVProjectHandler.h"
 #include "SVViewStateHandler.h"
 #include "SVSettings.h"
+#include "Vic3DConstants.h"
 #include "Vic3DGeometryHelpers.h"
 #include "Vic3DShaderProgram.h"
+#include "qstyle.h"
 
 namespace Vic3D {
 
@@ -81,10 +85,10 @@ void WireFrameObject::create(ShaderProgram * shaderProgram) {
 #define VERTEX_ARRAY_INDEX 0
 
 	m_vertexBufferObject.bind(); // this registers this buffer data object in the currently bound vao; in subsequent
-				  // calls to shaderProgramm->setAttributeBuffer() the buffer object is associated with the
-				  // respective attribute array that's fed into the shader. When the vao is later bound before
-				  // rendering, this association is remembered so that the vertex fetch stage pulls data from
-				  // this vbo
+	// calls to shaderProgramm->setAttributeBuffer() the buffer object is associated with the
+	// respective attribute array that's fed into the shader. When the vao is later bound before
+	// rendering, this association is remembered so that the vertex fetch stage pulls data from
+	// this vbo
 
 	// coordinates
 	m_shaderProgram->shaderProgram()->enableAttributeArray(VERTEX_ARRAY_INDEX);
@@ -110,6 +114,35 @@ void WireFrameObject::destroy() {
 	m_indexBufferObject.destroy();
 }
 
+template <typename t>
+void generateDrawingPlanes(const std::vector<t> &objects, unsigned int idDrawinLayer, unsigned int &currentVertexIndex,
+						   unsigned int &currentElementIndex, std::vector<VertexC> &vertexBufferData, std::vector<GLuint> &indexBufferData) {
+
+	for (const t & obj : objects) {
+		const VICUS::DrawingLayer *dl = dynamic_cast<const VICUS::DrawingLayer *>(obj.m_layerRef);
+		Q_ASSERT(dl != nullptr);
+
+		// Skip all block objects. They are added as part of inserts.
+		if (obj.m_block != nullptr)
+			continue;
+
+		// If object is not part of layer, we skip it
+		if (idDrawinLayer != dl->m_id)
+			continue;
+
+		// If layer is not selected and visible, it is also not drawn
+		if (!dl->m_selected || !dl->m_visible)
+			continue;
+
+		// Get all planes
+		const std::vector<VICUS::PlaneGeometry> &planes = obj.planeGeometries();
+		for (const VICUS::PlaneGeometry &plane : planes) {
+			addPlane(plane.triangulationData(), currentVertexIndex, currentElementIndex,
+					 vertexBufferData, indexBufferData);
+		}
+	}
+}
+
 
 void WireFrameObject::updateBuffers() {
 	// get all selected and visible objects
@@ -133,12 +166,14 @@ void WireFrameObject::updateBuffers() {
 
 	qDebug() << m_selectedObjects.size() << " selected objects";
 
+	std::set<unsigned int> handledDrawingIds;
 	for (const VICUS::Object * o : m_selectedObjects) {
 
 		const VICUS::Surface * s = dynamic_cast<const VICUS::Surface *>(o);
 		if (s != nullptr) {
 			if (!s->geometry().isValid()) continue;
 			addPlane(s->geometry().triangulationData(), currentVertexIndex, currentElementIndex, m_vertexBufferData, m_indexBufferData);
+
 			continue;
 		}
 
@@ -174,6 +209,28 @@ void WireFrameObject::updateBuffers() {
 					  currentVertexIndex, currentElementIndex, m_vertexBufferData, m_indexBufferData);
 			continue;
 		}
+
+		const VICUS::DrawingLayer * drawingLayer = dynamic_cast<const VICUS::DrawingLayer *>(o);
+		if (drawingLayer != nullptr) {
+
+			const VICUS::Drawing *drawing = dynamic_cast<const VICUS::Drawing *>(drawingLayer->m_parent);
+			Q_ASSERT(drawing != nullptr);
+
+			if (handledDrawingIds.find(drawing->m_id) != handledDrawingIds.end())
+				continue; // Skip if already handled
+
+			generateDrawingPlanes<VICUS::Drawing::Line>(drawing->m_lines, drawingLayer->m_id, currentVertexIndex, currentElementIndex, m_vertexBufferData, m_indexBufferData);
+			generateDrawingPlanes<VICUS::Drawing::PolyLine>(drawing->m_polylines, drawingLayer->m_id, currentVertexIndex, currentElementIndex, m_vertexBufferData, m_indexBufferData);
+			generateDrawingPlanes<VICUS::Drawing::LinearDimension>(drawing->m_linearDimensions, drawingLayer->m_id, currentVertexIndex, currentElementIndex, m_vertexBufferData, m_indexBufferData);
+			generateDrawingPlanes<VICUS::Drawing::Arc>(drawing->m_arcs, drawingLayer->m_id, currentVertexIndex, currentElementIndex, m_vertexBufferData, m_indexBufferData);
+			generateDrawingPlanes<VICUS::Drawing::Ellipse>(drawing->m_ellipses, drawingLayer->m_id, currentVertexIndex, currentElementIndex, m_vertexBufferData, m_indexBufferData);
+			generateDrawingPlanes<VICUS::Drawing::Circle>(drawing->m_circles, drawingLayer->m_id, currentVertexIndex, currentElementIndex, m_vertexBufferData, m_indexBufferData);
+			generateDrawingPlanes<VICUS::Drawing::Solid>(drawing->m_solids, drawingLayer->m_id, currentVertexIndex, currentElementIndex, m_vertexBufferData, m_indexBufferData);
+			generateDrawingPlanes<VICUS::Drawing::Text>(drawing->m_texts, drawingLayer->m_id, currentVertexIndex, currentElementIndex, m_vertexBufferData, m_indexBufferData);
+
+			//handledDrawingIds.insert(drawing->m_id);
+		}
+
 	}
 
 	// transfer data to GPU

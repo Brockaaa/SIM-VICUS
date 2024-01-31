@@ -27,7 +27,8 @@ namespace NANDRAD {
 
 
 void SolarLoadsDistributionModel::initDefaults() {
-	m_para[P_RadiationLoadFractionZone].set( KeywordList::Keyword("SolarLoadsDistributionModel::para_t", P_RadiationLoadFractionZone),	 0.5, IBK::Unit("---"));
+	m_distributionType = NANDRAD::SolarLoadsDistributionModel::SWR_SurfaceTypeFactor;
+	m_para[P_RadiationLoadFractionZone].set( KeywordList::Keyword("SolarLoadsDistributionModel::para_t", P_RadiationLoadFractionZone),	 0.1, IBK::Unit("---"));
 	// Mind: the next three must add up to 1
 	m_para[P_RadiationLoadFractionFloor].set( KeywordList::Keyword("SolarLoadsDistributionModel::para_t", P_RadiationLoadFractionFloor),	 0.5, IBK::Unit("---"));
 	m_para[P_RadiationLoadFractionWalls].set( KeywordList::Keyword("SolarLoadsDistributionModel::para_t", P_RadiationLoadFractionWalls),	 0.3, IBK::Unit("---"));
@@ -41,7 +42,7 @@ void SolarLoadsDistributionModel::checkParameters() const {
 	// check radiation load fractions
 	for (unsigned int i=0; i<4; ++i)
 		m_para[P_RadiationLoadFractionZone+i].checkedValue(
-					NANDRAD::KeywordList::Keyword("SolarLoadsDistributionModel::para_t", P_RadiationLoadFractionZone+i),
+					NANDRAD::KeywordList::Keyword("SolarLoadsDistributionModel::para_t", P_RadiationLoadFractionZone+(int)i),
 					"---", "---", 0, true, 1, true,
 					"Radiation load fraction must be between 0 and 1.");
 

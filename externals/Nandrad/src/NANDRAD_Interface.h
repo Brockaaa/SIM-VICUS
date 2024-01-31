@@ -36,6 +36,7 @@
 namespace NANDRAD {
 
 class Zone;
+class EmbeddedObject;
 
 /*!	An Interface identifies a surface of a wall and stores all data that are needed for boundary
 	condition calculation. Each ConstructionInstance contains two member variables of type
@@ -106,6 +107,36 @@ public:
 				 with Project::writeXML(). Any existing text will be overwritten.
 	*/
 	std::string									m_comment;				// XML:C
+
+
+
+	// *** Runtime variables ***
+
+	/*! Stores pointer to connected zone */
+	const Zone									*m_zone = nullptr;
+
+	/*! Set to true if this is a side A interface of a construction instance.
+		Initialized in ConstructionInstance::checkParameters().
+	*/
+	bool										m_isSideA;
+
+	/*! Stores view factors for construction instances visible from this one, whereby the key is the
+		id of the visible construction instance or embedded object.
+		Populated in checkAndPrepareLongWaveHeatExchange().
+	*/
+	std::map<unsigned int, double>				m_viewFactors;
+
+	/*! Stores pointer to interfaces visible from this one, whereby the key is the id of the other, visible construction instance.
+		This is required to have access to the emission coefficient of the visible interface when computing LW radiation exchance.
+		Populated in checkAndPrepareLongWaveHeatExchange().
+	*/
+	std::map<unsigned int, const NANDRAD::Interface*>		m_connectedInterfaces;
+
+	/*! Stores pointers to embedded objects (windows only), where key is the ID of the embedded object.
+		Populated in checkAndPrepareLongWaveHeatExchange().
+		\note LW radiation through embedded objects is not implemented, yet!
+	*/
+	std::map<unsigned int, const NANDRAD::EmbeddedObject*>	m_connectedWindows;
 };
 
 } // namespace NANDRAD

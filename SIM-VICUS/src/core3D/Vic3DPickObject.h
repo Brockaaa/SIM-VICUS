@@ -62,7 +62,9 @@ struct PickObject {
 		RT_CoordinateSystemCenter,
 		/*! One of the marker objects at the end of the axis in "rotation" and "scale" modes have been picked,
 			m_uniqueObjectID in pick object identifies axis: 0 = x, 1 = y, 2 = z. */
-		RT_AxisEndMarker
+		RT_AxisEndMarker,
+		/*! X-Y-Plane. */
+		RT_xyPlane
 	};
 
 	/*! Stores information about a particular snap point candidate. */
@@ -72,6 +74,7 @@ struct PickObject {
 		}
 
 		ResultType		m_resultType;
+
 		/*! Distance from observer/near plane point. */
 		double			m_depth;
 
@@ -79,6 +82,12 @@ struct PickObject {
 			For m_snapPointType == RT_GridPlane, this holds the index of the plane in the Vic3DScene::m_gridPlanes vector.
 		*/
 		unsigned int	m_objectID = 0;
+
+		/*! Special handling for drawing objects, since it is not a vicus object
+			and its origin has to be stored separately. This is needed to perform
+			correct picking of drawing objects. */
+		unsigned int	m_drawingID = 0;
+
 		/*! Stores the index of a hole/window or any other embedded object. */
 		int				m_holeIdx = -1;
 
@@ -89,8 +98,7 @@ struct PickObject {
 
 	PickObject(const QPoint & localMousePos) :
 		m_localMousePos(localMousePos)
-	{
-	}
+	{}
 
 	/*! Set to true, if picking was already performed. */
 	bool					m_pickPerformed = false;

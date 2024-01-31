@@ -72,10 +72,10 @@ QVariant SVDBMaterialTableModel::data ( const QModelIndex & index, int role) con
 				case ColName				: return QtExt::MultiLangString2QString(it->second.m_displayName);
 				case ColCategory			:
 					try {
-						return VICUS::KeywordListQt::Keyword("Material::Category",it->second.m_category);
-					} catch (...) {
-						return "";
-					}
+					return VICUS::KeywordListQt::Keyword("Material::Category",it->second.m_category);
+				} catch (...) {
+					return "";
+				}
 				case ColProductID			: return "--";
 				case ColProducer			: return QtExt::MultiLangString2QString(it->second.m_manufacturer);
 				case ColSource				: return QtExt::MultiLangString2QString(it->second.m_dataSource);
@@ -101,8 +101,8 @@ QVariant SVDBMaterialTableModel::data ( const QModelIndex & index, int role) con
 
 		case Qt::SizeHintRole :
 			switch (index.column()) {
-				case ColCheck :
-					return QSize(22, 16);
+			case ColCheck :
+				return QSize(22, 16);
 			} // switch
 			break;
 
@@ -125,7 +125,7 @@ QVariant SVDBMaterialTableModel::data ( const QModelIndex & index, int role) con
 					return QString::fromStdString(it->second.m_errorMsg);
 			}
 		}
-	}
+	} // switch
 
 	return QVariant();
 }
@@ -140,28 +140,28 @@ QVariant SVDBMaterialTableModel::headerData(int section, Qt::Orientation orienta
 	if (orientation == Qt::Vertical)
 		return QVariant();
 	switch (role) {
-		case Qt::DisplayRole: {
-			switch ( section ) {
-				case ColId					: return tr("Id");
-				case ColName				: return tr("Name");
-				case ColCategory			: return tr("Category");
-				case ColProductID			: return tr("ProductID");
-				case ColProducer			: return tr("Producer");
-				case ColSource				: return tr("Source");
-				case ColRho					: return tr("Rho [kg/m3]");
-				case ColCet					: return tr("Ce [J/kgK]");
-				case ColLambda				: return tr("Lambda [W/m2K]");
+	case Qt::DisplayRole: {
+		switch ( section ) {
+		case ColId					: return tr("Id");
+		case ColName				: return tr("Name");
+		case ColCategory			: return tr("Category");
+		case ColProductID			: return tr("ProductID");
+		case ColProducer			: return tr("Producer");
+		case ColSource				: return tr("Source");
+		case ColRho					: return tr("Rho [kg/m3]");
+		case ColCet					: return tr("Ce [J/kgK]");
+		case ColLambda				: return tr("Lambda [W/m2K]");
 
-					// TODO : Dirk, andere Spaltenüberschriften
-			}
-		} break;
-
-		case Qt::FontRole : {
-			QFont f;
-			f.setBold(true);
-			f.setPointSizeF(f.pointSizeF()*0.8);
-			return f;
+			// TODO : Dirk, andere Spaltenüberschriften
 		}
+	} break;
+
+	case Qt::FontRole : {
+		QFont f;
+		f.setBold(true);
+		f.setPointSizeF(f.pointSizeF()*0.8);
+		return f;
+	}
 	} // switch
 	return QVariant();
 }
@@ -175,7 +175,7 @@ void SVDBMaterialTableModel::resetModel() {
 
 QModelIndex SVDBMaterialTableModel::addNewItem() {
 	VICUS::Material m;
-	m.m_displayName.setEncodedString("en:<new material>");
+	m.m_displayName.setString(tr("<new material>").toStdString(), IBK::MultiLanguageString::m_language);
 
 	//set default parameters
 	VICUS::KeywordList::setParameter(m.m_para, "Material::para_t", VICUS::Material::P_Conductivity, 1);

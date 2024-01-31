@@ -24,6 +24,7 @@
 */
 
 #include "SVPropEditGeometry.h"
+#include "IBKMK_2DCalculations.h"
 #include "ui_SVPropEditGeometry.h"
 
 #include <IBK_physics.h>
@@ -158,6 +159,8 @@ SVPropEditGeometry::SVPropEditGeometry(QWidget *parent) :
 	m_ui->lineEditScaleY->installEventFilter(this);
 	m_ui->lineEditScaleZ->installEventFilter(this);
 
+	// m_ui->lineEditScaleFactor->installEventFilter(this);
+
 	m_ui->lineEditCopyX->setText( QString("%L1").arg(m_copyTranslationVector.m_x,0,'f',3));
 	m_ui->lineEditCopyY->setText( QString("%L1").arg(m_copyTranslationVector.m_y,0,'f',3));
 	m_ui->lineEditCopyZ->setText( QString("%L1").arg(m_copyTranslationVector.m_z,0,'f',3));
@@ -188,6 +191,7 @@ SVPropEditGeometry::SVPropEditGeometry(QWidget *parent) :
 	connect(m_ui->lineEditScaleX, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditScaleY, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditScaleZ, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
+	// connect(m_ui->lineEditScaleFactor, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 
 	connect(m_ui->lineEditTranslateX, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditTranslateY, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
@@ -209,6 +213,9 @@ void SVPropEditGeometry::enableTransformation() {
 void SVPropEditGeometry::setModificationType(ModificationType modType) {
 	m_ui->stackedWidget->setCurrentIndex(modType);
 	updateInputs(); // update all inputs
+	// adjust size
+	QSize preferredSize = m_ui->stackedWidget->currentWidget()->sizeHint();
+	m_ui->stackedWidget->setFixedHeight(preferredSize.height());
 	// only adjust local coordinate system, if this widget is visible
 	if (this->isVisibleTo(qobject_cast<QWidget*>(parent())) ) {
 		// Note: setting new coordinates to the local coordinate system object will in turn call setCoordinates()
@@ -230,13 +237,13 @@ void SVPropEditGeometry::setCoordinates(const Vic3D::Transform3D &t) {
 	m_lcsTransform =  t;
 
 	// compute dimensions of bounding box (dx, dy, dz) and center point of all selected surfaces
-	m_bbDim[OM_Local] = project().boundingBox(m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Local],
+	m_bbDim[OM_Local] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Local],
 											  QVector2IBKVector(cso->translation() ),
 											  QVector2IBKVector(cso->localXAxis() ),
 											  QVector2IBKVector(cso->localYAxis() ),
 											  QVector2IBKVector(cso->localZAxis() ) );
-	m_bbDim[OM_Global] = project().boundingBox(m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Global]);
 
+	m_bbDim[OM_Global] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Global]);
 
 	m_normal = QVector2IBKVector(cso->localZAxis());
 	updateInputs();
@@ -354,7 +361,7 @@ bool SVPropEditGeometry::eventFilter(QObject * target, QEvent * event) {
 
 			QWheelEvent *wheelEvent = static_cast<QWheelEvent*>(event);
 			// offset are changed in 0.01 steps
-			double offset = (wheelEvent->delta() > 0) ? delta : -delta;
+			double offset = (wheelEvent->angleDelta().y()>0) ? delta : -delta;
 			onWheelTurned(offset, qobject_cast<QtExt::ValidatingLineEdit*>(target)); // we know that target points to a ValidatingLineEdit
 		}
 	}
@@ -508,6 +515,7 @@ void SVPropEditGeometry::on_pushButtonFlipNormals_clicked() {
 	// process all selected surfaces (not subsurfaces) and flip their normal vectors
 	// this is done directly, without use of apply/cancel buttons
 	std::vector<VICUS::Surface>			modifiedSurfaces;
+	std::vector<VICUS::Drawing>			modifiedDrawings;
 	for (const VICUS::Surface* s : m_selSurfaces) {
 		// create a copy of the surface
 		VICUS::Surface modS(*s);
@@ -518,7 +526,7 @@ void SVPropEditGeometry::on_pushButtonFlipNormals_clicked() {
 	if (modifiedSurfaces.empty())
 		return;
 
-	SVUndoModifySurfaceGeometry * undo = new SVUndoModifySurfaceGeometry(tr("Surface normal flipped"), modifiedSurfaces );
+	SVUndoModifySurfaceGeometry * undo = new SVUndoModifySurfaceGeometry(tr("Surface normal flipped"), modifiedSurfaces, modifiedDrawings );
 	undo->push();
 
 	// also disable apply and cancel buttons
@@ -546,6 +554,14 @@ void SVPropEditGeometry::on_lineEditCopyZ_editingFinishedSuccessfully() {
 
 // *** PRIVATE FUNCTIONS ***
 
+void selectChildSurfaces(std::vector<const VICUS::Surface*>	&selSurfaces, const VICUS::Surface &s) {
+	for(const VICUS::Surface &cs : s.childSurfaces() ) {
+		if(cs.m_selected && cs.m_visible)
+			selSurfaces.push_back(&cs);
+		selectChildSurfaces(selSurfaces, cs);
+	}
+}
+
 void SVPropEditGeometry::updateUi(bool resetLCS) {
 	Vic3D::CoordinateSystemObject *cso = SVViewStateHandler::instance().m_coordinateSystemObject;
 	Q_ASSERT(cso != nullptr);
@@ -557,6 +573,7 @@ void SVPropEditGeometry::updateUi(bool resetLCS) {
 	project().selectObjects(sel, VICUS::Project::SG_All, false, false);
 
 	// we also have to cache all existing names, so we take alle existing objects
+	m_selDrawings.clear();
 	m_selSurfaces.clear();
 	m_selRooms.clear();
 	m_selSubSurfaces.clear();
@@ -567,7 +584,6 @@ void SVPropEditGeometry::updateUi(bool resetLCS) {
 	m_surfNames.clear();
 	m_buildingNames.clear();
 	m_buildingLevelNames.clear();
-
 
 	// process all selected objects and sort them into vectors
 	for (const VICUS::Object * o : sel) {
@@ -601,15 +617,25 @@ void SVPropEditGeometry::updateUi(bool resetLCS) {
 			if (b->m_selected && b->m_visible)
 				m_selBuildings.push_back(b);
 		}
+
+		const VICUS::Drawing * d = dynamic_cast<const VICUS::Drawing *>(o);
+		if (d != nullptr) {
+			if (d->m_selected && d->m_visible)
+				m_selDrawings.push_back(d);
+			//			for (const VICUS::Drawing::DrawingLayer &dl : d->m_layers) {
+			//				if (dl.m_selected && dl.m_visible)
+			//					m_selDrawings.push_back(d);
+			//			}
+		}
 	}
 
 	// compute dimensions of bounding box (dx, dy, dz) and center point of all selected surfaces
-	m_bbDim[OM_Local] = project().boundingBox(m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Local],
+	m_bbDim[OM_Local] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Local],
 											  QVector2IBKVector(cso->translation() ),
 											  QVector2IBKVector(cso->localXAxis() ),
 											  QVector2IBKVector(cso->localYAxis() ),
 											  QVector2IBKVector(cso->localZAxis() ) );
-	m_bbDim[OM_Global] = project().boundingBox(m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Global]);
+	m_bbDim[OM_Global] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Global]);
 
 	// NOTE: this function is being called even if edit geometry property widget is not
 	SVViewStateHandler::instance().m_localCoordinateViewWidget->setBoundingBoxDimension(m_bbDim[OM_Global]);
@@ -634,10 +660,15 @@ void SVPropEditGeometry::updateUi(bool resetLCS) {
 	m_ui->pushButtonCopyBuildingLevel->setEnabled(!m_selBuildingLevels.empty());
 	m_ui->pushButtonCopyBuilding->setEnabled(!m_selBuildings.empty());
 
-	bool noSelection = m_selSurfaces.empty() && m_selSubSurfaces.empty() &&
+	bool noSelection = m_selDrawings.empty() && m_selSurfaces.empty() && m_selSubSurfaces.empty() &&
 			m_selRooms.empty() && m_selBuildingLevels.empty() && m_selBuildings.empty();
 
 	setEnabled(!noSelection);
+
+//	if (m_selDrawings.size() == 1)
+//		m_ui->lineEditScaleFactor->setValue(m_selDrawings.back()->m_scalingFactor);
+//	else
+//		m_ui->lineEditScaleFactor->setValue(1.0);
 }
 
 
@@ -1064,7 +1095,8 @@ void SVPropEditGeometry::updateCoordinateSystemLook() {
 	if (SVViewStateHandler::instance().m_geometryView == nullptr)
 		return; // do nothing while initializing
 	// adjust appearance of local coordinate system
-	if (m_ui->stackedWidget->currentIndex() == MT_Align) {
+	if (m_ui->stackedWidget->currentIndex() == MT_Align ||
+			m_ui->stackedWidget->currentIndex() == MT_Copy) {
 		// put local coordinate system back into "plain" mode
 		if (cso->m_geometryTransformMode != 0) {
 			cso->m_geometryTransformMode = 0;
@@ -1161,6 +1193,45 @@ void SVPropEditGeometry::on_pushButtonCancel_clicked() {
 	const_cast<Vic3D::SceneView*>(SVViewStateHandler::instance().m_geometryView->sceneView())->renderLater();
 }
 
+void rotateChild(VICUS::Surface &s, std::vector<VICUS::Surface> &modifiedSurfaces,
+				 const QQuaternion &rotation, const QVector3D &translation) {
+	std::vector<VICUS::Surface> childs;
+	std::vector<VICUS::SubSurface> subs = s.subSurfaces();
+	for (const VICUS::Surface &cs : s.childSurfaces()) {
+		VICUS::Surface modS(cs);
+
+		IBKMK::Polygon3D poly = cs.polygon3D();
+
+		// we copy the surface's local, normal and offset
+		IBKMK::Vector3D localX = poly.localX();
+		IBKMK::Vector3D normal = poly.normal();
+		IBKMK::Vector3D offset = poly.offset();
+		IBKMK::Vector3D trans = QVector2IBKVector(translation);
+
+		if (rotation != QQuaternion()) {
+			// we rotate our axis and offset
+			IBKMK::Quaternion rotate = QQuaternion2IBKQuaternion(rotation);
+			rotate.rotateVector(localX);
+			rotate.rotateVector(normal);
+			rotate.rotateVector(offset);
+		}
+
+		trans = QVector2IBKVector(translation);
+
+		// we set our rotated axises
+		poly.setRotation(normal, localX);
+		// we have to mind the we rotate around our
+		// local coordinate system center point
+		poly.translate(offset-poly.offset()+trans);
+
+		// Polygon3D is dirty, but geometry is not
+		modS.setPolygon3D((VICUS::Polygon3D)poly); // now geometry is also marked as dirty
+		childs.push_back(modS);
+		rotateChild(modS, modifiedSurfaces, rotation, translation);
+		// modifiedSurfaces.push_back(modS);
+	}
+	s.setChildAndSubSurfaces(subs, childs);
+}
 
 void SVPropEditGeometry::on_pushButtonApply_clicked() {
 	FUNCID(SVPropEditGeometry::on_pushButtonApply_clicked);
@@ -1177,6 +1248,7 @@ void SVPropEditGeometry::on_pushButtonApply_clicked() {
 
 	// compose vector of modified surface geometries
 	std::vector<VICUS::Surface>			modifiedSurfaces;
+	std::vector<VICUS::Drawing>			modifiedDrawings;
 	std::set<const VICUS::Surface*>		handledSurfaces;
 
 	// process all selected surfaces
@@ -1222,6 +1294,7 @@ void SVPropEditGeometry::on_pushButtonApply_clicked() {
 			double scaleY = diffNew.m_y/diffOrig.m_y;
 
 			std::vector<VICUS::SubSurface> modSubs = modS.subSurfaces();
+			std::vector<VICUS::Surface>    modChilds = modS.childSurfaces();
 			for (VICUS::SubSurface & sub : modSubs) {
 				std::vector<IBKMK::Vector2D> polyVerts = sub.m_polygon2D.vertexes();
 				for (unsigned int i=0; i<polyVerts.size(); ++i) {
@@ -1231,9 +1304,17 @@ void SVPropEditGeometry::on_pushButtonApply_clicked() {
 				// now set the new subsurface polygon
 				sub.m_polygon2D.setVertexes(polyVerts);
 			}
+//			for (VICUS::Surface & child : modChilds) {
+//				std::vector<IBKMK::Vector3D> verts = child.polygon3D().vertexes();
+//				for (IBKMK::Vector3D & v : verts) {
+//					v = QVector2IBKVector( transMat*IBKVector2QVector(v) );
+//				}
+//				// now set the new subsurface polygon
+//				const_cast<IBKMK::Polygon3D &>(child.polygon3D()).setVertexes(verts);
+//			}
 
 			modS.setPolygon3D((VICUS::Polygon3D)poly);
-			modS.setSubSurfaces(modSubs);
+			modS.setChildAndSubSurfaces(modSubs, modChilds);
 			modifiedSurfaces.push_back(modS);
 		}
 		else {
@@ -1266,6 +1347,9 @@ void SVPropEditGeometry::on_pushButtonApply_clicked() {
 
 			// Polygon3D is dirty, but geometry is not
 			modS.setPolygon3D((VICUS::Polygon3D)poly); // now geometry is also marked as dirty
+
+			// rotateChild(modS, modifiedSurfaces, rotation, translation);
+
 			modifiedSurfaces.push_back(modS);
 		}
 
@@ -1310,7 +1394,7 @@ void SVPropEditGeometry::on_pushButtonApply_clicked() {
 
 			// number of sub-surfaces and holes should always be equal
 			// Just in order to be safe
-			Q_ASSERT(newSurf.subSurfaces().size() == newSurf.geometry().holes().size());
+			Q_ASSERT( ( newSurf.subSurfaces().size() + newSurf.childSurfaces().size() ) == newSurf.geometry().holes().size());
 
 			// we only modify our selected sub surface
 			VICUS::SubSurface &subS = newSubSurfs[i];
@@ -1342,19 +1426,47 @@ void SVPropEditGeometry::on_pushButtonApply_clicked() {
 
 		handledSurfaces.insert(parentSurf);
 
+		std::vector<VICUS::Surface> childs = parentSurf->childSurfaces();
 		// we update the 2D polyline
-		newSurf.setSubSurfaces(newSubSurfs);
+		newSurf.setChildAndSubSurfaces(newSubSurfs, childs);
 		modifiedSurfaces.push_back(newSurf);
 	}
 
+	for (const VICUS::Drawing *d : m_selDrawings) {
+		VICUS::Drawing newDrawing(*d);
+		// QVector3D origin = IBKVector2QVector(newDrawing.m_origin);
+
+		if (rotation != QQuaternion(1, 0, 0, 0)) {
+			// Translation of LCS
+			IBKMK::Vector3D newOrigin = newDrawing.m_origin;
+
+			const QVector3D &trans = m_lcsTransform.translation();
+
+			newOrigin -= QVector2IBKVector(trans);
+			QMatrix4x4 transform;
+			transform.rotate(rotation);
+
+			newOrigin = QVector2IBKVector(transform * IBKVector2QVector(newOrigin));
+			newOrigin += QVector2IBKVector(trans);
+			// rotation
+			QQuaternion quaternion = rotation * newDrawing.m_rotationMatrix.toQuaternion();
+			newDrawing.m_rotationMatrix.setQuaternion(quaternion);
+
+			newDrawing.m_origin = newOrigin;
+		}
+		else
+			newDrawing.m_origin += QVector2IBKVector(translation);
+
+		modifiedDrawings.push_back(newDrawing);
+	}
 
 	// TODO : Netzwerk zeugs
 
 	// in case operation was executed without any selected objects - should be prevented
-	if (modifiedSurfaces.empty())
+	if (modifiedSurfaces.empty() && modifiedDrawings.empty())
 		return;
 
-	SVUndoModifySurfaceGeometry * undo = new SVUndoModifySurfaceGeometry(tr("Geometry modified"), modifiedSurfaces );
+	SVUndoModifySurfaceGeometry * undo = new SVUndoModifySurfaceGeometry(tr("Geometry modified"), modifiedSurfaces, modifiedDrawings );
 	undo->push();
 
 	// also disable apply and cancel buttons
@@ -1601,5 +1713,129 @@ void SVPropEditGeometry::on_pushButtonApplyRotation_clicked() {
 void SVPropEditGeometry::on_pushButtonApplyTrimmingRotation_clicked() {
 	Q_ASSERT(SVViewStateHandler::instance().m_trimmingObject != nullptr);
 	SVViewStateHandler::instance().m_trimmingObject->setTrimmingPlaneNormal(m_trimingPlaneNormal);
+} 
+
+void SVPropEditGeometry::on_comboBoxUnit_currentIndexChanged(int /*index*/) {
+	enableTransformation();
+}
+
+void SVPropEditGeometry::on_pushButtonFixSurfaceOrientation_clicked() {
+	FUNCID(on_pushButtonFixSurfaceOrientation_clicked);
+
+	/// 1) We take all surfaces from each room
+	/// 2) We calculate the surface weight point by points
+	/// 3) We take its normal from the middle point
+	/// 4) We construct a long ray (e.g. 1000m)
+	/// 5) We check if we cut other surfaces of the room
+	/// 6) If surface cutting count is 0 or even the normal points into correct direction
+	/// 7) If surface cutting count is uneven the normal should be inverted
+
+	VICUS::Project prj = SVProjectHandler::instance().project();
+
+	std::vector<VICUS::Surface> modifiedSurfaces;
+
+	for (const VICUS::Building &b : prj.m_buildings) {
+		for (const VICUS::BuildingLevel &bl : b.m_buildingLevels) {
+			for (const VICUS::Room &r : bl.m_rooms) {
+				for (const VICUS::Surface &s : r.m_surfaces) {
+
+					if (!s.geometry().isValid())
+						continue;
+
+					if (!s.m_visible || !s.m_selected)
+						continue;
+
+					unsigned int intersectionCount = 0;
+
+					// Find Intersection
+					IBKMK::Vector3D center;
+
+					const IBKMK::Vector3D &offset = s.geometry().offset();
+					const IBKMK::Vector3D &localX = s.geometry().localX();
+					const IBKMK::Vector3D &localY = s.geometry().localY();
+
+					for (unsigned int i=0; i<s.geometry().polygon3D().vertexes().size(); ++i) {
+						for(unsigned int j=0; j<3; ++j) {
+							unsigned int idx = (i+j)%s.geometry().polygon3D().vertexes().size();
+							const IBKMK::Vector3D &v3D = s.geometry().polygon3D().vertexes()[idx];
+
+							center += v3D;
+						}
+
+						center /= 3.;
+
+						IBKMK::Vector2D p;
+
+						// Check if point lies within polygon
+						if (!IBKMK::planeCoordinates(offset, localX, localY, center, p.m_x, p.m_y))
+							continue;
+
+						if(IBKMK::pointInPolygon(s.geometry().polygon2D().vertexes(), p) != -1)
+							break;
+
+						center = IBKMK::Vector3D();
+					}
+
+					const IBKMK::Vector3D &normal = s.geometry().normal();
+
+					for (const VICUS::Surface &sTest : r.m_surfaces) {
+
+						if (s.m_id == sTest.m_id)
+							continue;
+
+						if(!sTest.geometry().isValid())
+							continue;
+
+						const IBKMK::Vector3D &offset = sTest.geometry().offset();
+						const IBKMK::Vector3D &localX = sTest.geometry().localX();
+						const IBKMK::Vector3D &localY = sTest.geometry().localY();
+						const IBKMK::Vector3D &normalTest = sTest.geometry().normal();
+
+						IBKMK::Vector3D v;
+						IBKMK::Vector2D p;
+						double dist;
+
+						if (!IBKMK::linePlaneIntersectionWithNormalCheck(offset, normalTest, center, normal, v, dist, false))
+							continue;
+
+						if (dist < 1E-3)
+							continue;
+
+						if (!IBKMK::planeCoordinates(offset, localX, localY, v, p.m_x, p.m_y))
+							continue;
+
+						if(IBKMK::pointInPolygon(sTest.geometry().polygon2D().vertexes(), p) == -1)
+							continue;
+
+						++intersectionCount;
+					}
+
+					if (intersectionCount > 0 && intersectionCount % 2 == 1) {
+						IBK::IBK_Message(IBK::FormatString("Surface #%2 %1 is beeing flipped.").arg(s.m_displayName.toStdString()).arg(s.m_id), IBK::MSG_WARNING, FUNC_ID);
+
+						const_cast<VICUS::Surface &>(s).flip();
+						const_cast<VICUS::Surface &>(s).initializeColorBasedOnInclination(); // reset color
+						modifiedSurfaces.push_back(s);
+					}
+				}
+			}
+		}
+	}
+
+	// in case operation was executed without any selected objects - should be prevented
+	if (modifiedSurfaces.empty())
+		return;
+
+	std::vector<VICUS::Drawing> drawings;
+	SVUndoModifySurfaceGeometry * undo = new SVUndoModifySurfaceGeometry(tr("Surface normal flipped"), modifiedSurfaces, drawings );
+	undo->push();
+
+	// also disable apply and cancel buttons
+	m_ui->pushButtonApply->setEnabled(false);
+	m_ui->pushButtonCancel->setEnabled(false);
+	SVViewStateHandler::instance().m_selectedGeometryObject->resetTransformation();
+	// and update our inputs again
+	updateUi();
+
 }
 

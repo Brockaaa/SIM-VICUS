@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>311</width>
-    <height>682</height>
+    <width>349</width>
+    <height>830</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -61,14 +61,14 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Total length</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="3" column="1">
        <widget class="QLabel" name="labelTotalLength">
         <property name="text">
          <string/>
@@ -82,17 +82,31 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="5" column="1">
        <widget class="QLabel" name="labelConnectedSymbol">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string>Network connected</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Sub Stations</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="labelSubStationCount">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
@@ -121,7 +135,7 @@
       <item>
        <widget class="QPushButton" name="pushButtonSelectFluid">
         <property name="text">
-         <string>select fluid...</string>
+         <string>Select fluid...</string>
         </property>
        </widget>
       </item>
@@ -139,32 +153,56 @@
      <property name="title">
       <string>Editing Algorithms</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QPushButton" name="pushButtonConnectBuildings">
-        <property name="text">
-         <string>connect sub stations</string>
-        </property>
-       </widget>
-      </item>
+     <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <widget class="QPushButton" name="pushButtonGenerateIntersections">
         <property name="text">
-         <string>generate intersections</string>
+         <string>Generate intersections</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButtonReduceDeadEnds">
+       <widget class="QPushButton" name="pushButtonConnectBuildings">
         <property name="text">
-         <string>reduce dead ends</string>
+         <string>Connect sub stations</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="pushButtonReduceRedundantNodes">
         <property name="text">
-         <string>reduce redundant nodes</string>
+         <string>Reduce redundant nodes</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButtonReduceDeadEnds">
+        <property name="text">
+         <string>Reduce dead ends</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
         </property>
        </widget>
       </item>
@@ -180,13 +218,13 @@
       </sizepolicy>
      </property>
      <property name="title">
-      <string>remove short edges</string>
+      <string>Remove short edges</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <widget class="QLabel" name="label_24">
         <property name="text">
-         <string>threshold [m]</string>
+         <string>Threshold:</string>
         </property>
        </widget>
       </item>
@@ -198,9 +236,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="label_25">
+        <property name="text">
+         <string>m</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="pushButtonRemoveSmallEdge">
         <property name="text">
-         <string>remove short edges</string>
+         <string>Remove short edges</string>
         </property>
        </widget>
       </item>
@@ -212,34 +257,34 @@
      <property name="title">
       <string>Size pipes</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QPushButton" name="pushButtonSelectPipes">
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QPushButton" name="pushButtonEditSimultaneity">
         <property name="text">
-         <string>select available pipes...</string>
+         <string>Edit simultaneity...</string>
         </property>
        </widget>
       </item>
-      <item>
-       <layout class="QFormLayout" name="formLayout_3">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_8">
+      <item row="2" column="0" colspan="2">
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="3" column="1">
+         <widget class="QtExt::ValidatingLineEdit" name="lineEditTemperatureDifference">
           <property name="text">
-           <string>Maximum pressure drop [Pa/m]</string>
+           <string>4</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_4">
+        <item row="2" column="1">
+         <widget class="QtExt::ValidatingLineEdit" name="lineEditTemperatureSetpoint">
           <property name="text">
-           <string>Temperature setpoint [C]</string>
+           <string>10</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
+        <item row="3" column="0">
          <widget class="QLabel" name="label_5">
           <property name="text">
-           <string>Temperature difference [K]</string>
+           <string>Temperature difference:</string>
           </property>
          </widget>
         </item>
@@ -250,26 +295,60 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QtExt::ValidatingLineEdit" name="lineEditTemperatureSetpoint">
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_4">
           <property name="text">
-           <string>10</string>
+           <string>Temperature setpoint:</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QtExt::ValidatingLineEdit" name="lineEditTemperatureDifference">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_8">
           <property name="text">
-           <string>4</string>
+           <string>Maximum pressure drop:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>Pa/m</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>C</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>K</string>
           </property>
          </widget>
         </item>
        </layout>
       </item>
-      <item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="pushButtonSelectPipes">
+        <property name="text">
+         <string>Select available pipes...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
        <widget class="QPushButton" name="pushButtonSizePipeDimensions">
         <property name="text">
-         <string>run sizing algorithm</string>
+         <string>Run sizing algorithm</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
         </property>
        </widget>
       </item>

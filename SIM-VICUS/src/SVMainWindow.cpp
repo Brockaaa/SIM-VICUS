@@ -52,11 +52,14 @@
 #include <QGuiApplication>
 #include <QMessageBox>
 #include "SVUndoAddSurface.h"
+#include <QShortcut>
+#include <QProgressDialog>
 
 #include <numeric>
 
 #include <IBK_FileUtils.h>
 #include <IBK_messages.h>
+#include <IBK_NotificationHandler.h>
 
 #include <VICUS_Project.h>
 #include <VICUS_Constants.h>
@@ -69,6 +72,7 @@
 
 #include <NANDRAD_Project.h>
 
+#include "SVLcaLccSettingsWidget.h"
 #include "SVMessageHandler.h"
 #include "SVConstants.h"
 #include "SVSettings.h"
@@ -83,6 +87,7 @@
 #include "SVNetworkImportDialog.h"
 #include "SVNetworkExportDialog.h"
 #include "SVPreferencesPageStyle.h"
+#include "SVPreferencesPageMisc.h"
 #include "SVViewStateHandler.h"
 #include "SVImportIDFDialog.h"
 #include "SVPropVertexListWidget.h"
@@ -91,37 +96,47 @@
 #include "SVStyle.h"
 #include "SVPropFloorManagerWidget.h"
 #include "SVPropAddWindowWidget.h"
-#include "SVView3DDialog.h"
 #include "SVNotesDialog.h"
 #include "SVSimulationShadingOptions.h"
 #include "SVPluginLoader.h"
+#include "SVLcaLccResultsWidget.h"
+#include "SVAcousticConstraintsCheckWidget.h"
 
 #include "SVDatabaseEditDialog.h"
 #include "SVDBZoneTemplateEditDialog.h"
 #include "SVDBDuplicatesDialog.h"
 #include "SVLogFileDialog.h"
 
-#include "SVSimulationStartNandrad.h"
 #include "SVDBInternalLoadsTableModel.h"
 #include "SVCoSimCO2VentilationDialog.h"
 
 #include "SVGeometryView.h"
 #include "Vic3DSceneView.h"
 
-#include "SVUndoModifyProject.h"
-#include "SVUndoAddNetwork.h"
-#include "SVUndoAddBuilding.h"
-#include "SVUndoAddProject.h"
-#include "IBKMK_Vector3D.h"
-#include "IBKMK_3DCalculations.h"
-#include "IBKMK_Polygon3D.h"
 #include "SVUndoModifySiteData.h"
+#include "SVSimulationSettingsView.h"
+#include "SVStructuralUnitCreationDialog.h"
 
 #include "plugins/SVDatabasePluginInterface.h"
 #include "plugins/SVImportPluginInterface.h"
 
 
 static bool copyRecursively(const QString &srcFilePath, const QString &tgtFilePath);
+
+
+class ProgressNotifyer : public IBK::NotificationHandler {
+public:
+	void notify() override {}
+	void notify(double percentage, const char *txt) override;
+	QProgressDialog		*m_prgDlg = nullptr;
+};
+
+void ProgressNotifyer::notify(double percentage, const char *txt) {
+	m_prgDlg->setValue((int)(m_prgDlg->maximum() * percentage));
+	m_prgDlg->setLabelText(txt);
+	qApp->processEvents();
+}
+
 
 SVMainWindow * SVMainWindow::m_self = nullptr;
 
@@ -171,13 +186,28 @@ SVMainWindow::SVMainWindow(QWidget * /*parent*/) :
 	m_ui->actionFileClose->setShortcut(QKeySequence((int)Qt::CTRL + Qt::Key_W));
 	m_ui->actionViewFindSelectedGeometry->setShortcut(QKeySequence((int)Qt::CTRL + Qt::Key_F));
 
+	// connect "F9" with showing the start simulation page
+	QShortcut *shortCutStartSim = new QShortcut(QKeySequence((int)Qt::Key_F9), this);
+	connect(shortCutStartSim, &QShortcut::activated, this, &SVMainWindow::onShortCutStartSimulation);
+
 	// enforce using a native window; we need this so we can call window() and retrieve scaling information
 	setAttribute(Qt::WA_NativeWindow);
 	QWindow *w = window()->windowHandle();
 	connect(w, &QWindow::screenChanged, this, &SVMainWindow::onScreenChanged);
 
+	// we need to set the theme name once here
+	if (SVSettings::instance().m_theme == SVSettings::TT_Dark)
+		QIcon::setThemeName("dark");
+	else
+		QIcon::setThemeName("light");
 
-	m_ui->actionDBZoneControlShading->setEnabled(true);
+	m_ui->actionFileNew->setIcon(QIcon::fromTheme("file_new"));
+	m_ui->actionFileOpen->setIcon(QIcon::fromTheme("file_open"));
+	m_ui->actionFileSave->setIcon(QIcon::fromTheme("file_save"));
+
+	m_ui->actionGeometryView->setIcon(QIcon::fromTheme("3d_geometry_view"));
+	m_ui->actionSimulationSettings->setIcon(QIcon::fromTheme("simulation_view"));
+	m_ui->actionOpenPostProcessing->setIcon(QIcon::fromTheme("post_processing"));
 }
 
 
@@ -260,148 +290,189 @@ SVDatabaseEditDialog * SVMainWindow::dbMaterialEditDialog() {
 	if (m_dbMaterialEditDialog == nullptr) {
 		m_dbMaterialEditDialog = SVDatabaseEditDialog::createMaterialEditDialog(this);
 	}
+	m_dbMaterialEditDialog->resizeDBDialog(0.65);
 	return m_dbMaterialEditDialog;
+}
+
+SVDatabaseEditDialog * SVMainWindow::dbEpdEditDialog() {
+	if (m_dbEpdEditDialog == nullptr) {
+		m_dbEpdEditDialog = SVDatabaseEditDialog::createEpdEditDialog(this);
+	}
+	m_dbEpdEditDialog->resizeDBDialog(0.6);
+	return m_dbEpdEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbConstructionEditDialog() {
 	if (m_dbConstructionEditDialog == nullptr) {
 		m_dbConstructionEditDialog = SVDatabaseEditDialog::createConstructionEditDialog(this);
 	}
+	m_dbConstructionEditDialog->resizeDBDialog(0.7);
 	return m_dbConstructionEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbComponentEditDialog() {
 	if (m_dbComponentEditDialog == nullptr)
 		m_dbComponentEditDialog = SVDatabaseEditDialog::createComponentEditDialog(this);
+	m_dbComponentEditDialog->resizeDBDialog(0.6);
 	return m_dbComponentEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbSubSurfaceComponentEditDialog() {
 	if (m_dbSubSurfaceComponentEditDialog == nullptr)
 		m_dbSubSurfaceComponentEditDialog = SVDatabaseEditDialog::createSubSurfaceComponentEditDialog(this);
+	m_dbSubSurfaceComponentEditDialog->resizeDBDialog(0.6);
 	return m_dbSubSurfaceComponentEditDialog;
+}
+
+SVDatabaseEditDialog * SVMainWindow::dbAcousticBoundaryConditionEditDialog(){
+	if (m_dbAcousticBoundaryConditionEditDialog == nullptr)
+		m_dbAcousticBoundaryConditionEditDialog = SVDatabaseEditDialog::createAcousticBoundaryConditionEditDialog(this);
+	return m_dbAcousticBoundaryConditionEditDialog;
+}
+
+SVDatabaseEditDialog * SVMainWindow::dbAcousticSoundAbsorptionEditDialog(){
+	if (m_dbAcousticSoundAbsorptionEditDialog == nullptr)
+		m_dbAcousticSoundAbsorptionEditDialog = SVDatabaseEditDialog::createAcousticSoundAbsorptionEditDialog(this);
+	return m_dbAcousticSoundAbsorptionEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbBoundaryConditionEditDialog() {
 	if (m_dbBoundaryConditionEditDialog == nullptr)
 		m_dbBoundaryConditionEditDialog = SVDatabaseEditDialog::createBoundaryConditionsEditDialog(this);
+	m_dbBoundaryConditionEditDialog->resizeDBDialog();
 	return m_dbBoundaryConditionEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbWindowEditDialog() {
 	if (m_dbWindowEditDialog == nullptr)
 		m_dbWindowEditDialog = SVDatabaseEditDialog::createWindowEditDialog(this);
+	m_dbWindowEditDialog->resizeDBDialog();
 	return m_dbWindowEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbWindowGlazingSystemEditDialog() {
 	if (m_dbWindowGlazingSystemEditDialog == nullptr)
 		m_dbWindowGlazingSystemEditDialog = SVDatabaseEditDialog::createWindowGlazingSystemEditDialog(this);
+	m_dbWindowGlazingSystemEditDialog->resizeDBDialog();
 	return m_dbWindowGlazingSystemEditDialog;
 }
 
-SVDatabaseEditDialog * SVMainWindow::dbPipeEditDialog(){
+SVDatabaseEditDialog * SVMainWindow::dbPipeEditDialog() {
 	if (m_dbPipeEditDialog == nullptr)
 		m_dbPipeEditDialog = SVDatabaseEditDialog::createPipeEditDialog(this);
+	m_dbPipeEditDialog->resizeDBDialog();
 	return m_dbPipeEditDialog;
 }
 
-SVDatabaseEditDialog *SVMainWindow::dbSupplySystemEditDialog() {
+SVDatabaseEditDialog * SVMainWindow::dbSupplySystemEditDialog() {
 	if (m_dbSupplySystemEditDialog == nullptr)
 		m_dbSupplySystemEditDialog = SVDatabaseEditDialog::createSupplySystemsEditDialog(this);
+	m_dbSupplySystemEditDialog->resizeDBDialog();
 	return m_dbSupplySystemEditDialog;
 }
 
-SVDatabaseEditDialog *SVMainWindow::dbNetworkComponentEditDialog() {
+SVDatabaseEditDialog * SVMainWindow::dbNetworkComponentEditDialog() {
 	if (m_dbNetworkComponentEditDialog == nullptr)
 		m_dbNetworkComponentEditDialog = SVDatabaseEditDialog::createNetworkComponentEditDialog(this);
+	m_dbNetworkComponentEditDialog->resizeDBDialog();
 	return m_dbNetworkComponentEditDialog;
 }
 
-SVDatabaseEditDialog *SVMainWindow::dbFluidEditDialog()
-{
+SVDatabaseEditDialog * SVMainWindow::dbFluidEditDialog() {
 	if (m_dbFluidEditDialog == nullptr)
-		m_dbFluidEditDialog  = SVDatabaseEditDialog::createFluidEditDialog(this);
+		m_dbFluidEditDialog = SVDatabaseEditDialog::createFluidEditDialog(this);
+	m_dbFluidEditDialog->resizeDBDialog();
 	return m_dbFluidEditDialog;
 }
 
-SVDatabaseEditDialog *SVMainWindow::dbNetworkControllerEditDialog()
-{
+SVDatabaseEditDialog * SVMainWindow::dbNetworkControllerEditDialog() {
 	if (m_dbNetworkControllerEditDialog == nullptr)
 		m_dbNetworkControllerEditDialog = SVDatabaseEditDialog::createNetworkControllerEditDialog(this);
+	m_dbNetworkControllerEditDialog->resizeDBDialog();
 	return m_dbNetworkControllerEditDialog;
 }
 
-SVDatabaseEditDialog *SVMainWindow::dbSubNetworkEditDialog()
-{
+SVDatabaseEditDialog * SVMainWindow::dbSubNetworkEditDialog() {
 	if (m_dbSubNetworkEditDialog == nullptr)
 		m_dbSubNetworkEditDialog = SVDatabaseEditDialog::createSubNetworkEditDialog(this);
+	m_dbSubNetworkEditDialog->resizeDBDialog();
 	return m_dbSubNetworkEditDialog;
 }
 
-SVDatabaseEditDialog *SVMainWindow::dbScheduleEditDialog() {
+SVDatabaseEditDialog * SVMainWindow::dbScheduleEditDialog() {
 	if (m_dbScheduleEditDialog == nullptr)
 		m_dbScheduleEditDialog = SVDatabaseEditDialog::createScheduleEditDialog(this);
+	m_dbScheduleEditDialog->resizeDBDialog();
 	return m_dbScheduleEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbInternalLoadsPersonEditDialog() {
 	if (m_dbInternalLoadsPersonEditDialog == nullptr)
 		m_dbInternalLoadsPersonEditDialog = SVDatabaseEditDialog::createInternalLoadsEditDialog(this, VICUS::InternalLoad::IC_Person);
+	m_dbInternalLoadsPersonEditDialog->resizeDBDialog();
 	return m_dbInternalLoadsPersonEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbInternalLoadsElectricEquipmentEditDialog() {
 	if (m_dbInternalLoadsElectricEquipmentEditDialog == nullptr)
 		m_dbInternalLoadsElectricEquipmentEditDialog = SVDatabaseEditDialog::createInternalLoadsEditDialog(this, VICUS::InternalLoad::IC_ElectricEquiment);
+	m_dbInternalLoadsElectricEquipmentEditDialog->resizeDBDialog();
 	return m_dbInternalLoadsElectricEquipmentEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbInternalLoadsLightsEditDialog() {
 	if (m_dbInternalLoadsLightsEditDialog == nullptr)
 		m_dbInternalLoadsLightsEditDialog = SVDatabaseEditDialog::createInternalLoadsEditDialog(this, VICUS::InternalLoad::IC_Lighting);
+	m_dbInternalLoadsLightsEditDialog->resizeDBDialog();
 	return m_dbInternalLoadsLightsEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbInternalLoadsOtherEditDialog() {
 	if (m_dbInternalLoadsOtherEditDialog == nullptr)
 		m_dbInternalLoadsOtherEditDialog = SVDatabaseEditDialog::createInternalLoadsEditDialog(this, VICUS::InternalLoad::IC_Other);
+	m_dbInternalLoadsOtherEditDialog->resizeDBDialog();
 	return m_dbInternalLoadsOtherEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbZoneControlThermostatEditDialog() {
 	if (m_dbZoneControlThermostatEditDialog == nullptr)
 		m_dbZoneControlThermostatEditDialog = SVDatabaseEditDialog::createZoneControlThermostatEditDialog(this);
+	m_dbZoneControlThermostatEditDialog->resizeDBDialog();
 	return m_dbZoneControlThermostatEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbZoneControlVentilationNaturalEditDialog() {
 	if (m_dbZoneControlVentilationNaturalEditDialog == nullptr)
 		m_dbZoneControlVentilationNaturalEditDialog = SVDatabaseEditDialog::createZoneControlVentilationNaturalEditDialog(this);
+	m_dbZoneControlVentilationNaturalEditDialog->resizeDBDialog();
 	return m_dbZoneControlVentilationNaturalEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbZoneControlShadingEditDialog() {
 	if (m_dbZoneControlShadingEditDialog == nullptr)
 		m_dbZoneControlShadingEditDialog = SVDatabaseEditDialog::createZoneControlShadingEditDialog(this);
+	m_dbZoneControlShadingEditDialog->resizeDBDialog();
 	return m_dbZoneControlShadingEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbVentilationNaturalEditDialog() {
 	if (m_dbVentilationNaturalEditDialog == nullptr)
 		m_dbVentilationNaturalEditDialog = SVDatabaseEditDialog::createVentilationNaturalEditDialog(this);
+	m_dbVentilationNaturalEditDialog->resizeDBDialog();
 	return m_dbVentilationNaturalEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbInfiltrationEditDialog() {
 	if (m_dbInfiltrationEditDialog == nullptr)
 		m_dbInfiltrationEditDialog = SVDatabaseEditDialog::createInfiltrationEditDialog(this);
+	m_dbInfiltrationEditDialog->resizeDBDialog();
 	return m_dbInfiltrationEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbZoneIdealHeatingCoolingEditDialog() {
 	if (m_dbZoneIdealHeatingCoolingEditDialog == nullptr)
 		m_dbZoneIdealHeatingCoolingEditDialog = SVDatabaseEditDialog::createZoneIdealHeatingCoolingEditDialog(this);
+	m_dbZoneIdealHeatingCoolingEditDialog->resizeDBDialog();
 	return m_dbZoneIdealHeatingCoolingEditDialog;
 }
 
@@ -414,6 +485,7 @@ SVDBZoneTemplateEditDialog * SVMainWindow::dbZoneTemplateEditDialog() {
 SVDatabaseEditDialog * SVMainWindow::dbSurfaceHeatingSystemEditDialog() {
 	if (m_dbVSurfaceHeatingSystemEditDialog == nullptr)
 		m_dbVSurfaceHeatingSystemEditDialog = SVDatabaseEditDialog::createSurfaceHeatingSystemEditDialog(this);
+	m_dbVSurfaceHeatingSystemEditDialog->resizeDBDialog();
 	return m_dbVSurfaceHeatingSystemEditDialog;
 }
 
@@ -650,7 +722,7 @@ void SVMainWindow::closeEvent(QCloseEvent * event) {
 
 void SVMainWindow::moveEvent(QMoveEvent *event) {
 	QMainWindow::moveEvent(event);
-	SVViewStateHandler::instance().m_geometryView->moveMeasurementWidget();
+	SVViewStateHandler::instance().m_geometryView->moveTransparentSceneWidgets();
 }
 
 
@@ -664,13 +736,15 @@ void SVMainWindow::setup() {
 
 	// *** setup welcome widget ***
 
-	QHBoxLayout * lay = new QHBoxLayout;
+	QHBoxLayout * mainLayout = new QHBoxLayout;
 	m_welcomeScreen = new SVWelcomeScreen(this);
-	lay->addWidget(m_welcomeScreen);
-	lay->setMargin(0);
-	lay->setSpacing(0);
-	m_ui->centralWidget->setLayout(lay);
-	m_welcomeScreen->updateWelcomePage();
+	mainLayout->addWidget(m_welcomeScreen);
+	mainLayout->setMargin(0);
+	mainLayout->setSpacing(0);
+	m_ui->centralWidget->setLayout(mainLayout);
+	// updates colors and entire content of welcome page
+	m_welcomeScreen->onStyleChanged();
+	//m_welcomeScreen->setStyleSheet("QWidget {background-image: url(:/gfx/background/simvicus-background-mail.png);}");
 
 	connect(m_welcomeScreen, SIGNAL(newProjectClicked()), this, SLOT(on_actionFileNew_triggered()));
 	connect(m_welcomeScreen, SIGNAL(openProjectClicked()), this, SLOT(on_actionFileOpen_triggered()));
@@ -696,19 +770,29 @@ void SVMainWindow::setup() {
 	// *** Create splitter that holds navigation tree view and geometry view
 
 	m_geometryViewSplitter = new QSplitter(this);
-	lay->addWidget(m_geometryViewSplitter);
+	mainLayout->addWidget(m_geometryViewSplitter);
 
 	// *** Navigation tree
 
 	m_navigationTreeWidget = new SVNavigationTreeWidget(this);
 	m_geometryViewSplitter->addWidget(m_navigationTreeWidget);
-	m_geometryViewSplitter->setCollapsible(0, true);
+	m_geometryViewSplitter->setCollapsible(0, false);
 
 	// *** Geometry view ***
 
 	m_geometryView = new SVGeometryView(this);
+	m_geometryView->m_focusRootWidgets.insert(m_navigationTreeWidget); // remember as possible focus widget for events
 	m_geometryViewSplitter->addWidget(m_geometryView);
 	m_geometryViewSplitter->setCollapsible(1, false);
+
+	connect(SVMainWindow::instance().preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged,
+			m_geometryView, &SVGeometryView::onStyleChanged);
+
+	// *** Simulation Settings View
+
+	m_simulationSettingsView = new SVSimulationSettingsView(this);
+	mainLayout->addWidget(m_simulationSettingsView);
+
 
 	// *** Signal/slot connections ***
 
@@ -722,27 +806,38 @@ void SVMainWindow::setup() {
 	// *** setup tool bar (add actions for undo and redo) ***
 
 	m_undoAction = m_undoStack->createUndoAction(this, tr("Undo"));
-	m_undoAction->setIcon(QIcon(":/gfx/actions/24x24/undo.png"));
+	m_undoAction->setIcon(QIcon::fromTheme("undo"));
 	m_undoAction->setShortcut(QKeySequence((int)Qt::CTRL + Qt::Key_Z));
 	m_redoAction = m_undoStack->createRedoAction(this, tr("Redo"));
 	m_redoAction->setShortcut(QKeySequence((int)Qt::CTRL + Qt::SHIFT + Qt::Key_Z));
-	m_redoAction->setIcon(QIcon(":/gfx/actions/24x24/redo.png"));
+	m_redoAction->setIcon(QIcon::fromTheme("redo"));
 
 	// this is a bit messy, but there seems to be no other way, unless we create the whole menu ourselves
 	QList<QAction*> acts = m_ui->menuEdit->actions();
 	m_ui->menuEdit->addAction(m_undoAction);
 	m_ui->menuEdit->addAction(m_redoAction);
-	// now move all the actions to bottom
-	for (int i=0; i<acts.count(); ++i)
-		m_ui->menuEdit->addAction(acts[i]);
 
-	m_ui->toolBar->addAction(m_undoAction);
-	m_ui->toolBar->addAction(m_redoAction);
+	QWidget* spacer = new QWidget();
+	spacer->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	spacer->setFixedSize(QSize(10, 150));
+	m_ui->toolBar->addWidget(spacer);
+
+	QList<QAction*> actions = m_ui->toolBar->actions();
+
+	m_ui->toolBar->insertAction(actions[3], m_undoAction);
+	m_ui->toolBar->insertAction(actions[3], m_redoAction);
+
+	actions = m_ui->toolBar->actions();
+
+	m_ui->toolBar->insertWidget(actions[3], spacer);
+	m_ui->toolBar->insertWidget(actions[5], spacer);
+
+	m_ui->toolBar->insertSeparator(actions[3]);
+
 	m_ui->menuView->addAction(m_ui->toolBar->toggleViewAction());
 
 	// *** Create definition lists dock widgets
 	setupDockWidgets();
-
 
 	// *** restore state of UI ***
 	QByteArray geometry, state;
@@ -783,9 +878,6 @@ void SVMainWindow::setup() {
 		}
 	}
 
-	// final style touches (icon themes etc.)
-	onStyleChanged();
-
 	// add user settings related window resize at program start
 #if defined(Q_OS_WIN)
 	showMaximized();
@@ -795,29 +887,49 @@ void SVMainWindow::setup() {
 	show();
 #endif
 
-	// finally setup plugins
+	// Set the width of geometryViewSplitter. We do that only once here.
+	// If the stored width of the navigationSplitter is within a reasonable range, we use it.
+	// If not, we reset it to the preferred width of the navigation tree.
+	QScreen *screen = windowHandle()->screen();
+	int storedNavSplitterWidth = (int)(SVSettings::instance().m_navigationSplitterSize / SVSettings::instance().m_ratio);
+	int preferredNavSplitterWidth = 1.05 * m_navigationTreeWidget->sizeHint().width();
+	if (storedNavSplitterWidth > preferredNavSplitterWidth && storedNavSplitterWidth < 1.5*preferredNavSplitterWidth)
+		preferredNavSplitterWidth = storedNavSplitterWidth;
+	QList<int> sizes;
+	sizes << preferredNavSplitterWidth << screen->size().width() - preferredNavSplitterWidth;
+	m_geometryViewSplitter->setSizes(sizes);
+
+	// we want to limit the width, so buttons are always visible
+//	m_navigationTreeWidget->setMinimumWidth(preferredNavSplitterWidth);
+	onScreenChanged(screen);
+
+	// *** Plugins ***
 	setupPlugins();
+
+	// *** Auto-Save Timer ***
+
+	m_autoSaveTimer = new QTimer(this); // parent takes ownership
+	// Connect time out to autosave
+	connect(m_autoSaveTimer, &QTimer::timeout, &SVProjectHandler::instance(), &SVProjectHandler::onAutoSave);
+
+	// apply settings
+	onAutosaveSettingsChanged();
+
+	m_ui->toolBar->setStyleSheet("QToolBar {spacing: 5px; padding: 5px; }");
 }
 
 
-void SVMainWindow::onStyleChanged() {
-	m_welcomeScreen->updateWelcomePage();
-	m_welcomeScreen->update();
-
-	// manually change icons
-	// if we have, at some point, really different icon sets for dark and bright themes, we
-	// may just centrally replace the entire icon set, but this is tricky and also would require
-	// a lot of work maintaining two icon themes. So for now, we just manually switch between the icon sets
-#if 0
-	if (SVSettings::instance().m_theme == SVSettings::TT_Dark) {
-		m_ui->actionViewToggleGeometryMode->setIcon(QIcon(":/gfx/actions/icon-shape-shape-cube.svg"));
-		m_ui->actionViewToggleParametrizationMode->setIcon(QIcon(":/gfx/actions/icon-filter-slider-circle-h.svg"));
+void SVMainWindow::onAutosaveSettingsChanged() {
+	FUNCID(SVMainWindow::onAutosaveSettingsChanged);
+	if (SVSettings::instance().m_autosaveEnabled) {
+		m_autoSaveTimer->start(SVSettings::instance().m_autosaveInterval*60*1000); // Mind: conversion to milliseconds
+		// Note: time keeps autofiring every interval until stopped
+		IBK::IBK_Message(IBK::FormatString("Autosave enabled, interval = %1 min\n").arg(SVSettings::instance().m_autosaveInterval), IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
 	}
 	else {
-		m_ui->actionViewToggleGeometryMode->setIcon(QIcon(":/gfx/actions/icon-shape-shape-cube-dark.svg"));
-		m_ui->actionViewToggleParametrizationMode->setIcon(QIcon(":/gfx/actions/icon-filter-slider-circle-h-dark.svg"));
+		m_autoSaveTimer->stop();
+		IBK::IBK_Message(IBK::FormatString("Autosave disabled\n"), IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
 	}
-#endif
 }
 
 
@@ -831,6 +943,8 @@ void SVMainWindow::onDockWidgetToggled(bool visible) {
 
 
 void SVMainWindow::onImportPluginTriggered() {
+	FUNCID(SVMainWindow::onImportPluginTriggered);
+
 	QAction * a = qobject_cast<QAction *>(sender());
 	if (a == nullptr) {
 		IBK::IBK_Message("Invalid call to onImportPluginTriggered()", IBK::MSG_ERROR);
@@ -845,11 +959,24 @@ void SVMainWindow::onImportPluginTriggered() {
 	VICUS::Project p;
 	QString projectText;
 	bool success = importPlugin->import(this, projectText);
+
+	ProgressNotifyer *notifyer = new ProgressNotifyer;
+	notifyer->m_prgDlg = new QProgressDialog(QString(), QString(), 0, 100, this);
+	notifyer->m_prgDlg->setWindowTitle(tr("Import project"));
+	notifyer->m_prgDlg->setMinimumDuration(0);
+	notifyer->notify(0, "");
 	try {
-		p.readXML(projectText);
+		p.readImportedXML(projectText, dynamic_cast<IBK::NotificationHandler*>(notifyer));
+//		std::ofstream out("C:/test/VicusImport.xml");
+//		out << projectText.toStdString();
 	}
-	catch(IBK::Exception& e) {
+	catch(IBK::Exception &ex) {
 		success = false;
+		// call of import plugin not successful
+		QMessageBox::critical(this, "Plugin Error", tr("Error while importing a project with plugin '%1'\n%2")
+							  .arg(importPlugin->title())
+							  .arg(ex.what()), IBK::MSG_ERROR, *FUNC_ID);
+
 		IBK::IBK_Message(IBK::FormatString("Error while importing a project with plugin '%1'")
 						 .arg(importPlugin->title().toStdString()), IBK::MSG_ERROR);
 	}
@@ -859,36 +986,21 @@ void SVMainWindow::onImportPluginTriggered() {
 		if (!m_projectHandler.isValid()) {
 			// create new project
 			m_projectHandler.newProject(&p); // emits updateActions()
+//			m_projectHandler.project().writeXML(IBK::Path("g:\\temp\\VicusImport_clean.txt"));
 		}
 		else {
-			// ask user about preference
-			int res = QMessageBox::question(this, tr("Replace or merge projects"), tr("Would you like to replace "
-																					  "the current project with the imported project, or would you like to combine both projects into one?"),
-											tr("Replace"), tr("Combine"));
-			if (res == 0) {
-				setFocus();
-				// close project if we have one
-				if (!m_projectHandler.closeProject(this)) // emits updateActions() if project was closed
-					return;
 
-				// create new project
-				m_projectHandler.newProject(&p); // emits updateActions()
-			}
-			else {
-				// The merging of project and referenced data is a bit complicated.
-				// First we must import the embedded database from the imported project
-				// Then, we can copy the buildings to our project.
+			// The merging of project and referenced data is a bit complicated.
+			// First we must import the embedded database from the imported project
+			// Then, we can copy the buildings to our project.
+			m_projectHandler.importEmbeddedDB(p); // this might modify IDs of the imported project
 
-				m_projectHandler.importEmbeddedDB(p); // this might modify IDs of the imported project
+			m_projectHandler.importProject(p);
+			QTimer::singleShot(0, &SVViewStateHandler::instance(), &SVViewStateHandler::refreshColors);
 
-				m_projectHandler.importProject(p);
-			}
 		}
 	}
-	// call of import plugin not successful
-	else {
-		///< \todo Error handling in case of import error
-	}
+	notifyer->notify(1, "Finished");
 }
 
 
@@ -912,12 +1024,23 @@ void SVMainWindow::onConfigurePluginTriggered() {
 
 
 void SVMainWindow::onScreenChanged(QScreen *screen) {
+	// set minimum width of navigation tree, buttons shall be visible
+//	m_navigationTreeWidget->setMinimumWidth(m_navigationTreeWidget->sizeHint().width());
 	qDebug() << "Screen Changed: Device pixel ratio has been updated to: " << screen->devicePixelRatio();
 	SVSettings::instance().m_ratio = screen->devicePixelRatio();
+	// let others know (e.g. DB dialogs)
+	emit screenHasChanged(screen);
+}
+
+SVStructuralUnitCreationDialog *SVMainWindow::structuralUnitDialog() {
+	if (m_structuralUnitCreationDialog == nullptr)
+		m_structuralUnitCreationDialog = new SVStructuralUnitCreationDialog(this);
+	return m_structuralUnitCreationDialog;
 }
 
 
 void SVMainWindow::on_actionFileNew_triggered() {
+	m_geometryView->switch2AddGeometry();
 	// move input focus away from any input fields (to allow editingFinished() events to fire)
 	setFocus();
 	// close project if we have one
@@ -926,11 +1049,11 @@ void SVMainWindow::on_actionFileNew_triggered() {
 
 	// create new project
 	m_projectHandler.newProject(); // emits updateActions()
-	SVViewStateHandler::instance().m_geometryView->switch2AddGeometry();
 }
 
 
 void SVMainWindow::on_actionFileOpen_triggered() {
+	m_geometryView->switch2AddGeometry();
 	// move input focus away from any input fields (to allow editingFinished() events to fire)
 	setFocus();
 	// close project if we have one
@@ -1021,7 +1144,7 @@ void SVMainWindow::on_actionFileReload_triggered() {
 }
 
 
-void SVMainWindow::on_actionFileImportEneryPlusIDF_triggered() {
+void SVMainWindow::on_actionEneryPlus_IDF_triggered() {
 	// request IDF file and afterwards open import dialog
 	QString filename = QFileDialog::getOpenFileName(
 				this,
@@ -1087,6 +1210,10 @@ void SVMainWindow::on_actionFileOpenProjectDir_triggered() {
 
 
 void SVMainWindow::on_actionFileClose_triggered() {
+	/* We dont know which project (network/building) will be opened afterwards.
+	 * Also we need to hide transparent widgets (color legend, measurement widget).
+	 */
+	m_geometryView->switch2AddGeometry();
 	// move input focus away from any input fields (to allow editingFinished() events to fire)
 	setFocus();
 	m_projectHandler.closeProject(this);
@@ -1130,12 +1257,6 @@ void SVMainWindow::on_actionFileExportProjectPackage_triggered() {
 }
 
 
-void SVMainWindow::on_actionFileExportView3D_triggered() {
-	SVView3DDialog v3d;
-	v3d.exportView3d();
-}
-
-
 void SVMainWindow::on_actionFileQuit_triggered() {
 	close();
 }
@@ -1152,16 +1273,15 @@ void SVMainWindow::on_actionEditPreferences_triggered() {
 
 
 void SVMainWindow::on_actionEditCleanProject_triggered() {
+	QMessageBox::critical(this, QString(), tr("Not implemented, yet."));
+//	// create a copy of the whole project
+//	VICUS::Project cleanProject = SVProjectHandler::instance().project();
 
-	// create a copy of the whole project
-	VICUS::Project cleanProject = SVProjectHandler::instance().project();
+//	// TODO : Implement clean functionality
 
-	// clean it
-	cleanProject.clean();
-
-	// create undo action and push it
-	SVUndoModifyProject * undo = new SVUndoModifyProject( tr("Removed unused definitions"), cleanProject );
-	undo->push();
+//	// create undo action and push it
+//	SVUndoModifyProject * undo = new SVUndoModifyProject( tr("Removed unused definitions"), cleanProject );
+//	undo->push();
 
 }
 
@@ -1170,68 +1290,6 @@ void SVMainWindow::on_actionEditApplicationLog_triggered() {
 	SVLogFileDialog dlg;
 	dlg.setLogFile(QtExt::Directories::globalLogFile(), QString(), false);
 	dlg.exec();
-}
-
-
-void SVMainWindow::on_actionBuildingFloorManager_triggered() {
-	SVViewState vs = SVViewStateHandler::instance().viewState();
-	// turn off any special scene modes
-	vs.m_sceneOperationMode = SVViewState::NUM_OM;
-	vs.m_propertyWidgetMode = SVViewState::PM_BuildingProperties;
-	SVViewStateHandler::instance().setViewState(vs);
-
-	// adjust appearance of selector widget
-	SVViewStateHandler::instance().m_propertyWidget->setBuildingPropertyType(BT_FloorManager);
-
-}
-
-
-void SVMainWindow::on_actionBuildingSurfaceHeatings_triggered() {
-	SVViewState vs = SVViewStateHandler::instance().viewState();
-	// turn off any special scene modes
-	vs.m_sceneOperationMode = SVViewState::NUM_OM;
-	vs.m_propertyWidgetMode = SVViewState::PM_BuildingProperties;
-	// adjust appearance of selector widget
-	SVViewStateHandler::instance().m_propertyWidget->setBuildingPropertyType(BT_SurfaceHeating);
-	SVViewStateHandler::instance().setViewState(vs);
-
-	SVViewStateHandler::instance().m_geometryView->switch2BuildingParametrization();
-}
-
-
-void SVMainWindow::on_actionSimulationNANDRAD_triggered() {
-	// we need a saved project, before we can start the simulation
-	// we require a saved project with at least one network definition
-	if (SVProjectHandler::instance().projectFile().isEmpty()) {
-		QMessageBox::critical(this, QString(), tr("The project must be saved, first!"));
-		if (!saveProject())
-			return;
-	}
-	if (m_simulationStartNandrad == nullptr)
-		m_simulationStartNandrad = new SVSimulationStartNandrad;
-	// open simulation start dialog, with settings for climate location, simulation and
-	// solver settings and simulation start button
-	int res = m_simulationStartNandrad->edit();
-	if (res == QDialog::Accepted) {
-		// transfer data to VICUS project
-		// create an undo action for modification of the (entire) project
-		SVUndoModifyProject * undo = new SVUndoModifyProject(tr("Updated simulation parameters"), m_simulationStartNandrad->localProject());
-		undo->push();
-	}
-}
-
-
-void SVMainWindow::on_actionSimulationExportFMI_triggered() {
-	// we require a saved project with at least one network definition
-	if (SVProjectHandler::instance().projectFile().isEmpty()) {
-		QMessageBox::critical(this, QString(), tr("The project must be saved, first!"));
-		if (!saveProject())
-			return;
-	}
-	if (m_simulationStartNandrad == nullptr)
-		m_simulationStartNandrad = new SVSimulationStartNandrad;
-	// open simulation start dialog with FMI export option
-	m_simulationStartNandrad->edit(true);
 }
 
 
@@ -1244,7 +1302,7 @@ void SVMainWindow::on_actionSimulationCO2Balance_triggered() {
 
 void SVMainWindow::on_actionViewShowSurfaceNormals_toggled(bool visible) {
 	// set corresponding flag in View
-	const_cast<Vic3D::SceneView*>(SVViewStateHandler::instance().m_geometryView->sceneView())->setNormalVectorsVisible(visible);
+	const_cast<Vic3D::SceneView*>(m_geometryView->sceneView())->setNormalVectorsVisible(visible);
 }
 
 
@@ -1295,86 +1353,24 @@ void SVMainWindow::on_actionViewFromAbove_triggered() {
 	SVViewStateHandler::instance().m_geometryView->resetCamera(Vic3D::SceneView::CP_Above);
 }
 
-void SVMainWindow::on_actionBirdsEyeViewSouthWest_triggered(){
+
+void SVMainWindow::on_actionViewBirdsEyeViewSouthWest_triggered(){
 	SVViewStateHandler::instance().m_geometryView->resetCamera(Vic3D::SceneView::CP_BirdEyeSouthWest);
-
 }
 
-void SVMainWindow::on_actionBirdsEyeViewNorthWest_triggered(){
+
+void SVMainWindow::on_actionViewBirdsEyeViewNorthWest_triggered(){
 	SVViewStateHandler::instance().m_geometryView->resetCamera(Vic3D::SceneView::CP_BirdEyeNorthWest);
-
 }
 
-void SVMainWindow::on_actionBirdsEyeViewSouthEast_triggered(){
+
+void SVMainWindow::on_actionViewBirdsEyeViewSouthEast_triggered(){
 	SVViewStateHandler::instance().m_geometryView->resetCamera(Vic3D::SceneView::CP_BirdEyeSouthEast);
-
 }
 
-void SVMainWindow::on_actionBirdsEyeViewNorthEast_triggered(){
+
+void SVMainWindow::on_actionViewBirdsEyeViewNorthEast_triggered(){
 	SVViewStateHandler::instance().m_geometryView->resetCamera(Vic3D::SceneView::CP_BirdEyeNorthEast);
-}
-
-
-void SVMainWindow::on_actionToolsExternalPostProcessing_triggered() {
-	// configure PostProc session, save parallel to project and open session in post
-
-	if (SVSettings::instance().m_postProcExecutable.isEmpty() ||
-			!QFileInfo::exists(SVSettings::instance().m_postProcExecutable))
-	{
-		QMessageBox::information(this, tr("Setup external tool"), tr("Please select first the path to the external "
-																	 "post processing in the preferences dialog!"));
-		// spawn preferences dialog
-		preferencesDialog()->edit(0);
-		return;
-	}
-	// if we are using the new post-processing, generate a session file:
-	if (QFileInfo(SVSettings::instance().m_postProcExecutable).baseName() == "PostProcApp") {
-
-		QString sessionFile;
-		if (m_projectHandler.isValid()) {
-			IBK::Path sessionFilePath = SVPostProcBindings::defaultSessionFilePath(m_projectHandler.projectFile());
-			if(sessionFilePath.isValid()) {
-				if (!sessionFilePath.exists())
-					SVPostProcBindings::generateDefaultSessionFile(m_projectHandler.projectFile());
-				sessionFile = QString::fromStdString(sessionFilePath.str());
-			}
-			// some session files exist in project directory - look for the right one
-			else {
-				sessionFile = QFileDialog::getOpenFileName(nullptr, tr("Postproc session files"),
-														   QFileInfo(m_projectHandler.projectFile()).absolutePath(),
-														   QString("*.p2"), nullptr,
-														   SVSettings::instance().m_dontUseNativeDialogs ? QFileDialog::DontUseNativeDialog : QFileDialog::Options());
-			}
-		}
-
-		// check, if already an instance of PostProc is running
-		int res = m_postProcHandler->reopenIfActive();
-		if (res != 0) {
-			// try to spawn new postprocessing
-			if (!m_postProcHandler->spawnPostProc(sessionFile.toStdString())) {
-				QMessageBox::critical(this, tr("Error running PostProc"),
-									  tr("Could not start executable '%1'.").arg(SVSettings::instance().m_postProcExecutable));
-				return;
-			}
-		}
-#if !defined(Q_OS_WIN)
-		else {
-			QMessageBox::information(this, tr("Error running PostProc"),
-									 tr("Process already running."));
-		}
-#endif
-	}
-	else {
-		// check, if already an instance of PostProc is running
-		int res = m_postProcHandler->reopenIfActive();
-		if (res != 0) {
-			if (!m_postProcHandler->spawnPostProc(std::string())) {
-				QMessageBox::critical(this, tr("Error running PostProc"),
-									  tr("Could not start executable '%1'.").arg(SVSettings::instance().m_postProcExecutable));
-				return;
-			}
-		}
-	}
 }
 
 
@@ -1386,7 +1382,10 @@ void SVMainWindow::on_actionToolsCCMeditor_triggered() {
 																	 "climate editor in the preferences dialog!"));
 		// spawn preferences dialog
 		preferencesDialog()->edit(0);
-		return;
+		// still not ccm editor selected?
+		ccmPath = SVSettings::instance().m_CCMEditorExecutable;
+		if (ccmPath.isEmpty() || !QFileInfo::exists(ccmPath))
+			return;
 	}
 	bool res = QProcess::startDetached(ccmPath, QStringList(), QString());
 	if (!res) {
@@ -1489,7 +1488,7 @@ void SVMainWindow::onActionSwitchLanguage() {
 }
 
 
-void SVMainWindow::on_actionFileImportNetworkGISData_triggered() {
+void SVMainWindow::on_actionNetwork_GIS_data_triggered() {
 	// opens import network dialog
 	if (m_networkImportDialog == nullptr)
 		m_networkImportDialog = new SVNetworkImportDialog(this);
@@ -1539,17 +1538,10 @@ void SVMainWindow::onUpdateActions() {
 	m_ui->actionFileClose->setEnabled(have_project);
 	m_ui->actionFileExportProjectPackage->setEnabled(have_project);
 	m_ui->actionExportNetworkAsGeoJSON->setEnabled(have_project);
-	m_ui->actionFileExportView3D->setEnabled(have_project);
 	m_ui->actionFileOpenProjectDir->setEnabled(have_project);
 
 	m_ui->actionEditTextEditProject->setEnabled(have_project);
 	m_ui->actionEditCleanProject->setEnabled(have_project);
-
-	m_ui->actionBuildingFloorManager->setEnabled(have_project);
-	m_ui->actionBuildingSurfaceHeatings->setEnabled(have_project);
-
-	m_ui->actionNetworkImport->setEnabled(have_project);
-	m_ui->actionNetworkEdit->setEnabled(have_project);
 
 	m_ui->actionViewFindSelectedGeometry->setEnabled(have_project);
 	m_ui->actionViewResetView->setEnabled(have_project);
@@ -1560,88 +1552,119 @@ void SVMainWindow::onUpdateActions() {
 	m_ui->actionViewFromSouth->setEnabled(have_project);
 	m_ui->actionViewFromWest->setEnabled(have_project);
 	m_ui->actionViewFromAbove->setEnabled(have_project);
+	m_ui->actionViewBirdsEyeViewNorthEast->setEnabled(have_project);
+	m_ui->actionViewBirdsEyeViewNorthWest->setEnabled(have_project);
+	m_ui->actionViewBirdsEyeViewSouthEast->setEnabled(have_project);
+	m_ui->actionViewBirdsEyeViewSouthWest->setEnabled(have_project);
 
-	m_ui->actionSimulationNANDRAD->setEnabled(have_project);
-	m_ui->actionSimulationHydraulicNetwork->setEnabled(have_project);
-	m_ui->actionSimulationExportFMI->setEnabled(have_project);
 	m_ui->actionSimulationCO2Balance->setEnabled(have_project);
 
-	// no project, no undo actions -> clearing undostack also disables undo actions
-	if (!have_project)
-		m_undoStack->clear();
-
-	// *** Geometry view ***
-
-	// turn off geometry view first when project is gone
-	if (!have_project) {
-		m_geometryViewSplitter->setVisible(false);
-	}
-
-	// *** Dock widgets ***
-
-	// Dock-Widgets are only visible when project is there
-	if (!have_project) {
-		m_logDockWidget->toggleViewAction()->setEnabled(false);
-
-		m_logDockWidget->toggleViewAction()->blockSignals(true);
-		m_logDockWidget->setVisible(false);
-		m_logDockWidget->toggleViewAction()->blockSignals(false);
-	}
-	// Note: in case of a project, the dock widgets visibility is set in onNavigationBarViewChanged() below
 
 	// *** View configuration ***
 
-	// show welcome page only when we have no project
-	m_welcomeScreen->setVisible(!have_project);
 	// navigation bar is only visible when we have a project
 	m_ui->toolBar->setVisible(have_project);
 	m_ui->toolBar->setEnabled(have_project);
+	m_ui->toolBar->toggleViewAction()->setEnabled(have_project);
 
-	// Note: in case of a project, the current view widget is set visible onNavigationBarViewChanged() below
 
-	// when we have a project
-	if (have_project) {
+	// We dont have NO PROJECT
+	if (!have_project) {
+
+		// no project, no undo actions -> clearing undostack also disables undo actions
+		m_undoStack->clear();
+
+		// turn off main view first when project is gone
+		m_mainViewMode = MV_None;
+		updateMainView();
+
+		// Dock-Widgets are only visible when project is there
+		m_logDockWidget->toggleViewAction()->setEnabled(false);
+		m_logDockWidget->toggleViewAction()->blockSignals(true);
+		m_logDockWidget->setVisible(false);
+		m_logDockWidget->toggleViewAction()->blockSignals(false);
+
+		// window caption
+		setWindowTitle(QString("SIM-VICUS %1").arg(VICUS::LONG_VERSION));
+
+		// if no recent projects set welcome page to demo files
+		if (SVSettings::instance().m_recentProjects.empty())
+			m_welcomeScreen->setPageType(SVWelcomeScreen::PT_DemoFiles);
+		m_welcomeScreen->updateWelcomePage();
+	}
+
+	// when we have A PROJECT
+	else {
+
+		updateWindowTitle();
+
+		if (m_mainViewMode == MV_None)
+			m_mainViewMode = MV_GeometryView;
+		updateMainView();
+
 		// select the current view, this also enables (in case of ConstructionView) the visibility of the dock widgets
 		m_logDockWidget->setVisible(m_dockWidgetVisibility[m_logDockWidget]);
 		m_logDockWidget->toggleViewAction()->setEnabled(true);
 
-		m_geometryViewSplitter->setVisible(true);
-		m_ui->toolBar->setVisible(true);
-		m_ui->toolBar->toggleViewAction()->setEnabled(true);
-
-		// restore navigation tree width on first call
-		if (SVSettings::instance().m_navigationSplitterSize != 0) {
-			QList<int> sizes;
-			int availableWidth = width();
-			int navSplitterWidth = (int)(SVSettings::instance().m_navigationSplitterSize / SVSettings::instance().m_ratio);
-			// guard against screen resolution changes, for example when SIM-VICUS was opened on an external
-			// 4K screen and splitter size was 1200 of 3800 and now the tool is opened again on laptop fullHD screen
-			// in Window mode where window is only about 1100 wide itself. Then, we rather want to limit the navigation
-			// panel to cover only max 1/3 of the available with
-			if (navSplitterWidth > 0.6*availableWidth)
-				navSplitterWidth = (int)(0.3*availableWidth);
-			sizes << navSplitterWidth << availableWidth - navSplitterWidth;
-			m_geometryViewSplitter->setSizes(sizes);
-
-			SVSettings::instance().m_navigationSplitterSize = 0; // will be set again when the app is being closed
-		}
-	}
-	else {
-		m_ui->toolBar->setVisible(false);
-		m_ui->toolBar->toggleViewAction()->setEnabled(false);
-		m_logDockWidget->setVisible(false);
-		m_logDockWidget->toggleViewAction()->setEnabled(false);
-	}
-
-	// also update window caption and status bar
-	if (have_project) {
-		updateWindowTitle();
-	}
-	else {
-		setWindowTitle(QString("SIM-VICUS %1").arg(VICUS::VERSION));
-		m_welcomeScreen->updateWelcomePage();
+		bool isVisible = true;
+		if (project().m_viewSettings.m_gridPlanes.size() > 0)
+			isVisible = project().m_viewSettings.m_gridPlanes[0].m_isVisible;
+		m_ui->actionViewShowGrid->setChecked(isVisible);
 	}
 }
+
+
+void SVMainWindow::updateMainView() {
+
+	// uncheck all button bar actions
+	m_ui->actionGeometryView->setChecked(false);
+	m_ui->actionSimulationSettings->setChecked(false);
+
+	// Prevent updating the ui before we are finished with visibility changes
+	setUpdatesEnabled(false);
+
+	switch (m_mainViewMode) {
+		case MV_None: {
+			m_geometryViewSplitter->setVisible(false);
+			m_simulationSettingsView->setVisible(false);
+			m_welcomeScreen->setVisible(true);
+		} break;
+		case MV_GeometryView: {
+			// We avoid unneccessary ui updates here!
+			m_welcomeScreen->setVisible(false);
+			m_simulationSettingsView->setVisible(false);
+			m_geometryViewSplitter->setVisible(true);
+			m_ui->actionGeometryView->setChecked(true);
+			m_geometryView->setFocus();
+		} break;
+		case MV_SimulationView: {
+			// We avoid unneccessary ui updates here!
+			m_welcomeScreen->setVisible(false);
+			m_geometryViewSplitter->setVisible(false);
+			m_simulationSettingsView->setVisible(true);
+			m_ui->actionSimulationSettings->setChecked(true);
+		} break;
+	}
+
+	// toggle visibility and update position of floating transparent widgets (color legend, measurement, snap options)
+	SVViewStateHandler::instance().toggleTransparentWidgetsVisibility(m_mainViewMode);
+	SVViewStateHandler::instance().m_geometryView->moveTransparentSceneWidgets();
+
+	setUpdatesEnabled(true);
+}
+
+
+void SVMainWindow::on_actionGeometryView_triggered() {
+	m_mainViewMode = MV_GeometryView;
+	updateMainView();
+}
+
+
+void SVMainWindow::on_actionSimulationSettings_triggered() {
+	m_mainViewMode = MV_SimulationView;
+	updateMainView();
+}
+
 
 
 void SVMainWindow::onUpdateRecentProjects() {
@@ -1699,35 +1722,45 @@ void SVMainWindow::onOpenProjectByFilename(const QString & filename) {
 
 void SVMainWindow::onOpenExampleByFilename(const QString & filename) {
 	// This function is only called from the welcome page, so there must not be a project opened!
-	QFile f1(filename);
-	if (!f1.exists()) {
+	QFileInfo finfo(filename);
+	if (!finfo.exists()) {
 		QMessageBox::critical(this, tr("File not found"), tr("The file '%1' cannot be found or does not exist.").arg(filename));
 		return;
 	}
-	// determine parent directory and ask user to select an example base directory to copy the input data into
-	QFileInfo finfo(filename);
+
+	// soruce and target dirs
 	QDir srcDir = finfo.absoluteDir();
-	QSettings settings( SVSettings::instance().m_organization, SVSettings::instance().m_appName );
-	QString lastExampleTargetDir = settings.value("LastExampleSaveDirectory", QDir::homePath()).toString();
-	QString targetDir = QFileDialog::getExistingDirectory(this, tr("Select directory to copy example project into"), lastExampleTargetDir,
-														  SVSettings::instance().m_dontUseNativeDialogs ? QFileDialog::DontUseNativeDialog : QFileDialog::Options()
-																										  );
-	if (targetDir.isEmpty())
-		return;
-	settings.setValue("LastExampleSaveDirectory", targetDir);
+	QDir targetDir(QtExt::Directories::userExampleFileDir());
 
-	// append base directory name to target Dir
-	targetDir = QDir(targetDir).absoluteFilePath( srcDir.dirName() );
+	// create targetDir, if required
+	if (!targetDir.exists())
+		targetDir.mkpath(".");
 
-	// now recursively copy 'srcDir' into targetDir
-	if (!copyRecursively(srcDir.absolutePath(), targetDir)) {
-		QMessageBox::critical(this, tr("Write error"), tr("Cannot copy example, maybe missing permissions?"));
-		return;
+	// copy target file, ask permission if existing
+	QString targetFile = targetDir.absoluteFilePath(finfo.fileName());
+	if (QFile::exists(targetFile)) {
+		QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Overwrite example"), tr("Example project exists already user directory, overwrite it?"), QMessageBox::Yes|QMessageBox::No);
+		if (reply == QMessageBox::No)
+			return;
+		else
+			if (!QFile::remove(targetFile))
+				QMessageBox::critical(this, tr("Write error"), tr("Unable to overwrite example file, maybe missing permissions?"));
+	}
+	QFile::copy(filename, targetFile);
+
+	// now also copy the "DataFiles" directory needed for network examples, we don't ask permission for that
+	srcDir.cd("DataFiles");
+	targetDir.mkpath("DataFiles");
+	targetDir.cd("DataFiles");
+	if (srcDir.exists()) {
+		if (!copyRecursively(srcDir.absolutePath(), targetDir.absolutePath())) {
+			QMessageBox::critical(this, tr("Write error"), tr("Cannot copy example, maybe missing permissions?"));
+			return;
+		}
 	}
 
 	// and finally open the copied project file and hope for the best
-	QString newFName = QDir(targetDir).absoluteFilePath(finfo.fileName());
-	onOpenProjectByFilename(newFName);
+	onOpenProjectByFilename(targetFile);
 }
 
 
@@ -1847,6 +1880,7 @@ void SVMainWindow::setupDockWidgets() {
 
 	// *** Log widget ***
 	m_logDockWidget = new QDockWidget(this);
+	m_geometryView->m_focusRootWidgets.insert(m_logDockWidget); // remember as possible focus widget for events
 	m_logDockWidget->setObjectName("LogDockWidget");
 	m_logDockWidget->setContentsMargins(0,0,0,0);
 	m_logDockWidget->setWindowTitle(tr("Application Log"));
@@ -1864,6 +1898,12 @@ void SVMainWindow::setupDockWidgets() {
 
 void SVMainWindow::setupPlugins() {
 	m_pluginLoader->loadPlugins();
+
+//	const auto staticInstances = QPluginLoader::staticInstances();
+	for (auto pldata = m_pluginLoader->m_plugins.begin(); pldata != m_pluginLoader->m_plugins.end(); ++pldata) {
+		QObject* pl = pldata->m_loader->instance();
+		setupPluginMenuEntries(pl);
+	}
 }
 
 
@@ -1941,7 +1981,7 @@ void SVMainWindow::updateWindowTitle() {
 	}
 	if (m_projectHandler.isModified())
 		shortFileName += "*";
-	setWindowTitle(QString("SIM-VICUS %1 - %2").arg(VICUS::VERSION).arg(shortFileName));
+	setWindowTitle(QString("SIM-VICUS %1 - %2").arg(VICUS::LONG_VERSION).arg(shortFileName));
 }
 
 
@@ -1978,7 +2018,13 @@ QString SVMainWindow::saveThumbNail() {
 	if (!QDir(thumbNailPath).exists())
 		QDir().mkpath(thumbNailPath);
 	// compose temporary file path
-	QString thumbPath = QtExt::Directories::userDataDir()  + "/thumbs/" + QFileInfo(m_projectHandler.projectFile() + ".png").fileName();
+	// thumb name is full filepath with replaces / \ and :
+	QString thumbName = m_projectHandler.projectFile();
+	thumbName.replace("/", "_");
+	thumbName.replace("\\", "_");
+	thumbName.replace(":", "_");
+	thumbName.replace(".vicus", "");
+	QString thumbPath = QtExt::Directories::userDataDir()  + "/thumbs/" + thumbName + ".png";
 	QFileInfo finfo(thumbPath);
 	if (finfo.exists()) {
 		// only update thumbnail if project file is newer than thumbnail file
@@ -2123,18 +2169,18 @@ bool SVMainWindow::exportProjectCopy(QString targetDirPath, const VICUS::Project
 }
 
 
-SVSimulationStartNandrad * SVMainWindow::simulationStartNandrad() const {
-	return m_simulationStartNandrad;
-}
-
-
 SVPreferencesDialog * SVMainWindow::preferencesDialog() {
 	if (m_preferencesDialog == nullptr) {
 		m_preferencesDialog = new SVPreferencesDialog(this);
-		connect(m_preferencesDialog->pageStyle(), &SVPreferencesPageStyle::styleChanged,
-				this, &SVMainWindow::onStyleChanged);
+		connect(preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged,
+				m_welcomeScreen, &SVWelcomeScreen::onStyleChanged);
 		connect(m_preferencesDialog->pageStyle(), &SVPreferencesPageStyle::styleChanged,
 				m_geometryView->sceneView(), &Vic3D::SceneView::onStyleChanged);
+		connect(m_preferencesDialog->pageMisc(), &SVPreferencesPageMisc::autosaveSettingsChanged,
+				this, &SVMainWindow::onAutosaveSettingsChanged);
+
+		connect(preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged,
+				m_navigationTreeWidget, &SVNavigationTreeWidget::onStyleChanged);
 	}
 	return m_preferencesDialog;
 }
@@ -2174,4 +2220,117 @@ static bool copyRecursively(const QString &srcFilePath,
 	}
 	return true;
 }
+
+void SVMainWindow::onShortCutStartSimulation() {
+	on_actionSimulationSettings_triggered();
+	m_simulationSettingsView->setCurrentPage(2); // page 2 is simulation start
+}
+
+
+void SVMainWindow::on_actionOpenPostProcessing_triggered() {
+	// configure PostProc session, save parallel to project and open session in post
+
+	if (SVSettings::instance().m_postProcExecutable.isEmpty() ||
+			!QFileInfo::exists(SVSettings::instance().m_postProcExecutable))
+	{
+		QMessageBox::information(this, tr("Setup external tool"), tr("Please select first the path to the external "
+																	 "post processing in the preferences dialog!"));
+		// spawn preferences dialog
+		preferencesDialog()->edit(0);
+		// still not postproc selected?
+		if (SVSettings::instance().m_postProcExecutable.isEmpty() || !QFileInfo::exists(SVSettings::instance().m_postProcExecutable))
+			return;
+	}
+	// if we are using the new post-processing, generate a session file:
+	if (QFileInfo(SVSettings::instance().m_postProcExecutable).baseName() == "PostProcApp") {
+
+		QString sessionFile;
+		if (m_projectHandler.isValid()) {
+			IBK::Path sessionFilePath = SVPostProcBindings::defaultSessionFilePath(m_projectHandler.projectFile());
+			if(sessionFilePath.isValid()) {
+				if (!sessionFilePath.exists())
+					SVPostProcBindings::generateDefaultSessionFile(m_projectHandler.projectFile());
+				sessionFile = QString::fromStdString(sessionFilePath.str());
+			}
+			// some session files exist in project directory - look for the right one
+			else {
+				sessionFile = QFileDialog::getOpenFileName(nullptr, tr("Postproc session files"),
+														   QFileInfo(m_projectHandler.projectFile()).absolutePath(),
+														   QString("*.p2"), nullptr,
+														   SVSettings::instance().m_dontUseNativeDialogs ? QFileDialog::DontUseNativeDialog : QFileDialog::Options());
+			}
+		}
+
+		// check, if already an instance of PostProc is running
+		int res = m_postProcHandler->reopenIfActive();
+		if (res != 0) {
+			// try to spawn new postprocessing
+			if (!m_postProcHandler->spawnPostProc(sessionFile.toStdString())) {
+				QMessageBox::critical(this, tr("Error running PostProc"),
+									  tr("Could not start executable '%1'.").arg(SVSettings::instance().m_postProcExecutable));
+				return;
+			}
+		}
+#if !defined(Q_OS_WIN)
+		else {
+			QMessageBox::information(this, tr("Error running PostProc"),
+									 tr("Process already running."));
+		}
+#endif
+	}
+	else {
+		// check, if already an instance of PostProc is running
+		int res = m_postProcHandler->reopenIfActive();
+		if (res != 0) {
+			if (!m_postProcHandler->spawnPostProc(std::string())) {
+				QMessageBox::critical(this, tr("Error running PostProc"),
+									  tr("Could not start executable '%1'.").arg(SVSettings::instance().m_postProcExecutable));
+				return;
+			}
+		}
+	}
+}
+
+void SVMainWindow::on_actionEPDElements_triggered() {
+	dbEpdEditDialog()->edit();
+}
+
+
+void SVMainWindow::on_actionExternal_Post_Processor_triggered() {
+	on_actionOpenPostProcessing_triggered();
+}
+
+
+void SVMainWindow::on_actionDWD_Weather_Data_Converter_triggered() {
+	QString dwdPath = SVSettings::instance().m_DWDConverterExecutable;
+	if (dwdPath.isEmpty() || !QFileInfo::exists(dwdPath)) {
+		QMessageBox::information(this, tr("Setup external tool"), tr("Please select first the path to the DWD "
+																	 "weather downloader in the preferences dialog!"));
+		// spawn preferences dialog
+		preferencesDialog()->edit(0);
+		// still not ccm editor selected?
+		dwdPath = SVSettings::instance().m_DWDConverterExecutable;
+		if (dwdPath.isEmpty() || !QFileInfo::exists(dwdPath))
+			return;
+	}
+	bool res = QProcess::startDetached(dwdPath, QStringList(), QString());
+	if (!res) {
+		QMessageBox::critical(this, tr("Error starting external application"), tr("DWD weather downloader '%1' could not be started.")
+							  .arg(dwdPath));
+	}
+}
+
+
+void SVMainWindow::on_actionDBAcousticBoundaryConditions_triggered() {
+	dbAcousticBoundaryConditionEditDialog()->edit();
+}
+
+
+void SVMainWindow::on_actionDBAcousticSoundAbsorptions_triggered() {
+	dbAcousticSoundAbsorptionEditDialog()->edit();
+}
+
+
+
+
 

@@ -106,6 +106,7 @@ public:
 
 	/*! Returns 3D vertex coordinates. */
 	const std::vector<IBKMK::Vector3D> & vertexes() const;
+	const std::vector<IBKMK::Vector3D> & rawVertexes() const;
 
 	const IBKMK::Vector3D & offset() const { return m_offset; }
 	const IBKMK::Vector3D & normal() const { return m_normal; }
@@ -128,7 +129,7 @@ public:
 	/*! Inverts normal vector (this is a convenience function for setting a new orientation
 		with negated normal vector.
 	*/
-	void flip();
+	Vector2D flip();
 
 
 	// Calculation functions
@@ -195,6 +196,12 @@ private:
 	*/
 	void update2DPolyline(const std::vector<IBKMK::Vector3D> & verts);
 
+	/*! Checks if the vector is smaller zero. */
+	bool smallerVectZero(const IBKMK::Vector3D &vect);
+
+	/*! Calculates a normalized normal of a polyline. If an error occurs the vector (1,0,0) is output.  */
+	IBKMK::Vector3D computeNormal(const std::vector<IBKMK::Vector3D>& polygon);
+
 	// *** PRIVATE MEMBER VARIABLES ***
 
 	/*! Stores the valid state of the polygon, update in checkPolygon() */
@@ -215,6 +222,8 @@ private:
 	mutable	bool							m_dirty;
 	/*! Cached 3D vertexes, updated upon access when dirty is true. */
 	mutable	std::vector<IBKMK::Vector3D>	m_vertexes;
+
+
 };
 
 } // namespace IBKMK

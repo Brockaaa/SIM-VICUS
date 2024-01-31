@@ -69,9 +69,9 @@ void SVDBSubNetworkEditWidget::updateInput(int id) {
 
 	// now update the GUI controls
 	m_ui->lineEditSubNetworkName->setString(m_currentSubNet->m_displayName);
+	m_ui->pushButtonColor->setColor(m_currentSubNet->m_color);
 
 	updateTableWidget();
-	updateElementProperties();
 
 	// for built-ins, disable editing/make read-only
 	bool isEditable = !m_currentSubNet->m_builtIn;
@@ -92,6 +92,9 @@ void SVDBSubNetworkEditWidget::modelModify() {
 
 
 void SVDBSubNetworkEditWidget::updateTableWidget() {
+
+	int currentRow = m_ui->tableWidgetElements->currentRow();
+
 	m_ui->tableWidgetElements->blockSignals(true);
 	m_ui->tableWidgetElements->setRowCount(0);
 	m_ui->tableWidgetElements->blockSignals(false);
@@ -118,7 +121,7 @@ void SVDBSubNetworkEditWidget::updateTableWidget() {
 
 		++row;
 
-		// newt row: element
+		// next row: element
 
 		// column 1 - color of component
 		item = new QTableWidgetItem;
@@ -139,6 +142,13 @@ void SVDBSubNetworkEditWidget::updateTableWidget() {
 
 		++row;
 	}
+
+	if (currentRow < m_ui->tableWidgetElements->rowCount())
+		m_ui->tableWidgetElements->selectRow(currentRow);
+	else
+		m_ui->tableWidgetElements->selectRow(row);
+
+	updateElementProperties();
 
 	m_ui->tableWidgetElements->blockSignals(false);
 }
@@ -185,8 +195,12 @@ void SVDBSubNetworkEditWidget::updateElementProperties() {
 		}
 
 	}
-	else
+	else {
 		m_ui->groupBoxEditElement->setEnabled(false);
+		m_ui->lineEditComponent->clear();
+		m_ui->lineEditController->clear();
+		m_ui->checkBoxElementHasHeatExchange->setChecked(false);
+	}
 }
 
 void SVDBSubNetworkEditWidget::setInletOutletIds()
@@ -274,7 +288,6 @@ void SVDBSubNetworkEditWidget::on_toolButtonEditComponent_clicked()
 	m_currentSubNet->m_elements[(unsigned int)m_currentElementIdx].m_componentId = newId;
 	m_currentSubNet->m_elements[(unsigned int)m_currentElementIdx].m_displayName = QtExt::MultiLangString2QString(m_db->m_networkComponents[newId]->m_displayName);
 	modelModify();
-	updateElementProperties();
 	updateTableWidget(); // for name and color
 }
 
@@ -289,11 +302,9 @@ void SVDBSubNetworkEditWidget::on_toolButtonEditController_clicked()
 	if (newId == VICUS::INVALID_ID)
 		return;
 
-	if (newId != ctrId){
-		m_currentSubNet->m_elements[(unsigned int)m_currentElementIdx].m_controlElementId = newId;
-		modelModify();
-		updateElementProperties();
-	}
+	m_currentSubNet->m_elements[(unsigned int)m_currentElementIdx].m_controlElementId = newId;
+	modelModify();
+	updateElementProperties();
 }
 
 

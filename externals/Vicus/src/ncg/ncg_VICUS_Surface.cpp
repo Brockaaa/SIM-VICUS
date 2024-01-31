@@ -63,7 +63,9 @@ void Surface::readXMLPrivate(const TiXmlElement * element) {
 		const TiXmlElement * c = element->FirstChildElement();
 		while (c) {
 			const std::string & cName = c->ValueStr();
-			if (cName == "SubSurfaces") {
+			if (cName == "ViewFactors")
+				m_viewFactors.setEncodedString(c->GetText());
+			else if (cName == "SubSurfaces") {
 				const TiXmlElement * c2 = c->FirstChildElement();
 				while (c2) {
 					const std::string & c2Name = c2->ValueStr();
@@ -72,6 +74,18 @@ void Surface::readXMLPrivate(const TiXmlElement * element) {
 					SubSurface obj;
 					obj.readXML(c2);
 					m_subSurfaces.push_back(obj);
+					c2 = c2->NextSiblingElement();
+				}
+			}
+			else if (cName == "ChildSurfaces") {
+				const TiXmlElement * c2 = c->FirstChildElement();
+				while (c2) {
+					const std::string & c2Name = c2->ValueStr();
+					if (c2Name != "Surface")
+						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+					Surface obj;
+					obj.readXML(c2);
+					m_childSurfaces.push_back(obj);
 					c2 = c2->NextSiblingElement();
 				}
 			}
@@ -102,6 +116,8 @@ TiXmlElement * Surface::writeXMLPrivate(TiXmlElement * parent) const {
 		e->SetAttribute("visible", IBK::val2string<bool>(m_visible));
 	if (m_displayColor.isValid())
 		e->SetAttribute("displayColor", m_displayColor.name().toStdString());
+	if (!m_viewFactors.m_values.empty())
+		TiXmlElement::appendSingleAttributeElement(e, "ViewFactors", nullptr, std::string(), m_viewFactors.encodedString());
 
 	if (!m_subSurfaces.empty()) {
 		TiXmlElement * child = new TiXmlElement("SubSurfaces");
@@ -109,6 +125,18 @@ TiXmlElement * Surface::writeXMLPrivate(TiXmlElement * parent) const {
 
 		for (std::vector<SubSurface>::const_iterator it = m_subSurfaces.begin();
 			it != m_subSurfaces.end(); ++it)
+		{
+			it->writeXML(child);
+		}
+	}
+
+
+	if (!m_childSurfaces.empty()) {
+		TiXmlElement * child = new TiXmlElement("ChildSurfaces");
+		e->LinkEndChild(child);
+
+		for (std::vector<Surface>::const_iterator it = m_childSurfaces.begin();
+			it != m_childSurfaces.end(); ++it)
 		{
 			it->writeXML(child);
 		}

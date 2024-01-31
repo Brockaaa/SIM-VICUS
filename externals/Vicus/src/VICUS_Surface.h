@@ -35,6 +35,8 @@
 
 #include <IBK_LinearSpline.h>
 
+#include "NANDRAD_IDVectorMap.h"
+
 #include <QString>
 #include <QColor>
 
@@ -46,8 +48,8 @@ class ComponentInstance;
 class Surface : public Object {
 	VICUS_READWRITE_PRIVATE
 public:
-		/*! Type-info string. */
-		const char * typeinfo() const override { return "Surface"; }
+	/*! Type-info string. */
+	const char * typeinfo() const override { return "Surface"; }
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
@@ -66,10 +68,16 @@ public:
 	void setPolygon3D(const IBKMK::Polygon3D & polygon3D);
 
 	const std::vector<SubSurface> &		subSurfaces() const { return m_subSurfaces; }
-	void setSubSurfaces(const std::vector<SubSurface> & subSurfaces);
+	const std::vector<Surface> &		childSurfaces() const { return m_childSurfaces; }
+
+	void setChildAndSubSurfaces(const std::vector<SubSurface>  &subSurfaces,
+								const std::vector<Surface>     &childSurfaces);
 
 	/*! Gives read-access to the surface's geometry. */
-	const PlaneGeometry &				geometry() const { return m_geometry; }
+	const PlaneGeometry & geometry() const { return m_geometry; }
+
+	/*! Subtracts the subsurface are from the surface area */
+	double areaWithoutSubsurfaces() const ;
 
 	/*! Flips the normal vector of polygon.
 		This also swaps local X and localY axes, so the x and y coordinates of our sub-surface
@@ -107,10 +115,15 @@ public:
 	*/
 	ComponentInstance					*m_componentInstance = nullptr;
 
+	/*! Map that stores the id of a (sub)surface and the viewFactor onto that (subSurface) */
+	NANDRAD::IDVectorMap<double>		m_viewFactors;				// XML:E
+
 private:
 	/*! Subsurfaces of the surface. */
 	std::vector<SubSurface>				m_subSurfaces;				// XML:E
 
+	/*! ChildSurfaces of the surface. */
+	std::vector<Surface>				m_childSurfaces;			// XML:E
 
 	// *** RUNTIME VARIABLES ***
 

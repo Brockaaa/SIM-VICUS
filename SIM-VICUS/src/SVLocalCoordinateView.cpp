@@ -27,6 +27,7 @@
 #include "ui_SVLocalCoordinateView.h"
 
 #include <QDebug>
+#include <QKeyEvent>
 
 #include "SVViewStateHandler.h"
 #include "SVGeometryView.h"
@@ -42,6 +43,16 @@ SVLocalCoordinateView::SVLocalCoordinateView(QWidget *parent) :
 
 	// make us known to the world
 	SVViewStateHandler::instance().m_localCoordinateViewWidget = this;
+
+	QIcon coord = QIcon::fromTheme("local_coordinate");
+	m_ui->labelCoordinateSystem->setPixmap(coord.pixmap(24));
+	QIcon dim = QIcon::fromTheme("dimensions");
+	m_ui->labelBoundingBox->setPixmap(dim.pixmap(24));
+	m_ui->toolButtonAlignCoordinateSystem->setIcon(QIcon::fromTheme("local_coordinate_align"));
+	m_ui->toolButtonMoveCoordinateSystem->setIcon(QIcon::fromTheme("local_coordinate_move"));
+	m_ui->toolButtonInformation->setIcon(QIcon::fromTheme("surface_info"));
+
+//	setStyleSheet("QToolButton {border: 1px solid lightgray}");
 }
 
 
@@ -85,17 +96,22 @@ void SVLocalCoordinateView::setMoveCoordinateSystemButtonChecked(bool checked) {
 
 void SVLocalCoordinateView::on_toolButtonAlignCoordinateSystem_clicked() {
 	SVGeometryView * geoView = SVViewStateHandler::instance().m_geometryView;
-	geoView->handleGlobalKeyPress(Qt::Key_F4);
+	QKeyEvent e(QKeyEvent::KeyPress, Qt::Key_F4, Qt::NoModifier);
+	geoView->handleGlobalKeyPressEvent(&e);
 }
+
 
 void SVLocalCoordinateView::on_toolButtonMoveCoordinateSystem_clicked() {
 	SVGeometryView * geoView = SVViewStateHandler::instance().m_geometryView;
-	geoView->handleGlobalKeyPress(Qt::Key_F5);
+	QKeyEvent e(QKeyEvent::KeyPress, Qt::Key_F5, Qt::NoModifier);
+	geoView->handleGlobalKeyPressEvent(&e);
 }
+
 
 void SVLocalCoordinateView::on_toolButtonInformation_clicked() {
 	showInformation();
 }
+
 
 void SVLocalCoordinateView::showInformation() {
 	// update our selection lists

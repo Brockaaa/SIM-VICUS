@@ -1156,8 +1156,8 @@ void NandradModel::initWallsAndInterfaces() {
 			// now the net surface area has been computed, which is needed in the next loop
 		}
 		catch (IBK::Exception & ex) {
-			throw IBK::Exception(ex, IBK::FormatString("Error initializing construction instance #%1 '%2' (id=%3).")
-								 .arg(i).arg(ci.m_displayName).arg(ci.m_id), FUNC_ID);
+			throw IBK::Exception(ex, IBK::FormatString("Error initializing construction instance #%1 '%2'.")
+								 .arg(ci.m_id).arg(ci.m_displayName), FUNC_ID);
 		}
 	}
 	// Prepare data for flux distribution:
@@ -1260,8 +1260,8 @@ void NandradModel::initWallsAndInterfaces() {
 
 		}
 		catch (IBK::Exception & ex) {
-			throw IBK::Exception(ex, IBK::FormatString("Error initializing construction instance #%1 '%2' (id=%3).")
-								 .arg(i).arg(ci.m_displayName).arg(ci.m_id), FUNC_ID);
+			throw IBK::Exception(ex, IBK::FormatString("Error initializing construction instance #%1 '%2'.")
+								 .arg(ci.m_id).arg(ci.m_displayName), FUNC_ID);
 		}
 
 	}
@@ -1609,7 +1609,9 @@ void NandradModel::initNetworks() {
 									.arg(nw.m_id), FUNC_ID);
 			}
 			// create a network model object
-			HydraulicNetworkModel * nwmodel = new HydraulicNetworkModel(nw, m_project->m_models.m_thermostats, nw.m_id, nw.m_displayName);
+			HydraulicNetworkModel * nwmodel = new HydraulicNetworkModel(nw, m_project->m_models.m_thermostats, nw.m_id, nw.m_displayName,
+																		m_project->m_solverParameter.m_para[NANDRAD::SolverParameter::P_HydraulicNetworkAbsTol].value,
+																		m_project->m_solverParameter.m_para[NANDRAD::SolverParameter::P_HydraulicNetworkMassFluxScale].value);
 			m_modelContainer.push_back(nwmodel); // transfer ownership
 			// initialize
 			nwmodel->setup();
@@ -2355,7 +2357,7 @@ void NandradModel::initOutputReferenceList() {
 	}
 
 
-	// *** append variable name substitutions for zones ***
+	// *** append variable name substitutions for zones, construction instances, ... ***
 
 	for (const NANDRAD::Zone & zone : m_project->m_zones) {
 		// skip zones without display name
@@ -2364,6 +2366,23 @@ void NandradModel::initOutputReferenceList() {
 		std::string zoneObjectRef = IBK::FormatString("Zone(id=%1)").arg(zone.m_id).str();
 		m_varSubstitutionMap[zoneObjectRef] = zone.m_displayName;
 	}
+
+	for (const NANDRAD::ConstructionInstance &ci: m_project->m_constructionInstances) {
+		for (const NANDRAD::EmbeddedObject &eo: ci.m_embeddedObjects) {
+			// skip eos without display name
+			if (!eo.m_displayName.empty()) {
+				std::string eoObjectRef = IBK::FormatString("EmbeddedObject(id=%1)").arg(eo.m_id).str();
+				m_varSubstitutionMap[eoObjectRef] = eo.m_displayName;
+			}
+
+		}
+		// skip cis without display name
+		if (!ci.m_displayName.empty()) {
+			std::string ciObjectRef = IBK::FormatString("ConstructionInstance(id=%1)").arg(ci.m_id).str();
+			m_varSubstitutionMap[ciObjectRef] = ci.m_displayName;
+		}
+	}
+
 
 	// *** replace any "[" and "]" in the display names to avoid problems in post proc
 	for (std::map<std::string, std::string>::iterator it = m_varSubstitutionMap.begin(); it != m_varSubstitutionMap.end(); ++it ){
@@ -3023,31 +3042,13 @@ void NandradModel::initStatistics(SOLFRA::ModelInterface * modelInterface, bool 
 		// m_simTimeAtStart is set in setRestart()
 
 		// re-open progressLog file for writing
-#ifdef _WIN32
-	#if defined(_MSC_VER)
-		m_progressLog = new std::ofstream( (m_dirs.m_logDir / "progress.tsv").wstr().c_str(), std::ios_base::app);
-	#else
-		std::string dirStrAnsi = IBK::WstringToANSI((m_dirs.m_logDir / "progress.tsv").wstr(), false);
-		m_progressLog = new std::ofstream(dirStrAnsi.c_str(), std::ios_base::app);
-	#endif
-#else
-		m_progressLog = new std::ofstream( (m_dirs.m_logDir / "progress.tsv").str().c_str(), std::ios_base::app);
-#endif
+		m_progressLog = IBK::create_ofstream(m_dirs.m_logDir / "progress.tsv", std::ios_base::app);
 	}
 	else {
 		m_elapsedSecondsAtStart = 0;
 		m_elapsedSimTimeAtStart = t0();
 		// open progressLog file for writing and write header
-#ifdef _WIN32
-	#if defined(_MSC_VER)
-		m_progressLog = new std::ofstream( (m_dirs.m_logDir / "progress.tsv").wstr().c_str());
-	#else
-		std::string dirStrAnsi = IBK::WstringToANSI((m_dirs.m_logDir / "progress.tsv").wstr(), false);
-		m_progressLog = new std::ofstream(dirStrAnsi.c_str());
-	#endif
-#else
-		m_progressLog = new std::ofstream( (m_dirs.m_logDir / "progress.tsv").str().c_str());
-#endif
+		m_progressLog = IBK::create_ofstream(m_dirs.m_logDir / "progress.tsv");
 	}
 
 	// setup feedback object, this also starts the stopwatch

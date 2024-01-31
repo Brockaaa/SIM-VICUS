@@ -37,6 +37,10 @@
 #include <QDialogButtonBox>
 #include <QInputDialog>
 #include <QTimer>
+#include <QCryptographicHash>
+#include <QPushButton>
+
+#include <QtExt_Directories.h>
 
 #include <IBK_Exception.h>
 #include <IBK_FileUtils.h>
@@ -48,11 +52,14 @@
 #include <VICUS_Project.h>
 #include <VICUS_utilities.h>
 
+#include <NANDRAD_KeywordList.h>
+
 #include "SVSettings.h"
 #include "SVConstants.h"
 #include "SVLogFileDialog.h"
 #include "SVViewStateHandler.h"
 #include "SVUndoModifyProject.h"
+#include "SVMainWindow.h"
 
 SVProjectHandler * SVProjectHandler::m_self = nullptr;
 
@@ -104,6 +111,17 @@ bool SVProjectHandler::newProject(VICUS::Project * project) {
 		bl.m_displayName = tr("Ground floor");
 		b.m_buildingLevels.push_back(bl);
 		m_project->m_buildings.push_back(b);
+
+		// add hourly output grid as default
+		NANDRAD::OutputGrid g;
+		g.m_name = "Hourly values";
+		NANDRAD::Interval ival;
+		ival.m_para[NANDRAD::Interval::P_Start].set(
+			NANDRAD::KeywordList::Keyword("Interval::para_t", NANDRAD::Interval::P_Start), 0, IBK::Unit("d"));
+		ival.m_para[NANDRAD::Interval::P_StepSize].set(
+			NANDRAD::KeywordList::Keyword("Interval::para_t", NANDRAD::Interval::P_StepSize), 1, IBK::Unit("h"));
+		g.m_intervals.push_back(ival);
+		m_project->m_outputs.m_grids.push_back(g);
 	}
 
 	// update all internal pointers
@@ -178,6 +196,9 @@ bool SVProjectHandler::closeProject(QWidget * parent) {
 
 	} // if (isModified())
 
+	// remove autosave file upon close
+	QFile::remove(m_projectFile + "~"); // remove backup file.
+
 	// saving succeeded, now we can close the project
 	destroyProject();
 
@@ -189,20 +210,50 @@ bool SVProjectHandler::closeProject(QWidget * parent) {
 }
 
 
-void SVProjectHandler::loadProject(QWidget * parent, const QString & fileName,	bool silent) {
+void SVProjectHandler::loadProject(QWidget * parent, QString fileName,	bool silent) {
 	FUNCID(SVProjectHandler::loadProject);
 
 	// we must not have a project loaded
 	IBK_ASSERT(!isValid());
 
+	bool autosaveLoaded = false;
 	do {
 		m_reload = false;
 
 		// create a new project
 		createProject();
 
+		// check for autosave file
+		if (QFile::exists(fileName + "~")) {
+			QDateTime timeBackup = QFileInfo(fileName + "~").lastModified();
+			QDateTime timeProject = QFileInfo(fileName).lastModified();
+			QMessageBox msgbox(QMessageBox::Question, tr("Load autosave backup?"), tr("There exists a backup file for "
+				"the project.\nBackup file date %1,\nproject last saved on %2.\n Load backup file or discard autosave backup?")
+							   .arg(timeBackup.toString("yyyy-MM-dd hh:mm:ss"), timeProject.toString("yyyy-MM-dd hh:mm:ss")),
+							   QMessageBox::Cancel, parent);
+			// add buttons
+			QPushButton * btnLoadBackup = new QPushButton("Load backup");
+			QPushButton * btnRejectBackup = new QPushButton("Discard backup");
+			msgbox.addButton(btnLoadBackup, QMessageBox::YesRole); // dialog takes ownership
+			msgbox.addButton(btnRejectBackup, QMessageBox::NoRole); // dialog takes ownership
+			msgbox.exec(); // ignore return code, as we have custom buttons
+
+			if (msgbox.clickedButton() == btnLoadBackup) {
+				// we load the backup
+				autosaveLoaded = true; // remember to fix the filepath afterwards
+				fileName += "~";
+			}
+			else if (msgbox.clickedButton() == btnRejectBackup) {
+				QFile::remove(fileName + "~"); // remove backup file
+			}
+			else
+				return; // dialog was canceled
+
+
+		}
+
 		try {
-			if (!read(fileName))
+			if (!read(parent, fileName))
 				throw IBK::Exception(IBK::FormatString("Error reading project '%1'").arg(fileName.toStdString()), FUNC_ID);
 			// project read successfully
 
@@ -248,6 +299,15 @@ void SVProjectHandler::loadProject(QWidget * parent, const QString & fileName,	b
 		// fixes above
 		m_modified = have_modified_project;
 
+		// fix project file again if we have read a backup
+		if (autosaveLoaded) {
+			fileName.chop(1); // remove trailing ~
+			m_projectFile.chop(1);
+			// also update time stamp to that of original project, otherwise we get a modified warning here
+			m_lastReadTime = QFileInfo(fileName).lastModified();
+		}
+
+		// this updates the filename in main menu, hence we need to fix the backup file name before this call
 		emit updateActions();
 	}
 	catch (IBK::Exception & ex) {
@@ -288,12 +348,14 @@ void SVProjectHandler::loadProject(QWidget * parent, const QString & fileName,	b
 	QTimer::singleShot(0, this, SIGNAL(fixProjectAfterRead()));
 }
 
+
 void SVProjectHandler::reloadProject(QWidget * parent) {
 	QString projectFileName = projectFile();
 	m_modified = false; // so that closeProject doesn't ask questions
 	closeProject(parent);
 	loadProject(parent, projectFileName, false); // emits updateActions() if project was successfully loaded
 }
+
 
 void SVProjectHandler::importProject(VICUS::Project & other) {
 	// we must have a project loaded
@@ -315,7 +377,8 @@ void SVProjectHandler::importProject(VICUS::Project & other) {
 			IDMap[b.m_id] = newID;
 			b.m_id = newID;
 		}
-		else	IDMap[b.m_id] = b.m_id;
+		else
+			IDMap[b.m_id] = b.m_id;
 
 		for (VICUS::BuildingLevel & bl : b.m_buildingLevels) {
 			if (m_project->objectById(bl.m_id) != nullptr) {
@@ -323,7 +386,8 @@ void SVProjectHandler::importProject(VICUS::Project & other) {
 				IDMap[bl.m_id] = newID;
 				bl.m_id = newID;
 			}
-			else	IDMap[bl.m_id] = bl.m_id;
+			else
+				IDMap[bl.m_id] = bl.m_id;
 
 			for (VICUS::Room & r : bl.m_rooms) {
 				if (m_project->objectById(r.m_id) != nullptr) {
@@ -331,7 +395,8 @@ void SVProjectHandler::importProject(VICUS::Project & other) {
 					IDMap[r.m_id] = newID;
 					r.m_id = newID;
 				}
-				else	IDMap[r.m_id] = r.m_id;
+				else
+					IDMap[r.m_id] = r.m_id;
 
 				for (VICUS::Surface & s : r.m_surfaces) {
 					if (m_project->objectById(s.m_id) != nullptr) {
@@ -339,7 +404,8 @@ void SVProjectHandler::importProject(VICUS::Project & other) {
 						IDMap[s.m_id] = newID;
 						s.m_id = newID;
 					}
-					else	IDMap[s.m_id] = s.m_id;
+					else
+						IDMap[s.m_id] = s.m_id;
 
 					// process the subsurfaces as well - since we only modify IDs, we can const-cast the sub-surfaces vector
 					for (VICUS::SubSurface & sub : const_cast<std::vector<VICUS::SubSurface>&>(s.subSurfaces()) ) {
@@ -348,7 +414,8 @@ void SVProjectHandler::importProject(VICUS::Project & other) {
 							IDMap[sub.m_id] = newID;
 							sub.m_id = newID;
 						}
-						else	IDMap[sub.m_id] = sub.m_id;
+						else
+							IDMap[sub.m_id] = sub.m_id;
 					}
 				}
 			}
@@ -362,12 +429,23 @@ void SVProjectHandler::importProject(VICUS::Project & other) {
 	for (VICUS::ComponentInstance & c : other.m_componentInstances) {
 		c.m_idSideASurface = IDMap[c.m_idSideASurface];
 		c.m_idSideBSurface = IDMap[c.m_idSideBSurface];
+		c.m_id = nextID++;
 	}
 
 	for (VICUS::SubSurfaceComponentInstance & c : other.m_subSurfaceComponentInstances) {
 		c.m_idSideASurface = IDMap[c.m_idSideASurface];
 		c.m_idSideBSurface = IDMap[c.m_idSideBSurface];
+		c.m_id = nextID++;
 	}
+
+	// import drawings: ids are not used for referencing, so we can simply change them
+	for (VICUS::Drawing &d: other.m_drawings) {
+		d.m_id = nextID++;
+		for (VICUS::DrawingLayer &dl: d.m_drawingLayers) {
+			dl.m_id = nextID++;
+		}
+	}
+
 
 	// fix problems in the project; will set have_modified_project to true if fixes were applied
 	bool haveErrors;
@@ -382,6 +460,7 @@ void SVProjectHandler::importProject(VICUS::Project & other) {
 	mergedProject.m_componentInstances.insert(mergedProject.m_componentInstances.end(), other.m_componentInstances.begin(), other.m_componentInstances.end());
 	mergedProject.m_subSurfaceComponentInstances.insert(mergedProject.m_subSurfaceComponentInstances.end(), other.m_subSurfaceComponentInstances.begin(), other.m_subSurfaceComponentInstances.end());
 	mergedProject.m_plainGeometry.m_surfaces.insert(mergedProject.m_plainGeometry.m_surfaces.end(), other.m_plainGeometry.m_surfaces.begin(), other.m_plainGeometry.m_surfaces.end());
+	mergedProject.m_drawings.insert(mergedProject.m_drawings.end(), other.m_drawings.begin(), other.m_drawings.end());
 
 	SVUndoModifyProject * undo = new SVUndoModifyProject(tr("Merged imported project"), mergedProject);
 	undo->push();
@@ -412,6 +491,9 @@ SVProjectHandler::SaveResult SVProjectHandler::saveWithNewFilename(QWidget * par
 		return SaveCancelled;
 	}
 
+	// remove previous backup file
+	QFile::remove(m_projectFile + "~"); // remove backup file
+
 	// relay to saveProject() which updates modified flag and emits corresponding signals.
 	if (saveProject(parent, filename) != SaveOK)
 		return SaveFailed; // saving failed
@@ -420,12 +502,22 @@ SVProjectHandler::SaveResult SVProjectHandler::saveWithNewFilename(QWidget * par
 }
 
 
-SVProjectHandler::SaveResult SVProjectHandler::saveProject(QWidget * parent, const QString & fileName, bool addToRecentFilesList) {
+SVProjectHandler::SaveResult SVProjectHandler::saveProject(QWidget * parent, const QString & fileName, bool addToRecentFilesList, bool autosave) {
+
+	bool writeDrawingFile = !m_project->m_drawings.empty();
 
 	// check project file ending, if there is none append it
 	QString fname = fileName;
-	if (!fname.endsWith(SVSettings::instance().m_projectFileSuffix))
-		fname.append( SVSettings::instance().m_projectFileSuffix );
+	if (autosave) {
+		// Note: for autosave we expect a valid filename and do not modify the passed name
+		fname += "~";
+		// dont write drawing file when autosaving
+		writeDrawingFile = false;
+	}
+	else {
+		if (!fname.endsWith(SVSettings::instance().m_projectFileSuffix))
+			fname.append( SVSettings::instance().m_projectFileSuffix );
+	}
 
 	// updated created and lastEdited tags
 	if (m_project->m_projectInfo.m_created.empty())
@@ -440,7 +532,11 @@ SVProjectHandler::SaveResult SVProjectHandler::saveProject(QWidget * parent, con
 	SVSettings::instance().m_db.updateEmbeddedDatabase(*m_project);
 
 	// save project file
-	if (!write(fname)) {
+	if (!write(parent, fname, writeDrawingFile)) {
+		m_project->m_placeholders.clear(); // clear placeholders again - not really necessary, but helps preventing programming errors
+
+		if (autosave)
+			return SaveFailed;
 
 		QMessageBox::critical(
 				parent,
@@ -448,9 +544,11 @@ SVProjectHandler::SaveResult SVProjectHandler::saveProject(QWidget * parent, con
 				tr("Error while saving project file, see error log file '%1' for details.").arg(QtExt::Directories::globalLogFile())
 				);
 
-		m_project->m_placeholders.clear(); // clear placeholders again - not really necessary, but helps preventing programming errors
 		return SaveFailed;
 	}
+
+	if (autosave)
+		return SaveOK;
 
 	m_project->m_placeholders.clear(); // clear placeholders again - not really necessary, but helps preventing programming errors
 
@@ -499,7 +597,7 @@ void SVProjectHandler::updateLastReadTime() {
 }
 
 
-IBK::Path SVProjectHandler::replacePathPlaceholders(const IBK::Path & stringWithPlaceholders) {
+IBK::Path SVProjectHandler::replacePathPlaceholders(const IBK::Path & stringWithPlaceholders) const {
 	std::map<std::string, IBK::Path> mergedPlaceholders;
 
 	mergedPlaceholders[VICUS::DATABASE_PLACEHOLDER_NAME] = QtExt::Directories::databasesDir().toStdString();
@@ -546,7 +644,7 @@ void importDBElement(T & e, VICUS::Database<T> & db, std::map<unsigned int, unsi
 		unsigned int oldId = e.m_id;
 		unsigned int newId = db.add(e, oldId); // e.m_id gets modified here!
 		IBK::IBK_Message( IBK::FormatString(importMsg)
-			.arg(e.m_displayName.string(),50,std::ios_base::left).arg(oldId).arg(newId),
+			.arg(e.m_displayName.string(),5,std::ios_base::left).arg(oldId).arg(newId),
 						  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
 		if (newId != oldId)
 			idSubstitutionMap[oldId] = newId;
@@ -557,7 +655,7 @@ void importDBElement(T & e, VICUS::Database<T> & db, std::map<unsigned int, unsi
 			// we need to adjust the ID name of material
 			idSubstitutionMap[e.m_id] = existingElement->m_id;
 			IBK::IBK_Message( IBK::FormatString(existingMsg)
-				.arg(e.m_displayName.string(),50,std::ios_base::left).arg(e.m_id).arg(existingElement->m_id),
+				.arg(e.m_displayName.string(),5,std::ios_base::left).arg(e.m_id).arg(existingElement->m_id),
 							  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
 		}
 	}
@@ -655,6 +753,28 @@ bool SVProjectHandler::importEmbeddedDB(VICUS::Project & pro) {
 			"Boundary condition '%1' with #%2 exists already -> ID #%3.\n"
 		);
 	}
+
+	// acoustic sound absorptions
+	std::map<unsigned int, unsigned int> acousticSoundAbsorptionsIDMap;
+	for (VICUS::AcousticSoundAbsorption & e : pro.m_embeddedDB.m_acousticSoundAbsorptions) {
+		importDBElement(e, db.m_acousticSoundAbsorptions, acousticSoundAbsorptionsIDMap,
+						"Sound absorption '%1' with #%2 imported -> new ID #%3.\n",
+						"Sound absorption '%1' with #%2 exists already -> ID #%3.\n"
+						);
+	}
+
+	// acoustic boundary conditions
+	std::map<unsigned int, unsigned int> acousticBoundaryConditionsIDMap;
+	for (VICUS::AcousticBoundaryCondition & e : pro.m_embeddedDB.m_acousticBoundaryConditions) {
+		for(VICUS::AcousticSoundAbsorptionPartition &asp : e.m_acousticSoundAbsorptionPartitions){
+			replaceID(asp.m_idSoundAbsorption, acousticSoundAbsorptionsIDMap);
+		}
+		importDBElement(e, db.m_acousticBoundaryConditions, acousticBoundaryConditionsIDMap,
+						"Acoustic Boundary condition '%1' with #%2 imported -> new ID #%3.\n",
+						"Acoustic Boundary condition '%1' with #%2 exists already -> ID #%3.\n"
+						);
+	}
+
 
 	// component
 	std::map<unsigned int, unsigned int> componentIDMap;
@@ -890,6 +1010,13 @@ bool SVProjectHandler::importEmbeddedDB(VICUS::Project & pro) {
 		}
 	}
 
+	// ** Acoustic Boundary Conditions **
+	for(VICUS::AcousticBoundaryCondition &abc : pro.m_embeddedDB.m_acousticBoundaryConditions) {
+		for(VICUS::AcousticSoundAbsorptionPartition &asp : abc.m_acousticSoundAbsorptionPartitions){
+			replaceID(asp.m_idSoundAbsorption, acousticSoundAbsorptionsIDMap);
+		}
+	}
+
 	// ** Network (Nodes, Edges, Pipes, Fluid) **
 
 	for (VICUS::Network & n : pro.m_geometricNetworks) {
@@ -928,9 +1055,37 @@ bool SVProjectHandler::importEmbeddedDB(VICUS::Project & pro) {
 	idsModified |= !netComponentsIDMap.empty();
 	idsModified |= !netControllersIDMap.empty();
 	idsModified |= !subNetworksIDMap.empty();
+	idsModified |= !acousticBoundaryConditionsIDMap.empty();
+	idsModified |= !acousticSoundAbsorptionsIDMap.empty();
+	idsModified |= !materialIDMap.empty();
 
 	return idsModified;
 }
+
+
+void SVProjectHandler::onAutoSave() {
+	FUNCID(SVProjectHandler::onAutoSave);
+
+	// no autosave without project
+	if (!isValid())
+		return;
+
+	// no autosave without existing filename
+	if (m_projectFile.isEmpty())
+		return;
+
+	// save backup
+	if (saveProject(nullptr, m_projectFile, false, true) == SaveOK) {
+		// remember to strip the trailing ~ again
+		m_projectFile.chop(1);
+		IBK::IBK_Message( IBK::FormatString("Auto-saved project in file %1\n").arg( (m_projectFile + "~").toStdString()),
+						  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
+	}
+	else
+		IBK::IBK_Message("Error autosaving project", IBK::MSG_ERROR, FUNC_ID, IBK::VL_STANDARD);
+}
+
+
 
 
 // *** PRIVATE MEMBER FUNCTIONS ***
@@ -956,7 +1111,7 @@ void SVProjectHandler::destroyProject() {
 }
 
 
-bool SVProjectHandler::read(const QString & fname) {
+bool SVProjectHandler::read(QWidget * parent, const QString & fname) {
 	FUNCID(SVProjectHandler::read);
 
 	// check that we have a project, should be newly created
@@ -974,17 +1129,57 @@ bool SVProjectHandler::read(const QString & fname) {
 		m_project->readXML(IBK::Path(fname.toStdString()) );
 		m_projectFile = fname;
 
+		m_lastReadTime = QFileInfo(fname).lastModified();
+
+		if (m_project->m_drawingFilePath.isValid()) {
+			IBK::Path drawingAbsFilePath = replacePathPlaceholders(m_project->m_drawingFilePath);
+			if (!drawingAbsFilePath.exists()) {
+				// we have a broken link, we may want to delete the link or find the file again
+				QMessageBox msgbox(QMessageBox::Question, tr("Broken link to drawing file"), tr("The referenced drawing file '%1' was not found.").arg(drawingAbsFilePath.c_str()),
+								   QMessageBox::NoButton, parent);
+				// add buttons
+				QPushButton * btnFindFile = new QPushButton(tr("Find file ..."));
+				QPushButton * btnDelete = new QPushButton(tr("Delete reference"));
+				QPushButton * btnIgnore = new QPushButton(tr("Ignore"));
+				msgbox.addButton(btnIgnore, QMessageBox::YesRole); // dialog takes ownership
+				msgbox.addButton(btnDelete, QMessageBox::YesRole); // dialog takes ownership
+				msgbox.addButton(btnFindFile, QMessageBox::YesRole); // dialog takes ownership
+				msgbox.exec(); // ignore return code, as we have custom buttons
+				// delete link
+				if (msgbox.clickedButton() == btnDelete)
+					m_project->m_drawingFilePath.clear();
+				// ask user to find the file
+				else if (msgbox.clickedButton() == btnFindFile) {
+					QFileInfo finfo(QString::fromStdString(drawingAbsFilePath.str()));
+					QString drawFilename = QFileDialog::getOpenFileName(
+						parent,
+						tr("Select drawing file"),
+						finfo.path(),
+						tr("SIM-VICUS drawing files (*%1 );;All files (*.*)").arg(SVSettings::instance().m_drawingFileSuffix), nullptr,
+						SVSettings::instance().m_dontUseNativeDialogs ? QFileDialog::DontUseNativeDialog : QFileDialog::Options() );
+					if (!drawFilename.isEmpty()) {
+						// we just use the absolute file path here
+						m_project->m_drawingFilePath = drawFilename.toStdString();
+						drawingAbsFilePath = m_project->m_drawingFilePath;
+					}
+				}
+			}
+
+			// if there is a drawing file: read it
+			if (drawingAbsFilePath.exists()) {
+				m_project->readDrawingXML(drawingAbsFilePath);
+				m_project->updatePointers();
+				// generate inserts, this should happen only once!
+				for (VICUS::Drawing &dr: m_project->m_drawings)
+					dr.generateInsertGeometries(m_project->nextUnusedID());
+			}
+		}
+
 		// clear placeholders - this avoids confusion with outdates placeholders (ie when a different user has saved the
 		// project file)
 		// when resolving file paths with placeholders, one should always call
 		// SVProjectHandler::instance().replacePathPlaceholders(...)
 		m_project->m_placeholders.clear();
-
-		m_lastReadTime = QFileInfo(fname).lastModified();
-
-		// update the colors
-		// if project has invalid colors nothing is drawn ...
-		updateSurfaceColors();
 
 		// after reading the project file, we should update the views
 		// this is done in a subsequent call to setModified() from the calling function
@@ -1002,7 +1197,7 @@ bool SVProjectHandler::read(const QString & fname) {
 }
 
 
-bool SVProjectHandler::write(const QString & fname) const {
+bool SVProjectHandler::write(QWidget *parent, const QString & fname, bool writeDrawingFile) const {
 	FUNCID(SVProjectHandler::write);
 	Q_ASSERT(isValid());
 
@@ -1029,9 +1224,34 @@ bool SVProjectHandler::write(const QString & fname) const {
 	}
 	file.close();
 
+	// write drawings file
+	if (writeDrawingFile) {
+		if (m_project->m_drawingFilePath.str().empty()) {
+			// by default: drawing file name is identical to project file name, just with drawing suffix
+			QString drawingFileName = fname;
+			drawingFileName.replace(SVSettings::instance().m_projectFileSuffix, SVSettings::instance().m_drawingFileSuffix);
+			// now compose relative path
+			IBK::Path projectPath(fname.toStdString());
+			projectPath = projectPath.parentPath();
+			IBK::Path drawingFilePath( drawingFileName.toStdString());
+			try {
+				m_project->m_drawingFilePath = "${Project Directory}" / drawingFilePath.relativePath(projectPath);
+			} catch (...) {
+				// can't relate paths... keep absolute
+				m_project->m_drawingFilePath = drawingFilePath;
+			}
+		}
+
+		if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+			IBK::IBK_Message(IBK::FormatString("Cannot create/write file '%1' (path does not exists or missing permissions).")
+								 .arg(m_project->m_drawingFilePath), IBK::MSG_ERROR, FUNC_ID);
+			return false;
+		}
+		file.close();
+	}
+
 	try {
 		IBK::Path filename(fname.toStdString());
-		IBK::Path newProjectDir = filename.parentPath();
 		IBK::Path oldProjectDir(m_projectFile.toStdString());
 		std::map<std::string, IBK::Path> pmap;
 		try {
@@ -1042,9 +1262,8 @@ bool SVProjectHandler::write(const QString & fname) const {
 			// invalid old path -> we shouldn't have "Project Directory" placeholder in this case...
 		}
 
-
 		// filename is converted to utf8 before calling writeXML
-		m_project->writeXML(IBK::Path(fname.toStdString()) );
+		m_project->writeXML(IBK::Path(fname.toStdString()));
 
 		// also set the project file name
 		m_projectFile = fname;
@@ -1052,6 +1271,15 @@ bool SVProjectHandler::write(const QString & fname) const {
 
 		// remove backup file again
 		QFile(fname + ".bak").remove();
+
+		if (writeDrawingFile) {
+			IBK::Path drawingAbsFilePath = replacePathPlaceholders(m_project->m_drawingFilePath);
+			// if we don't have a drawing (maybe it was deleted), then we delete the drawing file
+			if (m_project->m_drawings.empty())
+				IBK::Path::remove(drawingAbsFilePath);
+			else
+				m_project->writeDrawingXML(drawingAbsFilePath);
+		}
 
 		return true;
 	}
@@ -1094,32 +1322,6 @@ void SVProjectHandler::addToRecentFiles(const QString& fname) {
 
 	// update recent project list
 	emit updateRecentProjects();
-}
-
-
-void SVProjectHandler::updateSurfaceColors() {
-	for (VICUS::Building &b : m_project->m_buildings) {
-		for (VICUS::BuildingLevel & bl : b.m_buildingLevels) {
-			for (VICUS::Room &r : bl.m_rooms) {
-				for (VICUS::Surface &s : r.m_surfaces) {
-					if (!s.m_displayColor.isValid())
-						s.initializeColorBasedOnInclination();
-					s.m_color = s.m_displayColor;
-					for (const VICUS::SubSurface &sub : s.subSurfaces()) {
-						const_cast<VICUS::SubSurface &>(sub).updateColor();
-					}
-				}
-			}
-		}
-	}
-
-	// plain geometry surfaces will be silver
-	for (VICUS::Surface &s : m_project->m_plainGeometry.m_surfaces) {
-		if (s.m_color == QColor::Invalid) {
-			s.m_color = QColor("#C0C0C0");
-		}
-	}
-
 }
 
 

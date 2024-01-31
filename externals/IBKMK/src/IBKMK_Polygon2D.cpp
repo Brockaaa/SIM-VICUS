@@ -58,6 +58,9 @@ Polygon2D::Polygon2D(const std::vector<IBKMK::Vector2D> & vertexes) {
 }
 
 
+
+
+// Comparison operator !=
 bool Polygon2D::operator!=(const Polygon2D &other) const {
 	if (m_type != other.m_type)
 		return true;
@@ -80,7 +83,7 @@ void Polygon2D::setVertexes(const std::vector<IBKMK::Vector2D> & vertexes) {
 
 
 void Polygon2D::boundingBox(Vector2D & lowerValues, Vector2D & upperValues) const {
-	FUNCID("Polygon2D::boundingBox");
+	FUNCID(Polygon2D::boundingBox);
 	if (m_vertexes.empty())
 		throw IBK::Exception("Require at least one vertex in the polyline.", FUNC_ID);
 	// initialize bounding box with first point
@@ -90,6 +93,23 @@ void Polygon2D::boundingBox(Vector2D & lowerValues, Vector2D & upperValues) cons
 		IBKMK::enlargeBoundingBox(m_vertexes[i], lowerValues, upperValues);
 }
 
+
+double Polygon2D::areaSigned(int digits) const{
+	FUNCID(Polygon2D::area);
+	if(!m_valid)
+		throw IBK::Exception("Invalid polygon.", FUNC_ID);
+	double area = 0;
+	unsigned int size = m_vertexes.size();
+	for(unsigned int i=0, j = size-1; i<size; ++i){
+		area += (m_vertexes[j].m_x + m_vertexes[i].m_x) * (m_vertexes[j].m_y - m_vertexes[i].m_y);
+		j=i;
+	}
+
+	area *= -0.5;
+	area = std::round(area*IBK::f_pow10(digits))/IBK::f_pow10(digits);
+
+	return area;
+}
 
 double Polygon2D::area(int digits) const {
 	FUNCID(Polygon2D::area);

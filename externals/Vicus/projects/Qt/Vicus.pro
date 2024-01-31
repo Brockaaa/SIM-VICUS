@@ -9,22 +9,22 @@ TEMPLATE = lib
 include( ../../../IBK/projects/Qt/IBK.pri )
 
 
-QT += gui core widgets
+QT += gui widgets
 
 
 unix|mac {
-	VER_MAJ = 0
-	VER_MIN = 1
-	VER_PAT = 0
+VER_MAJ = 0
+VER_MIN = 1
+VER_PAT = 0
 	VERSION = $${VER_MAJ}.$${VER_MIN}.$${VER_PAT}
 }
 
-LIBS += -lNandrad -lIBK -lIBKMK -lTiCPP -lCCM -lDataIO
+LIBS += -lNandrad -lIBK -lIBKMK -lTiCPP -lCCM -lDataIO #-lHL
 
 INCLUDEPATH = \
-	../../src \
-	../../../IBK/src \
-	../../../IBKMK/src \
+../../src \
+../../../IBK/src \
+../../../IBKMK/src \
 	../../../CCM/src \
 	../../../Nandrad/src \
 	../../../DataIO/src \
@@ -33,8 +33,17 @@ INCLUDEPATH = \
 DEPENDPATH = $${INCLUDEPATH}
 
 HEADERS += \
-	../../src/VICUS_AbstractDBElement.h \
+../../src/VICUS_AbstractDBElement.h \
+../../src/VICUS_AcousticBoundaryCondition.h \
+../../src/VICUS_AcousticSoundAbsorption.h \
+	../../src/VICUS_AcousticBuildingTemplate.h \
+	../../src/VICUS_AcousticComponent.h \
+	../../src/VICUS_AcousticReferenceComponent.h \
+	../../src/VICUS_AcousticSoundAbsorptionPartition.h \
+	../../src/VICUS_AcousticSoundProtectionTemplate.h \
+	../../src/VICUS_AcousticTemplate.h \
 	../../src/VICUS_ArgsParser.h \
+	../../src/VICUS_BTFReader.h \
 	../../src/VICUS_BoundaryCondition.h \
 	../../src/VICUS_Building.h \
 	../../src/VICUS_BuildingLevel.h \
@@ -45,17 +54,23 @@ HEADERS += \
 	../../src/VICUS_Construction.h \
 	../../src/VICUS_DailyCycle.h \
 	../../src/VICUS_Database.h \
-	../../src/VICUS_EPDCategroySet.h \
-	../../src/VICUS_EPDDataset.h \
+	../../src/VICUS_Drawing.h \
+	../../src/VICUS_DrawingLayer.h \
 	../../src/VICUS_EmbeddedDatabase.h \
+	../../src/VICUS_EpdCategorySet.h \
+	../../src/VICUS_EpdDataset.h \
+	../../src/VICUS_EpdModuleDataset.h \
 	../../src/VICUS_GridPlane.h \
 	../../src/VICUS_Infiltration.h \
 	../../src/VICUS_InterfaceHeatConduction.h \
 	../../src/VICUS_InternalLoad.h \
 	../../src/VICUS_KeywordList.h \
+	../../src/VICUS_LcaSettings.h \
+	../../src/VICUS_LccSettings.h \
 	../../src/VICUS_Material.h \
 	../../src/VICUS_MaterialLayer.h \
 	../../src/VICUS_Network.h \
+	../../src/VICUS_NetworkBuriedPipeProperties.h \
 	../../src/VICUS_NetworkComponent.h \
 	../../src/VICUS_NetworkController.h \
 	../../src/VICUS_NetworkEdge.h \
@@ -78,13 +93,14 @@ HEADERS += \
 	../../src/VICUS_RotationMatrix.h \
 	../../src/VICUS_Schedule.h \
 	../../src/VICUS_ScheduleInterval.h \
+	../../src/VICUS_StructuralUnit.h \
 	../../src/VICUS_SubNetwork.h \
 	../../src/VICUS_SubSurface.h \
 	../../src/VICUS_SubSurfaceComponent.h \
 	../../src/VICUS_SubSurfaceComponentInstance.h \
 	../../src/VICUS_SupplySystem.h \
-	../../src/VICUS_SurfaceHeating.h \
 	../../src/VICUS_Surface.h \
+	../../src/VICUS_SurfaceHeating.h \
 	../../src/VICUS_VentilationNatural.h \
 	../../src/VICUS_ViewSettings.h \
 	../../src/VICUS_Window.h \
@@ -96,27 +112,42 @@ HEADERS += \
 	../../src/VICUS_ZoneControlThermostat.h \
 	../../src/VICUS_ZoneIdealHeatingCooling.h \
 	../../src/VICUS_ZoneTemplate.h \
-	../../src/VICUS_utilities.h \
-	../../src/VICUS_NetworkBuriedPipeProperties.h
+	../../src/VICUS_utilities.h
 
 SOURCES += \
-	../../src/VICUS_AbstractDBElement.cpp \
+../../src/VICUS_AcousticBoundaryCondition.cpp \
+../../src/VICUS_AcousticSoundAbsorption.cpp \
+../../src/VICUS_AbstractDBElement.cpp \
+	../../src/VICUS_AcousticBuildingTemplate.cpp \
+	../../src/VICUS_AcousticComponent.cpp \
+	../../src/VICUS_AcousticReferenceComponent.cpp \
+	../../src/VICUS_AcousticSoundAbsorptionPartition.cpp \
+	../../src/VICUS_AcousticSoundProtectionTemplate.cpp \
+	../../src/VICUS_AcousticTemplate.cpp \
 	../../src/VICUS_ArgsParser.cpp \
+	../../src/VICUS_BTFReader.cpp \
 	../../src/VICUS_BoundaryCondition.cpp \
 	../../src/VICUS_Component.cpp \
 	../../src/VICUS_Constants.cpp \
 	../../src/VICUS_Construction.cpp \
 	../../src/VICUS_DailyCycle.cpp \
-	../../src/VICUS_EPDCategroySet.cpp \
-	../../src/VICUS_EPDDataset.cpp \
+	../../src/VICUS_Drawing.cpp \
+	../../src/VICUS_DrawingLayer.cpp \
+	../../src/VICUS_EpdCategorySet.cpp \
+	../../src/VICUS_EpdDataset.cpp \
+	../../src/VICUS_EpdModuleDataset.cpp \
 	../../src/VICUS_GridPlane.cpp \
+	../../src/VICUS_HeatLoad12831Export.cpp \
 	../../src/VICUS_Infiltration.cpp \
 	../../src/VICUS_InterfaceHeatConduction.cpp \
 	../../src/VICUS_InternalLoad.cpp \
 	../../src/VICUS_KeywordList.cpp \
+	../../src/VICUS_LcaSettings.cpp \
+	../../src/VICUS_LccSettings.cpp \
 	../../src/VICUS_Material.cpp \
 	../../src/VICUS_MaterialLayer.cpp \
 	../../src/VICUS_Network.cpp \
+	../../src/VICUS_NetworkBuriedPipeProperties.cpp \
 	../../src/VICUS_NetworkComponent.cpp \
 	../../src/VICUS_NetworkController.cpp \
 	../../src/VICUS_NetworkEdge.cpp \
@@ -138,6 +169,7 @@ SOURCES += \
 	../../src/VICUS_Room.cpp \
 	../../src/VICUS_Schedule.cpp \
 	../../src/VICUS_ScheduleInterval.cpp \
+	../../src/VICUS_StructuralUnit.cpp \
 	../../src/VICUS_SubNetwork.cpp \
 	../../src/VICUS_SubSurface.cpp \
 	../../src/VICUS_SubSurfaceComponent.cpp \
@@ -153,6 +185,12 @@ SOURCES += \
 	../../src/VICUS_ZoneIdealHeatingCooling.cpp \
 	../../src/VICUS_ZoneTemplate.cpp \
 	../../src/VICUS_utilities.cpp \
+	../../src/ncg/ncg_VICUS_AcousticBoundaryCondition.cpp \
+	../../src/ncg/ncg_VICUS_AcousticBuildingTemplate.cpp \
+	../../src/ncg/ncg_VICUS_AcousticComponent.cpp \
+	../../src/ncg/ncg_VICUS_AcousticReferenceComponent.cpp \
+	../../src/ncg/ncg_VICUS_AcousticSoundAbsorption.cpp \
+	../../src/ncg/ncg_VICUS_AcousticTemplate.cpp \
 	../../src/ncg/ncg_VICUS_BoundaryCondition.cpp \
 	../../src/ncg/ncg_VICUS_Building.cpp \
 	../../src/ncg/ncg_VICUS_BuildingLevel.cpp \
@@ -160,15 +198,19 @@ SOURCES += \
 	../../src/ncg/ncg_VICUS_ComponentInstance.cpp \
 	../../src/ncg/ncg_VICUS_Construction.cpp \
 	../../src/ncg/ncg_VICUS_DailyCycle.cpp \
-	../../src/ncg/ncg_VICUS_EPDDataset.cpp \
+	../../src/ncg/ncg_VICUS_DrawingLayer.cpp \
 	../../src/ncg/ncg_VICUS_EmbeddedDatabase.cpp \
+	../../src/ncg/ncg_VICUS_EpdDataset.cpp \
 	../../src/ncg/ncg_VICUS_GridPlane.cpp \
 	../../src/ncg/ncg_VICUS_Infiltration.cpp \
 	../../src/ncg/ncg_VICUS_InterfaceHeatConduction.cpp \
 	../../src/ncg/ncg_VICUS_InternalLoad.cpp \
+	../../src/ncg/ncg_VICUS_LcaSettings.cpp \
+	../../src/ncg/ncg_VICUS_LccSettings.cpp \
 	../../src/ncg/ncg_VICUS_Material.cpp \
 	../../src/ncg/ncg_VICUS_MaterialLayer.cpp \
 	../../src/ncg/ncg_VICUS_Network.cpp \
+	../../src/ncg/ncg_VICUS_NetworkBuriedPipeProperties.cpp \
 	../../src/ncg/ncg_VICUS_NetworkComponent.cpp \
 	../../src/ncg/ncg_VICUS_NetworkController.cpp \
 	../../src/ncg/ncg_VICUS_NetworkEdge.cpp \
@@ -176,14 +218,17 @@ SOURCES += \
 	../../src/ncg/ncg_VICUS_NetworkFluid.cpp \
 	../../src/ncg/ncg_VICUS_NetworkNode.cpp \
 	../../src/ncg/ncg_VICUS_NetworkPipe.cpp \
-	../../src/ncg/ncg_VICUS_Outputs.cpp \
 	../../src/ncg/ncg_VICUS_OutputDefinition.cpp \
-	../../src/ncg/ncg_VICUS_Room.cpp \
-		../../src/ncg/ncg_VICUS_PlainGeometry.cpp \
+	../../src/ncg/ncg_VICUS_Outputs.cpp \
+	../../src/ncg/ncg_VICUS_PlainGeometry.cpp \
 	../../src/ncg/ncg_VICUS_Project.cpp \
+	../../src/ncg/ncg_VICUS_Room.cpp \
 	../../src/ncg/ncg_VICUS_RotationMatrix.cpp \
 	../../src/ncg/ncg_VICUS_Schedule.cpp \
-	../../src/ncg/ncg_VICUS_ScheduleInterval.cpp \
+	 ../../src/ncg/ncg_VICUS_ScheduleInterval.cpp \
+	../../src/ncg/ncg_VICUS_AcousticSoundAbsorptionPartition.cpp \
+	../../src/ncg/ncg_VICUS_AcousticSoundProtectionTemplate.cpp \
+	../../src/ncg/ncg_VICUS_StructuralUnit.cpp \
 	../../src/ncg/ncg_VICUS_SubNetwork.cpp \
 	../../src/ncg/ncg_VICUS_SubSurface.cpp \
 	../../src/ncg/ncg_VICUS_SubSurfaceComponent.cpp \
@@ -201,6 +246,7 @@ SOURCES += \
 	../../src/ncg/ncg_VICUS_ZoneControlShading.cpp \
 	../../src/ncg/ncg_VICUS_ZoneControlThermostat.cpp \
 	../../src/ncg/ncg_VICUS_ZoneIdealHeatingCooling.cpp \
-	../../src/ncg/ncg_VICUS_ZoneTemplate.cpp \
-	../../src/VICUS_NetworkBuriedPipeProperties.cpp \
-	../../src/ncg/ncg_VICUS_NetworkBuriedPipeProperties.cpp \
+	../../src/ncg/ncg_VICUS_ZoneTemplate.cpp
+
+DISTFILES += \
+../../src/.gitignore

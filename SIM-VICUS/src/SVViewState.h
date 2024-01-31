@@ -52,12 +52,16 @@ public:
 	/*! Returns true if we are editing properties (for networks or buildings) and
 	 *  we want to use different coloring of the objects. */
 	bool inPropertyEditingMode() const {
-		return m_propertyWidgetMode == PM_NetworkProperties || m_propertyWidgetMode == PM_BuildingProperties;
+		return m_propertyWidgetMode == PM_NetworkProperties || m_propertyWidgetMode == PM_BuildingProperties ||
+				m_propertyWidgetMode == PM_BuildingAcousticProperties || m_propertyWidgetMode == PM_BuildingStructuralUnitProperties;
 	}
 
 
 	/*! The different operation modes the scene can be in. NUM_OM means "none" and indicates simple
-		navigation.
+		navigation and selection operations.
+
+		The scene modes indicate, which operations are generally possible to the user and what kind
+		of widgets are visible. Also, some modes are linked to certain property widgets that are visible.
 	*/
 	enum SceneOperationMode {
 		/*! The scene is in passive geometry edit mode and has at least one selected surface/element.
@@ -90,9 +94,6 @@ public:
 			a line between starting point and current coordinate system's location is drawn and the distance is displayed.
 		*/
 		OM_MeasureDistance,
-		/*! In this mode, surfaces can be selected via an interactive rubberband inside the scene.
-		*/
-		OM_RubberbandSelection,
 		/*! In this mode, the user can place three points after another (by snapping the local coordinate system
 			to the points). When the third point was placed, all selected objects are rotated accordingly.
 		*/
@@ -123,8 +124,14 @@ public:
 		PM_AddSubSurfaceGeometry,
 		/*! Shows the widget with building properties. */
 		PM_BuildingProperties,
+		/*! Shows the widget with building acoustic properties. */
+		PM_BuildingAcousticProperties,
+        /*! Shows the widget with building structural unit properties. */
+        PM_BuildingStructuralUnitProperties,
 		/*! Shows the widget with network properties. */
-		PM_NetworkProperties
+		PM_NetworkProperties,
+		/*! Shows the widget with results visualisation. */
+		PM_ResultsProperties
 	};
 
 	/*! These enum values indicate what kind of coloring/highlighting shall be applied
@@ -155,10 +162,14 @@ public:
 			gray.
 		*/
 		OCM_ComponentOrientation,
-		/*! All surfaces that have a component assigned which has a boundary condition ID are colored based on the
+		/*! Looking from inside a the rooms: all surfaces that have a component assigned which has a boundary condition ID are colored based on the
 			boundary condition color.
 		*/
-		OCM_BoundaryConditions,
+		OCM_BoundaryConditionsInside,
+		/*! Looking from outside: all surfaces that have a component assigned which has a boundary condition ID are colored based on the
+			boundary condition color.
+		*/
+		OCM_BoundaryConditionsOutside,
 		/*! All surfaces of rooms with associated zone template are colored based on that zone template color.
 		*/
 		OCM_ZoneTemplates,
@@ -176,11 +187,24 @@ public:
 			are shown in orange.
 		*/
 		OCM_SelectedSurfacesHighlighted,
+		/*! All surfaces of rooms with associated acoustic template are colored based on that acoustic template color.
+		*/
+		OCM_AcousticRoomTemplates,
+		/*! All surfaces of rooms with associated sound protection template are colored based on that sound protection template color.
+		*/
+		OCM_SoundProtectionRoomTemplates,
+		/*! All surfaces of rooms with structural unit are colored based on that structural units color.
+		*/
+		OCM_StructuralUnit,
 		OCM_Network			=	0x1000,
 		OCM_NetworkNode,
 		OCM_NetworkEdge,
-		OCM_NetworkHeatExchange,
+        OCM_NetworkHeatExchange,
 		OCM_NetworkSubNetworks,
+		/*! This mode is selected, when user has the results property widget open.
+			Then, the colors of all objects are set by the results property widget (and updateColors() won't be called.
+		*/
+		OCM_ResultColorView =	0x2000
 	};
 
 	/*! Snapping/navigation locks, apply to movement of the
@@ -205,7 +229,9 @@ public:
 		Snap_GridPlane			= 0x0001,
 		Snap_ObjectCenter		= 0x0002,
 		Snap_ObjectVertex		= 0x0004,
-		Snap_ObjectEdgeCenter	= 0x0008
+		Snap_ObjectEdgeCenter	= 0x0008,
+		Snap_Drawings			= 0x0010,	// snaps drawing objects vertex points
+		Snap_DrawingLines		= 0x0020	// additionally snaps drawing lines
 	};
 
 	bool operator!=(const SVViewState &other) const;
@@ -217,9 +243,11 @@ public:
 	/*! Some color modes require an additional ID property. */
 	unsigned int			m_colorModePropertyID	= VICUS::INVALID_ID;
 	/*! Bitmask with selected snap options. */
-	int						m_snapOptionMask		= Snap_GridPlane | Snap_ObjectVertex | Snap_ObjectCenter | Snap_ObjectEdgeCenter;
+	int						m_snapOptionMask		= Snap_GridPlane | Snap_ObjectVertex | Snap_ObjectCenter | Snap_ObjectEdgeCenter | Snap_Drawings;
 	/*! Whether snapping is enabled or not. */
 	bool					m_snapEnabled			= true;
+	/*! Distance within which snapping is applied in [m]. */
+	float					m_snapDistance			= 1.0;
 	/*! Coordinate system movement locks. */
 	Locks					m_locks					= NUM_L;
 };

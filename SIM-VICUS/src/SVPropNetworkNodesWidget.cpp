@@ -31,6 +31,8 @@ SVPropNetworkNodesWidget::SVPropNetworkNodesWidget(QWidget *parent) :
 	m_ui->frameMixer->setStyleSheet(".QFrame { background-color: #77b300; }"); //QColor(119, 179, 0), green
 	m_ui->frameSubStation->setStyleSheet(".QFrame { background-color: #006bb3; }"); // QColor(0, 107, 179); // blue
 
+	m_ui->lineEditNodeId->setReadOnly(true);
+
 }
 
 SVPropNetworkNodesWidget::~SVPropNetworkNodesWidget()
@@ -46,7 +48,7 @@ void SVPropNetworkNodesWidget::updateUi() {
 
 	m_ui->groupBoxPosition->setEnabled(m_pa->m_currentNodes.size() == 1 && m_pa->m_currentEdges.empty());
 
-	m_ui->labelNodeId->clear();
+	m_ui->lineEditNodeId->clear();
 	m_ui->lineEditNodeName->clear();
 	m_ui->lineEditNodeXPosition->clear();
 	m_ui->lineEditNodeYPosition->clear();
@@ -61,7 +63,7 @@ void SVPropNetworkNodesWidget::updateUi() {
 	m_ui->lineEditNodeMaximumHeatingDemand->setEnabled(m_pa->m_currentNodes[0]->m_type == VICUS::NetworkNode::NT_SubStation);
 
 	if (m_pa->m_currentNodes.size() == 1){
-		m_ui->labelNodeId->setText(QString("%1").arg(m_pa->m_currentNodes[0]->m_id));
+		m_ui->lineEditNodeId->setText(QString("%1").arg(m_pa->m_currentNodes[0]->m_id));
 		m_ui->lineEditNodeName->setText(m_pa->m_currentNodes[0]->m_displayName);
 		m_ui->lineEditNodeXPosition->setValue(m_pa->m_currentNodes[0]->m_position.m_x);
 		m_ui->lineEditNodeYPosition->setValue(m_pa->m_currentNodes[0]->m_position.m_y);
@@ -69,12 +71,12 @@ void SVPropNetworkNodesWidget::updateUi() {
 	}
 
 	if (m_pa->uniformProperty(m_pa->m_currentNodes, &VICUS::NetworkNode::m_maxHeatingDemand))
-		m_ui->lineEditNodeMaximumHeatingDemand->setValue(m_pa->m_currentNodes[0]->m_maxHeatingDemand.value);
+		m_ui->lineEditNodeMaximumHeatingDemand->setValue(m_pa->m_currentNodes[0]->m_maxHeatingDemand.value / 1000);
 }
 
 
 void SVPropNetworkNodesWidget::clearUi() {
-	m_ui->labelNodeId->clear();
+	m_ui->lineEditNodeId->clear();
 	m_ui->lineEditNodeXPosition->clear();
 	m_ui->lineEditNodeYPosition->clear();
 	m_ui->lineEditNodeZPosition->clear();
@@ -121,7 +123,7 @@ void SVPropNetworkNodesWidget::on_lineEditNodeZPosition_editingFinishedSuccessfu
 void SVPropNetworkNodesWidget::on_lineEditNodeMaximumHeatingDemand_editingFinishedSuccessfully() {
 	if (m_ui->lineEditNodeMaximumHeatingDemand->isValid())
 		m_pa->modifyNodeProperty(&VICUS::NetworkNode::m_maxHeatingDemand,
-						   IBK::Parameter("MaxHeatingDemand", m_ui->lineEditNodeMaximumHeatingDemand->value(), "W"));
+						   IBK::Parameter("MaxHeatingDemand", m_ui->lineEditNodeMaximumHeatingDemand->value()*1000, "W"));
 }
 
 void SVPropNetworkNodesWidget::on_lineEditNodeName_editingFinished()

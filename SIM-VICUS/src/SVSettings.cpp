@@ -125,6 +125,13 @@ void SVSettings::setDefaults() {
 //		}
 //	}
 
+
+	// initialization of autosave vars
+	m_autosaveInterval = 10; // 10 mins
+	m_autosaveEnabled = true;
+
+	// set max number of recent projects
+	m_maxRecentProjects = 20;
 }
 
 
@@ -172,10 +179,31 @@ void SVSettings::read() {
 			m_CCMEditorExecutable = tmpCCMExecutable;
 	}
 
+	QString tmpDWDExecutable = settings.value("DWDConverterExecutable", m_DWDConverterExecutable ).toString();
+	if (!tmpDWDExecutable.isEmpty())
+		m_DWDConverterExecutable = tmpDWDExecutable;
+	else {
+		// auto-detect DWD converter in install directory
+#if defined(Q_OS_WIN)
+		tmpDWDExecutable = m_installDir + "\\DWDWeatherDataConverter.exe";
+#elif defined (Q_OS_MAC)
+		tmpDWDExecutable = m_installDir + "/DWDWeatherDataConverter.app/Contents/MacOS/DWDWeatherDataConverterApp";
+#else
+		tmpDWDExecutable = m_installDir + "/DWDWeatherDataConverter";
+#endif
+		if (QFile(tmpDWDExecutable).exists())
+			m_DWDConverterExecutable = tmpDWDExecutable;
+	}
+
 	m_fontPointSize = settings.value("FontPointSize", 0).toUInt();
-	m_navigationSplitterSize = settings.value("NavigationSplitterSize", 250).toUInt();
+	m_navigationSplitterSize = (int)settings.value("NavigationSplitterSize", 250).toUInt();
 	m_invertYMouseAxis = settings.value("InvertYMouseAxis", m_invertYMouseAxis).toBool();
 	m_terminalEmulator = (TerminalEmulators)settings.value("TerminalEmulator", TE_XTerm).toInt();
+	m_autosaveInterval = settings.value("AutosaveInterval", 10).toInt(); // in minutes
+	// guard against old code with ms as autosave interval
+	if (m_autosaveInterval > 100)
+		m_autosaveInterval = 10; // reset to default
+	m_autosaveEnabled = settings.value("EnableAutosaving", true).toBool();
 
 	SVSettings::ThemeType tmpTheme = (SVSettings::ThemeType)settings.value("Theme", m_theme ).toInt();
 	m_theme = tmpTheme;
@@ -197,23 +225,31 @@ void SVSettings::read() {
 //				 << m_themeSettings[TT_White].m_sceneBackgroundColor.name()
 //				 << m_themeSettings[TT_White].m_selectedSurfaceColor.name();
 	m_useHighDPIScaling = settings.value("UseHighDPIScaling", m_useHighDPIScaling).toBool();
+
+#if defined(Q_OS_WIN)
+	// on windows, use the native file dialogs
+	m_dontUseNativeDialogs = false;
+#endif
 }
 
 
 void SVSettings::write(QByteArray geometry, QByteArray state) {
 	QtExt::Settings::write(geometry, state);
 
-
 	QSettings settings( m_organization, m_appName );
 	settings.setValue("VersionIdentifier", m_versionIdentifier);
 	settings.setValue("VisibleDockWidgets", m_visibleDockWidgets.join(","));
 	settings.setValue("PostProcExecutable", m_postProcExecutable );
 	settings.setValue("CCMEditorExecutable", m_CCMEditorExecutable );
+	settings.setValue("DWDConverterExecutable", m_DWDConverterExecutable );
+
 	settings.setValue("FontPointSize", m_fontPointSize);
 	settings.setValue("InvertYMouseAxis", m_invertYMouseAxis);
 	settings.setValue("TerminalEmulator", m_terminalEmulator);
 	settings.setValue("UseHighDPIScaling", m_useHighDPIScaling);
 	settings.setValue("NavigationSplitterSize", m_navigationSplitterSize);
+	settings.setValue("AutosaveInterval", m_autosaveInterval);
+	settings.setValue("EnableAutosaving", m_autosaveEnabled);
 
 	settings.setValue("Theme", m_theme);
 
@@ -277,7 +313,7 @@ void SVSettings::readMainWindowSettings(QByteArray &geometry, QByteArray &state)
 	QtExt::Settings::readMainWindowSettings(geometry, state);
 
 	QSettings settings( m_organization, m_appName );
-	QString defaultDockWidgets = "Materials,Log";
+	QString defaultDockWidgets = "";
 	m_visibleDockWidgets = settings.value("VisibleDockWidgets", defaultDockWidgets).toString().split(",");
 }
 
@@ -518,8 +554,8 @@ void SVSettings::ThemeSettings::setDefaults(SVSettings::ThemeType theme) {
 
 		case TT_Dark :
 			m_majorGridColor = QColor("#9793a0");
-			m_minorGridColor = QColor("#27272c");
-			m_sceneBackgroundColor = QColor("#13141a");
+			m_minorGridColor = QColor("#34343b");
+			m_sceneBackgroundColor = QColor("#212124");
 			m_selectedSurfaceColor = QColor("#3465a4");
 		break;
 		case NUM_TT: ; // just to make compiler happy

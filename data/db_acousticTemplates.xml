@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AcousticTemplates>
+	<AcousticTemplate id="410001" displayName="de:A1 Musik |en:A1 Music" color="#21c27e">
+		<EvaluationOffset>0.07</EvaluationOffset>
+		<EvaluationFactor>0.45</EvaluationFactor>
+		<LinearSplineParameter name="MaxValue">
+			<X unit="1/s">125 250 500 1000 2000 4000</X>
+			<Y unit="%">145 120 120 120 120 120</Y>
+		</LinearSplineParameter>
+		<LinearSplineParameter name="MinValue">
+			<X unit="1/s">125 250 500 1000 2000 4000</X>
+			<Y unit="%">65 80 80 80 80 80</Y>
+		</LinearSplineParameter>
+	</AcousticTemplate>
+	<AcousticTemplate id="410002" displayName="de:A2 Sprache/Vortrag |en:A2 Speech/Lecture" color="#217907">
+		<EvaluationOffset>-0.14</EvaluationOffset>
+		<EvaluationFactor>0.37</EvaluationFactor>
+		<LinearSplineParameter name="MaxValue">
+			<X unit="1/s">125 250 500 1000 2000 4000</X>
+			<Y unit="%">145 120 120 120 120 120</Y>
+		</LinearSplineParameter>
+		<LinearSplineParameter name="MinValue">
+			<X unit="1/s">125 250 500 1000 2000 4000</X>
+			<Y unit="%">65 80 80 80 80 80</Y>
+		</LinearSplineParameter>
+	</AcousticTemplate>
+	<AcousticTemplate id="410003" displayName="de:A3 Unterricht/Kommunikation, Sprache/Vortrag inklusiv |en:A3 Lessons/Communication Speech/Lecture included" color="#3e2677">
+		<Note>Unterricht/Kommunikation bis 1000 m3 sowie Sprache/Vortrag inklusiv bis 5000 m3</Note>
+		<EvaluationOffset>-0.17</EvaluationOffset>
+		<EvaluationFactor>0.32</EvaluationFactor>
+		<LinearSplineParameter name="MaxValue">
+			<X unit="1/s">125 250 500 1000 2000 4000</X>
+			<Y unit="%">145 120 120 120 120 120</Y>
+		</LinearSplineParameter>
+		<LinearSplineParameter name="MinValue">
+			<X unit="1/s">125 250 500 1000 2000 4000</X>
+			<Y unit="%">65 80 80 80 80 80</Y>
+		</LinearSplineParameter>
+	</AcousticTemplate>
+	<AcousticTemplate id="410004" displayName="de:A4 Unterricht/Kommunikation inklusiv |en:A3 Lessons/Communication included" color="#9f5a2f">
+		<EvaluationOffset>-0.14</EvaluationOffset>
+		<EvaluationFactor>0.26</EvaluationFactor>
+		<LinearSplineParameter name="MaxValue">
+			<X unit="1/s">125 250 500 1000 2000 4000</X>
+			<Y unit="%">145 120 120 120 120 120</Y>
+		</LinearSplineParameter>
+		<LinearSplineParameter name="MinValue">
+			<X unit="1/s">125 250 500 1000 2000 4000</X>
+			<Y unit="%">65 80 80 80 80 80</Y>
+		</LinearSplineParameter>
+	</AcousticTemplate>
+	<AcousticTemplate id="410005" displayName="de:A5 Sport |en:A5 Sports" color="#c911b5">
+		<EvaluationOffset>-1</EvaluationOffset>
+		<EvaluationFactor>0.75</EvaluationFactor>
+		<LinearSplineParameter name="MaxValue">
+			<X unit="1/s">125 250 500 1000 2000 4000</X>
+			<Y unit="%">145 120 120 120 120 120</Y>
+		</LinearSplineParameter>
+		<LinearSplineParameter name="MinValue">
+			<X unit="1/s">125 250 500 1000 2000 4000</X>
+			<Y unit="%">65 80 80 80 80 80</Y>
+		</LinearSplineParameter>
+	</AcousticTemplate>
+</AcousticTemplates>

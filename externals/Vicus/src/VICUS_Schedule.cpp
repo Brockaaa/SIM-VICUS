@@ -24,6 +24,7 @@
 */
 
 #include "VICUS_Schedule.h"
+#include "IBK_messages.h"
 #include <algorithm>
 
 namespace VICUS {
@@ -201,9 +202,14 @@ bool Schedule::isSimilar(const Schedule & other) const {
 	FUNCID(Schedule::isSimilar(Schedule));
 
 	// do not allow comparison of annual schedules
-	if(m_haveAnnualSchedule || other.m_haveAnnualSchedule)
-		throw IBK::Exception(IBK::FormatString("Schedule with id %1 and %2 have annual schedules."
-												" These are not comparable.").arg(m_id).arg(other.m_id), FUNC_ID);
+	if(m_haveAnnualSchedule || other.m_haveAnnualSchedule) {
+//		throw IBK::Exception(IBK::FormatString("Schedule with id %1 and %2 have annual schedules."
+//												" These are not comparable.").arg(m_id).arg(other.m_id), FUNC_ID);
+
+		IBK::IBK_Message(IBK::FormatString("Schedule with id %1 and %2 have annual schedules."
+										   " These are not comparable.").arg(m_id).arg(other.m_id), IBK::MSG_WARNING, FUNC_ID);
+		return false;
+	}
 
 	// check if values are equal
 	Schedule sched = other;
@@ -499,10 +505,12 @@ void Schedule::createYearDataVector(std::vector<double> &timepoints, std::vector
 }
 
 
-Schedule Schedule::createAnnualScheduleFromPeriodSchedule(std::string &name, const IBK::Unit & unit, unsigned int startDayOfYear) {
+Schedule Schedule::createAnnualScheduleFromPeriodSchedule(std::string &name, const IBK::Unit & /*unit*/, unsigned int startDayOfYear) {
 	FUNCID(Schedule::createAnnualScheduleFromPeriodSchedule);
 	if (m_periods.empty())
 		IBK::Exception(IBK::FormatString("Schedule must have at least one period."), FUNC_ID);
+
+	// TODO : check unit
 
 	// save start day of year for shifting later
 	unsigned int startDayOfPeriod = startDayOfYear;

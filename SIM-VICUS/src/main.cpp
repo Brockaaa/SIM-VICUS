@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 
 	// Compose program name using the always use the major.minor version variant,
 	// since this string is used to identify the registry/config file location.
-	const QString ProgramVersionName = QString("SIM-VICUS %1").arg(VICUS::VERSION);
+	const QString ProgramVersionName = QString("SIM-VICUS %1").arg(VICUS::LONG_VERSION);
 
 	// *** Create and initialize setting object ***
 
@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
 		QString family = QFontDatabase::applicationFontFamilies(id).at(0);
 		QFont font(family);
 		font.setBold(true);
-		font.setPixelSize(16/ratio);
+		font.setPixelSize(22/ratio);
 
 		// Create painter
 		QPainter painter(&pixmap);
@@ -243,7 +243,7 @@ int main(int argc, char *argv[]) {
 
 		// draw "Version"
 		painter.setPen(Qt::white);
-		painter.drawText(615.0/ratio, 548.0/ratio, 180.0/ratio, 30.0/ratio, Qt::AlignRight, QString("VERSION %1").arg(VICUS::VERSION));
+		painter.drawText(615.0/ratio, 541.0/ratio, 180.0/ratio, 30.0/ratio, Qt::AlignRight, QString("v %1").arg(VICUS::LONG_VERSION));
 
 		id = QFontDatabase::addApplicationFont(":/fonts/Manrope-Medium.otf");
 		family = QFontDatabase::applicationFontFamilies(id).at(0);
@@ -255,6 +255,22 @@ int main(int argc, char *argv[]) {
 		painter.setPen(QColor("#CE4A4A"));
 		if (VICUS::VERSION[0] == '0')
 			painter.drawText(615.0/ratio, 572.0/ratio, 180.0/ratio, 30.0/ratio, Qt::AlignRight, QString("BETA-VERSION"));
+
+		painter.setPen(QColor("#333333"));
+		painter.setBrush(QBrush("#333333"));
+		painter.drawRect(50.0/ratio, 570/ratio, 300.0/ratio, 20.0/ratio);
+
+		painter.setPen(Qt::NoPen);
+
+		QLinearGradient gradient(0,0,740,100);
+		QColor gradientStart("#6bb9af");
+		QColor gradientEnd("#1f6595");
+		gradientStart.setAlpha(100);
+		gradientEnd.setAlpha(100);
+		gradient.setColorAt(1.0, gradientStart);
+		gradient.setColorAt(0.0, gradientEnd);
+
+		painter.fillRect(57.0/ratio, 587.0/ratio, 738.0/ratio, 6.0/ratio, gradient);
 		painter.end();
 
 		// show splash screen
@@ -269,6 +285,7 @@ int main(int argc, char *argv[]) {
 	try { // open scope to control lifetime of main window, ensure that main window instance dies before settings or project handler
 
 		SVMainWindow w;
+		a.m_mainWindow = &w; // set main window pointer for event filtering
 
 		// start event loop
 		res = a.exec();
@@ -277,6 +294,7 @@ int main(int argc, char *argv[]) {
 		ex.writeMsgStackToError();
 		return EXIT_FAILURE;
 	}
+	a.m_mainWindow = nullptr; // no more main window
 
 	// return exit code to environment
 	return res;

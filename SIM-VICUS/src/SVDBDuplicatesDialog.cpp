@@ -134,6 +134,11 @@ void SVDBDuplicatesDialog::onCurrentRowChanged(const QModelIndex & current, cons
 		case SVDatabase::DT_VentilationNatural:		dbItem(db.m_ventilationNatural, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_Infiltration:			dbItem(db.m_infiltration, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_ZoneTemplates:			dbItem(db.m_zoneTemplates, leftID, rightID, dbElemLeft, dbElemRight); break;
+		case SVDatabase::DT_EpdDatasets:			dbItem(db.m_epdDatasets, leftID, rightID, dbElemLeft, dbElemRight); break;
+		case SVDatabase::DT_AcousticTemplates:		dbItem(db.m_acousticTemplates, leftID, rightID, dbElemLeft, dbElemRight); break;
+		case SVDatabase::DT_AcousticBoundaryConditions: dbItem(db.m_acousticBoundaryConditions, leftID, rightID, dbElemLeft, dbElemRight); break;
+		case SVDatabase::DT_AcousticSoundAbsorptions:	dbItem(db.m_acousticSoundAbsorptions, leftID, rightID, dbElemLeft, dbElemRight); break;
+		case SVDatabase::DT_AcousticSoundProtectionTemplates:	dbItem(db.m_acousticSoundProtectionTemplates, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::NUM_DT:
 		break;
 	}
@@ -354,7 +359,8 @@ void SVDBDuplicatesDialog::updateUi() {
 	if (m_dbType != SVDatabase::NUM_DT) {
 		// remove all but the selected DB type
 		for (unsigned int i=0; i<SVDatabase::NUM_DT; ++i) {
-			if (i == m_dbType) continue;
+			if (i == m_dbType)
+				continue;
 			dupInfos[i].clear();
 		}
 	}
@@ -379,8 +385,6 @@ void SVDBDuplicatesDialog::updateUi() {
 					item->setText(tr("Constructions"));
 					dbItem(db.m_constructions, duplicates.m_idFirst, duplicates.m_idSecond, dbElemLeft, dbElemRight);
 				break;
-
-				// TODO : Katja
 				case SVDatabase::DT_Windows:
 					item->setText(tr("Windows"));
 					left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_windows[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
@@ -486,7 +490,33 @@ void SVDBDuplicatesDialog::updateUi() {
 					left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_zoneTemplates[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
 					right = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_zoneTemplates[duplicates.m_idSecond]->m_displayName) ).arg(duplicates.m_idSecond);
 					break;
+				case SVDatabase::DT_AcousticBoundaryConditions:
+					item->setText(tr("AcousticBoundaryConditions"));
+					left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticBoundaryConditions[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
+					right = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticBoundaryConditions[duplicates.m_idSecond]->m_displayName) ).arg(duplicates.m_idSecond);
+					break;
+				case SVDatabase::DT_EpdDatasets:
+					item->setText(tr("EpdDatasets"));
+					left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_epdDatasets[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
+					right = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_epdDatasets[duplicates.m_idSecond]->m_displayName) ).arg(duplicates.m_idSecond);
+					break;
+				case SVDatabase::DT_AcousticTemplates:
+					item->setText(tr("AcousticTemplates"));
+					left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticTemplates[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
+					right = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticTemplates[duplicates.m_idSecond]->m_displayName) ).arg(duplicates.m_idSecond);
+					break;
+				case SVDatabase::DT_AcousticSoundProtectionTemplates:
+					item->setText(tr("AcousticSoundProtectionTemplates"));
+                                        left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticSoundProtectionTemplates[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
+                                        right = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticSoundProtectionTemplates[duplicates.m_idSecond]->m_displayName) ).arg(duplicates.m_idSecond);
+					break;
+				case SVDatabase::DT_AcousticSoundAbsorptions:
+					item->setText(tr("AcousticSoundAbsorptions"));
+					left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticSoundAbsorptions[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
+					right = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticSoundAbsorptions[duplicates.m_idSecond]->m_displayName) ).arg(duplicates.m_idSecond);
+					break;
 				case SVDatabase::NUM_DT:;// just to make compiler happy
+				break;
 			}
 
 			if (dbElemLeft != nullptr) {

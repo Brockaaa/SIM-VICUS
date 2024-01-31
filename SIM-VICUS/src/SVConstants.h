@@ -50,6 +50,10 @@ extern const char * const THIRD_LANGUAGE;
 /*! Fixed-size font family to be used in tables. */
 extern const char * const FIXED_FONT_FAMILY;
 
+/*! Fixed-size font family to be used in tables. */
+extern const int AUTO_SAVE_INTERVALL;
+
+
 /*! Custom data roles provided by the models.
 	Note: not all models provide all roles. But when they do, they should use the
 		  constants below
@@ -97,11 +101,25 @@ enum BuildingPropertyType {
 	/*! Surface heating */
 	BT_SurfaceHeating,
 	/*! Supply Systems */
-	BT_SupplySystems,
+	BT_SupplySystems
+};
+
+/*! Structural unit property modes. */
+enum StructuralUnitPropertyType {
+	/*! Structural Unit property */
+	ST_StructuralUnit,
 	/*! Zone property */
-	BT_ZoneProperty,
+	ST_ZoneProperty,
 	/*! Floor manager. */
-	BT_FloorManager
+	ST_FloorManager,
+};
+
+/*! Acoustic property modes. */
+enum AcousticPropertyType {
+	/*! Acoustic Sound Protection Template */
+	AT_AcousticSoundProtectionTemplate,
+	/*! Acoustic Template */
+	AT_AcousticTemplate,
 };
 
 /*! Different edit/coloring modes. */

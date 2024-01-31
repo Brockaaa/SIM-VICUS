@@ -188,7 +188,7 @@ void SVStyle::formatDatabaseTreeView(QTreeView * v) {
 #endif
 }
 
-void SVStyle::formatWelcomePage(QString & htmlCode) {
+void SVStyle::setHtmlColors(QString & htmlCode) {
 	switch (SVSettings::instance().m_theme) {
 		case SVSettings::TT_Dark :
 		{
@@ -206,7 +206,7 @@ void SVStyle::formatWelcomePage(QString & htmlCode) {
 		default:
 		{
 			htmlCode.replace("${STYLE_TEXT_COLOR}", qApp->palette().color(QPalette::Text).name());
-			htmlCode.replace("${STYLE_BACKGROUND_COLOR}", "#FFFFFF");
+			htmlCode.replace("${STYLE_BACKGROUND_COLOR}", qApp->palette().color(QPalette::Background).name());
 			htmlCode.replace("${STYLE_LINKTEXT_COLOR}", "#0053A6");
 			htmlCode.replace("${STYLE_LINKTEXT_HOVER_COLOR}", "#1C7DEF");
 			htmlCode.replace("${STYLE_LINKTEXT_HOVER_BACKGROUND_COLOR}", qApp->palette().color(QPalette::Background).name());
@@ -229,17 +229,17 @@ void SVStyle::resizeTableColumnToContents(QTableView * v, int column, bool enlar
 
 
 void SVStyle::setStyle(SVSettings::ThemeType theme) {
-	QFile file(":/qdarkstyle/style.qss");
-	QFile fileWhite(":/qdarkstyle/whitestyle.qss");
+	QFile styleDark(":/qdarkstyle/style.qss");
+	QFile styleWhite(":/qdarkstyle/whitestyle.qss");
 
-	if ( theme == SVSettings::TT_Dark && file.exists()) {
+	if ( theme == SVSettings::TT_Dark && styleDark.exists()) {
 
-		file.open(QFile::ReadOnly);
-		m_styleSheet = QLatin1String(file.readAll());
+		styleDark.open(QFile::ReadOnly);
+		m_styleSheet = QLatin1String(styleDark.readAll());
 		qApp->setStyleSheet(m_styleSheet);
 		// set specific background/font colors
-		m_alternativeBackgroundBright				= "#73580e";
-		m_alternativeBackgroundDark					= "#57430b";
+		m_alternativeBackgroundBright				= "#324e41";
+		m_alternativeBackgroundDark					= "#283e34";
 		m_alternativeBackgroundText					= "#ffedce";
 
 		m_readOnlyEditFieldBackground				= "#5f7da0";
@@ -249,31 +249,39 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 		m_userDBBackgroundDark						= "#012a4a";
 		m_userDBBackgroundBright					= "#013a63";
 		m_regularDBEntryColorDark					= "#e0e0e0";
+		m_DBSelectionColor							= "#cc8425";
 
 		m_logProgressText							= "#c0c0c0";
 		m_logErrorText								= "#ff2222";
 		m_logWarningText							= "#f0dc00";
 		m_logDebugText								= "#39b1d9";
 
+		m_defaultDrawingColor						= "#FFFFFF";
+
 		// now adjust the style settings for QtExt components
-		QtExt::Style::EditFieldBackground = "#212124";
+		QtExt::Style::EditFieldBackground			= "#212124";
 		QtExt::Style::AlternativeEditFieldBackground = "#3a3b3f";
-		QtExt::Style::ErrorEditFieldBackground = "#ab4e4e";
-		QtExt::Style::ReadOnlyEditFieldBackground = "#5f7da0";
+		QtExt::Style::ErrorEditFieldBackground		= "#ab4e4e";
+		QtExt::Style::ReadOnlyEditFieldBackground	= "#5f7da0";
 
-		QtExt::Style::AlternativeBackgroundBright = "#73580e";
-		QtExt::Style::AlternativeBackgroundDark = "#57430b";
-		QtExt::Style::AlternativeBackgroundText = "#ffedce";
+		QtExt::Style::AlternativeBackgroundBright	= "#73580e";
+		QtExt::Style::AlternativeBackgroundDark		= "#57430b";
+		QtExt::Style::AlternativeBackgroundText		= "#ffedce";
+
+		QtExt::Style::ToolBoxPageBackground			= "#212124";
+		QtExt::Style::ToolBoxPageEdge				= "#3a3b3f";
+
+		QIcon::setThemeName("dark");
 	}
-	else if ( theme == SVSettings::TT_White && fileWhite.exists()) {
+	else if ( theme == SVSettings::TT_White && styleWhite.exists()) {
 
-		fileWhite.open(QFile::ReadOnly);
-		m_styleSheet = QLatin1String(fileWhite.readAll());
+		styleWhite.open(QFile::ReadOnly);
+		m_styleSheet = QLatin1String(styleWhite.readAll());
 		qApp->setStyleSheet(m_styleSheet);
 
 		// set specific background/font colors
-		m_alternativeBackgroundBright				= "#fff4b8";
-		m_alternativeBackgroundDark					= "#ffe49d";
+		m_alternativeBackgroundBright				= "#e9f5db";
+		m_alternativeBackgroundDark					= "#cfe1b9";
 		m_alternativeBackgroundText					= "#760000";
 		m_readOnlyEditFieldBackground				= "#d6e9ff";
 		m_alternativeReadOnlyEditFieldBackground	= "#b5d8ff";
@@ -281,11 +289,14 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 
 		m_userDBBackgroundDark						= "#cddafd";
 		m_userDBBackgroundBright					= "#dfe7fd";
+		m_DBSelectionColor							= "#088C54";
 
 		m_logProgressText							= "#202020";
 		m_logErrorText								= "#ab0000";
 		m_logWarningText							= "#b17d00";
 		m_logDebugText								= "#39b1d9";
+
+		m_defaultDrawingColor						= "#000000";
 
 		QtExt::Style::EditFieldBackground						= "#f9f6c8";
 		QtExt::Style::AlternativeEditFieldBackground			= "#f9ffd8";
@@ -296,6 +307,10 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 		QtExt::Style::AlternativeBackgroundDark					= "#ffe49d";
 		QtExt::Style::AlternativeBackgroundText					= "#760000";
 
+		QtExt::Style::ToolBoxPageBackground						= "#ffffff";
+		QtExt::Style::ToolBoxPageEdge							= "#f0f0f0";
+
+		QIcon::setThemeName("light");
 	}
 	else {
 		// clear style sheet for default style.

@@ -3,6 +3,7 @@
 #include "SVProjectHandler.h"
 #include "SVUndoModifyBuildingTopology.h"
 #include "SVUndoModifyRoom.h"
+#include "SVZoneInformationDialog.h"
 
 #include <IBK_StopWatch.h>
 
@@ -56,13 +57,13 @@ QVariant SVPropBuildingZonePropertyTableModel::data(const QModelIndex & index, i
 			case 2 :
 				//get parameter
 				if(!room.m_para[VICUS::Room::P_Area].empty())
-					return (int)(room.m_para[VICUS::Room::P_Area].get_value("m2")*100)/100.0;
+					return QString::number(room.m_para[VICUS::Room::P_Area].get_value("m2"), 'f', 2);
 				return QVariant();
 				// column 3 - room volume
 			case 3 :
 				//get parameter
 				if(!room.m_para[VICUS::Room::P_Volume].empty())
-					return (int)(room.m_para[VICUS::Room::P_Volume].get_value("m3")*100)/100.0;
+					return QString::number(room.m_para[VICUS::Room::P_Volume].get_value("m3"), 'f', 2);
 				return QVariant();
 			}
 		break;
@@ -100,13 +101,18 @@ QVariant SVPropBuildingZonePropertyTableModel::data(const QModelIndex & index, i
 		// UserRole returns value reference
 		case Qt::UserRole :  return room.m_id;
 
+		case Qt::TextAlignmentRole : {
+			if(index.column() == 2 || index.column() == 3) return Qt::AlignRight;
+		}
+		break;
+
 		case Qt::ForegroundRole : {
 			// vars with INVALID values -> red text color
 			if (index.column() == 2)
-				if (!room.m_para[VICUS::Room::P_Area].empty() && room.m_para[VICUS::Room::P_Area].get_value("m2") < 1e-2)
+				if (!room.m_para[VICUS::Room::P_Area].empty() && room.m_para[VICUS::Room::P_Area].get_value("m2") < 1e-1)
 					return QColor(Qt::red);
 			if (index.column() == 3)
-				if (!room.m_para[VICUS::Room::P_Volume].empty() && room.m_para[VICUS::Room::P_Volume].get_value("m3") < 1e-2)
+				if (!room.m_para[VICUS::Room::P_Volume].empty() && room.m_para[VICUS::Room::P_Volume].get_value("m3") < 1e-1)
 					return QColor(Qt::red);
 		}
 		break;
@@ -190,7 +196,7 @@ bool SVPropBuildingZonePropertyTableModel::setData(const QModelIndex & index, co
 	}
 
 	// create undo action for room parameter change
-	SVUndoModifyRoom * undo = new SVUndoModifyRoom(text, room, i, j, k);
+	SVUndoModifyRoom * undo = new SVUndoModifyRoom(text, room);
 	// copy new room parametrization into VICUS data structure
 	undo->push();
 
@@ -430,5 +436,21 @@ bool SVPropBuildingZonePropertyTableModel::assignSurfaces(const QModelIndex & in
 		return false;
 	}
 
+}
+
+void SVPropBuildingZonePropertyTableModel::showZoneInformation(const QModelIndex &index) {
+	Q_ASSERT((size_t)index.row() < m_rooms.size());
+	Q_ASSERT(m_rooms[(size_t)index.row()] != nullptr);
+
+	zoneInformationDialog()->showZoneInformation(project(), m_rooms[(size_t)index.row()]->m_id);
+}
+
+
+SVZoneInformationDialog *SVPropBuildingZonePropertyTableModel::zoneInformationDialog() {
+	if (m_zoneInformationDialog == nullptr) {
+		m_zoneInformationDialog = new SVZoneInformationDialog();
+	}
+
+	return m_zoneInformationDialog;
 }
 

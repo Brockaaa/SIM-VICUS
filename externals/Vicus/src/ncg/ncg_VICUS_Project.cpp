@@ -64,6 +64,18 @@ void Project::readXML(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
+			else if (cName == "StructuralUnits") {
+				const TiXmlElement * c2 = c->FirstChildElement();
+				while (c2) {
+					const std::string & c2Name = c2->ValueStr();
+					if (c2Name != "StructuralUnit")
+						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+					StructuralUnit obj;
+					obj.readXML(c2);
+					m_structuralUnits.push_back(obj);
+					c2 = c2->NextSiblingElement();
+				}
+			}
 			else if (cName == "ComponentInstances") {
 				const TiXmlElement * c2 = c->FirstChildElement();
 				while (c2) {
@@ -90,6 +102,8 @@ void Project::readXML(const TiXmlElement * element) {
 			}
 			else if (cName == "IfcFilePath")
 				m_ifcFilePath = IBK::Path(c->GetText());
+			else if (cName == "DrawingFilePath")
+				m_drawingFilePath = IBK::Path(c->GetText());
 			else if (cName == "SolverParameter")
 				m_solverParameter.readXML(c);
 			else if (cName == "SimulationParameter")
@@ -100,6 +114,10 @@ void Project::readXML(const TiXmlElement * element) {
 				m_outputs.readXML(c);
 			else if (cName == "ViewSettings")
 				m_viewSettings.readXML(c);
+			else if (cName == "LcaSettings")
+				m_lcaSettings.readXML(c);
+			else if (cName == "LccSettings")
+				m_lccSettings.readXML(c);
 			else if (cName == "PlainGeometry")
 				m_plainGeometry.readXML(c);
 			else if (cName == "EmbeddedDatabase")
@@ -135,6 +153,10 @@ TiXmlElement * Project::writeXML(TiXmlElement * parent) const {
 
 	m_viewSettings.writeXML(e);
 
+	m_lcaSettings.writeXML(e);
+
+	m_lccSettings.writeXML(e);
+
 	if (!m_geometricNetworks.empty()) {
 		TiXmlElement * child = new TiXmlElement("GeometricNetworks");
 		e->LinkEndChild(child);
@@ -153,6 +175,18 @@ TiXmlElement * Project::writeXML(TiXmlElement * parent) const {
 
 		for (std::vector<Building>::const_iterator it = m_buildings.begin();
 			it != m_buildings.end(); ++it)
+		{
+			it->writeXML(child);
+		}
+	}
+
+
+	if (!m_structuralUnits.empty()) {
+		TiXmlElement * child = new TiXmlElement("StructuralUnits");
+		e->LinkEndChild(child);
+
+		for (std::vector<StructuralUnit>::const_iterator it = m_structuralUnits.begin();
+			it != m_structuralUnits.end(); ++it)
 		{
 			it->writeXML(child);
 		}
@@ -190,6 +224,8 @@ TiXmlElement * Project::writeXML(TiXmlElement * parent) const {
 	m_fmiDescription.writeXML(e);
 	if (m_ifcFilePath.isValid())
 		TiXmlElement::appendSingleAttributeElement(e, "IfcFilePath", nullptr, std::string(), m_ifcFilePath.str());
+	if (m_drawingFilePath.isValid())
+		TiXmlElement::appendSingleAttributeElement(e, "DrawingFilePath", nullptr, std::string(), m_drawingFilePath.str());
 	return e;
 }
 

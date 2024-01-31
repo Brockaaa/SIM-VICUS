@@ -41,18 +41,27 @@
 #include <NANDRAD_Schedules.h>
 
 #include "VICUS_CodeGenMacros.h"
-#include "VICUS_SupplySystem.h"
 #include "VICUS_Network.h"
 #include "VICUS_Building.h"
 #include "VICUS_ViewSettings.h"
-#include "VICUS_NetworkFluid.h"
-#include "VICUS_NetworkPipe.h"
 #include "VICUS_Outputs.h"
+#include "VICUS_LcaSettings.h"
+#include "VICUS_LccSettings.h"
 #include "VICUS_ComponentInstance.h"
 #include "VICUS_SubSurfaceComponentInstance.h"
 #include "VICUS_EmbeddedDatabase.h"
 #include "VICUS_PlainGeometry.h"
+#include "VICUS_Drawing.h"
+#include "VICUS_StructuralUnit.h"
 
+#include "VICUS_AcousticTemplate.h"
+#include "VICUS_AcousticReferenceComponent.h"
+#include "VICUS_AcousticBuildingTemplate.h"
+#include "VICUS_AcousticSoundProtectionTemplate.h"
+
+namespace IBK {
+	class NotificationHandler;
+}
 
 namespace VICUS {
 
@@ -70,7 +79,8 @@ public:
 		SG_Building			= 0x001,
 		SG_Network			= 0x002,
 		SG_Obstacle			= 0x004,
-		SG_All				= SG_Building | SG_Network | SG_Obstacle,
+		SG_Drawing			= 0x008,
+		SG_All				= SG_Building | SG_Network | SG_Obstacle | SG_Drawing,
 		NUM_SG
 	};
 
@@ -103,15 +113,25 @@ public:
 	*/
 	void readXML(const IBK::Path & filename);
 
+	/*! Reads the additional drawing data from an XML file.
+		\param filename  The full path to the drawing file.
+	*/
+	void readDrawingXML(const IBK::Path & filename);
+
 	/*! Reads the project data from an text which contains XML.
 		\param projectText  Text with VICUS project.
 	*/
-	void readXML(const QString & projectText);
+	void readImportedXML(const QString & projectText, IBK::NotificationHandler *notifyer);
+
+	/*! Actual read function, called from both variants of readXML(). */
+	void readXMLDocument(TiXmlElement * rootElement);
 
 	/*! Writes the project file to an XML file.
 		\param filename  The full path to the project file.
 	*/
 	void writeXML(const IBK::Path & filename) const;
+
+	void writeDrawingXML(const IBK::Path & filename) const;
 
 	/*! Reads the placeholder section into m_placeholders map. */
 	void readDirectoryPlaceholdersXML(const TiXmlElement * element);
@@ -119,13 +139,17 @@ public:
 	/*! Writes the section with directory place holders. */
 	void writeDirectoryPlaceholdersXML(TiXmlElement * parent) const;
 
-	/*! Removes un-referenced/un-needed data structures. */
-	void clean();
-
 	/*! Call this function whenever project data has changed that depends on
 		objects linked through pointers (building hierarchies, networks etc.).
+		Checks interrelated definitions/references for validity.
+		Throws IBK::Exceptions in case of errors.
+		Call this function after reading a project and during debugging after
+		project modifications to ensure data consistency.
 	*/
 	void updatePointers();
+
+	/*! Adds child surfaces to pointers of project. */
+	void addChildSurface(const VICUS::Surface &s);
 
 	/*! Searches through all objects and determines the largest object ID (not unique ID!) used for buildings, buildingLevels, rooms, surface,
 		subsurfaces, networks, etc and returns the next ID to be used for new data elements. For example, if IDs 10, 11, 14 have been used already,
@@ -189,6 +213,10 @@ public:
 					   bool takeSelected,
 					   bool takeVisible) const;
 
+	/*! Select all child surfaces of surface. */
+	void selectChildSurfaces(std::set<const Object*> &selectedObjs, const VICUS::Surface & s,
+							 bool takeSelected, bool takeVisible) const;
+
 	/*! This function collects the pointers to all selected sub surfaces.
 		This is a convenience function which essentially does the same as selectObjects, but
 		only returns visible and selected objects of type SubSurface.
@@ -225,29 +253,41 @@ public:
 	*/
 	void generateNandradProject(NANDRAD::Project & p, QStringList & errorStack, const std::string & nandradProjectPath) const;
 //	void generateBuildingProjectData(NANDRAD::Project & p) const;
-	void generateNetworkProjectData(NANDRAD::Project & p, QStringList & errorStack, const std::string & nandradProjectPath) const;
+	void generateNetworkProjectData(NANDRAD::Project & p, QStringList & errorStack, const std::string & nandradProjectPath, unsigned int networkId) const;
 
+	void generateHeatLoadExport();
 
 	// *** STATIC FUNCTIONS ***
 
 	/*! This function computes the global bounding box of all selected surfaces and the center point in global coordinates.
 		\returns Returns the dimensions of the bounding box and its center point in argument 'center' in global coordinates.
 	*/
-	static IBKMK::Vector3D boundingBox(std::vector<const Surface*> &surfaces,
-									   std::vector<const SubSurface*> &subsurfaces,
+	static IBKMK::Vector3D boundingBox(const std::vector<const Drawing *> &drawings,
+									   const std::vector<const Surface *> &surfaces,
+									   const std::vector<const SubSurface *> &subsurfaces,
+									   IBKMK::Vector3D &center,
+									   bool transformPoints = true);
+
+	/*! This function computes the global bounding box of all selected edges & nodes and the center point in global coordinates.
+		\returns Returns the dimensions of the bounding box and its center point in argument 'center' in global coordinates.
+	*/
+	static IBKMK::Vector3D boundingBox(const std::vector<const Drawing *> & drawings,
+									   const std::vector<const NetworkEdge*> &edges,
+									   const std::vector<const NetworkNode*> &nodes,
 									   IBKMK::Vector3D &center);
 
 	/*! This function computes the bounding box of all selected surfaces and the center point in LOCAL coordinates of
 		the provided local coordinate system.
 		\returns Returns the dimensions of the bounding box and its center point in argument 'center' in local coordinates.
 	*/
-	static IBKMK::Vector3D boundingBox(std::vector<const VICUS::Surface*> &surfaces,
-										std::vector<const VICUS::SubSurface*> &subsurfaces,
-										IBKMK::Vector3D &center,
-										const IBKMK::Vector3D &offset,
-										const IBKMK::Vector3D &xAxis,
-										const IBKMK::Vector3D &yAxis,
-										const IBKMK::Vector3D &zAxis );
+	static IBKMK::Vector3D boundingBox(std::vector<const Drawing *> & drawings,
+									   std::vector<const VICUS::Surface*> &surfaces,
+									   std::vector<const VICUS::SubSurface*> &subsurfaces,
+									   IBKMK::Vector3D &center,
+									   const IBKMK::Vector3D &offset = IBKMK::Vector3D(0,0,0),
+									   const IBKMK::Vector3D &xAxis = IBKMK::Vector3D(1,0,0),
+									   const IBKMK::Vector3D &yAxis = IBKMK::Vector3D(0,1,0),
+									   const IBKMK::Vector3D &zAxis = IBKMK::Vector3D(0,0,1));
 
 	/*! Attempts to create new surface-surface connections based on the current selection.
 		Newly created component instances are stored in vector newComponentInstances alongside
@@ -278,9 +318,16 @@ public:
 
 	ViewSettings										m_viewSettings;				// XML:E
 
+	LcaSettings											m_lcaSettings;				// XML:E
+
+	LccSettings											m_lccSettings;				// XML:E
+
 	std::vector<Network>								m_geometricNetworks;		// XML:E
 
-	std::vector<Building>								m_buildings;				// XML:E
+	std::vector<Building>								m_buildings;	 			// XML:E
+
+    /*! Store structural units */
+    std::vector<StructuralUnit>							m_structuralUnits;			// XML:E
 
 	/*! All components actually placed in the geometry.
 		This vector is outside buildings, so that two building parts can be connected with
@@ -291,6 +338,9 @@ public:
 
 	/*! Vector with plain (dumb) geometry. */
 	PlainGeometry										m_plainGeometry;			// XML:E
+
+	std::vector<Drawing>								m_drawings;
+
 
 	/*! Path placeholder mappings used to substitute placeholders for database and user databases.
 		These placeholders are read from the path placeholders section of the project file and hold
@@ -316,32 +366,40 @@ public:
 	/*! Contains a file name for a IFC model in case of import from IFC. */
 	IBK::Path											m_ifcFilePath;				// XML:E
 
+	/*! Contains a file name for a drawing file. */
+	IBK::Path											m_drawingFilePath;			// XML:E
 
-private:
 
-	/*! Mapping element holds the data for later export. */
-	struct MappingElement {
+	/*! Mapping element holds the room data for later export. */
+	struct RoomMapping {
+		unsigned int							m_idBuildingVicus;
+		unsigned int							m_idBuildingLevelVicus;
 		unsigned int							m_idRoomVicus;
 		unsigned int							m_idRoomNandrad;
 		unsigned int							m_idZoneTemplateVicus;
+		std::string								m_nameBuildingVicus;
+		std::string								m_nameBuildingLevelVicus;
 		std::string								m_nameRoomVicus;
 		std::string								m_nameRoomNandrad;
 		std::string								m_zonetemplateName;
-		double									m_floorArea = 0;		// in m2
-		double									m_volume = 0;			// in m3
+		double									m_floorArea = 0;			// in m2
+		double									m_volume = 0;				// in m3
+		double									m_heatCapacity = 0;			// in J/K
 	};
 
 
+
+private:
 	// Functions below are implemented in VICUS_ProjectGenerator.cpp
 
 	void generateBuildingProjectData(const QString &modelName,
 									 NANDRAD::Project & p, QStringList & errorStack,
 									 std::map<unsigned int, unsigned int> &surfaceIdsVicusToNandrad,
-									 std::vector<MappingElement> &mappings)const;
+									 std::vector<RoomMapping> &roomMappings,  std::map<unsigned int, unsigned int> componentInstanceMapping)const;
 
 	void generateNandradZones(std::vector<const VICUS::Room *> & zones, std::set<unsigned int> & idSet,
 							  NANDRAD::Project & p, QStringList & errorStack,
-							  std::vector<MappingElement> &mappings)const;
+							  std::vector<RoomMapping> &mappings)const;
 
 	/*! Adds a vicus schedule to nandrad project. */
 	void addVicusScheduleToNandradProject(const VICUS::Schedule &schedVic, const std::string &scheduleQuantityName,
@@ -359,7 +417,7 @@ private:
 	/*! Export mapping table for VICUS and NANDRAD room ids and names.
 		Also export zone template ids and names.
 	*/
-	bool exportMappingTable(const IBK::Path & filepath, const std::vector<MappingElement> &mappings,
+	bool exportMappingTable(const IBK::Path & filepath, const std::vector<RoomMapping> &mappings,
 							bool addFloorAreaAndVolume = false) const;
 
 	/*! Export for each room VICUS and NANDRAD name, floor area [m2] and volume [m3] */
@@ -370,11 +428,19 @@ private:
 	*/
 	void addAndCheckForUniqueness(VICUS::Object* o);
 
+	/*! Adds view factors to the nandrad project.
+		If there are conflicts Exceptions are thrown.
+	*/
+	void addViewFactorsToNandradZones(NANDRAD::Project & p, const std::vector<Project::RoomMapping> &roomMappings, const std::map<unsigned int, unsigned int> &componentInstanceMapping,
+									  const std::map<unsigned int, unsigned int> &subSurfaceMapping, QStringList & errorStack) const;
+
 	/*! Cached unique-ID -> object ptr map. Greatly speeds up objectByID() and any other lookup functions.
 		This map is updated in updatePointers().
 	*/
 	std::map<unsigned int, VICUS::Object*>		m_objectPtr;
+
 };
+
 
 
 } // namespace VICUS

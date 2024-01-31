@@ -486,7 +486,7 @@ void SVImportIDFDialog::transferData(const EP::Project & prj, unsigned int start
 				// find material by name
 				unsigned int opaqueIdx = VICUS::elementIndex(prj.m_materials, matLay, false);
 				unsigned int windowIdx = VICUS::elementIndex(prj.m_windowMaterial, matLay, false);
-				unsigned int blindIdx, shadeIdx, screenIdx;
+				// unsigned int blindIdx, shadeIdx, screenIdx;
 
 				if (opaqueIdx < prj.m_materials.size()) {
 					IBK_ASSERT(matType == NUM_MT || matType == Opaque);
@@ -694,7 +694,7 @@ void SVImportIDFDialog::transferData(const EP::Project & prj, unsigned int start
 
 	// *** Adiabatic boundary conditions ("adiabatic") ***
 
-	unsigned int bcIDAdiabatic= VICUS::INVALID_ID;
+	unsigned int bcIDAdiabatic = VICUS::INVALID_ID;
 	{
 		VICUS::BoundaryCondition bc;
 		bc.m_id = ++nextID;
@@ -822,15 +822,18 @@ void SVImportIDFDialog::transferData(const EP::Project & prj, unsigned int start
 		surf.m_id = ++nextID;
 		surf.m_displayName = codec->toUnicode(bsd.m_name.c_str()); // Mind text encoding here!
 
+		bool isSimplePolygon = false;
 		// set the polygon of the BSD in the surface; the polygon will be checked and the triangulation will be computed,
 		// however, yet without holes
 		VICUS::Polygon3D p(bsd.m_polyline);
 		// TODO : Error handling?
-		if(!p.polyline().vertexes().empty())
+		if(!p.polyline().vertexes().empty()) {
 			surf.setPolygon3D( p );
+			isSimplePolygon = p.polyline().isSimplePolygon();
+		}
 
 		// we can only import a subsurface, if the surface itself has a valid polygon
-		if (p.polyline().vertexes().empty() || (!surf.geometry().isValid() && surf.polygon3D().vertexes().size() > 2)) {
+		if (!isSimplePolygon || p.polyline().vertexes().empty() || (!surf.geometry().isValid() && surf.polygon3D().vertexes().size() > 2)) {
 			//			surf.setPolygon3D( VICUS::Polygon3D( bsd.m_polyline ) ); // for debugging purposes - to see, why polygon isn't valid
 			const std::vector<IBKMK::Vector3D> &poly3D = bsd.m_polyline;
 
@@ -857,11 +860,17 @@ void SVImportIDFDialog::transferData(const EP::Project & prj, unsigned int start
 			polygon.setVertexes(poly3D, true); // we expect the poly3D vertexes to be flawed with rounding errors, so let's try some fixing here
 			surf.setPolygon3D(polygon);
 
+			// If polygon is not simple since it has colinear segments, we can import the surface successfully, but we cannot save and reload it, so for
+			// it is going to be skipped
+
+			// TODO Dirk: We should make several polygons out of it, so it stays valid
+
 			// TODO Stephan+Dirk : bitte nach nachdenken, ob man Polygone mit kolliniearen Segmenten (also bei denen Vertexe entfernt werden)
 			//                     trotzdem importieren kann, wenn das resultierende Polygon gültig ist
+			isSimplePolygon = surf.polygon3D().polyline().isSimplePolygon();
 
 			// we can only import a subsurface, if the surface itself has a valid polygon
-			if ( surf.geometry().polygon3D().vertexes().size() != bsd.m_polyline.size() ||  !surf.geometry().isValid()) {
+			if (!isSimplePolygon || surf.geometry().polygon3D().vertexes().size() != bsd.m_polyline.size() || !surf.geometry().isValid()) {
 				IBK::IBK_Message(IBK::FormatString("  %3.%1 [#%2] : Geometry of Surface is still broken. Import skipped!\n")
 								 .arg(surf.m_displayName.toStdString())
 								 .arg(surf.m_id)
@@ -1121,8 +1130,10 @@ void SVImportIDFDialog::transferData(const EP::Project & prj, unsigned int start
 			continue;
 		}
 		std::vector<VICUS::SubSurface> subs = surf->subSurfaces();
+		std::vector<VICUS::Surface> childs = surf->childSurfaces();
+
 		subs.push_back(subSurf);
-		surf->setSubSurfaces(subs);
+		surf->setChildAndSubSurfaces(subs, childs);
 
 		IBK::IBK_Message( IBK::FormatString("  %1.%2 [#%3]\n")
 						  .arg(surf->m_displayName.toStdString())

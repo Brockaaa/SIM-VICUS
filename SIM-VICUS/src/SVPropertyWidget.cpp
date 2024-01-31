@@ -42,6 +42,9 @@
 #include "SVPropFloorManagerWidget.h"
 #include "SVPropAddWindowWidget.h"
 #include "SVPropNetworkEditWidget.h"
+#include "SVPropAcosuticWidget.h"
+#include "SVPropStructuralUnitEditWidget.h"
+#include "SVPropResultsWidget.h"
 
 #include "Vic3DNewGeometryObject.h"
 #include "Vic3DCoordinateSystemObject.h"
@@ -78,9 +81,20 @@ void SVPropertyWidget::setBuildingPropertyType(int buildingPropertyType) {
 }
 
 
+void SVPropertyWidget::setStructuralUnitPropertyType(int buildingPropertyType) {
+	showPropertyWidget<SVPropStructuralUnitEditWidget>(M_BuildingStructuralUnitProperties);
+	qobject_cast<SVPropStructuralUnitEditWidget*>(m_propWidgets[M_BuildingStructuralUnitProperties])->setPropertyType(buildingPropertyType);
+}
+
+
 void SVPropertyWidget::setNetworkPropertyType(int networkPropertyType) {
 	showPropertyWidget<SVPropNetworkEditWidget>(M_NetworkProperties);
 	qobject_cast<SVPropNetworkEditWidget*>(m_propWidgets[M_NetworkProperties])->setPropertyType(networkPropertyType);
+}
+
+void SVPropertyWidget::setAcousticPropertyType(int acousticPropertyType) {
+	showPropertyWidget<SVPropAcosuticWidget>(M_BuildingAcousticProperties);
+	qobject_cast<SVPropNetworkEditWidget*>(m_propWidgets[M_BuildingAcousticProperties])->setPropertyType(acousticPropertyType);
 }
 
 
@@ -94,6 +108,16 @@ void SVPropertyWidget::updateColorMode() {
 		case SVViewState::PM_NetworkProperties : {
 			// enforce color update
 			SVPropNetworkEditWidget *widget = qobject_cast<SVPropNetworkEditWidget*>(m_propWidgets[M_NetworkProperties]);
+			widget->setPropertyType((int)widget->currentPropertyType());
+		} break;
+		case SVViewState::PM_BuildingStructuralUnitProperties : {
+			// enforce color update
+			SVPropStructuralUnitEditWidget *widget = qobject_cast<SVPropStructuralUnitEditWidget*>(m_propWidgets[M_BuildingStructuralUnitProperties]);
+			widget->setPropertyType((int)widget->currentPropertyType());
+		} break;
+		case SVViewState::PM_BuildingAcousticProperties : {
+			// enforce color update
+			SVPropAcosuticWidget *widget = qobject_cast<SVPropAcosuticWidget*>(m_propWidgets[M_BuildingAcousticProperties]);
 			widget->setPropertyType((int)widget->currentPropertyType());
 		} break;
 
@@ -137,8 +161,20 @@ void SVPropertyWidget::setPropertyWidgetVisible(SVViewState::PropertyWidgetMode 
 			showPropertyWidget<SVPropBuildingEditWidget>(M_BuildingProperties);
 		} break;
 
+		case SVViewState::PM_BuildingAcousticProperties : {
+			showPropertyWidget<SVPropAcosuticWidget>(M_BuildingAcousticProperties);
+		} break;
+		case SVViewState::PM_BuildingStructuralUnitProperties : {
+			showPropertyWidget<SVPropStructuralUnitEditWidget>(M_BuildingStructuralUnitProperties);
+		} break;
 		case SVViewState::PM_NetworkProperties : {
 			showPropertyWidget<SVPropNetworkEditWidget>(M_NetworkProperties);
+		} break;
+
+		case SVViewState::PM_ResultsProperties : {
+			showPropertyWidget<SVPropResultsWidget>(M_ResultsWidget);
+			qobject_cast<SVPropResultsWidget*>(m_propWidgets[M_ResultsWidget])->refreshDirectory();
+			qobject_cast<SVPropResultsWidget*>(m_propWidgets[M_ResultsWidget])->updateColors(0); // ensure color update, also when results dir is empty
 		} break;
 	}
 }

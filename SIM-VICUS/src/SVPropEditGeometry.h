@@ -30,7 +30,7 @@
 
 #include <IBKMK_Vector3D.h>
 
-#include <Vic3DGridObject.h>
+#include <VICUS_Drawing.h>
 #include <Vic3DTransform3D.h>
 
 namespace VICUS {
@@ -88,6 +88,14 @@ public:
 		OM_Local,
 		OM_Global,
 		NUM_OM
+	};
+
+	enum ScaleUnit {
+		SU_Meter,
+		SU_Decimeter,
+		SU_Centimeter,
+		SU_Millimeter,
+		NUM_SU
 	};
 
 	explicit SVPropEditGeometry(QWidget *parent = nullptr);
@@ -208,6 +216,9 @@ private slots:
 	void on_pushButtonApplyRotation_clicked();
 	void on_pushButtonApplyTrimmingRotation_clicked();
 
+	void on_comboBoxUnit_currentIndexChanged(int);
+	void on_pushButtonFixSurfaceOrientation_clicked();
+
 private:
 	/*! Updates the property widget regarding to all geometry data.
 		This function is called whenever the selection has changed, and when surface geometry (of selected surfaces)
@@ -298,6 +309,7 @@ private:
 	std::vector<const VICUS::Surface*>			m_selSurfaces;
 	std::vector<const VICUS::SubSurface*>		m_selSubSurfaces;
 
+	std::vector<const VICUS::Drawing*>			m_selDrawings;
 
 	std::set<QString>					m_subSurfNames;
 	std::set<QString>					m_surfNames;

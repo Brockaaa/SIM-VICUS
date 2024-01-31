@@ -24,6 +24,7 @@
 */
 
 #include "SVDatabaseEditDialog.h"
+#include "SVPreferencesDialog.h"
 #include "ui_SVDatabaseEditDialog.h"
 
 #include <QItemSelectionModel>
@@ -33,9 +34,11 @@
 #include <QGroupBox>
 #include <QTimer>
 #include <QSplitter>
+#include <QScreen>
 
 #include "SVSettings.h"
 #include "SVStyle.h"
+#include "SVPreferencesPageStyle.h"
 #include "SVConstants.h"
 #include "SVDBModelDelegate.h"
 #include "SVMainWindow.h"
@@ -46,6 +49,8 @@
 
 #include "SVDBMaterialTableModel.h"
 #include "SVDBMaterialEditWidget.h"
+#include "SVDBEpdTableModel.h"
+#include "SVDBEpdEditWidget.h"
 #include "SVDBConstructionTableModel.h"
 #include "SVDBConstructionEditWidget.h"
 #include "SVDBComponentTableModel.h"
@@ -56,6 +61,10 @@
 #include "SVDBWindowEditWidget.h"
 #include "SVDBWindowGlazingSystemTableModel.h"
 #include "SVDBWindowGlazingSystemEditWidget.h"
+#include "SVDBAcousticBoundaryConditionEditWidget.h"
+#include "SVDBAcousticBoundaryConditionTableModel.h"
+#include "SVDBAcousticSoundAbsorptionEditWidget.h"
+#include "SVDBAcousticSoundAbsorptionTableModel.h"
 #include "SVDBBoundaryConditionTableModel.h"
 #include "SVDBBoundaryConditionEditWidget.h"
 #include "SVDBScheduleTableModel.h"
@@ -122,6 +131,14 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 
 	setWindowTitle(title);
 
+	// set initial screen size
+	QScreen *screen = QGuiApplication::primaryScreen();
+	Q_ASSERT(screen!=nullptr);
+	m_screenSize = screen->size();
+
+	// connect to main window to recognise if main screen has changed
+	connect(&SVMainWindow::instance(), &SVMainWindow::screenHasChanged, this, &SVDatabaseEditDialog::onScreenChanged);
+
 	SVStyle::formatDatabaseTableView(m_ui->tableView);
 	m_ui->tableView->horizontalHeader()->setVisible(true);
 
@@ -171,6 +188,21 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 	m_ui->tableView->setItemDelegate(dg);
 
 	m_ui->tableView->installEventFilter(this);
+
+	connect(SVMainWindow::instance().preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged, this, &SVDatabaseEditDialog::onStyleChanged);
+
+	// modify frames and update colors
+	m_ui->frameBuildInDB->setFrameShape(QFrame::NoFrame);
+	m_ui->frameUserDB->setFrameShape(QFrame::NoFrame);
+	// this update colors of frames but also the table view selection color
+	onStyleChanged();
+
+
+	for (int i=0; i<m_dbModel->columnCount(); ++i){
+		QString name = m_dbModel->headerData(i, Qt::Horizontal).toString();
+		if (name == "") continue; // Skip valid column
+		m_ui->comboBoxColumn->addItem(name, i);
+	}
 }
 
 
@@ -186,6 +218,11 @@ void SVDatabaseEditDialog::edit(unsigned int initialId) {
 	m_ui->pushButtonSelect->setVisible(false);
 	m_ui->pushButtonCancel->setVisible(false);
 	m_ui->pushButtonRemoveUnusedElements->setEnabled(SVProjectHandler::instance().isValid());
+
+	// hide buttons that require a project if we do not have any
+	bool haveProject = SVProjectHandler::instance().isValid();
+	m_ui->toolButtonStoreInUserDB->setVisible(haveProject);
+	m_ui->toolButtonRemoveFromUserDB->setVisible(haveProject);
 
 	// ask database model to update its content
 	m_dbModel->resetModel(); // ensure we use up-to-date data (in case the database data has changed elsewhere)
@@ -204,18 +241,25 @@ void SVDatabaseEditDialog::edit(unsigned int initialId) {
 }
 
 
-unsigned int SVDatabaseEditDialog::select(unsigned int initialId) {
+unsigned int SVDatabaseEditDialog::select(unsigned int initialId, bool resetModel,  QString filterText, int filterColumn) {
 
 	m_ui->pushButtonClose->setVisible(false);
 	m_ui->pushButtonSelect->setVisible(true);
 	m_ui->pushButtonCancel->setVisible(true);
 	m_ui->pushButtonRemoveUnusedElements->setEnabled(SVProjectHandler::instance().isValid());
 
-	m_dbModel->resetModel(); // ensure we use up-to-date data (in case the database data has changed elsewhere)
+	if(resetModel)
+		m_dbModel->resetModel(); // ensure we use up-to-date data (in case the database data has changed elsewhere)
 	selectItemById(initialId);
 	onCurrentIndexChanged(m_ui->tableView->currentIndex(), QModelIndex()); // select nothing
 
 	m_ui->tableView->resizeColumnsToContents();
+
+	if(filterColumn > 1 && !filterText.isEmpty()) {
+		m_currentFilter = filterText;
+		m_proxyModel->setFilterKeyColumn(filterColumn);
+		m_proxyModel->setFilterWildcard(filterText);
+	}
 
 	// update "isRferenced" property of all elements
 	if (SVProjectHandler::instance().isValid()){
@@ -235,19 +279,24 @@ unsigned int SVDatabaseEditDialog::select(unsigned int initialId) {
 		return sourceIndex.data(Role_Id).toUInt();
 	}
 
+	m_proxyModel->setFilterWildcard("");
+	m_currentFilter = ""; // Reset filter
+
 	// nothing selected/dialog aborted
 	return initialId;
 }
 
 bool SVDatabaseEditDialog::eventFilter(QObject * obj, QEvent * event) {
 	if(obj == m_ui->tableView && event->type() == QEvent::Resize) {
-		m_ui->tableView->resizeRowsToContents();
+		// m_ui->tableView->resizeRowsToContents();
 	}
 	return QObject::eventFilter(obj, event);
 }
 
 
 void SVDatabaseEditDialog::on_pushButtonSelect_clicked() {
+	// TODO: check this, performance problem
+//	writeUserDB();
 	accept();
 }
 
@@ -258,11 +307,14 @@ void SVDatabaseEditDialog::on_pushButtonCancel_clicked() {
 
 
 void SVDatabaseEditDialog::on_pushButtonClose_clicked() {
+	// TODO: check this, performance problem
+//	writeUserDB();
 	accept();
 }
 
 
 void SVDatabaseEditDialog::on_toolButtonAdd_clicked() {
+	m_ui->toolButtonAdd->setFocus(); // move focus to trigger "leave" events in line edits
 	QModelIndex currentProxyIndex = m_ui->tableView->currentIndex();
 	// add new item
 	QModelIndex sourceIndex = m_dbModel->addNewItem();
@@ -283,6 +335,7 @@ void SVDatabaseEditDialog::on_toolButtonAdd_clicked() {
 
 
 void SVDatabaseEditDialog::on_toolButtonCopy_clicked() {
+	m_ui->toolButtonCopy->setFocus(); // move focus to trigger "leave" events in line edits
 	// determine current item
 	QModelIndex currentProxyIndex = m_ui->tableView->currentIndex();
 	Q_ASSERT(currentProxyIndex.isValid());
@@ -300,6 +353,7 @@ void SVDatabaseEditDialog::on_toolButtonCopy_clicked() {
 
 
 void SVDatabaseEditDialog::on_toolButtonRemove_clicked() {
+	m_ui->toolButtonRemove->setFocus(); // move focus to trigger "leave" events in line edits
 	QModelIndex currentProxyIndex = m_ui->tableView->currentIndex();
 	Q_ASSERT(currentProxyIndex.isValid());
 	QModelIndex sourceIndex = m_proxyModel->mapToSource(currentProxyIndex);
@@ -358,8 +412,11 @@ void SVDatabaseEditDialog::on_pushButtonReloadUserDB_clicked() {
 			case SVDatabase::DT_Constructions:			SVSettings::instance().m_db.m_constructions.removeUserElements(); break;
 			case SVDatabase::DT_Windows:				SVSettings::instance().m_db.m_windows.removeUserElements(); break;
 			case SVDatabase::DT_WindowGlazingSystems:	SVSettings::instance().m_db.m_windowGlazingSystems.removeUserElements(); break;
+			case SVDatabase::DT_AcousticBoundaryConditions:		SVSettings::instance().m_db.m_acousticBoundaryConditions.removeUserElements(); break;
+			case SVDatabase::DT_AcousticSoundAbsorptions:		SVSettings::instance().m_db.m_acousticSoundAbsorptions.removeUserElements(); break;
 			case SVDatabase::DT_BoundaryConditions:		SVSettings::instance().m_db.m_boundaryConditions.removeUserElements(); break;
 			case SVDatabase::DT_Components:				SVSettings::instance().m_db.m_components.removeUserElements(); break;
+			case SVDatabase::DT_EpdDatasets:			SVSettings::instance().m_db.m_epdDatasets.removeUserElements(); break;
 			case SVDatabase::DT_SubSurfaceComponents:	SVSettings::instance().m_db.m_subSurfaceComponents.removeUserElements(); break;
 			case SVDatabase::DT_SurfaceHeating:			SVSettings::instance().m_db.m_surfaceHeatings.removeUserElements(); break;
 			case SVDatabase::DT_Pipes:					SVSettings::instance().m_db.m_pipes.removeUserElements(); break;
@@ -377,7 +434,11 @@ void SVDatabaseEditDialog::on_pushButtonReloadUserDB_clicked() {
 			case SVDatabase::DT_VentilationNatural:		SVSettings::instance().m_db.m_ventilationNatural.removeUserElements(); break;
 			case SVDatabase::DT_Infiltration:			SVSettings::instance().m_db.m_infiltration.removeUserElements(); break;
 			case SVDatabase::DT_ZoneTemplates:			SVSettings::instance().m_db.m_zoneTemplates.removeUserElements(); break;
+			case SVDatabase::DT_AcousticTemplates:		SVSettings::instance().m_db.m_acousticTemplates.removeUserElements(); break;
+			case SVDatabase::DT_AcousticSoundProtectionTemplates:	SVSettings::instance().m_db.m_acousticSoundProtectionTemplates.removeUserElements(); break;
+			case SVDatabase::DT_AcousticBuildingTemplates: SVSettings::instance().m_db.m_acousticBuildingTemplates.removeUserElements(); break;
 			case SVDatabase::NUM_DT:; // just to make compiler happy
+			break;
 		}
 
 		SVSettings::instance().m_db.readDatabases(m_dbModel->databaseType()); // by default the "m_isReferenced" property is off after reading the user DB
@@ -395,6 +456,7 @@ void SVDatabaseEditDialog::on_pushButtonReloadUserDB_clicked() {
 
 
 void SVDatabaseEditDialog::on_toolButtonStoreInUserDB_clicked() {
+	m_ui->toolButtonStoreInUserDB->setFocus(); // move focus to trigger "leave" events in line edits
 	QModelIndex currentProxyIndex = m_ui->tableView->currentIndex();
 	Q_ASSERT(currentProxyIndex.isValid());
 	QModelIndex sourceIndex = m_proxyModel->mapToSource(currentProxyIndex);
@@ -420,6 +482,7 @@ void SVDatabaseEditDialog::on_toolButtonStoreInUserDB_clicked() {
 
 
 void SVDatabaseEditDialog::on_toolButtonRemoveFromUserDB_clicked() {
+	m_ui->toolButtonRemoveFromUserDB->setFocus(); // move focus to trigger "leave" events in line edits
 	QModelIndex currentProxyIndex = m_ui->tableView->currentIndex();
 	Q_ASSERT(currentProxyIndex.isValid());
 	QModelIndex sourceIndex = m_proxyModel->mapToSource(currentProxyIndex);
@@ -448,6 +511,12 @@ void SVDatabaseEditDialog::on_pushButtonRemoveUnusedElements_clicked() {
 }
 
 
+void SVDatabaseEditDialog::onStyleChanged() {
+	m_ui->frameBuildInDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_alternativeBackgroundBright.name()));
+	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundBright.name()));
+}
+
+
 void SVDatabaseEditDialog::selectItemById(unsigned int id) {
 	// select item with given id
 	for (int i=0, count = m_dbModel->rowCount(); i<count; ++i) {
@@ -466,6 +535,37 @@ void SVDatabaseEditDialog::selectItemById(unsigned int id) {
 }
 
 
+void SVDatabaseEditDialog::writeUserDB() {
+	// write db if modified
+	const SVDatabase &db = SVSettings::instance().m_db;
+	if ((m_dbModel->databaseType() == SVDatabase::DT_Materials && db.m_materials.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_Constructions && db.m_constructions.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_Windows && db.m_windows.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_WindowGlazingSystems && db.m_windowGlazingSystems.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_BoundaryConditions && db.m_boundaryConditions.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_AcousticSoundAbsorptions && db.m_acousticSoundAbsorptions.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_AcousticBoundaryConditions && db.m_acousticBoundaryConditions.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_Components && db.m_components.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_SubSurfaceComponents && db.m_subSurfaceComponents.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_SurfaceHeating && db.m_surfaceHeatings.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_Pipes && db.m_pipes.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_Fluids && db.m_fluids.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_NetworkComponents && db.m_networkComponents.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_NetworkControllers && db.m_networkControllers.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_SubNetworks && db.m_subNetworks.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_SupplySystems && db.m_supplySystems.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_Schedules && db.m_schedules.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_InternalLoads && db.m_internalLoads.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_ZoneControlThermostat && db.m_zoneControlThermostat.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_ZoneControlShading && db.m_zoneControlShading.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_ZoneControlNaturalVentilation && db.m_zoneControlVentilationNatural.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_ZoneIdealHeatingCooling && db.m_zoneIdealHeatingCooling.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_VentilationNatural && db.m_ventilationNatural.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_Infiltration && db.m_infiltration.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_ZoneTemplates && db.m_zoneTemplates.m_modified) ||
+		(m_dbModel->databaseType() == SVDatabase::DT_AcousticTemplates && db.m_acousticTemplates.m_modified) )
+	db.writeDatabases(m_dbModel->databaseType());
+}
 
 
 
@@ -477,7 +577,15 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createMaterialEditDialog(QWidget * 
 		new SVDBMaterialEditWidget(parent),
 		tr("Material Database"), tr("Material properties"), true
 	);
-	dlg->resize(1400,600);
+	return dlg;
+}
+
+SVDatabaseEditDialog * SVDatabaseEditDialog::createEpdEditDialog(QWidget * parent) {
+	SVDatabaseEditDialog * dlg = new SVDatabaseEditDialog(parent,
+		new SVDBEpdTableModel(parent, SVSettings::instance().m_db),
+		new SVDBEpdEditWidget(parent),
+		tr("EPD Database"), tr("EPD properties"), true
+	);
 	return dlg;
 }
 
@@ -486,9 +594,8 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createConstructionEditDialog(QWidge
 	SVDatabaseEditDialog * dlg = new SVDatabaseEditDialog(parent,
 		new SVDBConstructionTableModel(parent, SVSettings::instance().m_db),
 		new SVDBConstructionEditWidget(parent),
-		tr("Construction Database"), QString(), false
+		tr("Construction Database"), QString(), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -499,7 +606,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createComponentEditDialog(QWidget *
 		new SVDBComponentEditWidget(parent),
 		tr("Component Database"), tr("Component properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -510,7 +616,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createSubSurfaceComponentEditDialog
 		new SVDBSubSurfaceComponentEditWidget(parent),
 		tr("Sub-Surface Component Database"), tr("Sub-Surface properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -521,7 +626,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createWindowEditDialog(QWidget * pa
 		new SVDBWindowEditWidget(parent),
 		tr("Window Database"), tr("Window properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -531,7 +635,26 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createWindowGlazingSystemEditDialog
 		new SVDBWindowGlazingSystemEditWidget(parent),
 		tr("Window glazing system Database"), tr("Window glazing system properties"), true
 	);
-	dlg->resize(1400,800);
+	return dlg;
+}
+
+SVDatabaseEditDialog * SVDatabaseEditDialog::createAcousticBoundaryConditionEditDialog(QWidget * parent){
+	SVDatabaseEditDialog * dlg = new SVDatabaseEditDialog(parent,
+		new SVDBAcousticBoundaryConditionTableModel(parent, SVSettings::instance().m_db),
+		new SVDBAcousticBoundaryConditionEditWidget(parent),
+		tr("Acoustic boundary conditions Database"), tr("Acoustic boundary conditions properties"), true
+	);
+	//resizeDBDialog(dlg);
+	return dlg;
+}
+
+SVDatabaseEditDialog * SVDatabaseEditDialog::createAcousticSoundAbsorptionEditDialog(QWidget * parent){
+	SVDatabaseEditDialog * dlg = new SVDatabaseEditDialog(parent,
+														  new SVDBAcousticSoundAbsorptionTableModel(parent, SVSettings::instance().m_db),
+														  new SVDBAcousticSoundAbsorptionEditWidget(parent),
+														  tr("Acoustic sound absorption Database"), tr("Acoustic sound absorption properties"), true
+														  );
+	//resizeDBDialog(dlg);
 	return dlg;
 }
 
@@ -541,7 +664,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createBoundaryConditionsEditDialog(
 		new SVDBBoundaryConditionEditWidget(parent),
 		tr("Boundary Condition Database"), tr("Boundary condition properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -552,7 +674,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createScheduleEditDialog(QWidget * 
 		new SVDBScheduleEditWidget(parent),
 		tr("Schedule Database"), tr("Schedule properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -587,7 +708,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createInternalLoadsEditDialog(QWidg
 		default:
 			Q_ASSERT(false);
 	}
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -597,7 +717,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createZoneControlThermostatEditDialo
 		new SVDBZoneControlThermostatEditWidget(parent),
 		tr("Zone Control Thermostat Database"), tr("Zone control thermostat properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -607,7 +726,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createZoneControlVentilationNaturalE
 		new SVDBZoneControlVentilationNaturalEditWidget(parent),
 		tr("Zone Control Natural Ventilation Database"), tr("Zone Control Natural Ventilation properties"), true
 		);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -617,7 +735,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createZoneControlShadingEditDialog(Q
 		new SVDBZoneControlShadingEditWidget(parent),
 		tr("Zone Control Shading Database"), tr("Zone Control Shading properties"), true
 		);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -627,7 +744,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createZoneIdealHeatingCoolingEditDia
 										  new SVDBZoneIdealHeatingCoolingEditWidget(parent),
 										  tr("Zone Ideal Heating/Cooling Database"), tr("Zone Ideal Heating/Cooling properties"), true
 										  );
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -637,7 +753,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createVentilationNaturalEditDialog(Q
 		new SVDBVentilationNaturalEditWidget(parent),
 		tr("Natural Ventilation Database"), tr("Natural Ventilation properties"), true
 		);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -647,7 +762,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createInfiltrationEditDialog(QWidget
 		new SVDBInfiltrationEditWidget(parent),
 		tr("Infiltration Database"), tr("Infiltration properties"), true
 		);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -658,7 +772,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createSurfaceHeatingSystemEditDialog
 										  tr("Surface Heating/Cooling System Database"),
 														  tr("Surface Heating/Cooling System properties"), true
 										  );
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -669,7 +782,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createSupplySystemsEditDialog(QWidg
 		new SVDBSupplySystemEditWidget(parent),
 		tr("Supply System Database"), tr("Supply system properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -680,7 +792,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createNetworkComponentEditDialog(QW
 		new SVDBNetworkComponentEditWidget(parent),
 		tr("Network Component Database"), tr("Network Component Properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -691,7 +802,6 @@ SVDatabaseEditDialog * SVDatabaseEditDialog::createPipeEditDialog(QWidget * pare
 		new SVDBPipeEditWidget(parent),
 		tr("Network Pipes Database"), tr("Network Pipes Properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -702,7 +812,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createFluidEditDialog(QWidget *paren
 		new SVDBNetworkFluidEditWidget(parent),
 		tr("Network Fluids Database"), tr("Network Fluids Properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -713,7 +822,6 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createNetworkControllerEditDialog(QW
 		new SVDBNetworkControllerEditWidget(parent),
 		tr("Network Controllers Database"), tr("Network Controllers Properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
 
@@ -724,6 +832,47 @@ SVDatabaseEditDialog *SVDatabaseEditDialog::createSubNetworkEditDialog(QWidget *
 		new SVDBSubNetworkEditWidget(parent),
 		tr("Sub Networks Database"), tr("Sub Networks Properties"), true
 	);
-	dlg->resize(1400,800);
 	return dlg;
 }
+
+
+void SVDatabaseEditDialog::resizeDBDialog(double maxShareTableView) {
+	// set dialog size
+	this->resize(int(0.8*m_screenSize.width()), int(0.8*m_screenSize.height()));
+	// set max share that is occupied by table view
+	double w = this->size().width();
+	m_ui->groupBoxTableView->setMaximumWidth(int(w*maxShareTableView));
+}
+
+
+SVAbstractDatabaseTableModel * SVDatabaseEditDialog::dbModel() const {
+	return m_dbModel;
+}
+
+
+void SVDatabaseEditDialog::on_toolButtonApplyFilter_clicked() {
+	QString filter = m_ui->lineEditFilter->text();
+
+	// Filter Column
+	int filterCol = m_ui->comboBoxColumn->currentData().toInt();
+
+	// Set filter
+	m_proxyModel->setFilterWildcard(filter);
+	m_proxyModel->setFilterKeyColumn(filterCol);
+	m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+}
+
+void SVDatabaseEditDialog::on_comboBoxColumn_currentIndexChanged(int /*index*/) {
+	m_proxyModel->setFilterWildcard("");
+}
+
+
+void SVDatabaseEditDialog::on_lineEditFilter_returnPressed() {
+	on_toolButtonApplyFilter_clicked();
+}
+
+
+void SVDatabaseEditDialog::onScreenChanged(const QScreen *screen) {
+	m_screenSize = screen->size();
+}
+

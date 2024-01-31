@@ -34,6 +34,8 @@
 #include <SVConversions.h>
 
 #include <VICUS_KeywordListQt.h>
+#include <VICUS_KeywordList.h>
+#include <VICUS_Construction.h>
 
 #include "SVStyle.h"
 #include "SVConstants.h"
@@ -54,13 +56,17 @@ SVDBConstructionEditWidget::SVDBConstructionEditWidget(QWidget * parent) :
 	m_ui->lineEditName->initLanguages(QtExt::LanguageHandler::instance().langId().toStdString(), THIRD_LANGUAGE, true);
 	m_ui->lineEditName->setDialog3Caption(tr("Construction identification name"));
 
-	m_ui->tableWidget->setColumnCount(5);
+	m_ui->lineEditDataSource->initLanguages(QtExt::LanguageHandler::instance().langId().toStdString(), THIRD_LANGUAGE, true);
+	m_ui->lineEditDataSource->setDialog3Caption(tr("Construction data-source name"));
+
+	m_ui->tableWidget->setColumnCount(5+2); // 2 added for cost and lifetime
 	SVStyle::formatDatabaseTableView(m_ui->tableWidget);
 	m_ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectItems);
 	m_ui->tableWidget->setSortingEnabled(false);
 
 	QStringList headerLabels;
-	headerLabels << tr("Material") << tr("Width [cm]") << tr("rho [kg/m3]") << tr("cT [J/kgK]") << tr("lambda [W/mK]");
+	headerLabels << tr("Material") << tr("Width [cm]") << tr("rho [kg/m3]") << tr("cT [J/kgK]")
+				 << tr("lambda [W/mK]") << tr("lifetime [a]") << tr("cost [€/m2]") ;
 	m_ui->tableWidget->setHorizontalHeaderLabels(headerLabels);
 
 	m_ui->tableWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
@@ -116,7 +122,7 @@ SVDBConstructionEditWidget::SVDBConstructionEditWidget(QWidget * parent) :
 	connect(m_ui->widgetConstructionView, SIGNAL(moveLayer(int,bool)), this, SLOT(constructionViewMove_layer(int,bool)));
 	connect(m_ui->widgetConstructionView, SIGNAL(removelayer(int)), this, SLOT(constructionViewRemove_layer(int)));
 
-	setMinimumWidth(800); /// TODO : this should be font-size dependent?
+	setMinimumWidth(500); /// TODO : this should be font-size dependent?
 
 	updateInput(-1); // update widget for status "nothing selected"
 }
@@ -148,6 +154,11 @@ void SVDBConstructionEditWidget::updateInput(int id) {
 
 		// disable the line edits (they change background color)
 		m_ui->lineEditName->setEnabled(false);
+		m_ui->lineEditDataSource->setEnabled(false);
+		m_ui->lineEditImpactSound->setEnabled(false);
+		m_ui->lineEditAirSoundRes->setEnabled(false);
+		m_ui->label_9->setEnabled(false);
+		m_ui->label_10->setEnabled(false);
 
 		m_ui->comboBoxMaterialKind->setCurrentIndex(-1);
 		m_ui->comboBoxInsulationKind->setCurrentIndex(-1);
@@ -167,6 +178,14 @@ void SVDBConstructionEditWidget::updateInput(int id) {
 
 	// construction name and layer count
 	m_ui->lineEditName->setString(con->m_displayName);
+	m_ui->lineEditDataSource->setString(con->m_dataSource);
+
+	double impactSoundValue = con->m_acousticPara[VICUS::Construction::P_ImpactSoundValue].value;
+	m_ui->lineEditImpactSound->setValue(impactSoundValue);
+
+	double airSoundResValue = con->m_acousticPara[VICUS::Construction::P_AirSoundResistanceValue].value;
+	m_ui->lineEditAirSoundRes->setValue(airSoundResValue);
+
 	int n = std::max<int>(1, con->m_materialLayers.size());
 	m_ui->spinBoxLayerCount->setValue(n);
 
@@ -186,10 +205,16 @@ void SVDBConstructionEditWidget::updateInput(int id) {
 
 	// update read-only/enabled states
 	m_ui->lineEditName->setEnabled(!con->m_builtIn);
+	m_ui->lineEditDataSource->setEnabled(!con->m_builtIn);
+	m_ui->lineEditImpactSound->setEnabled(!con->m_builtIn);
+	m_ui->lineEditAirSoundRes->setEnabled(!con->m_builtIn);
+	m_ui->label_9->setEnabled(!con->m_builtIn);
+	m_ui->label_10->setEnabled(!con->m_builtIn);
 	m_ui->spinBoxLayerCount->setEnabled(!con->m_builtIn);
 	m_ui->comboBoxInsulationKind->setEnabled(!con->m_builtIn);
 	m_ui->comboBoxMaterialKind->setEnabled(!con->m_builtIn);
 	m_ui->comboBoxConstructionUsage->setEnabled(!con->m_builtIn);
+	m_ui->pushButtonFlipConstruction->setEnabled(!con->m_builtIn);
 
 	// set palette
 	QPalette pal;
@@ -239,7 +264,7 @@ void SVDBConstructionEditWidget::updateTable() {
 			}
 			m_ui->tableWidget->setItem(i+1,0,item);
 
-			item = new QTableWidgetItem(QString("%L1").arg(layer.m_thickness.value*100, 0, 'f', 1)); // thickness in cm
+			item = new QTableWidgetItem(QString("%L1").arg(layer.m_para[VICUS::MaterialLayer::P_Thickness].value*100, 0, 'f', 1)); // thickness in cm
 			item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
 			if (m_current->m_builtIn) {
 				item->setFlags(Qt::ItemIsEnabled);
@@ -265,12 +290,45 @@ void SVDBConstructionEditWidget::updateTable() {
 			item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
 			item->setBackground(QBrush(SVStyle::instance().m_readOnlyEditFieldBackground));
 			m_ui->tableWidget->setItem(i+1,4,item);
+
+			QString string;
+			if (layer.m_para[VICUS::MaterialLayer::P_LifeTime].empty())
+				string = "-"; // if no value has been set, we show just '-'
+			else
+				string = QString("%L1").arg(layer.m_para[VICUS::MaterialLayer::P_LifeTime].get_value("a"), 0, 'f', 1); // MIND: We store all cost in EuroCent ergo /100
+			item = new QTableWidgetItem(string);
+			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+			m_ui->tableWidget->setItem(i+1,5,item);
+			item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+			if (m_current->m_builtIn) {
+				item->setFlags(Qt::ItemIsEnabled);
+				item->setBackground(QBrush(SVStyle::instance().m_readOnlyEditFieldBackground));
+			}
+			else {
+				item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+			}
+
+			if (layer.m_cost.empty())
+				string = "-";
+			else
+				string = QString("%L1").arg((double)layer.m_cost.value/100, 0, 'f', 1);
+			item = new QTableWidgetItem(string);
+			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+			m_ui->tableWidget->setItem(i+1,6,item);
+			item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+			if (m_current->m_builtIn) {
+				item->setFlags(Qt::ItemIsEnabled);
+				item->setBackground(QBrush(SVStyle::instance().m_readOnlyEditFieldBackground));
+			}
+			else {
+				item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+			}
 		}
 		else {
 			QTableWidgetItem * item = new QTableWidgetItem(tr("<select material>"));
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
 			m_ui->tableWidget->setItem(i+1,0,item);
-			item = new QTableWidgetItem(QString("%L1").arg(layer.m_thickness.value*100, 0, 'f', 1));
+			item = new QTableWidgetItem(QString("%L1").arg(layer.m_para[VICUS::MaterialLayer::P_Thickness].value*100, 0, 'f', 1));
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
 			m_ui->tableWidget->setItem(i+1,1,item);
 			item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -287,6 +345,21 @@ void SVDBConstructionEditWidget::updateTable() {
 			item->setFlags(Qt::ItemIsEnabled);
 			m_ui->tableWidget->setItem(i+1,4,item);
 			item->setBackground(QBrush(SVStyle::instance().m_readOnlyEditFieldBackground));
+
+			item = new QTableWidgetItem(QString("%L1").arg((double)layer.m_cost.value/100, 0, 'f', 2));
+			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+			m_ui->tableWidget->setItem(i+1,5,item);
+			item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+			QString string;
+			if (layer.m_para[VICUS::MaterialLayer::P_LifeTime].empty())
+				string = "";
+			else
+				string = QString("%L1").arg(layer.m_para[VICUS::MaterialLayer::P_LifeTime].get_value("a"), 0, 'f', 1);
+			item = new QTableWidgetItem(string);
+			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+			m_ui->tableWidget->setItem(i+1,6,item);
+			item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
 		}
 	}
 
@@ -327,7 +400,7 @@ void SVDBConstructionEditWidget::updateConstructionView() {
 			layer.m_name = tr("<select material>");
 		}
 
-		layer.m_width = m_current->m_materialLayers[i].m_thickness.value;
+		layer.m_width = m_current->m_materialLayers[i].m_para[VICUS::MaterialLayer::P_Thickness].value;
 //		if (!layer.m_color.isValid())
 			layer.m_color = QtExt::ConstructionView::ColorList[i % 12];
 		layer.m_id = (int)matID;
@@ -408,44 +481,98 @@ void SVDBConstructionEditWidget::on_comboBoxConstructionUsage_currentIndexChange
 
 // change layer thickness
 void SVDBConstructionEditWidget::tableItemChanged(QTableWidgetItem * item) {
-	Q_ASSERT(item->column() == 1);
+	Q_ASSERT(item->column() == 1 || item->column() == 5 || item->column() == 6);
 	Q_ASSERT(m_current != nullptr);
 
 	bool ok;
 	double val = QtExt::Locale().toDouble(item->text(), &ok); // val in cm
 	int row = item->row();
+	int col = item->column();
+
 	unsigned int materialLayerIdx = (unsigned int)row - 1; // Mind: first row is "outside" marker
-	Q_ASSERT(materialLayerIdx < m_current->m_materialLayers.size());
-	if (!ok || val < 0.1) {
-		if (!ok) {
-			QTableWidgetItem * item2 = m_ui->tableWidget->item(row, 1);
-			item2->setBackground(QBrush(SVStyle::instance().m_errorEditFieldBackground));
-			item2->setToolTip(tr("Invalid number format, please enter a valid decimal number!"));
-			//m_ui->tableWidget->setItem(row, 1, item2);
+	if(col == 1) {
+		Q_ASSERT(materialLayerIdx < m_current->m_materialLayers.size());
+		if (!ok || val < 0.1) {
+			if (!ok) {
+				QTableWidgetItem * item2 = m_ui->tableWidget->item(row, col);
+				item2->setBackground(QBrush(SVStyle::instance().m_errorEditFieldBackground));
+				item2->setToolTip(tr("Invalid number format, please enter a valid decimal number!"));
+				//m_ui->tableWidget->setItem(row, 1, item2);
+			}
+			else {
+				QTableWidgetItem * item2 = m_ui->tableWidget->item(row, col);
+				item2->setBackground(QBrush(SVStyle::instance().m_errorEditFieldBackground));
+				item2->setToolTip(tr("Layer widths must be larger than 1 mm. Ignore smaller layers, "
+									 "they will not affect the thermal storage mass!"));
+				//m_ui->tableWidget->setItem(row, 1, item2);
+			}
+			updateUValue();
+			m_dbModel->setItemModified(m_current->m_id); // tell model that we changed the data
+			return;
 		}
 		else {
-			QTableWidgetItem * item2 = m_ui->tableWidget->item(row, 1);
-			item2->setBackground(QBrush(SVStyle::instance().m_errorEditFieldBackground));
-			item2->setToolTip(tr("Layer widths must be larger than 1 mm. Ignore smaller layers, "
-								 "they will not affect the thermal storage mass!"));
-			//m_ui->tableWidget->setItem(row, 1, item2);
+			QTableWidgetItem * item2 = m_ui->tableWidget->item(row, col);
+			item2->setBackground(QBrush());
+		}
+		double valM = val / 100.0; // internal thickness in m
+		// we only accept changes up to 0.1 mm as different
+		if (!IBK::nearly_equal<4>(m_current->m_materialLayers[materialLayerIdx].m_para[VICUS::MaterialLayer::P_Thickness].value, valM)) {
+			m_current->m_materialLayers[materialLayerIdx].m_para[VICUS::MaterialLayer::P_Thickness].value = valM;
+			modelModify();
 		}
 		updateUValue();
+		updateConstructionView();
+	}
+	else if(col == 5) { // Lifetime
+		if(!ok || val < 0.0) {
+			if(!ok) {
+				QTableWidgetItem * item2 = m_ui->tableWidget->item(row, col);
+				item2->setBackground(QBrush(SVStyle::instance().m_errorEditFieldBackground));
+				item2->setToolTip(tr("Invalid number format, please enter a valid decimal number!"));
+			}
+			else {
+				QTableWidgetItem * item2 = m_ui->tableWidget->item(row, col);
+				item2->setBackground(QBrush(SVStyle::instance().m_errorEditFieldBackground));
+				item2->setToolTip(tr("Layer lifetime must be greater than 0 a."));
+				//m_ui->tableWidget->setItem(row, 1, item2);
+			}
+			return;
+		}
+		else {
+			QTableWidgetItem * item2 = m_ui->tableWidget->item(row, col);
+			item2->setBackground(QBrush());
+		}
+		m_current->m_materialLayers[materialLayerIdx].m_para[VICUS::MaterialLayer::P_LifeTime].set("Lifetime", val, "a");
 		m_dbModel->setItemModified(m_current->m_id); // tell model that we changed the data
-		return;
-	}
-	else {
-		QTableWidgetItem * item2 = m_ui->tableWidget->item(row, 1);
-		item2->setBackground(QBrush());
-	}
-	double valM = val / 100.0; // internal thickness in m
-	// we only accept changes up to 0.1 mm as different
-	if (!IBK::nearly_equal<4>(m_current->m_materialLayers[materialLayerIdx].m_thickness.value, valM)) {
-		m_current->m_materialLayers[materialLayerIdx].m_thickness.value = valM;
 		modelModify();
 	}
-	updateUValue();
-	updateConstructionView();
+	else if(col == 6) { // Cost
+		if(!ok || val<0.0) {
+			if(!ok) {
+				QTableWidgetItem * item2 = m_ui->tableWidget->item(row, col);
+				item2->setBackground(QBrush(SVStyle::instance().m_errorEditFieldBackground));
+				item2->setToolTip(tr("Invalid number format, please enter a valid decimal number!"));
+			}
+			else {
+				QTableWidgetItem * item2 = m_ui->tableWidget->item(row, col);
+				item2->setBackground(QBrush(SVStyle::instance().m_errorEditFieldBackground));
+				item2->setToolTip(tr("Layer cost must be greater than 0.0 € per m<sup>2</sup>."));
+				//m_ui->tableWidget->setItem(row, 1, item2);
+			}
+
+			return;
+		}
+		else {
+			QTableWidgetItem * item2 = m_ui->tableWidget->item(row, col);
+			item2->setBackground(QBrush());
+		}
+		m_current->m_materialLayers[materialLayerIdx].m_cost.set("Cost", 100.0*val); // Convert back to Euro Cent
+		m_dbModel->setItemModified(m_current->m_id); // tell model that we changed the data
+		modelModify();
+	}
+
+	// Rounds the numbers inside the table for lifetime and cost
+	updateTable();
 }
 
 
@@ -593,3 +720,48 @@ void SVDBConstructionEditWidget::modelModify() {
 	m_db->m_constructions.m_modified = true;
 	m_dbModel->setItemModified(m_current->m_id); // tell model that we changed the data
 }
+
+
+void SVDBConstructionEditWidget::on_pushButtonFlipConstruction_clicked() {
+    // reverse construction layers
+    std::reverse(m_current->m_materialLayers.begin(), m_current->m_materialLayers.end());
+    // update preview
+    // ToDO Maik: Flip also coloring!
+    updateConstructionView();
+}
+
+void SVDBConstructionEditWidget::on_lineEditDataSource_editingFinished() {
+	Q_ASSERT(m_current != nullptr);
+
+	if (m_current->m_dataSource != m_ui->lineEditDataSource->string()) {
+		m_current->m_dataSource = m_ui->lineEditDataSource->string();
+		modelModify();
+	}
+}
+
+
+void SVDBConstructionEditWidget::on_lineEditImpactSound_editingFinished()
+{
+	Q_ASSERT(m_current != nullptr);
+
+	bool ok;
+	double value = m_ui->lineEditImpactSound->text().toDouble(&ok);
+	if(ok){
+		VICUS::KeywordList::setParameter(m_current->m_acousticPara, "Construction::para_t", VICUS::Construction::P_ImpactSoundValue, value);
+		modelModify();
+	}
+}
+
+
+void SVDBConstructionEditWidget::on_lineEditAirSoundRes_editingFinished()
+{
+	Q_ASSERT(m_current != nullptr);
+
+	bool ok;
+	double value = m_ui->lineEditAirSoundRes->text().toDouble(&ok);
+	if(ok){
+		VICUS::KeywordList::setParameter(m_current->m_acousticPara, "Construction::para_t", VICUS::Construction::P_AirSoundResistanceValue, value);
+		modelModify();
+	}
+}
+

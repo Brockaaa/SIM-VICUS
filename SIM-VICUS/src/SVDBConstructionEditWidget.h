@@ -105,7 +105,9 @@ private slots:
 	void on_comboBoxMaterialKind_currentIndexChanged(int index);
 	void on_comboBoxConstructionUsage_currentIndexChanged(int index);
 	void on_spinBoxLayerCount_valueChanged(int);
-	/*! Triggered when user modifies a table cell, only needed for 'width'-column. */
+    void on_pushButtonFlipConstruction_clicked();
+
+    /*! Triggered when user modifies a table cell, only needed for 'width'-column. */
 	void tableItemChanged(QTableWidgetItem *);
 	/*! Triggered when user modifies a table cell, only needed for 'width'-column. */
 	void tableItemClicked(QTableWidgetItem *);
@@ -126,6 +128,14 @@ private slots:
 
 	/*! Connected with construction view widget move layer signal.*/
 	void constructionViewMove_layer(int index, bool left);
+
+	void on_lineEditDataSource_editingFinished();
+
+	/*! Connected with lineEdit Impact Sound */
+	void on_lineEditImpactSound_editingFinished();
+
+	/*! Connected with lineEdit Air Sound Resistance */
+	void on_lineEditAirSoundRes_editingFinished();
 };
 
 #endif // SVDBConstructionEditWidgetH

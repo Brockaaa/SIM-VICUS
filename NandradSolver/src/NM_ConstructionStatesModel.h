@@ -47,24 +47,31 @@ class ConstructionStatesModel : public AbstractModel {
 public:
 
 	enum VectorValuedResults {
-		VVR_ElementTemperature,			// Keyword: ElementTemperature		[C]		'Finite-volume mean element temperature'
+		VVR_ElementTemperature,			// Keyword: ElementTemperature			[C]		'Finite-volume mean element temperature'
+		/*! The index key is the ID of the interconnected construction instance. */
+		VVR_EmittedLongWaveRadiationA,	// Keyword: EmittedLongWaveRadiationA	[W]		'Emitted internal long-wave radiation from side A.'
+		/*! The index key is the ID of the interconnected construction instance. */
+		VVR_EmittedLongWaveRadiationB,	// Keyword: EmittedLongWaveRadiationB	[W]		'Emitted internal long-wave radiation from side B.'
 		NUM_VVR
 	};
 
 	/// \todo maybe add integral quantities like total moisture mass stored in construction or total energy stored in construction
 	enum Results {
-		R_SurfaceTemperatureA,			// Keyword: SurfaceTemperatureA		[C]		'Surface temperature at interface A'
-		R_SurfaceTemperatureB,			// Keyword: SurfaceTemperatureB		[C]		'Surface temperature at interface B'
-		R_SolarRadiationFluxA,			// Keyword: SolarRadiationFluxA		[W/m2]	'Solar radiation flux density into surface A'
-		R_SolarRadiationFluxB,			// Keyword: SolarRadiationFluxB		[W/m2]	'Solar radiation flux density into surface B'
-		R_LongWaveRadiationFluxA,		// Keyword: LongWaveRadiationFluxA	[W/m2]	'Absorbed minus emitted long wave radiation flux density for surface A'
-		R_LongWaveRadiationFluxB,		// Keyword: LongWaveRadiationFluxB	[W/m2]	'Absorbed minus emitted long wave radiation flux density for surface B'
+		/// \todo add ActiveLayerTemperature as keyword quantity and remove m_activeLayerMeanTemperature
+		R_SurfaceTemperatureA,				// Keyword: SurfaceTemperatureA				[C]		'Surface temperature at interface A'
+		R_SurfaceTemperatureB,				// Keyword: SurfaceTemperatureB				[C]		'Surface temperature at interface B'
+		R_SolarRadiationFluxA,				// Keyword: SolarRadiationFluxA				[W/m2]	'Solar radiation flux density into surface A'
+		R_SolarRadiationFluxB,				// Keyword: SolarRadiationFluxB				[W/m2]	'Solar radiation flux density into surface B'
+		R_FluxLongWaveRadiationBalanceA,	// Keyword: FluxLongWaveRadiationBalanceA	[W/m2]	'Absorbed minus emitted ambient long wave radiation flux density for surface A'
+		R_FluxLongWaveRadiationBalanceB,	// Keyword: FluxLongWaveRadiationBalanceB	[W/m2]	'Absorbed minus emitted ambient long wave radiation flux density for surface B'
+		R_FluxEmittedLongWaveRadiationA,	// Keyword: FluxEmittedLongWaveRadiationA	[W/m2]	'Emitted long wave radiation flux density for surface A (sum of all emissions to all other inside surface)'
+		R_FluxEmittedLongWaveRadiationB,	// Keyword: FluxEmittedLongWaveRadiationB	[W/m2]	'Emitted long wave radiation flux density for surface B (sum of all emissions to all other inside surface)'
 		NUM_R
 	};
 
 	/*! Constructor */
 	ConstructionStatesModel(unsigned int id, const std::string &displayName) :
-		m_id(id), m_displayName(displayName)
+		m_id(id), m_displayName(displayName), m_moistureBalanceConstruction(false)
 	{
 	}
 
@@ -142,8 +149,10 @@ private:
 	unsigned int									m_id;
 	/*! Display name (for error messages). */
 	std::string										m_displayName;
-	/*! True if moisture balance is enabled. */
+	/*! True if zone moisture balance is enabled. */
 	bool											m_moistureBalanceEnabled;
+	/*! True if moisture balance is calculated in construction. */
+	bool											m_moistureBalanceConstruction;
 
 	/*! Results, computed/updated during the calculation. */
 	std::vector<double>								m_results;
@@ -225,6 +234,17 @@ private:
 	double							m_TsA;
 	/*! Surface temperature at right side (side B) [K]. */
 	double							m_TsB;
+
+//	/*! Emitted long wave radiation to all construction instances visible from side A. The values are stored in a map
+//		with the key being the id of the targeted (radiation receiving) construction instance.
+//		The value of the map is the heat flux in [W].
+//	*/
+//	std::map<unsigned int, double>	m_emittedLongWaveRadiationA;
+//	/*! Emitted long wave radiation to all construction instances visible from side B. The values are stored in a map
+//		with the key being the id of the targeted (radiation receiving) construction instance.
+//		The value of the map is the heat flux in [W].
+//	*/
+//	std::map<unsigned int, double>	m_emittedLongWaveRadiationB;
 
 
 	friend class ConstructionBalanceModel; // Our balance model can directly take the data from us

@@ -6,20 +6,38 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>576</width>
-    <height>592</height>
+    <width>505</width>
+    <height>500</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <layout class="QVBoxLayout" name="verticalLayoutMaster">
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="pageTranslation">
       <layout class="QVBoxLayout" name="verticalLayoutTrans">
        <item>
         <widget class="QGroupBox" name="groupBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Move selected geometry</string>
          </property>
@@ -147,22 +165,6 @@
           </item>
          </layout>
         </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_5">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::MinimumExpanding</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>0</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>
@@ -364,14 +366,14 @@
       </layout>
      </widget>
      <widget class="QWidget" name="pageScaling">
-      <layout class="QVBoxLayout" name="verticalLayoutScale">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <widget class="QGroupBox" name="groupBox_6">
          <property name="title">
           <string>Scale selected geometry</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_6">
-          <item>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_7">
             <item>
              <widget class="QRadioButton" name="radioButtonScaleResize">
@@ -392,14 +394,14 @@
             </item>
            </layout>
           </item>
-          <item>
+          <item row="1" column="0">
            <widget class="QCheckBox" name="checkBoxKeepAspectRatio">
             <property name="text">
              <string>Keep aspect ratio</string>
             </property>
            </widget>
           </item>
-          <item>
+          <item row="2" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_8">
             <item>
              <widget class="QLabel" name="labelScaleX">
@@ -497,27 +499,38 @@
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer_8">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+        <widget class="QLabel" name="label_2">
+         <property name="font">
+          <font>
+           <italic>true</italic>
+          </font>
          </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::MinimumExpanding</enum>
+         <property name="text">
+          <string>To change scaling factors of DXF-drawing, double-click on layer in Navigation Tree on the left-side pane</string>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>0</height>
-          </size>
+         <property name="wordWrap">
+          <bool>true</bool>
          </property>
-        </spacer>
+        </widget>
        </item>
       </layout>
      </widget>
      <widget class="QWidget" name="pageAlignment">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <layout class="QVBoxLayout" name="verticalLayoutAlign">
        <item>
         <widget class="QGroupBox" name="groupBox_7">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Align geometry</string>
          </property>
@@ -541,6 +554,12 @@
        </item>
        <item>
         <widget class="QGroupBox" name="groupBox_8">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Surface orientation</string>
          </property>
@@ -553,27 +572,18 @@
            </widget>
           </item>
           <item>
-           <spacer name="verticalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
+           <widget class="QPushButton" name="pushButtonFixSurfaceOrientation">
+            <property name="text">
+             <string>Fix surface orientation (pointing outside)</string>
             </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::MinimumExpanding</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>421</width>
-              <height>0</height>
-             </size>
-            </property>
-           </spacer>
+           </widget>
           </item>
          </layout>
         </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="pageTrimm">
+        <widget class="QWidget" name="pageTrimm">
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0">
         <widget class="QGroupBox" name="groupBox_4">
@@ -1007,40 +1017,6 @@
           <string>Copy selected geometry</string>
          </property>
          <layout class="QGridLayout" name="gridLayout">
-          <item row="3" column="1">
-           <widget class="QPushButton" name="pushButtonCopyBuildingLevel">
-            <property name="text">
-             <string>Building levels</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <spacer name="verticalSpacer">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="2" column="0">
-           <widget class="QPushButton" name="pushButtonCopySurface">
-            <property name="text">
-             <string>Surfaces</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QPushButton" name="pushButtonCopySubsurface">
-            <property name="text">
-             <string>Windows/Doors</string>
-            </property>
-           </widget>
-          </item>
           <item row="3" column="2">
            <widget class="QPushButton" name="pushButtonCopyBuilding">
             <property name="text">
@@ -1048,10 +1024,10 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QPushButton" name="pushButtonCopyRoom">
+          <item row="3" column="1">
+           <widget class="QPushButton" name="pushButtonCopyBuildingLevel">
             <property name="text">
-             <string>Rooms</string>
+             <string>Building levels</string>
             </property>
            </widget>
           </item>
@@ -1149,6 +1125,27 @@
             </item>
            </layout>
           </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="pushButtonCopySurface">
+            <property name="text">
+             <string>Surfaces</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QPushButton" name="pushButtonCopyRoom">
+            <property name="text">
+             <string>Rooms</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QPushButton" name="pushButtonCopySubsurface">
+            <property name="text">
+             <string>Windows/Doors</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="0" colspan="3">
            <widget class="QLabel" name="label">
             <property name="text">
@@ -1168,18 +1165,31 @@
      <item>
       <widget class="QPushButton" name="pushButtonApply">
        <property name="text">
-        <string>Apply transformation</string>
+        <string>Apply</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="pushButtonCancel">
        <property name="text">
-        <string>Cancel transformation</string>
+        <string>Cancel</string>
        </property>
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer_3">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>
@@ -1212,7 +1222,6 @@
   <tabstop>lineEditScaleZ</tabstop>
   <tabstop>pushButtonCenterHorizontally</tabstop>
   <tabstop>pushButtonCenterVertically</tabstop>
-  <tabstop>pushButtonFlipNormals</tabstop>
   <tabstop>lineEditCopyX</tabstop>
   <tabstop>lineEditCopyY</tabstop>
   <tabstop>lineEditCopyZ</tabstop>

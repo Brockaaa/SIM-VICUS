@@ -47,8 +47,7 @@ namespace Vic3D {
 MeasurementObject::MeasurementObject() :
 	m_startPoint(INVALID_POINT),
 	m_endPoint(INVALID_POINT)
-{
-}
+{}
 
 
 void MeasurementObject::create(ShaderProgram * shaderProgram) {
@@ -61,6 +60,7 @@ void MeasurementObject::destroy() {
 	m_vbo.destroy();
 }
 
+
 void MeasurementObject::reset() {
 	m_startPoint = INVALID_POINT;
 	m_endPoint = INVALID_POINT;
@@ -69,6 +69,7 @@ void MeasurementObject::reset() {
 
 	m_vertexCount = 0;
 }
+
 
 void MeasurementObject::setMeasureLine(const QVector3D & end, const QVector3D & cameraForward) {
 	// create a temporary buffer that will contain the x-y coordinates of all grid lines
@@ -83,17 +84,33 @@ void MeasurementObject::setMeasureLine(const QVector3D & end, const QVector3D & 
 
 	QVector3D uprightVec = QVector3D::crossProduct(cameraForward, end-m_startPoint).normalized();
 
-	QVector3D startLine1 = m_startPoint + 0.5 * uprightVec;
-	QVector3D endLine1 = m_startPoint - 0.5 * uprightVec;
+	QVector3D startLine1	= m_startPoint + 0.5 * uprightVec;
+	QVector3D endLine1		= m_startPoint - 0.5 * uprightVec;
 
-	QVector3D startLine2 = end + 0.5 * uprightVec;
-	QVector3D endLine2 = end - 0.5 * uprightVec;
+	QVector3D startLine2	= end + 0.5 * uprightVec;
+	QVector3D endLine2		= end - 0.5 * uprightVec;
 
 	measurementVertexBufferData.push_back(VertexC(startLine1));
 	measurementVertexBufferData.push_back(VertexC(endLine1));
 
 	measurementVertexBufferData.push_back(VertexC(startLine2));
 	measurementVertexBufferData.push_back(VertexC(endLine2));
+
+	QVector3D measurementVec = end - m_startPoint;
+	unsigned int lengthDeciSteps = measurementVec.length() * 10.0;
+	qDebug() << lengthDeciSteps;
+
+	for (unsigned int i = 0; i < lengthDeciSteps + 1; ++i) {
+		double length = 0.1;
+		if ( i % 10 == 0 )
+			length = 0.3;
+
+		QVector3D tickStart = m_startPoint + i * 0.1 * measurementVec.normalized() + length * uprightVec;
+		QVector3D tickEnd	= m_startPoint + i * 0.1 * measurementVec.normalized() - length * uprightVec;
+
+		measurementVertexBufferData.push_back(VertexC(tickStart));
+		measurementVertexBufferData.push_back(VertexC(tickEnd));
+	}
 
 	m_vertexCount = measurementVertexBufferData.size();
 

@@ -52,6 +52,7 @@ QVariant SVSimulationOutputTableModel::data(const QModelIndex & index, int role)
 		return QVariant();
 
 	const OutputVariable & var = m_variables[(size_t)index.row()];
+
 	switch (role) {
 		case Qt::DisplayRole : {
 			switch (index.column()) {
@@ -75,8 +76,12 @@ QVariant SVSimulationOutputTableModel::data(const QModelIndex & index, int role)
 		case Qt::UserRole:
 			return QVariant::fromValue(var.m_objectIds);
 
-		case Qt::UserRole + 1:
-			return QVariant::fromValue(var.m_vectorIds);
+		case Qt::UserRole + 1: {
+			if (var.m_objectIds.size() == 1 && !var.m_vectorIdMap.empty())
+				return QVariant::fromValue(var.m_vectorIdMap.first());
+			else
+				return QVariant();
+		}
 
 		case Qt::UserRole + 2 :
 			return QString::fromStdString(var.m_objectTypeName); // "Zone" or "ConstructionInstance"
@@ -86,12 +91,15 @@ QVariant SVSimulationOutputTableModel::data(const QModelIndex & index, int role)
 
 		case Qt::UserRole + 4 :
 			return QString::fromStdString(var.m_unit);
+
+		case Qt::UserRole + 5 :
+			return QVariant::fromValue(var.m_vectorIdMap);
 	}
 	return QVariant();
 }
 
 
-void SVSimulationOutputTableModel::updateListFromFile(const QString & outputRefListFilepath) {
+void SVSimulationOutputTableModel::updateListFromFile(const QString & outputRefListFilepath, bool enableSeparateVectorIndexSelection) {
 	FUNCID(SVSimulationOutputTableModel::updateListFromFile);
 
 
@@ -159,11 +167,18 @@ void SVSimulationOutputTableModel::updateListFromFile(const QString & outputRefL
 			}
 
 			// vector IDs are optional
+			std::vector<unsigned int> vectorIds;
 			if (tokens[2].find_first_not_of(" ") != std::string::npos) {
 				try {
 					NANDRAD::IDGroup ids;
 					ids.setEncodedString(tokens[2]);
-					var.m_vectorIds = ids.m_ids;
+					// vector ids can only exist in the file if there is only one object id
+					vectorIds = std::vector<unsigned int>(ids.m_ids.begin(), ids.m_ids.end());
+					if (var.m_objectIds.size() == 1)
+						var.m_vectorIdMap[*var.m_objectIds.begin()] = vectorIds;
+					else
+						throw IBK::Exception(IBK::FormatString("Invalid format in line '%1'. Vetor ids can only be given for one single object id.").arg(line), FUNC_ID);
+
 				}
 				catch (IBK::Exception & ex) {
 					throw IBK::Exception(ex, IBK::FormatString("Invalid vector ID format in line '%1'.").arg(line), FUNC_ID);
@@ -174,7 +189,25 @@ void SVSimulationOutputTableModel::updateListFromFile(const QString & outputRefL
 			var.m_unit = tokens[3];
 			var.m_description = tokens[4];
 
-			m_variables.push_back(var);
+			// if separateVectorIndexSelection not enabled: we summarize outputs of same type and name and collect the object ids
+			bool addedToExisting = false;
+			if (!enableSeparateVectorIndexSelection) {
+				for (OutputVariable &exVariable: m_variables) {
+					if ( exVariable.m_objectTypeName == var.m_objectTypeName
+						 && exVariable.m_quantity == var.m_quantity
+						 && var.m_objectIds.size() == 1 ) {
+						unsigned int id = *var.m_objectIds.begin();
+						exVariable.m_objectIds.insert(id);
+						for (unsigned int vecId : vectorIds)
+							exVariable.m_vectorIdMap[id].push_back(vecId);
+						addedToExisting = true;
+						break;
+					}
+				}
+			}
+
+			if (!addedToExisting)
+				m_variables.push_back(var);
 		}
 
 		endResetModel();
@@ -199,18 +232,16 @@ bool SVSimulationOutputTableModel::haveOutput(const VICUS::OutputDefinition & of
 			}
 		}
 		if (!ok) continue;
-		for (unsigned int i : of.m_vectorIds) {
-			if (var.m_vectorIds.find(i) == var.m_vectorIds.end()) {
-				ok = false;
-				break;
-			}
-		}
 		if (!ok) continue;
 		if (var.m_quantity != of.m_quantity) continue;
 		if (var.m_objectTypeName != of.m_sourceObjectType) continue;
+		if (var.m_vectorIdMap.toStdMap() != of.m_vectorIdMap.m_values) {
+			break;
+		}
 		// ok, we found a match
 		return true;
 	}
 	return false;
 }
+
 

@@ -70,6 +70,12 @@ SVDBScheduleEditWidget::SVDBScheduleEditWidget(QWidget *parent) :
 	// Note: valid column is self-explanatory and does not need a caption
 	m_ui->tableWidgetPeriods->setHorizontalHeaderLabels(QStringList() << tr("Start date") << QString() << tr("Name"));
 
+	// set period table column sizes
+	m_ui->tableWidgetPeriods->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
+	m_ui->tableWidgetPeriods->setColumnWidth(0, 120);
+	m_ui->tableWidgetPeriods->setColumnWidth(1, 24);
+	m_ui->tableWidgetPeriods->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+
 	// styling of tables
 	SVStyle::formatDatabaseTableView(m_ui->tableWidgetPeriods);
 	m_ui->tableWidgetPeriods->setSortingEnabled(false);
@@ -100,19 +106,6 @@ SVDBScheduleEditWidget::SVDBScheduleEditWidget(QWidget *parent) :
 	// initial state is "nothing selected"
 	updateInput(-1);
 
-
-	// set period table column sizes
-
-	m_ui->tableWidgetPeriods->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
-	QFontMetrics fm(m_ui->tableWidgetPeriods->horizontalHeader()->font());
-	int width = fm.boundingRect(tr("Start date")).width();
-#ifdef Q_OS_LINUX
-	width = fm.boundingRect(tr("Start datexxxx")).width();
-#endif
-	m_ui->tableWidgetPeriods->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
-	m_ui->tableWidgetPeriods->setColumnWidth(0, width);
-	m_ui->tableWidgetPeriods->setColumnWidth(1, 24);
-	m_ui->tableWidgetPeriods->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
 }
 
 
@@ -162,6 +155,9 @@ void SVDBScheduleEditWidget::updateInput(int id) {
 	}
 
 	m_current = const_cast<VICUS::Schedule *>(m_db->m_schedules[(unsigned int) id ]);
+	// for built-ins, disable editing/make read-only
+	m_isEditable = !m_current->m_builtIn;
+
 	// we must a valid schedule pointer
 	Q_ASSERT(m_current != nullptr);
 
@@ -180,6 +176,7 @@ void SVDBScheduleEditWidget::updateInput(int id) {
 	m_ui->radioButtonDailyCycles->blockSignals(false);
 
 	m_ui->stackedWidget->setCurrentIndex(m_current->m_haveAnnualSchedule ? 1 : 0);
+
 
 	// period schedule?
 	if (!m_current->m_haveAnnualSchedule) {
@@ -268,8 +265,6 @@ void SVDBScheduleEditWidget::updateInput(int id) {
 		updateAnnualDataDiagram();
 	}
 
-	// for built-ins, disable editing/make read-only
-	m_isEditable = !m_current->m_builtIn;
 	m_ui->lineEditName->setReadOnly(!m_isEditable);
 
 	m_ui->toolButtonAddPeriod->setEnabled(m_isEditable);
@@ -279,6 +274,7 @@ void SVDBScheduleEditWidget::updateInput(int id) {
 	m_ui->radioButtonConstant->setEnabled(m_isEditable);
 	m_ui->pushButtonSelectWeekDays->setEnabled(m_isEditable);
 	m_ui->pushButtonSelectWeekEnds->setEnabled(m_isEditable);
+
 }
 
 
@@ -442,7 +438,7 @@ void SVDBScheduleEditWidget::selectDailyCycle() {
 	// update current daily cycle data type and chart
 
 	VICUS::DailyCycle *dc = &m_currentInterval->m_dailyCycles[m_currentDailyCycleIndex];
-	m_ui->widgetDailyCycle->updateInput( dc , m_db, m_isEditable);
+	m_ui->widgetDailyCycle->updateInput(dc, m_db,m_isEditable);
 
 	updateDailyCycleSelectButtons();
 
@@ -1074,8 +1070,13 @@ void SVDBScheduleEditWidget::updateColumnIndexList() {
 		m_ui->widgetTimeSeriesPreview->setErrorMessage(tr("Error reading data file."));
 		return;
 	}
+	// store x title
+	if (reader.m_captions.size() > 0 && reader.m_units.size() > 0)
+		m_xTitle = IBK::FormatString("%1 [%2]").arg(reader.m_captions[0]).arg(reader.m_units[0]).str();
+
 	// special case: only two columns, just compose linear spline parameter and populate diagram
 	if (reader.m_captions.size() == 2) {
+		m_yTitle = IBK::FormatString("%1 [%2]").arg(reader.m_captions[1]).arg(reader.m_units[1]).str();
 		updateAnnualDataDiagram();
 		return;
 	}
@@ -1136,7 +1137,7 @@ void SVDBScheduleEditWidget::updateAnnualDataDiagram() {
 			m_ui->widgetTimeSeriesPreview->setErrorMessage(tr("Error reading data file."));
 			return;
 		}
-		m_ui->widgetTimeSeriesPreview->setData(spl);
+		m_ui->widgetTimeSeriesPreview->setData(spl, m_xTitle, m_yTitle);
 	}
 	else {
 		// embedded data variant
@@ -1148,7 +1149,7 @@ void SVDBScheduleEditWidget::updateAnnualDataDiagram() {
 		}
 
 		// simply transfer the data to the widget
-		m_ui->widgetTimeSeriesPreview->setData(m_current->m_annualSchedule);
+		m_ui->widgetTimeSeriesPreview->setData(m_current->m_annualSchedule, m_xTitle, m_yTitle);
 	}
 }
 
@@ -1164,6 +1165,7 @@ void SVDBScheduleEditWidget::on_listWidgetColumnSelection_currentItemChanged(QLi
 		return;
 	}
 	QString unitName = current->data(Qt::UserRole+1).toString();
+	m_yTitle = QString("%1 [%2]").arg(current->data(Qt::UserRole+2).toString()).arg(unitName).toStdString();
 
 	// add suffix to file name
 	IBK::Path fname(IBK::Path(m_ui->filepathAnnualDataFile->filename().toStdString()));
