@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1008</width>
-    <height>692</height>
+    <width>1148</width>
+    <height>754</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -78,7 +78,6 @@
            <addaction name="actionXLock"/>
            <addaction name="actionYLock"/>
            <addaction name="actionZLock"/>
-           <addaction name="separator"/>
           </widget>
          </item>
         </layout>
@@ -125,13 +124,17 @@
          <addaction name="actionScaleGeometry"/>
          <addaction name="separator"/>
          <addaction name="actionAlignGeometry"/>
-         <addaction name="actionCopyGeometry"/>
          <addaction name="actionTrimGeometry"/>
+         <addaction name="actionCopyGeometry"/>
          <addaction name="separator"/>
          <addaction name="actionBuildingParametrization"/>
+         <addaction name="actionAcousticParametrization"/>
+         <addaction name="actionStructuralUnits"/>
+         <addaction name="separator"/>
          <addaction name="actionNetworkParametrization"/>
          <addaction name="actionSiteParametrization"/>
          <addaction name="separator"/>
+         <addaction name="actionShowResults"/>
         </widget>
        </item>
       </layout>
@@ -145,8 +148,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/Object-Snap.png</normaloff>:/gfx/actions/Object-Snap.png</iconset>
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-magnet-80.png</normaloff>:/gfx/icons8/icons8-magnet-80.png</iconset>
    </property>
    <property name="text">
     <string>Snap</string>
@@ -160,8 +163,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/Measurement.png</normaloff>:/gfx/actions/Measurement.png</iconset>
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-width-80.png</normaloff>:/gfx/icons8/icons8-width-80.png</iconset>
    </property>
    <property name="text">
     <string>Measure</string>
@@ -202,8 +205,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/Add.png</normaloff>:/gfx/actions/Add.png</iconset>
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-add-layer-80.png</normaloff>:/gfx/icons8/icons8-add-layer-80.png</iconset>
    </property>
    <property name="text">
     <string>Add geometry</string>
@@ -217,8 +220,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/move.png</normaloff>:/gfx/actions/move.png</iconset>
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-in-alle-richtungen-skalieren-80.png</normaloff>:/gfx/icons8/icons8-in-alle-richtungen-skalieren-80.png</iconset>
    </property>
    <property name="text">
     <string>Translate geometry</string>
@@ -232,8 +235,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/rotating.png</normaloff>:/gfx/actions/rotating.png</iconset>
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-verfuegbare-updates-80.png</normaloff>:/gfx/icons8/icons8-verfuegbare-updates-80.png</iconset>
    </property>
    <property name="text">
     <string>Rotate geometry</string>
@@ -247,8 +250,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/resize.png</normaloff>:/gfx/actions/resize.png</iconset>
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-skalieren-80.png</normaloff>:/gfx/icons8/icons8-skalieren-80.png</iconset>
    </property>
    <property name="text">
     <string>Rotate geometry</string>
@@ -262,8 +265,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/misc_operations.png</normaloff>:/gfx/actions/misc_operations.png</iconset>
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-kategorisieren-80.png</normaloff>:/gfx/icons8/icons8-kategorisieren-80.png</iconset>
    </property>
    <property name="text">
     <string>Align geometry</string>
@@ -277,8 +280,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/copy_building.png</normaloff>:/gfx/actions/copy_building.png</iconset>
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-kopieren-80.png</normaloff>:/gfx/icons8/icons8-kopieren-80.png</iconset>
    </property>
    <property name="text">
     <string>Copy geometry</string>
@@ -292,8 +295,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/building_parameter.png</normaloff>:/gfx/actions/building_parameter.png</iconset>
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-heim-automatisierung-80.png</normaloff>:/gfx/icons8/icons8-heim-automatisierung-80.png</iconset>
    </property>
    <property name="text">
     <string>Edit Building Parametrization</string>
@@ -307,8 +310,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/neural.png</normaloff>:/gfx/actions/neural.png</iconset>
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-netzdiagramm-80.png</normaloff>:/gfx/icons8/icons8-netzdiagramm-80.png</iconset>
    </property>
    <property name="text">
     <string>Edit Network Parametrization</string>
@@ -322,8 +325,8 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/info.png</normaloff>:/gfx/actions/info.png</iconset>
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-gitter-80.png</normaloff>:/gfx/icons8/icons8-gitter-80.png</iconset>
    </property>
    <property name="text">
     <string>actionSiteParametrization</string>
@@ -332,19 +335,64 @@
     <string>Edit Site Parametrization</string>
    </property>
   </action>
+  <action name="actionAcousticParametrization">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-audiowelle-80.png</normaloff>:/gfx/icons8/icons8-audiowelle-80.png</iconset>
+   </property>
+   <property name="text">
+    <string>Acoustic parametrization</string>
+   </property>
+   <property name="toolTip">
+    <string>Acoustic parametrization</string>
+   </property>
+  </action>
+  <action name="actionShowResults">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-futures-80.png</normaloff>:/gfx/icons8/icons8-futures-80.png</iconset>
+   </property>
+   <property name="text">
+    <string>Show Results</string>
+   </property>
+   <property name="toolTip">
+    <string>Show Results</string>
+   </property>
+  </action>
+  <action name="actionStructuralUnits">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-box-80.png</normaloff>:/gfx/icons8/icons8-box-80.png</iconset>
+   </property>
+   <property name="text">
+    <string>Structural units parametrization</string>
+   </property>
+   <property name="toolTip">
+    <string>Structural unit parametrization</string>
+   </property>
+  </action>
   <action name="actionTrimGeometry">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="../resources/SIM-VICUS.qrc">
-     <normaloff>:/gfx/actions/layers.png</normaloff>:/gfx/actions/layers.png</iconset>
+     <normaloff>:/gfx/actions/misc_operations.png</normaloff>:/gfx/actions/misc_operations.png</iconset>
    </property>
    <property name="text">
     <string>Trim Geometry</string>
    </property>
    <property name="toolTip">
-    <string>Interactive Trimming Mode</string>
+    <string>Trim (cut) building geometry</string>
    </property>
   </action>
  </widget>
