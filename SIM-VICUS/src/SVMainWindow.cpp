@@ -51,7 +51,6 @@
 #include <QApplication>
 #include <QGuiApplication>
 #include <QMessageBox>
-#include "SVUndoAddSurface.h"
 #include <QShortcut>
 #include <QProgressDialog>
 
