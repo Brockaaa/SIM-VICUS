@@ -220,15 +220,13 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		// If we have a selection, switch scene operation mode to OM_SelectedGeometry.
 		// If we no longer have a selection, and we are in geometry mode+edit mode -> switch back to default operation mode NUM_OP
 		SVViewState vs = SVViewStateHandler::instance().viewState();
-		if (selectedObjects.empty()) {
+		// Stay in Polygon Trimming when you deselect all surfaces
+		if (selectedObjects.empty() && vs.m_sceneOperationMode != SVViewState::OM_PolygonTrimming) {
 			vs.m_sceneOperationMode = SVViewState::NUM_OM;
 
 			// vs.m_propertyWidgetMode = SVViewState::PM_AddGeometry;
 		}
-		else {
-			vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;
-			// Do not modify property widget mode
-		}
+
 		SVViewStateHandler::instance().setViewState(vs);
 
 	} break;
@@ -862,6 +860,7 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 			m_rubberbandObject.selectObjectsBasedOnRubberband();
 			m_rubberbandObject.reset();
 		}
+
 		// clear orbit controller flag
 		m_navigationMode = NUM_NM;
 
@@ -999,29 +998,29 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 
 	// *** TRIMMING ***
 
-//	if (SVViewStateHandler::instance().viewState().m_sceneOperationMode == SVViewState::OM_PolygonTrimming) {
-//		// Align lcs
-//		alignLCS2Object(pickObject, needRepaint);
+	//	if (SVViewStateHandler::instance().viewState().m_sceneOperationMode == SVViewState::OM_PolygonTrimming) {
+	//		// Align lcs
+	//		alignLCS2Object(pickObject, needRepaint);
 
-//		// now we handle the snapping rules and also the locking; updates local coordinate system location
-//		snapLocalCoordinateSystem(pickObject);
+	//		// now we handle the snapping rules and also the locking; updates local coordinate system location
+	//		snapLocalCoordinateSystem(pickObject);
 
-//		const VICUS::Project &prj = SVProjectHandler::instance().project();
+	//		const VICUS::Project &prj = SVProjectHandler::instance().project();
 
-//		std::vector<const VICUS::Surface *> surfs;
-//		std::vector<const VICUS::SubSurface *> subSurfs;
-//		prj.selectedSurfaces(surfs, VICUS::Project::SG_All);
-//		prj.selectedSubSurfaces(subSurfs, VICUS::Project::SG_All);
+	//		std::vector<const VICUS::Surface *> surfs;
+	//		std::vector<const VICUS::SubSurface *> subSurfs;
+	//		prj.selectedSurfaces(surfs, VICUS::Project::SG_All);
+	//		prj.selectedSubSurfaces(subSurfs, VICUS::Project::SG_All);
 
-//		IBKMK::Vector3D center;
-//		IBKMK::Vector3D bb = prj.boundingBox(surfs, subSurfs, center);
+	//		IBKMK::Vector3D center;
+	//		IBKMK::Vector3D bb = prj.boundingBox(surfs, subSurfs, center);
 
-//		m_trimmingObject.setBoundingBoxDimension(center, bb);
+	//		m_trimmingObject.setBoundingBoxDimension(center, bb);
 
-//		if (m_trimmingObject.planeNormal() == IBKMK::Vector3D(0,0,1))
-//			m_trimmingObject.setTrimmingPlaneNormal(QVector2IBKVector(m_coordinateSystemObject.localXAxis()));
-//		m_trimmingObject.setTrimmingPlanePoint(QVector2IBKVector(m_coordinateSystemObject.translation()));
-//	}
+	//		if (m_trimmingObject.planeNormal() == IBKMK::Vector3D(0,0,1))
+	//			m_trimmingObject.setTrimmingPlaneNormal(QVector2IBKVector(m_coordinateSystemObject.localXAxis()));
+	//		m_trimmingObject.setTrimmingPlanePoint(QVector2IBKVector(m_coordinateSystemObject.translation()));
+	//	}
 
 	// *** ALIGN COORDINATE SYSTEM ***
 
@@ -1189,8 +1188,8 @@ void Scene::render() {
 		if (vs.m_propertyWidgetMode == SVViewState::PM_AddSubSurfaceGeometry)
 			m_newSubSurfaceObject.renderTransparent(); // might do nothing, if no subsurface is being constructed
 
-		// Always render trimming object, visibility is handled in object
-		m_trimmingObject.render();
+		if (vs.m_sceneOperationMode == SVViewState::OM_PolygonTrimming)
+			m_trimmingObject.render();
 
 		m_buildingShader->release();
 
@@ -1342,18 +1341,18 @@ void Scene::setViewState(const SVViewState & vs) {
 		bool updateNetwork = true;
 		// Detailed handling of update logic (update x only when y) is error prone
 		// TODO: If this becomes a performance issue, we may handle the update logic in detail
-//		if (m_lastColorMode > 0 && m_lastColorMode < SVViewState::OCM_Network)
-//			updateBuilding = true;
-//		if (vs.m_objectColorMode > 0 && vs.m_objectColorMode < SVViewState::OCM_Network)
-//			updateBuilding = true;
-//		if (vs.m_objectColorMode >= SVViewState::OCM_ResultColorView)
-//			updateBuilding = true;
-//		if (m_lastColorMode >= SVViewState::OCM_Network)
-//			updateNetwork = true;
-//		if (vs.m_objectColorMode >= SVViewState::OCM_Network)
-//			updateNetwork = true;
-//		if (vs.m_objectColorMode >= SVViewState::OCM_ResultColorView)
-//			updateNetwork = true;
+		//		if (m_lastColorMode > 0 && m_lastColorMode < SVViewState::OCM_Network)
+		//			updateBuilding = true;
+		//		if (vs.m_objectColorMode > 0 && vs.m_objectColorMode < SVViewState::OCM_Network)
+		//			updateBuilding = true;
+		//		if (vs.m_objectColorMode >= SVViewState::OCM_ResultColorView)
+		//			updateBuilding = true;
+		//		if (m_lastColorMode >= SVViewState::OCM_Network)
+		//			updateNetwork = true;
+		//		if (vs.m_objectColorMode >= SVViewState::OCM_Network)
+		//			updateNetwork = true;
+		//		if (vs.m_objectColorMode >= SVViewState::OCM_ResultColorView)
+		//			updateNetwork = true;
 
 		// update the color properties in the data objects (does not update GPU memory!)
 		recolorObjects(vs.m_objectColorMode, vs.m_colorModePropertyID);
@@ -2386,7 +2385,7 @@ void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) co
 		}
 	} break;
 
-	// *** OCM_AcousticRoomType
+		// *** OCM_AcousticRoomType
 	case SVViewState::OCM_SoundProtectionRoomTemplates : {
 		for (const VICUS::Building & b : p.m_buildings) {
 			for (const VICUS::BuildingLevel & bl : b.m_buildingLevels) {
@@ -3090,7 +3089,7 @@ struct SnapCandidate {
 
 
 void Scene::snapLocalCoordinateSystem(const PickObject & pickObject) {
-//	qDebug() << "================";
+	//	qDebug() << "================";
 
 	const SVViewState & vs = SVViewStateHandler::instance().viewState();
 
@@ -3186,8 +3185,8 @@ void Scene::snapLocalCoordinateSystem(const PickObject & pickObject) {
 		QVector3D pickPoint = IBKVector2QVector(r.m_pickPoint);
 
 
-//		qDebug() << "Result type: " << r.m_resultType;
-//		qDebug() << "Object-ID: " << r.m_objectID;
+		//		qDebug() << "Result type: " << r.m_resultType;
+		//		qDebug() << "Object-ID: " << r.m_objectID;
 
 		// depending on type of object, process the different snap options
 		if (r.m_resultType == PickObject::RT_GridPlane) {
@@ -3376,7 +3375,7 @@ void Scene::snapLocalCoordinateSystem(const PickObject & pickObject) {
 
 			const VICUS::NetworkNode * no = dynamic_cast<const VICUS::NetworkNode *>(obj);
 			if (no != nullptr) {
-//				qDebug() << "Snap to network";
+				//				qDebug() << "Snap to network";
 
 				std::vector<SnapCandidate> snapCandidates;
 				SnapCandidate sc;
@@ -3411,43 +3410,43 @@ void Scene::snapLocalCoordinateSystem(const PickObject & pickObject) {
 
 					const VICUS::Drawing::AbstractDrawingObject *obj = d->objectByID(r.m_drawingID);
 
-						std::vector<IBKMK::Vector3D> points3d = d->pickPoints().at(obj->m_id);
-						for (unsigned int i=0; i<points3d.size(); ++i) {
+					std::vector<IBKMK::Vector3D> points3d = d->pickPoints().at(obj->m_id);
+					for (unsigned int i=0; i<points3d.size(); ++i) {
 
-							const IBKMK::Vector3D & v3D  = points3d[i];
+						const IBKMK::Vector3D & v3D  = points3d[i];
 
-							float dist = (IBKVector2QVector(v3D) - pickPoint).lengthSquared();
-							if (dist < closestDepthSoFar && dist < vs.m_snapDistance) {
+						float dist = (IBKVector2QVector(v3D) - pickPoint).lengthSquared();
+						if (dist < closestDepthSoFar && dist < vs.m_snapDistance) {
+							// for now we snap to the vertexes of the outer polygon and all holes
+							sc.m_distToLineOfSight = (double)dist;
+							sc.m_pickPoint = v3D;
+							snapCandidates.push_back(sc);
+							closestDepthSoFar = dist;
+						}
+
+						if (snapOptions & SVViewState::Snap_DrawingLines) {
+							const IBKMK::Vector3D & v3DB = points3d[((int)i - 1) % points3d.size()];
+
+							IBKMK::Vector3D pickPoint;
+							double lineFactor;
+							double dist2 = IBKMK::lineToPointDistance(v3D, v3DB - v3D, r.m_pickPoint, lineFactor, pickPoint);
+
+							// qDebug() << "Line-pick | Distance: " << dist2 << " X: " << pickPoint.m_x << " Y: " << pickPoint.m_y << " Z: " << pickPoint.m_z << " Line-factor: " << lineFactor;
+
+							// Only add if close enough (< vs.m_snapDistance) and if there isn't yet
+							// another snap point that's closer.
+							if (dist2 < closestDepthSoFar &&
+									dist2 < vs.m_snapDistance &&
+									lineFactor > 0. && lineFactor < 1.) {
 								// for now we snap to the vertexes of the outer polygon and all holes
-								sc.m_distToLineOfSight = (double)dist;
-								sc.m_pickPoint = v3D;
+								sc.m_distToLineOfSight = (double)dist2;
+								sc.m_pickPoint = pickPoint;
 								snapCandidates.push_back(sc);
-								closestDepthSoFar = dist;
+								closestDepthSoFar = dist2;
+
+								// qDebug() << "PICKED";
 							}
-
-							if (snapOptions & SVViewState::Snap_DrawingLines) {
-								const IBKMK::Vector3D & v3DB = points3d[((int)i - 1) % points3d.size()];
-
-								IBKMK::Vector3D pickPoint;
-								double lineFactor;
-								double dist2 = IBKMK::lineToPointDistance(v3D, v3DB - v3D, r.m_pickPoint, lineFactor, pickPoint);
-
-								// qDebug() << "Line-pick | Distance: " << dist2 << " X: " << pickPoint.m_x << " Y: " << pickPoint.m_y << " Z: " << pickPoint.m_z << " Line-factor: " << lineFactor;
-
-								// Only add if close enough (< vs.m_snapDistance) and if there isn't yet
-								// another snap point that's closer.
-								if (dist2 < closestDepthSoFar &&
-										dist2 < vs.m_snapDistance &&
-										lineFactor > 0. && lineFactor < 1.) {
-									// for now we snap to the vertexes of the outer polygon and all holes
-									sc.m_distToLineOfSight = (double)dist2;
-									sc.m_pickPoint = pickPoint;
-									snapCandidates.push_back(sc);
-									closestDepthSoFar = dist2;
-
-									// qDebug() << "PICKED";
-								}
-							}
+						}
 					}
 
 					// now we take the snap point that's closest - even if all the snap options of an object are
@@ -3463,13 +3462,13 @@ void Scene::snapLocalCoordinateSystem(const PickObject & pickObject) {
 			// currently there is such snapping to nodes, yet
 
 			/// \todo Add snapping to nodes (i.e. when drawing edges)
-//			qDebug() << "Pick point: " << r.m_pickPoint.m_x << " | " << r.m_pickPoint.m_y << " | " <<  r.m_pickPoint.m_z;
+			//			qDebug() << "Pick point: " << r.m_pickPoint.m_x << " | " << r.m_pickPoint.m_y << " | " <<  r.m_pickPoint.m_z;
 
 		} // object snap
 
 	} // with snapping
 
-//	qDebug() << "Snap to: " << snapInfo.c_str();
+	//	qDebug() << "Snap to: " << snapInfo.c_str();
 
 	// we now have a snap point
 	// if we also have line snap on, calculate the projection of this intersection point with the line
@@ -3534,97 +3533,113 @@ void Scene::adjustCursorDuringMouseDrag(const QPoint & mouseDelta, const QPoint 
 	}
 }
 
-
 void Scene::handleLeftMouseClick(const KeyboardMouseHandler & keyboardHandler, PickObject & o) {
 	// do different things depending on current scene operation mode
 
+
+	qDebug() << "Scene operation mode: " << SVViewStateHandler::instance().viewState().m_sceneOperationMode;
 	switch (SVViewStateHandler::instance().viewState().m_sceneOperationMode) {
 
-		// *** place a vertex ***
+	// *** place a vertex ***
 
-		case SVViewState::NUM_OM :
-		case SVViewState::OM_SelectedGeometry :
-		case SVViewState::OM_RubberbandSelection:
-		case SVViewState::OM_ThreePointRotation: {
-			// selection handling
-			handleSelection(keyboardHandler, o);
-			return;
-		}
+	case SVViewState::NUM_OM :
+	case SVViewState::OM_SelectedGeometry :
+	case SVViewState::OM_RubberbandSelection: {
+		// selection handling
+		handleSelection(keyboardHandler, o);
+		return;
+	}
 
 		// *** MEASURE DISTANCE ***
-		case SVViewState::OM_MeasureDistance : {
-			// we start a new measurement when:
-			// a) no start and no end point have been set yet (i.e. mode has just started)
-			// b) last measurement is complete, i.e. both start and end point are set
+	case SVViewState::OM_MeasureDistance : {
+		// we start a new measurement when:
+		// a) no start and no end point have been set yet (i.e. mode has just started)
+		// b) last measurement is complete, i.e. both start and end point are set
 
-			// new starting point for measurement selected
-			if (m_measurementObject.m_startPoint == INVALID_POINT)
-			{
-				// if we start from "initial mode", show the distance widget
-				// store new start point
-				m_measurementObject.m_startPoint = m_coordinateSystemObject.translation();
-				m_measurementWidget->showStartPoint(m_measurementObject.m_startPoint);
-				m_coordinateSystemObject.m_originalTranslation = m_coordinateSystemObject.translation();
-			}
-			else if (m_measurementObject.m_startPoint != INVALID_POINT && m_measurementObject.m_endPoint != INVALID_POINT) {
-				// first reset object and widget
-				m_measurementObject.reset();
-				m_measurementWidget->reset();
-				// then start next measurement from current LCS position
-				m_measurementObject.m_startPoint = m_coordinateSystemObject.translation();
-				m_measurementWidget->showStartPoint(m_measurementObject.m_startPoint);
-				m_coordinateSystemObject.m_originalTranslation = m_coordinateSystemObject.translation();
-			}
-			else {
-				// finish measurement mode by fixing the end point
-				m_measurementObject.m_endPoint = m_coordinateSystemObject.translation();
-			}
-			return;
+		// new starting point for measurement selected
+		if (m_measurementObject.m_startPoint == INVALID_POINT)
+		{
+			// if we start from "initial mode", show the distance widget
+			// store new start point
+			m_measurementObject.m_startPoint = m_coordinateSystemObject.translation();
+			m_measurementWidget->showStartPoint(m_measurementObject.m_startPoint);
+			m_coordinateSystemObject.m_originalTranslation = m_coordinateSystemObject.translation();
 		}
+		else if (m_measurementObject.m_startPoint != INVALID_POINT && m_measurementObject.m_endPoint != INVALID_POINT) {
+			// first reset object and widget
+			m_measurementObject.reset();
+			m_measurementWidget->reset();
+			// then start next measurement from current LCS position
+			m_measurementObject.m_startPoint = m_coordinateSystemObject.translation();
+			m_measurementWidget->showStartPoint(m_measurementObject.m_startPoint);
+			m_coordinateSystemObject.m_originalTranslation = m_coordinateSystemObject.translation();
+		}
+		else {
+			// finish measurement mode by fixing the end point
+			m_measurementObject.m_endPoint = m_coordinateSystemObject.translation();
+		}
+		return;
+	}
 
 		// *** place a vertex ***
-		case SVViewState::OM_PlaceVertex : {
-			// get current coordinate system's position
-			IBKMK::Vector3D p = QVector2IBKVector(m_coordinateSystemObject.translation());
-			// append a vertex (this will automatically update the draw buffer) and also
-			// modify the vertexListWidget.
-			m_newGeometryObject.appendVertex(p);
-			return;
-		}
+	case SVViewState::OM_PlaceVertex : {
+		// get current coordinate system's position
+		IBKMK::Vector3D p = QVector2IBKVector(m_coordinateSystemObject.translation());
+		// append a vertex (this will automatically update the draw buffer) and also
+		// modify the vertexListWidget.
+		m_newGeometryObject.appendVertex(p);
+		return;
+	}
 
 		// *** align coordinate system ***
-		case SVViewState::OM_AlignLocalCoordinateSystem : {
-			// finish aligning coordinate system and keep selected rotation in coordinate system
-			// but restore origin of local coordinate system object
-			m_coordinateSystemObject.setTranslation(m_oldCoordinateSystemTransform.translation());
-			// switch back to previous view state
-			leaveCoordinateSystemAdjustmentMode(false);
-			return;
-		}
+	case SVViewState::OM_AlignLocalCoordinateSystem : {
+		// finish aligning coordinate system and keep selected rotation in coordinate system
+		// but restore origin of local coordinate system object
+		m_coordinateSystemObject.setTranslation(m_oldCoordinateSystemTransform.translation());
+		// switch back to previous view state
+		leaveCoordinateSystemAdjustmentMode(false);
+		return;
+	}
 
 		// *** move coordinate system ***
-		case SVViewState::OM_MoveLocalCoordinateSystem : {
-			// finish moving coordinate system and current local coordinate system location
-			leaveCoordinateSystemTranslationMode(false);
-			return;
-		}
+	case SVViewState::OM_MoveLocalCoordinateSystem : {
+		// finish moving coordinate system and current local coordinate system location
+		leaveCoordinateSystemTranslationMode(false);
+		return;
+	}
 
 		// *** UPDATE PLANE FOR TRIMMING ***
-		case SVViewState::OM_PolygonTrimming: {
+	case SVViewState::OM_PolygonTrimming: {
 
+		handleSelection(keyboardHandler, o);
 
-		}
+		// Now we test if we are in trimming mode, where a transparent trimming plane is drawn at the LCS Center
+		const VICUS::Project &prj = SVProjectHandler::instance().project();
+
+		std::vector<const VICUS::Surface *> surfs;
+		std::vector<const VICUS::SubSurface *> subSurfs;
+		prj.selectedSurfaces(surfs, VICUS::Project::SG_All);
+		prj.selectedSubSurfaces(subSurfs, VICUS::Project::SG_All);
+
+		IBKMK::Vector3D center;
+		std::vector<const VICUS::Drawing *> drawings;
+		IBKMK::Vector3D bb = prj.boundingBox(drawings, surfs, subSurfs, center);
+
+		m_trimmingObject.setBoundingBoxDimension(center, bb);
+
+		m_trimmingObject.setTrimmingPlaneNormal(QVector2IBKVector(m_coordinateSystemObject.localZAxis()));
+		m_trimmingObject.setTrimmingPlanePoint(QVector2IBKVector(m_coordinateSystemObject.translation()));
+		m_trimmingObject.updateTrimmingPlane();
+	}
 
 		// *** three point rotation
-		case SVViewState::OM_ThreePointRotation:
-			// TODO
-			break;
+	case SVViewState::OM_ThreePointRotation:
+		// TODO
+		break;
 
-		} // switch
-			
-	}
+	} // switch
+
 }
-
 
 void Scene::handleSelection(const KeyboardMouseHandler & keyboardHandler, PickObject & o) {
 	// this will be a selection click - execute pick() operation
@@ -3763,9 +3778,8 @@ void Scene::setDefaultViewState() {
 			if (vs.m_propertyWidgetMode == SVViewState::PM_EditGeometry)
 				vs.m_propertyWidgetMode = SVViewState::PM_AddGeometry;
 		}
-		else if (SVViewStateHandler::instance().m_geometryView) {
-
-		}
+		else if (m_coordinateSystemObject.m_geometryTransformMode == Vic3D::CoordinateSystemObject::TM_Trim)
+			vs.m_sceneOperationMode = SVViewState::OM_PolygonTrimming;
 		else
 			vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;
 		SVViewStateHandler::instance().setViewState(vs);

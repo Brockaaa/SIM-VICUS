@@ -332,6 +332,7 @@ private:
 		NM_InteractiveRotation, // this is set for any axis rotation - which rotation is rotated about is set in the local coordinate system TM_xx bit
 		NM_InteractiveScaling, // this is set for any axis - which axis is scaled is set in the local coordinate system TM_xx bit
 		NM_RubberbandSelection, // not really a navigation mode, but here the user drags a visible rectangle, hence other navigation operations are disabled
+//		NM_TrimmingPlane, // not really a navigation mode, but trimming plane is drawn at LCS
 		NUM_NM
 	};
 
