@@ -65,23 +65,26 @@ public:
 	*/
 	enum GeometryTransformMode {
 		/*! No transform mode, just a regular coordinate system. */
-		TM_None									= 0x00,
+		TM_None									= 0x000,
 		/*! Rotation around X-axis. */
-		TM_RotateX								= 0x01,
+		TM_RotateX								= 0x001,
 		/*! Rotation around Y-axis. */
-		TM_RotateY								= 0x02,
+		TM_RotateY								= 0x002,
 		/*! Rotation around Z-axis. */
-		TM_RotateZ								= 0x04,
+		TM_RotateZ								= 0x004,
 		/*! Scale along X-axis. */
-		TM_ScaleX								= 0x10,
+		TM_ScaleX								= 0x010,
 		/*! Scale along Y-axis. */
-		TM_ScaleY								= 0x20,
+		TM_ScaleY								= 0x020,
 		/*! Scale along Z-axis. */
-		TM_ScaleZ								= 0x40,
+		TM_ScaleZ								= 0x040,
+		/*! Trim selected objects. */
+		TM_Trim									= 0x100,
+
 		/*! Translation mode (there is no axis-specific handling for translation, since translation locks are
 			set separetely)
 		*/
-		TM_Translate							= 0x100,
+		TM_Translate							= 0x200,
 		TM_RotateMask							= TM_RotateX | TM_RotateY | TM_RotateZ,
 		TM_ScaleMask							= TM_ScaleX | TM_ScaleY | TM_ScaleZ
 	};
