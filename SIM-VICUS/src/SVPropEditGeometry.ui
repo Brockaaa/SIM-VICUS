@@ -583,7 +583,7 @@
        </item>
       </layout>
      </widget>
-        <widget class="QWidget" name="pageTrimm">
+     <widget class="QWidget" name="pageTrimm">
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0">
         <widget class="QGroupBox" name="groupBox_4">

@@ -221,7 +221,7 @@ void SVPropEditGeometry::setModificationType(ModificationType modType) {
 		// Note: setting new coordinates to the local coordinate system object will in turn call setCoordinates()
 		//       and indirectly also updateInputs()
 		updateCoordinateSystemLook();
-		updateTrimmingPlane();
+//		updateTrimmingPlane();
 		adjustLocalCoordinateSystemForRotateToAngle();
 	}
 
@@ -669,6 +669,8 @@ void SVPropEditGeometry::updateUi(bool resetLCS) {
 //		m_ui->lineEditScaleFactor->setValue(m_selDrawings.back()->m_scalingFactor);
 //	else
 //		m_ui->lineEditScaleFactor->setValue(1.0);
+
+	updateInputs();
 }
 
 
@@ -1128,8 +1130,8 @@ void SVPropEditGeometry::updateCoordinateSystemLook() {
 			break;
 
 		case MT_Trim:
-			if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_None) {
-				cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_None;
+			if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_Trim) {
+				cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_Trim;
 				SVViewStateHandler::instance().m_geometryView->refreshSceneView();
 			}
 			break;
@@ -1154,15 +1156,17 @@ void SVPropEditGeometry::updateTrimmingPlane() {
 	prj.selectedSubSurfaces(subSurfs, VICUS::Project::SG_All);
 
 	IBKMK::Vector3D center;
-	IBKMK::Vector3D bb = prj.boundingBox(surfs, subSurfs, center);
+	std::vector<const VICUS::Drawing *> draws;
+	IBKMK::Vector3D bb = prj.boundingBox(draws, surfs, subSurfs, center);
 
 	Vic3D::CoordinateSystemObject &cso = *SVViewStateHandler::instance().m_coordinateSystemObject;
-	cso.setTranslation(translation);
+//	if (translation != cso.translation())
+//		cso.setTranslation(translation);
 
 	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
 	to.setBoundingBoxDimension(center, bb);
-	to.setTrimmingPlanePoint(QVector2IBKVector(translation));
-//	to.updateTrimmingPlane();
+	to.setTrimmingPlanePoint(QVector2IBKVector(cso.translation()));
+	to.updateTrimmingPlane(QVector2IBKVector(cso.localZAxis()));
 
 	SVViewStateHandler::instance().m_geometryView->refreshSceneView();
 }
