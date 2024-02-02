@@ -105,7 +105,7 @@ public:
 			The LCS Object is visible and the transparent trimming plane is manipulated in a seperate property widget.
 			The scene is in passive mode - user can navigate and click on object to change selection.
 		*/
-		OM_PolygonTrimming,
+		OM_TrimObjects,
 		NUM_OM
 	};
 
