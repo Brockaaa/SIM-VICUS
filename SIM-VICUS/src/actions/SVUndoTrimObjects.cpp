@@ -33,6 +33,8 @@
 
 #include <VICUS_Project.h>
 
+#include <RC_VicusClipping.h>
+
 SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
 									 std::map<unsigned int, std::vector<IBKMK::Polygon3D> > trimmedPolygons,
 									 // trimSurfaces is a vector of tuples, each containing a reference to the selected surface of one trim, and the polyInput vector
@@ -57,9 +59,15 @@ void SVUndoTrimObjects::undo() {
 
 void SVUndoTrimObjects::redo() {
 	// iterate over different trims
+//	std::map<unsigned int, const VICUS::ComponentInstance *> cisA, cisB;
+
 	for (std::map<unsigned int, std::vector<IBKMK::Polygon3D>>::iterator it = m_trimmedPolygons.begin();
 		 it != m_trimmedPolygons.end(); ++it )
 	{
+		// new surface ids
+		std::set<unsigned int>							newSurfaceIds;
+		// new subsurface ids
+		std::map<unsigned int, std::set<unsigned int>>	newSubSurfaceIds;
 
 		const VICUS::Object *o = m_project.objectById(it->first);
 		if (o == nullptr)
@@ -84,10 +92,15 @@ void SVUndoTrimObjects::redo() {
 		double yCoord;
 
 		// iterate over different trim result surfaces (of one trim / one original surface)
-		for (unsigned int i=0; i<polys.size(); ++i) {
-			newSurf.m_id = nextId++;
+		for (unsigned int i = 0; i < polys.size(); ++i) {
+			const IBKMK::Polygon3D &surfPoly = polys[i];
+
+			qDebug() << "Surface #" << id << " replaced by Surface #" << nextId;
+
+			newSurf.m_id = nextId;
+			newSurfaceIds.insert(nextId++);
 			newSurf.m_displayName = QString::fromStdString(surfDisplayName + "[" + std::to_string(i+1) + "]");
-			newSurf.setPolygon3D(polys[i]);
+			newSurf.setPolygon3D(surfPoly);
 			std::vector<VICUS::SubSurface> tempSubsurfaces;
 
 			// iterate over all subsurfaces that were trimmed
@@ -106,37 +119,60 @@ void SVUndoTrimObjects::redo() {
 				if (ss->m_parent->m_id == it->first) {
 
 					// transform the trimmed polygon to 2d for testing pointInPolygon with each former subsurface's centerpoint later
-					std::vector<IBKMK::Vector2D> aux2DPolygon(polys[i].vertexes().size());
-					for (unsigned int j = 0; j < polys[i].vertexes().size(); ++j) {
-						IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), polys[i].vertexes()[j], xCoord, yCoord);
+					std::vector<IBKMK::Vector2D> aux2DPolygon(surfPoly.vertexes().size());
+					for (unsigned int j = 0; j < surfPoly.vertexes().size(); ++j) {
+						IBKMK::planeCoordinates(surfPoly.offset(), surfPoly.localX(), surfPoly.localY(), surfPoly.vertexes()[j], xCoord, yCoord);
 						aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
 					}
 
-					// Add all trimresults of this subsurface, whose centerpoint is contained in this polys[i]
+					// Add all trimresults of this subsurface, whose centerpoint is contained in this surfacePoly
 					for (unsigned int k = 0; k < m_trimmedSubsurfaces[ssit->first].size(); ++k) {
-						IBKMK::Vector3D subPolyCenter = IBKMK::Polygon3D(m_trimmedSubsurfaces[ssit->first][k]).centerPoint();
+						const IBKMK::Polygon3D &subSurfPoly = m_trimmedSubsurfaces[ssit->first][k];
+
+						IBKMK::Vector3D subPolyCenter = subSurfPoly.centerPoint();
 
 						// if any of the former surface's (trimmed) subsurfaces have their center point within this trimresult surface
-						IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), subPolyCenter, xCoord, yCoord);
-						IBKMK::Vector2D subPolyCenter2D = IBKMK::Vector2D(xCoord, yCoord);
+						IBKMK::Vector2D subPolyCenter2D;
+						IBKMK::planeCoordinates(surfPoly.offset(), surfPoly.localX(), surfPoly.localY(), subPolyCenter, subPolyCenter2D.m_x, subPolyCenter2D.m_y);
 
 						if (IBKMK::pointInPolygon(aux2DPolygon, subPolyCenter2D) == 1) {
+
+							// *** FIX SUB-SURFACES ***
+
+							/// Sub-Surfaces need to produce a real hole in the parent surface.
+							/// If points of the trimmed sub-surface lie directly on a edge of the parent polygon
+							/// the CDT encounters errors und planes are not visible anymore since triangulation is
+							/// error-prone. We need to fix the trimmed sub-surfaces so that points laying on the edge
+							/// are moved inside the polygon. For now we assume that we move the point 1 cm inwards.
+							///
+							/// Steps:
+							/// 1) Go through all edges of parent polygon
+							/// 2) Check if one of sub-surface polygon's points is on edge of parent
+							/// 3) If point is on edge, take normal of parent and edge vector and construct rectangular vector
+							///	   relative to edge vector
+							/// 4) Take point laying on edge add vector in both possible directions with e.g. 1cm and check if point is in parent-polygon
+
+							fixSubSurfacePolygon(surfPoly, const_cast<IBKMK::Polygon3D&>(subSurfPoly));
+
+							// ************************
+
 
 							// Transform subsurface back to 2D
 							std::vector<IBKMK::Vector2D> aux2DPolygon;
 
 							// iterate over vertices of 3d subsurface
 							for (unsigned int l = 0; l < m_trimmedSubsurfaces[ssit->first][k].vertexes().size(); ++l) {
-								IBKMK::planeCoordinates(polys[i].offset(), polys[i].localX(), polys[i].localY(), m_trimmedSubsurfaces[ssit->first][k].vertexes()[l], xCoord, yCoord);
+								IBKMK::planeCoordinates(surfPoly.offset(), surfPoly.localX(), surfPoly.localY(), m_trimmedSubsurfaces[ssit->first][k].vertexes()[l], xCoord, yCoord);
 								aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
 							}
-							VICUS::SubSurface tempSubsurface;
-							tempSubsurface.m_polygon2D = aux2DPolygon;
-							tempSubsurface.m_displayName = ss->m_displayName + QString::fromStdString("[" + std::to_string(k+1) + "]");
-							tempSubsurface.m_color = ss->m_color;
-							tempSubsurface.m_id = nextId++;
-							tempSubsurfaces.push_back(tempSubsurface);
+							VICUS::SubSurface newSubsurface(*ss);
+							newSubsurface.m_polygon2D = aux2DPolygon;
+							newSubsurface.m_displayName = m_project.newUniqueSurfaceName(newSubsurface.m_displayName);
+							newSubsurface.m_id = nextId;
+							tempSubsurfaces.push_back(newSubsurface);
 
+							// Store new IDs for subsurface component instance swapping
+							newSubSurfaceIds[ss->m_id].insert(nextId++);
 							break;
 						}
 					}
@@ -159,18 +195,69 @@ void SVUndoTrimObjects::redo() {
 		}
 
 		if(room != nullptr) {
-			for (unsigned int i=0; i<room->m_surfaces.size(); ++i) {
+
+			// Remove old component id
+			unsigned int idx = 0;
+			std::vector<VICUS::ComponentInstance>			&cis    = m_project.m_componentInstances;
+			std::vector<VICUS::SubSurfaceComponentInstance> &subCis = m_project.m_subSurfaceComponentInstances;
+			for (; idx < m_project.m_componentInstances.size(); ++idx) {
+				if (cis[idx].m_idSideASurface == id || cis[idx].m_idSideBSurface == id)
+					break;
+			}
+			for (unsigned int i = 0; i < room->m_surfaces.size(); ++i) {
 				if (id == room->m_surfaces[i].m_id) {
-					qDebug() << "Removing surface with ID #%1" << s->m_id;
+					qDebug() << "Removing surface with ID %1" << s->m_id;
 					const_cast<VICUS::Room *>(room)->m_surfaces.erase(room->m_surfaces.begin() + i);
 					break;
 				}
+			}
+
+			for (unsigned newId : newSurfaceIds) {
+				VICUS::ComponentInstance newCi = cis[idx];
+				newCi.m_id = nextId++;
+				if (newCi.m_idSideASurface == id) {
+					newCi.m_idSideASurface = newId;
+					newCi.m_idSideBSurface = VICUS::INVALID_ID;
+				}
+				else if (newCi.m_idSideBSurface == id) {
+					newCi.m_idSideASurface = VICUS::INVALID_ID;
+					newCi.m_idSideBSurface = newId;
+				}
+				// Add new sub surface component instances
+				m_project.m_componentInstances.push_back(newCi);
+			}
+			cis.erase(cis.begin() + idx);
+
+			idx = 0;
+			std::vector<unsigned int> idxToDelete;
+			for (const std::pair<unsigned int, std::set<unsigned int>> subIdSwap : newSubSurfaceIds) {
+				for (;idx < subCis.size(); ++idx) {
+					if (subIdSwap.first == subCis[idx].m_idSideASurface ||
+							subIdSwap.first == subCis[idx].m_idSideBSurface)
+						break;
+				}
+				idxToDelete.push_back(idx);
+				// Add new sub-surface component instance
+				for (unsigned int newId : subIdSwap.second) {
+					VICUS::SubSurfaceComponentInstance newSubCi = subCis[idx];
+					newSubCi.m_id = nextId++;
+					if (newSubCi.m_idSideASurface == subIdSwap.first)
+						newSubCi.m_idSideASurface = newId;
+					if (newSubCi.m_idSideBSurface == subIdSwap.first)
+						newSubCi.m_idSideBSurface = newId;
+					// Add new sub surface component instances
+					subCis.push_back(newSubCi);
+				}
+			}
+
+			for (unsigned int i = idxToDelete.size(); i > 0; --i) {
+				subCis.erase(subCis.begin() + idxToDelete[i - 1]);
 			}
 		}
 		else {
 			for (unsigned int i=0; i<m_project.m_plainGeometry.m_surfaces.size(); ++i) {
 				if (id == m_project.m_plainGeometry.m_surfaces[i].m_id) {
-					qDebug() << "Removing surface with ID #%1" << s->m_id;
+					qDebug() << "Removing surface with ID %1" << s->m_id;
 					m_project.m_plainGeometry.m_surfaces.erase(m_project.m_plainGeometry.m_surfaces.begin() + i);
 					break;
 				}
@@ -180,10 +267,62 @@ void SVUndoTrimObjects::redo() {
 		m_project.updatePointers();
 	}
 
+
+	RC::VicusClipper vicusClipper(m_project.m_buildings, m_project.m_componentInstances, 5, 1, m_project.nextUnusedID(), true);
+	vicusClipper.createComponentInstances(nullptr);
+
 	std::swap(theProject(), m_project);
 	theProject().updatePointers();
 	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingGeometryChanged );
 	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingTopologyChanged );
 
+}
+
+void SVUndoTrimObjects::fixSubSurfacePolygon(const IBKMK::Polygon3D &parentPoly,
+											 IBKMK::Polygon3D &subSurfacePoly) {
+
+	const double TOL		= 1E-3;
+	const double FIX_WIDTH	= 1E-4;
+
+	unsigned int size = parentPoly.vertexes().size();
+	for (unsigned int i = 0; i < size; ++i) {
+		const IBKMK::Vector3D &v1 = parentPoly.vertexes()[ i			];
+		const IBKMK::Vector3D &v2 = parentPoly.vertexes()[(i + 1) % size];
+
+		std::vector<IBKMK::Vector3D> newVerts = subSurfacePoly.vertexes();
+
+		for (unsigned int j = 0; j < subSurfacePoly.vertexes().size(); ++j) {
+			const IBKMK::Vector3D &v = subSurfacePoly.vertexes()[j];
+
+			double lineFactor;
+			IBKMK::Vector3D p;
+			double distance = IBKMK::lineToPointDistance(v1, v2-v1, v, lineFactor, p);
+
+			if (distance < TOL) {
+				IBKMK::Vector3D perpVec = (v2 - v1).crossProduct(parentPoly.normal()).normalized();
+
+				double directions[2] = {-1., 1.};
+				IBKMK::Vector3D newPoint;
+				bool foundPoint = false;
+				for (double dir : directions) {
+					newPoint = v + dir * FIX_WIDTH * perpVec;
+
+					IBKMK::Vector2D point;
+					IBKMK::planeCoordinates(parentPoly.offset(), parentPoly.localX(), parentPoly.localY(), newPoint, point.m_x, point.m_y);
+
+					if (IBKMK::pointInPolygon(parentPoly.polyline().vertexes(), point) == 1) {
+						foundPoint = true;
+						break;
+					}
+				}
+
+				if (foundPoint)
+					newVerts[j] = newPoint;
+			}
+		}
+
+		IBKMK::Polygon3D newPoly(newVerts);
+		std::swap(subSurfacePoly, newPoly);
+	}
 }
 

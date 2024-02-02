@@ -51,6 +51,13 @@ public:
 	virtual void redo();
 
 private:
+	/*! Fixes sub-surfaces after trimming, so that all points lay inside the parent polygon and
+		triangulation is working properly. Writes a Warning, if sub-surface could not be fixed.
+		\param parenPoly Parent polygon of sub-surface
+		\param normal	 Normal of parent plane
+		\param subSurfacePoly Polygon of sub-surface - is going to be fixed, if possible
+	*/
+	void fixSubSurfacePolygon(const IBKMK::Polygon3D &parentPoly, IBKMK::Polygon3D &subSurfacePoly);
 
 	/*! Object copies of surfaces to be deleted and added.
 		key is id of surface to be trimmed
