@@ -1000,7 +1000,7 @@ void SVGeometryView::on_actionTrimGeometry_triggered() {
 		if (sel.empty())
 			vs.m_sceneOperationMode = SVViewState::NUM_OM;
 		else
-			vs.m_sceneOperationMode = SVViewState::OM_PolygonTrimming;
+			vs.m_sceneOperationMode = SVViewState::OM_TrimObjects;
 		SVViewStateHandler::instance().setViewState(vs);
 	}
 	Q_ASSERT(SVViewStateHandler::instance().m_propEditGeometryWidget != nullptr);
