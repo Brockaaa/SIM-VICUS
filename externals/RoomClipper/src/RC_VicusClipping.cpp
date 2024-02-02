@@ -805,12 +805,12 @@ void VicusClipper::createComponentInstances(Notification *notify, bool createCon
 
 		++currentCount;
 		// only notify every second or so
-		if (!notify->m_aborted && m_stopWatch.difference() > STOPWATCH_INTERVAL) {
+		if (notify != nullptr &&!notify->m_aborted && m_stopWatch.difference() > STOPWATCH_INTERVAL) {
 			notify->notify(0.75 + 0.25 * double(currentCount+1) / Count);
 			m_stopWatch.start();
 		}
 
-		if (notify->m_aborted)
+		if (notify != nullptr && notify->m_aborted)
 			throw IBK::Exception("Clipping canceled.", FUNC_ID);
 
 		if (handledSurfaces.find(surfA->m_id) != handledSurfaces.end())
@@ -1022,7 +1022,8 @@ void VicusClipper::createComponentInstances(Notification *notify, bool createCon
 	m_vicusCompInstances.swap(cis);
 	m_vicusSubSurfCompInstances.swap(subCis);
 
-	notify->notify(1);
+	if (notify != nullptr)
+		notify->notify(1);
 }
 
 
