@@ -165,9 +165,8 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 				vs.m_sceneOperationMode = SVViewState::NUM_OM;
 				vs.m_propertyWidgetMode = SVViewState::PM_AddGeometry;
 			}
-			else {
-				vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;
-				// Do not modify property widget mode
+			else if (vs.m_sceneOperationMode == SVViewState::OM_TrimObjects) {
+				m_trimmingObject.updateTrimmingPlane();
 			}
 			SVViewStateHandler::instance().setViewState(vs);
 		}
@@ -221,7 +220,7 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		// If we no longer have a selection, and we are in geometry mode+edit mode -> switch back to default operation mode NUM_OP
 		SVViewState vs = SVViewStateHandler::instance().viewState();
 		// Stay in Polygon Trimming when you deselect all surfaces
-		if (selectedObjects.empty() && vs.m_sceneOperationMode != SVViewState::OM_PolygonTrimming) {
+		if (selectedObjects.empty() && vs.m_sceneOperationMode != SVViewState::OM_TrimObjects) {
 			vs.m_sceneOperationMode = SVViewState::NUM_OM;
 
 			// vs.m_propertyWidgetMode = SVViewState::PM_AddGeometry;
@@ -721,15 +720,21 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 					// now we handle the snapping rules and also the locking
 					snapLocalCoordinateSystem(pickObject);
 
-					// qDebug() << localMousePos << IBKVector2QVector(o.m_pickPoint) << m_coordinateSystemObject.translation();
-
-					// determine vector to snapped mouse position
-					QVector3D newPoint = m_coordinateSystemObject.translation();
-					// vector offset from starting point to current location
-					QVector3D translationVector = newPoint - m_coordinateSystemObject.m_originalTranslation;
-					// now set this in the wireframe object as translation
-					m_selectedGeometryObject.translate(translationVector);
-
+					if (SVViewStateHandler::instance().viewState().m_sceneOperationMode == SVViewState::OM_TrimObjects) {
+						// Translate trimming plane
+						const QVector3D &newPoint = m_coordinateSystemObject.translation();
+						m_trimmingObject.setTrimmingPlanePoint(QVector2IBKVector(newPoint));
+						m_trimmingObject.updateTrimmingPlane();
+					}
+					else {
+						// qDebug() << localMousePos << IBKVector2QVector(o.m_pickPoint) << m_coordinateSystemObject.translation();
+						// determine vector to snapped mouse position
+						QVector3D newPoint = m_coordinateSystemObject.translation();
+						// vector offset from starting point to current location
+						QVector3D translationVector = newPoint - m_coordinateSystemObject.m_originalTranslation;
+						// now set this in the wireframe object as translation
+						m_selectedGeometryObject.translate(translationVector);
+					}
 
 				} break;// interactive translation active
 
@@ -1188,7 +1193,7 @@ void Scene::render() {
 		if (vs.m_propertyWidgetMode == SVViewState::PM_AddSubSurfaceGeometry)
 			m_newSubSurfaceObject.renderTransparent(); // might do nothing, if no subsurface is being constructed
 
-		if (vs.m_sceneOperationMode == SVViewState::OM_PolygonTrimming)
+		if (vs.m_sceneOperationMode == SVViewState::OM_TrimObjects)
 			m_trimmingObject.render();
 
 		m_buildingShader->release();
@@ -1230,7 +1235,7 @@ void Scene::render() {
 			vs.m_sceneOperationMode == SVViewState::OM_AlignLocalCoordinateSystem ||
 			vs.m_sceneOperationMode == SVViewState::OM_MoveLocalCoordinateSystem ||
 			vs.m_sceneOperationMode == SVViewState::OM_MeasureDistance ||
-			vs.m_sceneOperationMode == SVViewState::OM_PolygonTrimming;
+			vs.m_sceneOperationMode == SVViewState::OM_TrimObjects;
 
 	// do not draw LCS if we are in sub-surface mode
 	if (vs.m_propertyWidgetMode == SVViewState::PM_AddSubSurfaceGeometry)
@@ -2981,7 +2986,8 @@ void Scene::pick(PickObject & pickObject) {
 
 		// also, we do not snap to the local coordinate system spheres, when we are in align coordinate system
 		// mode. Basically, we only snap to the local coordinate system, when in "selected geometry" mode
-		if (SVViewStateHandler::instance().viewState().m_sceneOperationMode == SVViewState::OM_SelectedGeometry) {
+		if (SVViewStateHandler::instance().viewState().m_sceneOperationMode == SVViewState::OM_SelectedGeometry ||
+				SVViewStateHandler::instance().viewState().m_sceneOperationMode == SVViewState::OM_TrimObjects) {
 
 			PickObject::PickResult r;
 			if (m_coordinateSystemObject.pick(nearPoint, direction, r)) {
@@ -3609,7 +3615,7 @@ void Scene::handleLeftMouseClick(const KeyboardMouseHandler & keyboardHandler, P
 	}
 
 		// *** UPDATE PLANE FOR TRIMMING ***
-	case SVViewState::OM_PolygonTrimming: {
+	case SVViewState::OM_TrimObjects: {
 
 		handleSelection(keyboardHandler, o);
 
@@ -3627,7 +3633,7 @@ void Scene::handleLeftMouseClick(const KeyboardMouseHandler & keyboardHandler, P
 
 		m_trimmingObject.setBoundingBoxDimension(center, bb);
 
-		m_trimmingObject.setTrimmingPlaneNormal(QVector2IBKVector(m_coordinateSystemObject.localZAxis()));
+//		m_trimmingObject.setTrimmingPlaneNormal(QVector2IBKVector(m_coordinateSystemObject.localZAxis()));
 		m_trimmingObject.setTrimmingPlanePoint(QVector2IBKVector(m_coordinateSystemObject.translation()));
 		m_trimmingObject.updateTrimmingPlane();
 	}
@@ -3778,8 +3784,8 @@ void Scene::setDefaultViewState() {
 			if (vs.m_propertyWidgetMode == SVViewState::PM_EditGeometry)
 				vs.m_propertyWidgetMode = SVViewState::PM_AddGeometry;
 		}
-		else if (m_coordinateSystemObject.m_geometryTransformMode == Vic3D::CoordinateSystemObject::TM_Trim)
-			vs.m_sceneOperationMode = SVViewState::OM_PolygonTrimming;
+		else if (m_coordinateSystemObject.m_geometryTransformMode == Vic3D::CoordinateSystemObject::TM_TrimMask)
+			vs.m_sceneOperationMode = SVViewState::OM_TrimObjects;
 		else
 			vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;
 		SVViewStateHandler::instance().setViewState(vs);
