@@ -139,9 +139,17 @@ public slots:
 	/*! Is called when a line edit fields text has changed. */
 	void onLineEditTextEdited(const QString);
 
+	/*! Updated the final rotation of the trimming plane. */
+	void onTrimmingRotationFinished();
+
 protected:
 	/*! Event Filter: Needed for all scrolling specific inputs */
 	bool eventFilter(QObject *target, QEvent *event) override;
+
+	/*! Focus out event.
+		Needed for transformation application.
+	*/
+	void focusOutEvent(QFocusEvent *event) override;
 
 private slots:
 
@@ -250,7 +258,7 @@ private:
 	void updateRotationPreview();
 
 	/*! Updates the transformation matrix for rotating the trim grid. */
-	void updateTrimGridRotationPreview();
+	void updateTrimGridRotationPreview(bool updateNormal = false);
 
 	/*! Updates the transformation matrix for local scaling.
 		The parameter aspectRatioSourceEdit, if not -1, indicates which
