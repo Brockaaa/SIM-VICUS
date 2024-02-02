@@ -79,14 +79,14 @@ public:
 		/*! Scale along Z-axis. */
 		TM_ScaleZ								= 0x040,
 		/*! Trim selected objects. */
-		TM_Trim									= 0x100,
 
 		/*! Translation mode (there is no axis-specific handling for translation, since translation locks are
 			set separetely)
 		*/
-		TM_Translate							= 0x200,
+		TM_Translate							= 0x100,
 		TM_RotateMask							= TM_RotateX | TM_RotateY | TM_RotateZ,
-		TM_ScaleMask							= TM_ScaleX | TM_ScaleY | TM_ScaleZ
+		TM_ScaleMask							= TM_ScaleX | TM_ScaleY | TM_ScaleZ,
+		TM_TrimMask								= TM_Translate
 	};
 
 
