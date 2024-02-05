@@ -302,12 +302,12 @@ void VicusClipper::clipSurfaces(Notification * notify) {
 		it != m_surfaceConnections.end(); ++it){
 
 		// only notify every second or so
-		if (!notify->m_aborted && m_stopWatch.difference() > STOPWATCH_INTERVAL) {
+		if (notify != nullptr && !notify->m_aborted && m_stopWatch.difference() > STOPWATCH_INTERVAL) {
 			notify->notify(0.5 + 0.25*double(currentConnectionCount+1) / connectionCount);
 			m_stopWatch.start();
 		}
 
-		if (notify->m_aborted)
+		if (notify != nullptr && notify->m_aborted)
 			throw IBK::Exception("Clipping canceled.", FUNC_ID);
 
 		++currentConnectionCount;
@@ -670,7 +670,7 @@ unsigned int VicusClipper::findComponentInstanceForSurface(const VICUS::Surface 
 	if (!replaceComponentInstance) {
 		for (unsigned int i=0; i<m_vicusCompInstances.size(); ++i){
 			VICUS::ComponentInstance& ci = m_vicusCompInstances[i];
-			if (ci.m_idSideASurface == s.m_id){
+			if (ci.m_idSideASurface == s.m_id || ci.m_idSideBSurface == s.m_id){
 				return ci.m_idComponent;
 			}
 		}

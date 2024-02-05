@@ -59,7 +59,7 @@ void SVUndoTrimObjects::undo() {
 
 void SVUndoTrimObjects::redo() {
 	// iterate over different trims
-//	std::map<unsigned int, const VICUS::ComponentInstance *> cisA, cisB;
+	//	std::map<unsigned int, const VICUS::ComponentInstance *> cisA, cisB;
 
 	for (std::map<unsigned int, std::vector<IBKMK::Polygon3D>>::iterator it = m_trimmedPolygons.begin();
 		 it != m_trimmedPolygons.end(); ++it )
@@ -200,9 +200,12 @@ void SVUndoTrimObjects::redo() {
 			unsigned int idx = 0;
 			std::vector<VICUS::ComponentInstance>			&cis    = m_project.m_componentInstances;
 			std::vector<VICUS::SubSurfaceComponentInstance> &subCis = m_project.m_subSurfaceComponentInstances;
+			bool foundComponent = false;
 			for (; idx < m_project.m_componentInstances.size(); ++idx) {
-				if (cis[idx].m_idSideASurface == id || cis[idx].m_idSideBSurface == id)
+				if (cis[idx].m_idSideASurface == id || cis[idx].m_idSideBSurface == id) {
+					foundComponent = true;
 					break;
+				}
 			}
 			for (unsigned int i = 0; i < room->m_surfaces.size(); ++i) {
 				if (id == room->m_surfaces[i].m_id) {
@@ -212,21 +215,24 @@ void SVUndoTrimObjects::redo() {
 				}
 			}
 
-			for (unsigned newId : newSurfaceIds) {
-				VICUS::ComponentInstance newCi = cis[idx];
-				newCi.m_id = nextId++;
-				if (newCi.m_idSideASurface == id) {
-					newCi.m_idSideASurface = newId;
-					newCi.m_idSideBSurface = VICUS::INVALID_ID;
+			if (foundComponent) {
+				for (unsigned newId : newSurfaceIds) {
+					VICUS::ComponentInstance newCi = cis[idx];
+					newCi.m_id = nextId++;
+					if (newCi.m_idSideASurface == id) {
+						newCi.m_idSideASurface = newId;
+						newCi.m_idSideBSurface = VICUS::INVALID_ID;
+						cis.push_back(newCi);
+					}
+					else if (newCi.m_idSideBSurface == id) {
+						newCi.m_idSideASurface = VICUS::INVALID_ID;
+						newCi.m_idSideBSurface = newId;
+						cis.push_back(newCi);
+					}
+					// Add new sub surface component instances
 				}
-				else if (newCi.m_idSideBSurface == id) {
-					newCi.m_idSideASurface = VICUS::INVALID_ID;
-					newCi.m_idSideBSurface = newId;
-				}
-				// Add new sub surface component instances
-				m_project.m_componentInstances.push_back(newCi);
+				cis.erase(cis.begin() + idx);
 			}
-			cis.erase(cis.begin() + idx);
 
 			idx = 0;
 			std::vector<unsigned int> idxToDelete;
@@ -269,7 +275,10 @@ void SVUndoTrimObjects::redo() {
 
 
 	RC::VicusClipper vicusClipper(m_project.m_buildings, m_project.m_componentInstances, 5, 1, m_project.nextUnusedID(), true);
+	vicusClipper.clipSurfaces(nullptr);
 	vicusClipper.createComponentInstances(nullptr);
+	m_project.m_buildings = vicusClipper.vicusBuildings();
+	m_project.m_componentInstances = *vicusClipper.vicusCompInstances();
 
 	std::swap(theProject(), m_project);
 	theProject().updatePointers();
