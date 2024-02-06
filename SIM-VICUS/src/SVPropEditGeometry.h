@@ -276,7 +276,7 @@ private:
 	void updateCoordinateSystemLook();
 
 	/*! If Trimming is selected, we create a trimming grid, otherwise delete if necessary. */
-	void updateTrimmingPlane();
+	void updateTrimmingPlane(const IBKMK::Vector3D &trans);
 
 	/*! Update Trimming Grid position if LCS changed */
 	void updateTrimmingGridLcs();

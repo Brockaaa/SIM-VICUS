@@ -301,7 +301,8 @@ void SVPropEditGeometry::onViewStateChanged() {
 		SVViewStateHandler::instance().m_selectedGeometryObject->resetTransformation();
 	}
 	else if (vs.m_sceneOperationMode == SVViewState::OM_TrimObjects) {
-		updateTrimmingPlane();
+		const QVector3D &trans = SVViewStateHandler::instance().m_coordinateSystemObject->translation();
+		updateTrimmingPlane(QVector2IBKVector(trans));
 	}
 }
 
@@ -484,17 +485,32 @@ void SVPropEditGeometry::on_lineEditRotateZTrimming_editingFinishedSuccessfully(
 }
 
 void SVPropEditGeometry::on_lineEditTranslateTrimmingX_editingFinishedSuccessfully() {
-	updateTrimmingPlane();
+	double newX = m_ui->lineEditTranslateTrimmingX->value();
+	double newY = m_ui->lineEditTranslateTrimmingY->value();
+	double newZ = m_ui->lineEditTranslateTrimmingZ->value();
+	IBKMK::Vector3D translation ((float)newX, (float)newY, (float)newZ);
+
+	updateTrimmingPlane(translation);
 }
 
 
 void SVPropEditGeometry::on_lineEditTranslateTrimmingY_editingFinishedSuccessfully() {
-	updateTrimmingPlane();
+	double newX = m_ui->lineEditTranslateTrimmingX->value();
+	double newY = m_ui->lineEditTranslateTrimmingY->value();
+	double newZ = m_ui->lineEditTranslateTrimmingZ->value();
+	IBKMK::Vector3D translation ((float)newX, (float)newY, (float)newZ);
+
+	updateTrimmingPlane(translation);
 }
 
 
 void SVPropEditGeometry::on_lineEditTranslateTrimmingZ_editingFinishedSuccessfully() {
-	updateTrimmingPlane();
+	double newX = m_ui->lineEditTranslateTrimmingX->value();
+	double newY = m_ui->lineEditTranslateTrimmingY->value();
+	double newZ = m_ui->lineEditTranslateTrimmingZ->value();
+	IBKMK::Vector3D translation ((float)newX, (float)newY, (float)newZ);
+
+	updateTrimmingPlane(translation);
 }
 
 void SVPropEditGeometry::on_pushButtonThreePointRotation_clicked() {
@@ -1177,12 +1193,7 @@ void SVPropEditGeometry::updateCoordinateSystemLook() {
 	}
 }
 
-void SVPropEditGeometry::updateTrimmingPlane() {
-
-	double newX = m_ui->lineEditTranslateTrimmingX->value();
-	double newY = m_ui->lineEditTranslateTrimmingY->value();
-	double newZ = m_ui->lineEditTranslateTrimmingZ->value();
-//	QVector3D translation = QVector3D((float)newX, (float)newY, (float)newZ);
+void SVPropEditGeometry::updateTrimmingPlane(const IBKMK::Vector3D &trans) {
 
 	const VICUS::Project &prj = SVProjectHandler::instance().project();
 
@@ -1201,7 +1212,7 @@ void SVPropEditGeometry::updateTrimmingPlane() {
 
 	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
 	to.setBoundingBoxDimension(center, bb);
-	to.setTrimmingPlanePoint(QVector2IBKVector(cso.translation()));
+	to.setTrimmingPlanePoint(trans);
 	to.updateTrimmingPlane();
 
 	SVViewStateHandler::instance().m_geometryView->refreshSceneView();
@@ -1735,6 +1746,10 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 		}
 		// Add back trimmes sub surfaces
 		trimmedSubSurfacePolygons[subSurf->m_id] = validTrimmedSubSurfacePolygons;
+
+		// Readd old polygon
+		if (trimmedSurfacePolygons.find(surf->m_id) == trimmedSurfacePolygons.end())
+			trimmedSurfacePolygons[surf->m_id].push_back(surf->polygon3D());
 
 		// Readd original surface polygon, if it hasn't been trimmed before
 		++successfulTrims;
