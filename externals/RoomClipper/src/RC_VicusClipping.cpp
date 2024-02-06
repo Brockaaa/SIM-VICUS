@@ -675,27 +675,27 @@ unsigned int VicusClipper::findComponentInstanceForSurface(const VICUS::Surface 
 			}
 		}
 	}
-
-	// Search for standard components
-	double angleZ = IBKMK::angleBetweenVectorsDeg(s.geometry().normal(), IBKMK::Vector3D(0,0,1));
-
-	if (coupledSurface) {
-		if (angleZ < 45 || angleZ > 315)
-			return m_predefinedComponents[PredefinedComponentType::PDC_Ceiling];
-		else if (angleZ > 45 && angleZ < 135)
-			return m_predefinedComponents[PredefinedComponentType::PDC_InteriorWall];
-		else if (angleZ > 135 && angleZ < 225)
-			return m_predefinedComponents[PredefinedComponentType::PDC_Ceiling];
-	}
 	else {
-		if (angleZ < 45 || angleZ > 315)
-			return m_predefinedComponents[PredefinedComponentType::PDC_Roof];
-		else if (angleZ > 45 && angleZ < 135)
-			return m_predefinedComponents[PredefinedComponentType::PDC_ExteriorWall];
-		else if (angleZ > 135 && angleZ < 225)
-			return m_predefinedComponents[PredefinedComponentType::PDC_Floor];
-	}
+		// Search for standard components
+		double angleZ = IBKMK::angleBetweenVectorsDeg(s.geometry().normal(), IBKMK::Vector3D(0,0,1));
 
+		if (coupledSurface) {
+			if (angleZ < 45 || angleZ > 315)
+				return m_predefinedComponents[PredefinedComponentType::PDC_Ceiling];
+			else if (angleZ > 45 && angleZ < 135)
+				return m_predefinedComponents[PredefinedComponentType::PDC_InteriorWall];
+			else if (angleZ > 135 && angleZ < 225)
+				return m_predefinedComponents[PredefinedComponentType::PDC_Ceiling];
+		}
+		else {
+			if (angleZ < 45 || angleZ > 315)
+				return m_predefinedComponents[PredefinedComponentType::PDC_Roof];
+			else if (angleZ > 45 && angleZ < 135)
+				return m_predefinedComponents[PredefinedComponentType::PDC_ExteriorWall];
+			else if (angleZ > 135 && angleZ < 225)
+				return m_predefinedComponents[PredefinedComponentType::PDC_Floor];
+		}
+	}
 	return VICUS::INVALID_ID;
 }
 
