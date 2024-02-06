@@ -151,7 +151,7 @@ public:
 	*/
 	void enlargeBoundingBox(IBKMK::Vector3D & lowerValues, IBKMK::Vector3D & upperValues) const;
 
-	/*! \ToDo Moritz: Documenatation
+	/*! \ToDo Moritz: Documentation
 		\returns Returns true if point is on a line with and contained within two points.
 	*/
 	bool pointInEdge(const Vector3D &point, const Vector3D &edgeA, const Vector3D &edgeB);
