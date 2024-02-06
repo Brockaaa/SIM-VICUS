@@ -994,13 +994,7 @@ void SVGeometryView::on_actionTrimGeometry_triggered() {
 	{
 		vs.m_propertyWidgetMode = SVViewState::PM_EditGeometry;
 		vs.m_objectColorMode = SVViewState::OCM_None;
-		// we choose the operation based on the selection state
-		std::set<const VICUS::Object *> sel;
-		project().selectObjects(sel, VICUS::Project::SG_All, true, true);
-		if (sel.empty())
-			vs.m_sceneOperationMode = SVViewState::NUM_OM;
-		else
-			vs.m_sceneOperationMode = SVViewState::OM_TrimObjects;
+		vs.m_sceneOperationMode = SVViewState::OM_TrimObjects; // Always go to trimming mode
 		SVViewStateHandler::instance().setViewState(vs);
 	}
 	Q_ASSERT(SVViewStateHandler::instance().m_propEditGeometryWidget != nullptr);
