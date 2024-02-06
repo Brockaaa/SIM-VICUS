@@ -503,7 +503,7 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 			if (keyboardHandler.keyDown(Qt::Key_Space))
 				dampening = 1;
 
-			IBKMK::Vector3D cameraTrans = dampening * m_panCABARatio*BBDashVec;
+			IBKMK::Vector3D cameraTrans = dampening * m_panCABARatio * BBDashVec;
 
 			// translate camera
 			// qDebug() << "Camera translation";
