@@ -3127,6 +3127,10 @@ void Scene::snapLocalCoordinateSystem(const PickObject & pickObject) {
 	else if (vs.m_sceneOperationMode == SVViewState::OM_MeasureDistance) {
 		axisLockOffset = QVector2IBKVector(m_coordinateSystemObject.m_originalTranslation);
 	}
+	else if (vs.m_sceneOperationMode == SVViewState::OM_TrimObjects) {
+		axisLockOffset = QVector2IBKVector(m_coordinateSystemObject.m_originalTranslation);
+	}
+
 	// override user-selected axis lock for scaling operation
 	if (axisLoc != SVViewState::NUM_L)
 		actualLockOption = axisLoc;
