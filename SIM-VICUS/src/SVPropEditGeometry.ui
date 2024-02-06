@@ -879,13 +879,6 @@
            </layout>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButtonApplyTrimmingRotation">
-            <property name="text">
-             <string>Apply rotation</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="Line" name="line">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>

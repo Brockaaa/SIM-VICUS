@@ -1654,6 +1654,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 	std::map<unsigned int, std::vector<IBKMK::Polygon3D>> trimmedSurfacePolygons;
 	std::map<unsigned int, std::vector<IBKMK::Polygon3D>> trimmedSubSurfacePolygons;
 
+	// *** selected surfaces ***
 	for (const VICUS::Object* o : sel) {
 		const VICUS::Surface * surf = dynamic_cast<const VICUS::Surface*>(o);
 		if (surf == nullptr)
@@ -1682,51 +1683,61 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 		//		qDebug() << QString("Trimming of surface %1 successful.").arg(surf->info());
 		++successfulTrims;
+	}
 
-		// For each subsurface of the surface
-		for (const VICUS::SubSurface & subS : surf->subSurfaces()) {
-			//qDebug() << "has subsurface" << subS.m_id;
-			const IBKMK::Vector3D & offset3D = surf->polygon3D().offset();
-			const std::vector<IBKMK::Vector2D> & verts = subS.m_polygon2D.vertexes();
+	// *** selected subsurfaces ***
+	for (const VICUS::Object* o : sel) {
+		const VICUS::SubSurface * subSurf = dynamic_cast<const VICUS::SubSurface*>(o);
+		if (subSurf == nullptr)
+			continue; // skip all other objects
 
-			// Transforming 2d SubSurface into 3d surface
-			std::vector<IBKMK::Vector3D> verts3D(verts.size());
+		VICUS::Surface *surf = dynamic_cast<VICUS::Surface*>(subSurf->m_parent);
+		Q_ASSERT(surf != nullptr);
 
-			for (unsigned int i = 0; i < verts.size(); ++i) {
-				const IBKMK::Vector2D & point2d = verts[i];
-				verts3D[i] = offset3D + surf->polygon3D().localX() * point2d.m_x +
-						surf->polygon3D().localY() * point2d.m_y;
-			}
+		//qDebug() << "has subsurface" << subS.m_id;
+		const IBKMK::Vector3D &offset3D = surf->polygon3D().offset();
+		const std::vector<IBKMK::Vector2D> &verts = subSurf->m_polygon2D.vertexes();
 
-			IBKMK::Polygon3D subSurfacePolygon(verts3D);
-			std::vector<IBKMK::Polygon3D> trimmedSubSurfacePolys;
+		// Transforming 2d SubSurface into 3d surface
+		std::vector<IBKMK::Vector3D> verts3D(verts.size());
 
-			// *** TRIMMING OF SUB SURFACE POLYGONS HANDLED HERE ***
-			bool subSurfaceTrimmingSuccessful = subSurfacePolygon.trimByPlane(to.trimmingPolygon(), trimmedSubSurfacePolys);
-			// *****************************************************
-
-			if (!subSurfaceTrimmingSuccessful) {
-				qDebug() << "Could not trim polygon of sub-surface '" << subS.m_displayName << "' with ID #" << subS.m_id;
-
-				// Push back entire sub-surface without trimming
-				trimmedSubSurfacePolygons[subS.m_id].push_back(IBKMK::Polygon3D(verts3D));
-
-				// handle next sub-surface
-				continue;
-			}
-
-			// subSurface trimmed, add results to corresponding parent surfaces
-			std::vector<IBKMK::Polygon3D> validTrimmedSubSurfacePolygons;
-			for (const IBKMK::Polygon3D &subSurfacePolygon : trimmedSubSurfacePolys) {
-				if (!subSurfacePolygon.isValid())
-					continue;
-
-				// Add back valid polygon
-				validTrimmedSubSurfacePolygons.push_back(subSurfacePolygon);
-			}
-			// Add back trimmes sub surfaces
-			trimmedSubSurfacePolygons[subS.m_id] = validTrimmedSubSurfacePolygons;
+		for (unsigned int i = 0; i < verts.size(); ++i) {
+			const IBKMK::Vector2D & point2d = verts[i];
+			verts3D[i] = offset3D + surf->polygon3D().localX() * point2d.m_x +
+									surf->polygon3D().localY() * point2d.m_y;
 		}
+
+		IBKMK::Polygon3D subSurfacePolygon(verts3D);
+		std::vector<IBKMK::Polygon3D> trimmedSubSurfacePolys;
+
+		// *** TRIMMING OF SUB SURFACE POLYGONS HANDLED HERE ***
+		bool subSurfaceTrimmingSuccessful = subSurfacePolygon.trimByPlane(to.trimmingPolygon(), trimmedSubSurfacePolys);
+		// *****************************************************
+
+		if (!subSurfaceTrimmingSuccessful) {
+			qDebug() << "Could not trim polygon of sub-surface '" << subSurf->m_displayName << "' with ID #" << subSurf->m_id;
+
+			// Push back entire sub-surface without trimming
+			trimmedSubSurfacePolygons[subSurf->m_id].push_back(IBKMK::Polygon3D(verts3D));
+
+			// handle next sub-surface
+			continue;
+		}
+
+		// subSurface trimmed, add results to corresponding parent surfaces
+		std::vector<IBKMK::Polygon3D> validTrimmedSubSurfacePolygons;
+		for (const IBKMK::Polygon3D &subSurfacePolygon : trimmedSubSurfacePolys) {
+			if (!subSurfacePolygon.isValid())
+				continue;
+
+			// Add back valid polygon
+			validTrimmedSubSurfacePolygons.push_back(subSurfacePolygon);
+		}
+		// Add back trimmes sub surfaces
+		trimmedSubSurfacePolygons[subSurf->m_id] = validTrimmedSubSurfacePolygons;
+
+		// Readd original surface polygon, if it hasn't been trimmed before
+		++successfulTrims;
 	}
 
 	if (successfulTrims == 0) {
