@@ -125,9 +125,11 @@ void SVUndoTrimObjects::redo() {
 						aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
 					}
 
+					const std::vector<IBKMK::Polygon3D> &subSurfPolys = m_trimmedSubsurfaces[ssit->first];
+
 					// Add all trimresults of this subsurface, whose centerpoint is contained in this surfacePoly
-					for (unsigned int k = 0; k < m_trimmedSubsurfaces[ssit->first].size(); ++k) {
-						const IBKMK::Polygon3D &subSurfPoly = m_trimmedSubsurfaces[ssit->first][k];
+					for (unsigned int k = 0; k < subSurfPolys.size(); ++k) {
+						const IBKMK::Polygon3D &subSurfPoly = subSurfPolys[k];
 
 						IBKMK::Vector3D subPolyCenter = subSurfPoly.centerPoint();
 
@@ -173,7 +175,7 @@ void SVUndoTrimObjects::redo() {
 
 							// Store new IDs for subsurface component instance swapping
 							newSubSurfaceIds[ss->m_id].insert(nextId++);
-							break;
+
 						}
 					}
 				}
