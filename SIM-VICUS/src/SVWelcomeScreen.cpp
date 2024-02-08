@@ -72,10 +72,26 @@ SVWelcomeScreen::SVWelcomeScreen(QWidget *parent) :
 	m_ui->textBrowserMain->setStyleSheet("QTextBrowser { border: none; }");
 	m_ui->textBrowserNews->setStyleSheet("QTextBrowser { border: none; }");
 
+	m_ui->toolButtonNewProject->setIcon(QIcon::fromTheme("file_new"));
+	m_ui->toolButtonOpenProject->setIcon(QIcon::fromTheme("file_open"));
+
+	// labels need a fixed width to prevent shifting the layout during hovering (bold text is wider)
+	// we set the width dynamically here, as it depends on translation
+	m_ui->labelRecent->setActive(true);
+	QSize s1 = m_ui->labelRecent->sizeHint();
+	m_ui->labelRecent->setFixedWidth(s1.width());
+	m_ui->labelExample->setActive(true);
+	QSize s2 = m_ui->labelExample->sizeHint();
+	m_ui->labelExample->setFixedWidth(s2.width());
+
 	connect(m_ui->labelRecent, SIGNAL(clicked()), this, SLOT(on_labelRecentClicked()));
 	connect(m_ui->labelExample, SIGNAL(clicked()), this, SLOT(on_labelExampleClicked()));
 
 	on_labelRecentClicked();
+
+	// hide news for now
+	m_ui->textBrowserNews->setVisible(false);
+
 }
 
 
@@ -112,7 +128,7 @@ void SVWelcomeScreen::updateWelcomePage() {
 	QString htmlPage = HTML_TEMPLATE;
 	SVStyle::setHtmlColors(htmlPage);
 
-	int size = (int)SVSettings::instance().m_thumbNailSize;
+	int thumbNailSize = (int)SVSettings::instance().m_thumbNailSize;
 
 	if (m_pageType == PT_RecentFiles) {
 		// compose recent project file list table
@@ -162,13 +178,13 @@ void SVWelcomeScreen::updateWelcomePage() {
 			QFileInfo thumbFileInfo(thumbPath);
 			// check if file exists
 			if (thumbFileInfo.exists())
-				thumbPath = "<a href=\"pfile:${PROJECT_FULL_PATH}\"><img width=\"" + QString::number(size) + "\" src=\"" + thumbFileInfo.absoluteFilePath() + "\"></a>&nbsp;";
+				thumbPath = "<a href=\"pfile:${PROJECT_FULL_PATH}\"><img width=\"" + QString::number(thumbNailSize) + "\" src=\"" + thumbFileInfo.absoluteFilePath() + "\"></a>&nbsp;";
 			else
 				thumbPath = "&nbsp;";
 			thumbPath = thumbPath.replace("${PROJECT_FULL_PATH}", finfo.filePath());
 
 			// thumbnails generated from the software have all the same thumbnail size
-			projectInfoBlock = projectInfoBlock.replace("${THUMBNAILSIZE}", QString("%1").arg(SVSettings::instance().m_thumbNailSize+20));
+			projectInfoBlock = projectInfoBlock.replace("${THUMBNAILSIZE}", QString("%1").arg(thumbNailSize+20));
 			projectInfoBlock = projectInfoBlock.replace("${PROJECT_FILENAME}", finfo.fileName());
 			projectInfoBlock = projectInfoBlock.replace("${PROJECT_FULL_PATH}", finfo.filePath());
 			projectInfoBlock = projectInfoBlock.replace("${PROJECT_DESCRIPTION}", description);
@@ -230,7 +246,7 @@ void SVWelcomeScreen::updateWelcomePage() {
 //			}
 //			else {
 //				thumbPath = "&nbsp;";
-//				projectInfoBlock = projectInfoBlock.replace("${THUMBNAILSIZE}", QString("%1").arg(SVSettings::instance().m_thumbNailSize+20));
+//				projectInfoBlock = projectInfoBlock.replace("${THUMBNAILSIZE}", QString("%1").arg(thumbNailSize+20));
 //			}
 
 //			projectInfoBlock = projectInfoBlock.replace("${IMG_FILENAME}", thumbPath);
@@ -285,15 +301,15 @@ void SVWelcomeScreen::updateWelcomePage() {
 			// check if file exists
 			if (thumbFileInfo.exists() && p.load(thumbPath)) {
 				/// \todo Andreas: fix warning about bad resource loading (related to image files)
-				thumbPath = "<a href=\"pexample:${PROJECT_FULL_PATH}\"><img width=\"" + QString::number(size) + "\" src=\"" + thumbFileInfo.absoluteFilePath() + "\"></a>&nbsp;";
+				thumbPath = "<a href=\"pexample:${PROJECT_FULL_PATH}\"><img width=\"" + QString::number(thumbNailSize) + "\" src=\"" + thumbFileInfo.absoluteFilePath() + "\"></a>&nbsp;";
 				thumbPath = thumbPath.replace("${PROJECT_FULL_PATH}", finfo.filePath());
 
 				// Example projects may have larger thumbnails - hence we set the thumbnailsize based on the image size
-				projectInfoBlock = projectInfoBlock.replace("${THUMBNAILSIZE}", QString("%1").arg(p.width()+20));
+				projectInfoBlock = projectInfoBlock.replace("${THUMBNAILSIZE}", QString("%1").arg(thumbNailSize+20));
 			}
 			else {
 				thumbPath = "&nbsp;";
-				projectInfoBlock = projectInfoBlock.replace("${THUMBNAILSIZE}", QString("%1").arg(SVSettings::instance().m_thumbNailSize+20));
+				projectInfoBlock = projectInfoBlock.replace("${THUMBNAILSIZE}", QString("%1").arg(thumbNailSize+20));
 			}
 
 			projectInfoBlock = projectInfoBlock.replace("${IMG_FILENAME}", thumbPath);
@@ -307,8 +323,8 @@ void SVWelcomeScreen::updateWelcomePage() {
 
 
 void SVWelcomeScreen::setLabelColors(QString color) {
-	m_ui->labelRecent->setStyleSheet(QString("QLabel { font-weight: normal; color: %1}").arg(color), QString("QLabel { font-weight: bold; color: %1}").arg(color));
-	m_ui->labelExample->setStyleSheet(QString("QLabel { font-weight: normal; color: %1}").arg(color), QString("QLabel { font-weight: bold; color: %1}").arg(color));
+	m_ui->labelRecent->setStyleSheet("QLabel { font-weight: normal}", "QLabel { font-weight: bold}", QString("QLabel { font-weight: bold; color: %1}").arg(color));
+	m_ui->labelExample->setStyleSheet("QLabel { font-weight: normal", "QLabel { font-weight: bold}", QString("QLabel { font-weight: bold; color: %1}").arg(color));
 }
 
 
@@ -447,11 +463,15 @@ void SVWelcomeScreen::on_labelExampleClicked() {
 void SVWelcomeScreen::onStyleChanged() {
 	// set colors of clickable labels
 	if (SVSettings::instance().m_theme == SVSettings::TT_Dark)
-		setLabelColors("#ff7e16");
+		setLabelColors("#eb9a2f");
 	else
-		setLabelColors("#003264");
+		setLabelColors("#eb9a2f");
 	updateWelcomePage(); // this also updates html colors
 	update();
+
+
+	QPixmap pixmap = QIcon::fromTheme("simvicus_logo").pixmap(300);
+	m_ui->labelLogo->setPixmap(pixmap);
 }
 
 

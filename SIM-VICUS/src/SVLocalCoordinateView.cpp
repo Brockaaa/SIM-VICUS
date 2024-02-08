@@ -43,6 +43,24 @@ SVLocalCoordinateView::SVLocalCoordinateView(QWidget *parent) :
 
 	// make us known to the world
 	SVViewStateHandler::instance().m_localCoordinateViewWidget = this;
+
+	QIcon coord = QIcon::fromTheme("local_coordinate");
+	m_ui->labelCoordinateSystem->setPixmap(coord.pixmap(24));
+	QIcon dim = QIcon::fromTheme("dimensions");
+	m_ui->labelBoundingBox->setPixmap(dim.pixmap(24));
+	m_ui->toolButtonAlignCoordinateSystem->setIcon(QIcon::fromTheme("local_coordinate_align"));
+	m_ui->toolButtonMoveCoordinateSystem->setIcon(QIcon::fromTheme("local_coordinate_move"));
+	m_ui->toolButtonInformation->setIcon(QIcon::fromTheme("surface_info"));
+
+	m_ui->lineEditBoundingBoxDimensionX->setObjectName("xAxis");
+	m_ui->lineEditBoundingBoxDimensionY->setObjectName("yAxis");
+	m_ui->lineEditBoundingBoxDimensionZ->setObjectName("zAxis");
+
+	m_ui->lineEditXValue->setObjectName("xAxis");
+	m_ui->lineEditYValue->setObjectName("yAxis");
+	m_ui->lineEditZValue->setObjectName("zAxis");
+
+//	setStyleSheet("QToolButton {border: 1px solid lightgray}");
 }
 
 

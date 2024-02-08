@@ -53,7 +53,7 @@ void setTableWidgetItem(QTableWidget *table, std::map<VICUS::EpdModuleDataset::M
 	table->setItem(row, 0, item);
 
 	if(isNotUsed)
-		item->setTextColor(Qt::darkGray);
+		item->setForeground(Qt::darkGray);
 
 	moduleToTableItem[module] = item;
 }
@@ -125,6 +125,8 @@ SVDBMaterialEditWidget::SVDBMaterialEditWidget(QWidget *parent) :
 	m_ui->comboBoxCategory->blockSignals(false);
 
 	// color button size fix (overriding style settings)
+
+	m_ui->tabWidgetThermal->setTabEnabled(1, false);
 
 	// initial state is "nothing selected"
 	updateInput(-1);
@@ -217,7 +219,7 @@ void SVDBMaterialEditWidget::updateInput(int id) {
 		if(tableWidgetItem.second != nullptr) {
 			if(tableWidgetItem.second->data(Qt::UserRole) == true) {
 				tableWidgetItem.second->setData(Qt::UserRole+1, false);
-				tableWidgetItem.second->setBackgroundColor(Qt::darkRed);
+				tableWidgetItem.second->setForeground(Qt::darkRed);
 			}
 			else
 				tableWidgetItem.second->setBackground(QBrush(""));
@@ -388,7 +390,7 @@ void SVDBMaterialEditWidget::updateCategory(unsigned int idCategory, VICUS::Mate
 
 						if(m_moduleToTableItem[modules[j]]->data(Qt::UserRole) == true) {
 							m_moduleToTableItem[modules[j]]->setData(Qt::UserRole+1, true);
-							m_moduleToTableItem[modules[j]]->setBackgroundColor(Qt::darkGreen);
+							m_moduleToTableItem[modules[j]]->setBackground(Qt::darkGreen);
 						}
 					}
 				}
@@ -398,7 +400,7 @@ void SVDBMaterialEditWidget::updateCategory(unsigned int idCategory, VICUS::Mate
 }
 
 
-void SVDBMaterialEditWidget::updateCategoryValidity(unsigned int idCategory, const VICUS::LcaSettings::LcaCategory category) {
+void SVDBMaterialEditWidget::updateCategoryValidity(unsigned int /*idCategory*/, const VICUS::LcaSettings::LcaCategory category) {
 	bool isValid = true;
 
 	for(std::pair<VICUS::EpdModuleDataset::Module, QTableWidgetItem*> tableWidgetItem : m_moduleToTableItem) {
@@ -434,7 +436,7 @@ void SVDBMaterialEditWidget::on_toolButtonSelectCatA_clicked() {
 	SVDatabaseEditDialog * editDialog = SVMainWindow::instance().dbEpdEditDialog();
 	unsigned int idCatA = editDialog->select(m_current->m_epdCategorySet.m_idCategory[VICUS::EpdCategorySet::C_IDCategoryA], false, "A", 4);
 	if (idCatA != VICUS::INVALID_ID && idCatA != m_current->m_epdCategorySet.m_idCategory[VICUS::EpdCategorySet::C_IDCategoryA]) {
-		VICUS::EpdDataset * epd = const_cast<VICUS::EpdDataset *>(m_db->m_epdDatasets[idCatA]);
+//		VICUS::EpdDataset * epd = const_cast<VICUS::EpdDataset *>(m_db->m_epdDatasets[idCatA]);
 
 		//		if(epd->m_module != VICUS::EpdDataset::M_A1 &&
 		//				epd->m_module != VICUS::EpdDataset::M_A1_A2  &&
@@ -464,7 +466,7 @@ void SVDBMaterialEditWidget::on_toolButtonSelectCatB_clicked() {
 	SVDatabaseEditDialog * editDialog = SVMainWindow::instance().dbEpdEditDialog();
 	unsigned int idCatB = editDialog->select(m_current->m_epdCategorySet.m_idCategory[VICUS::EpdCategorySet::C_IDCategoryB], false, "B", 4);
 	if (idCatB != VICUS::INVALID_ID && idCatB != m_current->m_epdCategorySet.m_idCategory[VICUS::EpdCategorySet::C_IDCategoryB]) {
-		VICUS::EpdDataset * epd = const_cast<VICUS::EpdDataset *>(m_db->m_epdDatasets[idCatB]);
+//		VICUS::EpdDataset * epd = const_cast<VICUS::EpdDataset *>(m_db->m_epdDatasets[idCatB]);
 
 		//		if(epd->m_module != VICUS::EpdDataset::M_B1 &&
 		//				epd->m_module != VICUS::EpdDataset::M_B2  &&
@@ -495,7 +497,7 @@ void SVDBMaterialEditWidget::on_toolButtonSelectCatC_clicked() {
 	unsigned int idCatC = editDialog->select(m_current->m_epdCategorySet.m_idCategory[VICUS::EpdCategorySet::C_IDCategoryC], false, "C", 4); // we do not want to reset the model all the time
 
 	if (idCatC != VICUS::INVALID_ID && idCatC != m_current->m_epdCategorySet.m_idCategory[VICUS::EpdCategorySet::C_IDCategoryC]) {
-		VICUS::EpdDataset * epd = const_cast<VICUS::EpdDataset *>(m_db->m_epdDatasets[idCatC]);
+//		VICUS::EpdDataset * epd = const_cast<VICUS::EpdDataset *>(m_db->m_epdDatasets[idCatC]);
 
 		//		if(epd->m_module != VICUS::EpdDataset::M_C1 &&
 		//				epd->m_module != VICUS::EpdDataset::M_C2 &&
@@ -526,7 +528,7 @@ void SVDBMaterialEditWidget::on_toolButtonSelectCatD_clicked() {
 	SVDatabaseEditDialog * editDialog = SVMainWindow::instance().dbEpdEditDialog();
 	unsigned int idCatD = editDialog->select(m_current->m_epdCategorySet.m_idCategory[VICUS::EpdCategorySet::C_IDCategoryD], false, "D", 4);
 	if (idCatD != VICUS::INVALID_ID && idCatD != m_current->m_epdCategorySet.m_idCategory[VICUS::EpdCategorySet::C_IDCategoryD]) {
-		VICUS::EpdDataset * epd = const_cast<VICUS::EpdDataset *>(m_db->m_epdDatasets[idCatD]);
+//		VICUS::EpdDataset * epd = const_cast<VICUS::EpdDataset *>(m_db->m_epdDatasets[idCatD]);
 
 		//		if(epd->m_module != VICUS::EpdDataset::M_D )
 		//		{

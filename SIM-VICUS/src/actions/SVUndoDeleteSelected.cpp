@@ -225,6 +225,46 @@ SVUndoDeleteSelected::SVUndoDeleteSelected(const QString & label,
 		else
 			++idxNet;
 	}
+
+
+	// *** Drawings
+
+	m_drawings = project().m_drawings;
+	for (unsigned int idxDraw=0; idxDraw<m_drawings.size();  ) {
+		VICUS::Drawing &draw = m_drawings[idxDraw];
+		// an entire drawing?
+		if (selectedUniqueIDs.find(draw.m_id) != selectedUniqueIDs.end())
+			m_drawings.erase( m_drawings.begin() + idxDraw );
+		else
+			++idxDraw;
+	}
+
+	for (unsigned int idxDraw=0; idxDraw<m_drawings.size(); ++idxDraw ) {
+		VICUS::Drawing &draw = m_drawings[idxDraw];
+		// delete layers and collect their names
+		std::set<QString> deletedLayers;
+		for (unsigned int idxLayer=0; idxLayer<draw.m_drawingLayers.size();  ) {
+			VICUS::DrawingLayer drawLayer = draw.m_drawingLayers[idxLayer];
+			if (selectedUniqueIDs.find(drawLayer.m_id) != selectedUniqueIDs.end()) {
+				deletedLayers.insert(drawLayer.m_displayName);
+				draw.m_drawingLayers.erase( draw.m_drawingLayers.begin() + idxLayer );
+			}
+			else
+				++idxLayer;
+		}
+
+		// now also delete objects with according layer names
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_arcs);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_points);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_lines);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_polylines);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_circles);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_ellipses);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_solids);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_texts);
+		draw.eraseObjectsByLayer(deletedLayers, draw.m_linearDimensions);
+	}
+
 }
 
 
@@ -241,12 +281,14 @@ void SVUndoDeleteSelected::redo() {
 	prj.m_componentInstances.swap(m_compInstances);
 	prj.m_subSurfaceComponentInstances.swap(m_subCompInstances);
 	prj.m_geometricNetworks.swap(m_networks);
+	prj.m_drawings.swap(m_drawings);
 
 	// rebuild pointer hierarchy
-	theProject().updatePointers();
+	prj.updatePointers();
 
 	// tell project that the network has changed
 	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingGeometryChanged);
 	SVProjectHandler::instance().setModified( SVProjectHandler::NetworkGeometryChanged);
+	SVProjectHandler::instance().setModified( SVProjectHandler::DrawingModified);
 }
 

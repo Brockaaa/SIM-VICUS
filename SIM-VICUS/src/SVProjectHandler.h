@@ -102,6 +102,8 @@ public:
 			Note: if any selection property was changed, this undo-action also executes the SelectionChanged modification.
 		*/
 		NodeStateModified,
+		/*! Structural units were modified (Add, edit, delete). */
+		StructuralUnitsModified,
 		/*! An object's display name was renamed. Modification data is a pointer to the modified object. */
 		ObjectRenamed,
 		/*! Drawings have been added / removed from project */
@@ -244,7 +246,7 @@ public:
 		the "Project Directory" placeholder (if a project is active and has a valid file path)
 		and then calls the IBK::replace_path_placeholders() function.
 	*/
-	IBK::Path replacePathPlaceholders(const IBK::Path & stringWithPlaceholders);
+	IBK::Path replacePathPlaceholders(const IBK::Path & stringWithPlaceholders) const;
 
 	/*! Set the reload state to true.*/
 	void setReload() { m_reload = true; }
@@ -335,15 +337,16 @@ private:
 		\return Returns true on success, false on error (error messages are written to IBK::IBK_Message).
 		\note Does not emit any signals and does not call setModified()
 	*/
-	bool read(const QString & fname);
+	bool read(QWidget * parent, const QString & fname);
 
 	/*! Writes the project with the given filename.
 		If the writing was successful, the member variable m_projectFile is updated to 'fname'.
 		\param fname The filename of the project file to be read.
+		\param writeDrawingFile If true a separate file with all drawings will be written.
 		\return Returns true on success, false on error (error messages are written to IBK::IBK_Message).
 		\note Does not emit any signals and does not call setModified()
 	*/
-	bool write(const QString & fname) const;
+	bool write(QWidget * parent, const QString & fname, bool writeDrawingFile) const;
 
 	/*! Adds the file fname to the list of most recently used files.
 		The default implementation also emits the signal updateRecentProjects() which

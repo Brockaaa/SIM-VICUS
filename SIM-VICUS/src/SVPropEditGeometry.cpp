@@ -153,6 +153,26 @@ SVPropEditGeometry::SVPropEditGeometry(QWidget *parent) :
 	m_ui->lineEditCopyY->setFormatter(new LineEditFormater);
 	m_ui->lineEditCopyZ->setFormatter(new LineEditFormater);
 
+	m_ui->lineEditCopyX->setObjectName("xAxis");
+	m_ui->lineEditCopyY->setObjectName("yAxis");
+	m_ui->lineEditCopyZ->setObjectName("zAxis");
+
+	m_ui->lineEditRotateX->setObjectName("xAxis");
+	m_ui->lineEditRotateY->setObjectName("yAxis");
+	m_ui->lineEditRotateZ->setObjectName("zAxis");
+
+	m_ui->lineEditScaleX->setObjectName("xAxis");
+	m_ui->lineEditScaleY->setObjectName("yAxis");
+	m_ui->lineEditScaleZ->setObjectName("zAxis");
+
+	m_ui->lineEditTranslateX->setObjectName("xAxis");
+	m_ui->lineEditTranslateY->setObjectName("yAxis");
+	m_ui->lineEditTranslateZ->setObjectName("zAxis");
+
+//	m_ui->lineEditCopyX->setObjectName("xAxis");
+//	m_ui->lineEditCopyY->setObjectName("yAxis");
+//	m_ui->lineEditCopyZ->setObjectName("zAxis");
+
 	connect(m_ui->lineEditCopyX, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditCopyY, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditCopyZ, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
@@ -172,11 +192,6 @@ SVPropEditGeometry::SVPropEditGeometry(QWidget *parent) :
 	connect(m_ui->lineEditTranslateX, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditTranslateY, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditTranslateZ, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
-
-	m_ui->comboBoxUnit->addItem("Meter", SU_Meter);
-	m_ui->comboBoxUnit->addItem("Decimeter", SU_Decimeter);
-	m_ui->comboBoxUnit->addItem("Centimeter", SU_Centimeter);
-	m_ui->comboBoxUnit->addItem("Millimeter", SU_Millimeter);
 }
 
 
@@ -194,6 +209,9 @@ void SVPropEditGeometry::enableTransformation() {
 void SVPropEditGeometry::setModificationType(ModificationType modType) {
 	m_ui->stackedWidget->setCurrentIndex(modType);
 	updateInputs(); // update all inputs
+	// adjust size
+	QSize preferredSize = 1.2*m_ui->stackedWidget->currentWidget()->sizeHint();
+	m_ui->stackedWidget->setFixedHeight(preferredSize.height());
 	// only adjust local coordinate system, if this widget is visible
 	if (this->isVisibleTo(qobject_cast<QWidget*>(parent())) ) {
 		// Note: setting new coordinates to the local coordinate system object will in turn call setCoordinates()
@@ -212,7 +230,7 @@ void SVPropEditGeometry::setCoordinates(const Vic3D::Transform3D &t) {
 	m_lcsTransform =  t;
 
 	// compute dimensions of bounding box (dx, dy, dz) and center point of all selected surfaces
-	m_bbDim[OM_Local] = project().boundingBox(m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Local],
+	m_bbDim[OM_Local] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Local],
 											  QVector2IBKVector(cso->translation() ),
 											  QVector2IBKVector(cso->localXAxis() ),
 											  QVector2IBKVector(cso->localYAxis() ),
@@ -556,7 +574,7 @@ void SVPropEditGeometry::updateUi(bool resetLCS) {
 	}
 
 	// compute dimensions of bounding box (dx, dy, dz) and center point of all selected surfaces
-	m_bbDim[OM_Local] = project().boundingBox(m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Local],
+	m_bbDim[OM_Local] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Local],
 											  QVector2IBKVector(cso->translation() ),
 											  QVector2IBKVector(cso->localXAxis() ),
 											  QVector2IBKVector(cso->localYAxis() ),
@@ -1283,33 +1301,29 @@ void SVPropEditGeometry::on_pushButtonApply_clicked() {
 
 	for (const VICUS::Drawing *d : m_selDrawings) {
 		VICUS::Drawing newDrawing(*d);
-		newDrawing.m_origin += QVector2IBKVector(translation);
+		// QVector3D origin = IBKVector2QVector(newDrawing.m_origin);
 
-		ScaleUnit su = (ScaleUnit)m_ui->comboBoxUnit->currentData().toInt();
+		if (rotation != QQuaternion(1, 0, 0, 0)) {
+			// Translation of LCS
+			IBKMK::Vector3D newOrigin = newDrawing.m_origin;
 
-		double scalingFactor = 0.0;
+			const QVector3D &trans = m_lcsTransform.translation();
 
-		switch (su) {
+			newOrigin -= QVector2IBKVector(trans);
+			QMatrix4x4 transform;
+			transform.rotate(rotation);
 
-		case SU_Meter:		scalingFactor = 1;		break;
-		case SU_Decimeter:	scalingFactor = 0.1;	break;
-		case SU_Centimeter: scalingFactor = 0.01;	break;
-		case SU_Millimeter: scalingFactor = 0.001;	break;
-
-		case NUM_SU: break; // make compiler happy
-
-		}
-
-		newDrawing.m_scalingFactor = scalingFactor;
-
-		if (!haveScaling) {
+			newOrigin = QVector2IBKVector(transform * IBKVector2QVector(newOrigin));
+			newOrigin += QVector2IBKVector(trans);
 			// rotation
 			QQuaternion quaternion = rotation * newDrawing.m_rotationMatrix.toQuaternion();
 			newDrawing.m_rotationMatrix.setQuaternion(quaternion);
+
+			newDrawing.m_origin = newOrigin;
 		}
-		else {
-		}
-		newDrawing.updatePlaneGeometries();
+		else
+			newDrawing.m_origin += QVector2IBKVector(translation);
+
 		modifiedDrawings.push_back(newDrawing);
 	}
 

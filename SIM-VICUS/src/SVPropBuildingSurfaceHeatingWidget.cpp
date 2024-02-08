@@ -355,9 +355,9 @@ void SVPropBuildingSurfaceHeatingWidget::on_tableWidgetSurfaceHeating_itemSelect
 	// UserRole of column 2 stores ID of surface heating object; VICUS::INVALID_ID if not assigned
 	bool haveSurfaceHeating = false;
 
-	double rowCount = m_ui->tableWidgetSurfaceHeating->selectionModel()->selectedRows().count();
+//	double rowCount = m_ui->tableWidgetSurfaceHeating->selectionModel()->selectedRows().count();
 
-	for (QModelIndex idx : m_ui->tableWidgetSurfaceHeating->selectionModel()->selectedRows()) {
+	for (const QModelIndex &idx : m_ui->tableWidgetSurfaceHeating->selectionModel()->selectedRows()) {
 		// construct model index of second column
 		int row = idx.row();
 		// retrieve item and userrole from second column
@@ -446,7 +446,7 @@ void SVPropBuildingSurfaceHeatingWidget::on_pushButtonSwitchControlZone_clicked(
 	QModelIndexList list = m_ui->tableWidgetSurfaceHeating->selectionModel()->selectedRows(4);
 	std::vector<VICUS::ComponentInstance> cis = SVProjectHandler::instance().project().m_componentInstances;
 
-	for(unsigned int i=0; i<list.size(); ++i) {
+	for(unsigned int i=0; i < (unsigned int)list.size(); ++i) {
 
 		int currentRow = list[i].row();
 		unsigned int idCi = m_ui->tableWidgetSurfaceHeating->item(currentRow, 4)->data(Qt::UserRole).toUInt();

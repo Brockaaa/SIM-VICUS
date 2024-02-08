@@ -49,6 +49,17 @@ SVPropResultsWidget::SVPropResultsWidget(QWidget *parent) :
 	m_ui->lineEditMinValue->setup(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), tr("Minimum value for coloring"), false, false);
 	m_ui->lineEditMaxValue->setup(std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max(), tr("Maximum value for coloring"), false, false);
 
+	m_ui->pushButtonReadColormap->setIcon(QIcon::fromTheme("load_colormap"));
+	m_ui->pushButtonSaveColormap->setIcon(QIcon::fromTheme("save_colormap"));
+	m_ui->pushButtonSetGlobalMinMax->setIcon(QIcon::fromTheme("find_global_min_max"));
+	m_ui->pushButtonSetLocalMinMax->setIcon(QIcon::fromTheme("find_local_min_max"));
+
+	m_ui->pushButtonFindMaxObject->setIcon(QIcon::fromTheme("find_max_object"));
+	m_ui->pushButtonFindMinObject->setIcon(QIcon::fromTheme("find_min_object"));
+	m_ui->pushButtonJumpToMax->setIcon(QIcon::fromTheme("jump_to_max_time"));
+	m_ui->pushButtonJumpToMin->setIcon(QIcon::fromTheme("jump_to_min_time"));
+
+
 	connect(m_ui->widgetTimeSlider, &SVTimeSliderWidget::cutValueChanged,
 			this, &SVPropResultsWidget::onTimeSliderCutValueChanged);
 
@@ -103,10 +114,9 @@ void SVPropResultsWidget::onModified(int modificationType, ModificationInfo * /*
 
 	SVProjectHandler::ModificationTypes modType = (SVProjectHandler::ModificationTypes)modificationType;
 	switch (modType) {
-		case SVProjectHandler::AllModified: {
-			on_toolButtonSetDefaultDirectory_clicked();
-		}
-		[[clang::fallthrough]];
+		case SVProjectHandler::AllModified:
+			clearUi();
+			break;
 		case SVProjectHandler::NodeStateModified: {
 			// update current value line edit
 			onSelectionChanged();
@@ -182,9 +192,8 @@ void SVPropResultsWidget::on_tableWidgetAvailableResults_itemSelectionChanged() 
 			m_currentOutputQuantity.clear(); // not cached yet, cannot display
 			m_currentOutputUnit.clear();
 		}
-		else {
+		else if (!m_allResults[m_currentOutputQuantity].empty()) {
 			// set slider
-			Q_ASSERT(!m_allResults[m_currentOutputQuantity].empty());
 			// get time points from first data set for this quantity
 			IBK::UnitVector timePointVec;
 			timePointVec.m_data = m_allResults[m_currentOutputQuantity].begin()->second.m_values.x();
@@ -198,7 +207,6 @@ void SVPropResultsWidget::on_tableWidgetAvailableResults_itemSelectionChanged() 
 	}
 
 	m_ui->groupBoxAnalysis->setEnabled(!m_currentOutputQuantity.isEmpty());
-	m_ui->groupBoxCurrentSelection->setEnabled(!m_currentOutputQuantity.isEmpty());
 	if (m_currentOutputQuantity.isEmpty())
 		SVViewStateHandler::instance().m_geometryView->colorLegend()->setTitle("");
 	else
@@ -244,7 +252,6 @@ void SVPropResultsWidget::on_pushButtonRefreshDirectory_clicked() {
 		m_allResults.clear();
 		m_currentOutputQuantity.clear(); // = nothing selected, yet
 		m_resultsDir = resultsDir;
-
 	}
 	readResultsDir();
 }
@@ -443,6 +450,9 @@ void SVPropResultsWidget::readResultsDir() {
 		for (unsigned int i=0; i<captions.size(); ++i) {
 			QString caption = QString::fromStdString(captions[i]);
 			QString unit = QString::fromStdString(units[i]);
+			// Pa will be converted to Bar
+			if (unit == "Pa")
+				unit = "Bar";
 			QString outputName;
 			for (auto it=m_objectName2Id.begin(); it!=m_objectName2Id.end(); ++it) {
 				if (caption.contains(it->first)){
@@ -463,7 +473,6 @@ void SVPropResultsWidget::readResultsDir() {
 	}
 
 
-
 	// finally update the state of files that have been lost, i.e. are no longer in the directory
 	for (ResultDataSet & rds : m_outputFiles) {
 		if (!filesFound.contains(rds.m_filename))
@@ -476,7 +485,6 @@ void SVPropResultsWidget::readResultsDir() {
 	m_ui->groupBoxColormap->setEnabled(validOutputFound);
 	m_ui->groupBoxTime->setEnabled(validOutputFound);
 	m_ui->groupBoxAnalysis->setEnabled(validOutputFound);
-	m_ui->groupBoxCurrentSelection->setEnabled(validOutputFound);
 
 	if (!validOutputFound)
 		return;
@@ -693,11 +701,32 @@ void SVPropResultsWidget::readDataFile(const QString & filename) {
 
 		// and store in map with all outputs
 		if (m_resultFileType == FT_TSV) {
-			m_allResults[outputName][id] = NANDRAD::LinearSplineParameter(captions[i], NANDRAD::LinearSplineParameter::I_LINEAR,
+			// convert Pa to Bar
+			if (units[i] == IBK::Unit("Pa")) {
+				std::vector<double> y = reader.colData(i);
+				for (double &v: y)
+					v /= 1e5;
+				units[i] = IBK::Unit("Bar");
+				m_allResults[outputName][id] = NANDRAD::LinearSplineParameter(captions[i], NANDRAD::LinearSplineParameter::I_LINEAR,
+																			  timeSeconds.m_data, y, IBK::Unit("s"), units[i]);
+			}
+			else
+				m_allResults[outputName][id] = NANDRAD::LinearSplineParameter(captions[i], NANDRAD::LinearSplineParameter::I_LINEAR,
 																				   timeSeconds.m_data, reader.colData(i), IBK::Unit("s"), units[i]);
 		}
+
 		else if (m_resultFileType == FT_BTF) {
-			m_allResults[outputName][id] = NANDRAD::LinearSplineParameter(captions[i], NANDRAD::LinearSplineParameter::I_LINEAR,
+			// convert Pa to Bar
+			if (units[i] == IBK::Unit("Pa")) {
+				std::vector<double> y = reader.colData(i);
+				for (double &v: y)
+					v /= 1e5;
+				units[i] = IBK::Unit("Bar");
+				m_allResults[outputName][id] = NANDRAD::LinearSplineParameter(captions[i], NANDRAD::LinearSplineParameter::I_LINEAR,
+																			  timeSeconds.m_data, y, IBK::Unit("s"), units[i]);
+			}
+			else
+				m_allResults[outputName][id] = NANDRAD::LinearSplineParameter(captions[i], NANDRAD::LinearSplineParameter::I_LINEAR,
 																				   timeSeconds.m_data, dataColMajor[i], IBK::Unit("s"), units[i]);
 		}
 	} // for captions in file
@@ -1073,5 +1102,31 @@ void SVPropResultsWidget::on_pushButtonFindMinObject_clicked() {
 
 void SVPropResultsWidget::on_resultsDir_editingFinished() {
 	on_pushButtonRefreshDirectory_clicked();
+}
+
+
+void SVPropResultsWidget::clearUi() {
+
+	m_outputFiles.clear();
+	m_outputVariable2FileIndexMap.clear();
+	m_objectName2Id.clear();
+	m_allResults.clear();
+	m_currentOutputQuantity.clear(); // = nothing selected, yet
+
+	m_ui->resultsDir->setFilename("");
+	m_ui->lineEditMaxValue->setValue(1);
+	m_ui->lineEditMinValue->setValue(0);
+	m_ui->widgetTimeSlider->clear();
+	m_ui->lineEditCurrentValue->clear();
+
+	m_ui->tableWidgetAvailableResults->blockSignals(true);
+	m_ui->tableWidgetAvailableResults->clearContents();
+	m_ui->tableWidgetAvailableResults->setRowCount(0);
+	m_ui->tableWidgetAvailableResults->blockSignals(false);
+
+	m_currentMin = 0;
+	m_currentMax = 1;
+	SVViewStateHandler::instance().m_geometryView->colorLegend()->setTitle("");
+	SVViewStateHandler::instance().m_geometryView->colorLegend()->updateUi();
 }
 

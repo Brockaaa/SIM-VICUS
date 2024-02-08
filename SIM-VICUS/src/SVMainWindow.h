@@ -36,7 +36,7 @@
 #include "SVProjectHandler.h"
 
 namespace Ui {
-	class SVMainWindow;
+class SVMainWindow;
 }
 
 class QProgressDialog;
@@ -68,13 +68,14 @@ class SVDBZoneTemplateEditDialog;
 class SVDBDuplicatesDialog;
 class SVPluginLoader;
 class SVSimulationSettingsView;
+class SVStructuralUnitCreationDialog;
+class SVAcousticConstraintsCheckWidget;
 
 
 /*! Main window class. */
 class SVMainWindow : public QMainWindow {
 	Q_OBJECT
 public:
-
 
 	enum MainViewMode {
 		/*! None of the main views is shown, the welcome screen should then be present */
@@ -95,7 +96,6 @@ public:
 		Ownership of the command object will be transferred to the stack.
 	*/
 	static void addUndoCommand(QUndoCommand * command);
-
 
 
 	/*! Default SVMainWindow constructor. */
@@ -146,6 +146,10 @@ public:
 	SVDatabaseEditDialog * dbComponentEditDialog();
 	/*! Returns the subsurface component edit dialog. */
 	SVDatabaseEditDialog * dbSubSurfaceComponentEditDialog();
+	/*! Returns the acoustic boundary condition edit dialog. */
+	SVDatabaseEditDialog * dbAcousticBoundaryConditionEditDialog();
+	/*! Returns the sound absorption edit dialog. */
+	SVDatabaseEditDialog * dbAcousticSoundAbsorptionEditDialog();
 	/*! Returns the boundary condition edit dialog. */
 	SVDatabaseEditDialog * dbBoundaryConditionEditDialog();
 	/*! Returns the window edit dialog. */
@@ -193,6 +197,9 @@ public:
 	/*! Returns pointer to the applications preferences dialog. */
 	SVPreferencesDialog * preferencesDialog();
 
+	/*! Returns pointer to the structural unit creation dialog. */
+	SVStructuralUnitCreationDialog * structuralUnitDialog();
+
 public slots:
 
 	void on_actionDBComponents_triggered();
@@ -205,9 +212,10 @@ protected:
 	void closeEvent(QCloseEvent * event) override;
 	/*! Called when the window is moved. Repositions measurement widget. */
 	void moveEvent(QMoveEvent *event) override;
+	/*! Called to prevent constantly pressed CONTROL-KEY. */
+	void leaveEvent(QEvent *event) override;
 
 signals:
-
 	void screenHasChanged(const QScreen *screen);
 
 
@@ -277,7 +285,6 @@ private slots:
 	/*! Updates the device pixel ratio. */
 	void onScreenChanged(QScreen *screen);
 
-
 	// all menu action slots below
 
 	void on_actionFileNew_triggered();
@@ -285,7 +292,7 @@ private slots:
 	void on_actionFileSave_triggered();
 	void on_actionFileSaveAs_triggered();
 	void on_actionFileReload_triggered();
-	void on_actionFileImportEneryPlusIDF_triggered();
+	void on_actionEneryPlus_IDF_triggered();
 	void on_actionFileOpenProjectDir_triggered();
 	void on_actionFileClose_triggered();
 	void on_actionFileExportProjectPackage_triggered();
@@ -327,9 +334,6 @@ private slots:
 	void on_actionDBRemoveDuplicates_triggered();
 
 
-	void on_actionBuildingFloorManager_triggered();
-	void on_actionBuildingSurfaceHeatings_triggered();
-
 	void on_actionToolsCCMeditor_triggered();
 
 	void on_actionViewShowSurfaceNormals_toggled(bool visible);
@@ -357,7 +361,7 @@ private slots:
 	void on_actionHelpKeyboardAndMouseControls_triggered();
 	void on_actionHelpLinuxDesktopIntegration_triggered();
 
-	void on_actionFileImportNetworkGISData_triggered();
+	void on_actionNetwork_GIS_data_triggered();
 	void on_actionEditProjectNotes_triggered();
 	void on_actionPluginsManager_triggered();
 
@@ -377,6 +381,10 @@ private slots:
 	void on_actionExternal_Post_Processor_triggered();
 
 	void on_actionDWD_Weather_Data_Converter_triggered();
+
+	void on_actionDBAcousticBoundaryConditions_triggered();
+
+	void on_actionDBAcousticSoundAbsorptions_triggered();
 
 private:
 
@@ -528,6 +536,8 @@ private:
 	SVDatabaseEditDialog				*m_dbWindowGlazingSystemEditDialog				= nullptr;
 	SVDatabaseEditDialog				*m_dbComponentEditDialog						= nullptr;
 	SVDatabaseEditDialog				*m_dbSubSurfaceComponentEditDialog				= nullptr;
+	SVDatabaseEditDialog				*m_dbAcousticBoundaryConditionEditDialog		= nullptr;
+	SVDatabaseEditDialog				*m_dbAcousticSoundAbsorptionEditDialog			= nullptr;
 	SVDatabaseEditDialog				*m_dbBoundaryConditionEditDialog				= nullptr;
 	SVDatabaseEditDialog				*m_dbPipeEditDialog								= nullptr;
 	SVDatabaseEditDialog				*m_dbFluidEditDialog							= nullptr;
@@ -559,6 +569,9 @@ private:
 	QTimer								*m_autoSaveTimer 								= nullptr;
 
 	SVLcaLccSettingsWidget				*m_lcaLccSettingsDialog							= nullptr;
+
+	SVStructuralUnitCreationDialog		*m_structuralUnitCreationDialog					= nullptr;
+
 
 	friend class SVThreadBase;
 };

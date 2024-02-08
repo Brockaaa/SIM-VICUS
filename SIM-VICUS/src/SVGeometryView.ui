@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1008</width>
-    <height>692</height>
+    <width>1148</width>
+    <height>754</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -78,32 +78,9 @@
            <addaction name="actionXLock"/>
            <addaction name="actionYLock"/>
            <addaction name="actionZLock"/>
-           <addaction name="separator"/>
           </widget>
          </item>
         </layout>
-       </item>
-       <item>
-        <widget class="SVColorLegend" name="colorLegend" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>80</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>40</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
        </item>
        <item>
         <widget class="QToolBar" name="modeSelectionToolBar">
@@ -151,6 +128,8 @@
          <addaction name="separator"/>
          <addaction name="actionBuildingParametrization"/>
          <addaction name="actionAcousticParametrization"/>
+         <addaction name="actionStructuralUnits"/>
+         <addaction name="separator"/>
          <addaction name="actionNetworkParametrization"/>
          <addaction name="actionSiteParametrization"/>
          <addaction name="separator"/>
@@ -168,7 +147,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-magnet-80.png</normaloff>:/gfx/icons8/icons8-magnet-80.png</iconset>
    </property>
    <property name="text">
@@ -183,7 +162,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-width-80.png</normaloff>:/gfx/icons8/icons8-width-80.png</iconset>
    </property>
    <property name="text">
@@ -225,7 +204,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-add-layer-80.png</normaloff>:/gfx/icons8/icons8-add-layer-80.png</iconset>
    </property>
    <property name="text">
@@ -240,7 +219,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-in-alle-richtungen-skalieren-80.png</normaloff>:/gfx/icons8/icons8-in-alle-richtungen-skalieren-80.png</iconset>
    </property>
    <property name="text">
@@ -255,7 +234,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-verfuegbare-updates-80.png</normaloff>:/gfx/icons8/icons8-verfuegbare-updates-80.png</iconset>
    </property>
    <property name="text">
@@ -270,7 +249,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-skalieren-80.png</normaloff>:/gfx/icons8/icons8-skalieren-80.png</iconset>
    </property>
    <property name="text">
@@ -285,7 +264,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-kategorisieren-80.png</normaloff>:/gfx/icons8/icons8-kategorisieren-80.png</iconset>
    </property>
    <property name="text">
@@ -300,7 +279,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-kopieren-80.png</normaloff>:/gfx/icons8/icons8-kopieren-80.png</iconset>
    </property>
    <property name="text">
@@ -315,7 +294,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-heim-automatisierung-80.png</normaloff>:/gfx/icons8/icons8-heim-automatisierung-80.png</iconset>
    </property>
    <property name="text">
@@ -330,7 +309,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-netzdiagramm-80.png</normaloff>:/gfx/icons8/icons8-netzdiagramm-80.png</iconset>
    </property>
    <property name="text">
@@ -345,7 +324,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-gitter-80.png</normaloff>:/gfx/icons8/icons8-gitter-80.png</iconset>
    </property>
    <property name="text">
@@ -360,7 +339,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-audiowelle-80.png</normaloff>:/gfx/icons8/icons8-audiowelle-80.png</iconset>
    </property>
    <property name="text">
@@ -375,7 +354,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/icons.qrc">
+    <iconset>
      <normaloff>:/gfx/icons8/icons8-futures-80.png</normaloff>:/gfx/icons8/icons8-futures-80.png</iconset>
    </property>
    <property name="text">
@@ -383,6 +362,21 @@
    </property>
    <property name="toolTip">
     <string>Show Results</string>
+   </property>
+  </action>
+  <action name="actionStructuralUnits">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>:/gfx/icons8/icons8-box-80.png</normaloff>:/gfx/icons8/icons8-box-80.png</iconset>
+   </property>
+   <property name="text">
+    <string>Structural units parametrization</string>
+   </property>
+   <property name="toolTip">
+    <string>Structural unit parametrization</string>
    </property>
   </action>
  </widget>
@@ -393,15 +387,7 @@
    <header>SVPropertyWidget.h</header>
    <container>1</container>
   </customwidget>
-  <customwidget>
-   <class>SVColorLegend</class>
-   <extends>QWidget</extends>
-   <header>SVColorLegend.h</header>
-   <container>1</container>
-  </customwidget>
  </customwidgets>
- <resources>
-  <include location="../resources/icons.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

@@ -42,6 +42,7 @@
 #include "SVSmartSelectDialog.h"
 #include "SVPropEditGeometry.h"
 
+
 SVNavigationTreeWidget::SVNavigationTreeWidget(QWidget *parent) :
 	QWidget(parent),
 	m_ui(new Ui::SVNavigationTreeWidget)
@@ -62,11 +63,19 @@ SVNavigationTreeWidget::SVNavigationTreeWidget(QWidget *parent) :
 	m_ui->actionSmartSelect->setShortcut(QKeySequence((int)Qt::CTRL + Qt::Key_Period));
 	m_ui->actionInvertSelection->setShortcut(QKeySequence((int)Qt::CTRL + Qt::Key_I));
 
-
 	connect(&SVProjectHandler::instance(), &SVProjectHandler::modified,
 			this, &SVNavigationTreeWidget::onModified);
 
-	addAction(m_ui->actionDeselect_all);
+	addAction(m_ui->actionDeselectAll);
+
+	m_ui->actionDeselectAll->setIcon(QIcon::fromTheme("deselect_items"));
+	m_ui->actionSelectAll->setIcon(QIcon::fromTheme("select_items"));
+	m_ui->actionShowSelected->setIcon(QIcon::fromTheme("show_items"));
+	m_ui->actionHideSelected->setIcon(QIcon::fromTheme("hide_items"));
+	m_ui->actionRemoveSelected->setIcon(QIcon::fromTheme("delete_items"));
+	m_ui->actionSmartSelect->setIcon(QIcon::fromTheme("smart_select"));
+	m_ui->actionInvertSelection->setIcon(QIcon::fromTheme("invert_selection"));
+
 }
 
 
@@ -336,28 +345,42 @@ void SVNavigationTreeWidget::onModified(int modificationType, ModificationInfo *
 	}
 
 	// DXF Drawings
-	QTreeWidgetItem * drawing = new QTreeWidgetItem(QStringList() << "Drawing", QTreeWidgetItem::Type);
-	m_ui->treeWidget->addTopLevelItem(drawing);
-	for (const VICUS::Drawing & d : prj.m_drawings) {
-		// TODO should drawing have name & id
-		QTreeWidgetItem * drawingItem = new QTreeWidgetItem(QStringList() << d.m_displayName, QTreeWidgetItem::Type);
-		m_treeItemMap[d.m_id] = drawingItem;
-		//m_treeItemMap[d.m_id] = drawingItem;
-		drawing->addChild(drawingItem);
-		drawingItem->setData(0, SVNavigationTreeItemDelegate::NodeID, d.m_id);
-		drawingItem->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, d.m_visible);
-		drawingItem->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, d.m_selected);
+	// missing file?
+	if (prj.m_drawings.empty()) {
+		IBK::Path absDrawFilePath = SVProjectHandler::instance().replacePathPlaceholders(prj.m_drawingFilePath);
+		if (absDrawFilePath.isValid() && !absDrawFilePath.exists()) {
+			QTreeWidgetItem * drawing = new QTreeWidgetItem(QStringList() << tr("Missing drawing file '%1'").arg(QString::fromStdString(absDrawFilePath.str())), QTreeWidgetItem::Type);
+			drawing->setData(0, SVNavigationTreeItemDelegate::MissingDrawingFile, QString::fromStdString(absDrawFilePath.str()));
+			drawing->setToolTip(0, tr("Double click to find missing file."));
+			m_ui->treeWidget->addTopLevelItem(drawing);
+		}
+	}
+	// actual drawings
+	else {
+		for (const VICUS::Drawing & d : prj.m_drawings) {
+			QTreeWidgetItem * drawing = new QTreeWidgetItem(QStringList() << "Drawing", QTreeWidgetItem::Type);
+			drawing->setToolTip(0, tr("Double click to edit offset and scaling."));
+			m_ui->treeWidget->addTopLevelItem(drawing);
+			// TODO should drawing have name & id
+			QTreeWidgetItem * drawingItem = new QTreeWidgetItem(QStringList() << d.m_displayName, QTreeWidgetItem::Type);
+			m_treeItemMap[d.m_id] = drawingItem;
+			//m_treeItemMap[d.m_id] = drawingItem;
+			drawing->addChild(drawingItem);
+			drawingItem->setData(0, SVNavigationTreeItemDelegate::NodeID, d.m_id);
+			drawingItem->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, d.m_visible);
+			drawingItem->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, d.m_selected);
 
-		// add child nodes for each edge in the network
-		for (const VICUS::DrawingLayer & l : d.m_drawingLayers) {
-			const QString &name = l.m_displayName;
-			QTreeWidgetItem * ln = new QTreeWidgetItem(QStringList() << name, QTreeWidgetItem::Type);
-			m_treeItemMap[l.m_id] = ln;
-			// first fill with dummy data
-			ln->setData(0, SVNavigationTreeItemDelegate::NodeID, l.m_id);
-			ln->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, l.m_visible);
-			ln->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, l.m_selected);
-			drawingItem->addChild(ln);
+			// add child nodes for each edge in the network
+			for (const VICUS::DrawingLayer & l : d.m_drawingLayers) {
+				const QString &name = l.m_displayName;
+				QTreeWidgetItem * ln = new QTreeWidgetItem(QStringList() << name, QTreeWidgetItem::Type);
+				m_treeItemMap[l.m_id] = ln;
+				// first fill with dummy data
+				ln->setData(0, SVNavigationTreeItemDelegate::NodeID, l.m_id);
+				ln->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, l.m_visible);
+				ln->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, l.m_selected);
+				drawingItem->addChild(ln);
+			}
 		}
 	}
 
@@ -400,6 +423,11 @@ void SVNavigationTreeWidget::scrollToObject(unsigned int uniqueID) {
 }
 
 
+void SVNavigationTreeWidget::onStyleChanged() {
+	m_navigationTreeItemDelegate->onStyleChanged();
+	update();
+}
+
 
 void SVNavigationTreeWidget::collapseTreeWidgetItem(QTreeWidgetItem * parent) {
 	for (int i=0; i<parent->childCount(); ++i) {
@@ -431,11 +459,13 @@ void SVNavigationTreeWidget::on_actionHideSelected_triggered() {
 	emit hideSelected();
 }
 
-void SVNavigationTreeWidget::on_actionSelect_all_triggered() {
+void SVNavigationTreeWidget::on_actionSelectAll_triggered() {
 	emit selectAll();
 }
 
-void SVNavigationTreeWidget::on_actionDeselect_all_triggered() {
+
+void SVNavigationTreeWidget::on_actionDeselectAll_triggered() {
+
 	// This slot is triggered first - as top level action - when user presses Escape. However, depending on context,
 	// we have different possible actions, for example, when editing geometry, Escape should cancel the current transformation.
 

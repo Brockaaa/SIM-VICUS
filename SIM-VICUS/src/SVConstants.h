@@ -101,11 +101,25 @@ enum BuildingPropertyType {
 	/*! Surface heating */
 	BT_SurfaceHeating,
 	/*! Supply Systems */
-	BT_SupplySystems,
+	BT_SupplySystems
+};
+
+/*! Structural unit property modes. */
+enum StructuralUnitPropertyType {
+	/*! Structural Unit property */
+	ST_StructuralUnit,
 	/*! Zone property */
-	BT_ZoneProperty,
+	ST_ZoneProperty,
 	/*! Floor manager. */
-	BT_FloorManager,
+	ST_FloorManager,
+};
+
+/*! Acoustic property modes. */
+enum AcousticPropertyType {
+	/*! Acoustic Sound Protection Template */
+	AT_AcousticSoundProtectionTemplate,
+	/*! Acoustic Template */
+	AT_AcousticTemplate,
 };
 
 /*! Different edit/coloring modes. */

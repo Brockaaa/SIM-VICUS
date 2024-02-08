@@ -54,11 +54,11 @@ struct SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject {
 	double						m_simulationEndTime = -999;
 
 	/*! Check if room is covered by ventilation control. */
-	static bool hasVentilationControl(const VICUS::Room &room, const VICUS::Project &project);
+	static bool hasVentilationControl(const VICUS::Room &room, const VICUS::Project &);
 	/*! Check if room is covered by ventilation model and checks parameters. Throws an exception if something is missing*/
-	static void checkVentilationControl(const VICUS::Room &room, const VICUS::Project &project, QString &errmsg);
+	static void checkVentilationControl(const VICUS::Room &room, const VICUS::Project &, QString &errmsg);
 	/*! Check if room is covered by ventilation model and checks parameters. Fills an error string if something is missing*/
-	static void checkVentilation(const VICUS::Room &room, const VICUS::Project &project, QString &errmsg);
+	static void checkVentilation(const VICUS::Room &room, const VICUS::Project &, QString &errmsg);
 
 	// initialize from VICUS project file
 	void init(const VICUS::Project &project);
@@ -71,8 +71,7 @@ struct SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject {
 };
 
 
-void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::init(const VICUS::Project & project)
-{
+void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::init(const VICUS::Project & project) {
 	// get simulation start and end time
 	m_simulationStartTime = project.m_simulationParameter.m_interval.m_para[NANDRAD::Interval::P_Start].value;
 	m_simulationEndTime = project.m_simulationParameter.m_interval.endTime();
@@ -506,7 +505,7 @@ void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::generateFMIDefin
 }
 
 
-bool SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::hasVentilationControl(const VICUS::Room & room, const VICUS::Project &project)
+bool SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::hasVentilationControl(const VICUS::Room & room, const VICUS::Project &/*project*/)
 {
 	// no zone template
 	if(room.m_idZoneTemplate == VICUS::INVALID_ID) {
@@ -532,7 +531,7 @@ bool SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::hasVentilationCo
 }
 
 
-void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::checkVentilationControl(const VICUS::Room & room, const VICUS::Project & project, QString &errmsg)
+void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::checkVentilationControl(const VICUS::Room & room, const VICUS::Project & /*project*/, QString &errmsg)
 {
 	// no zone template
 	if(room.m_idZoneTemplate == VICUS::INVALID_ID) {
@@ -562,7 +561,7 @@ void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::checkVentilation
 }
 
 
-void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::checkVentilation(const VICUS::Room & room, const VICUS::Project & project, QString &errmsg)
+void SVCoSimCO2VentilationDialog::CO2ComfortVentilationProject::checkVentilation(const VICUS::Room & room, const VICUS::Project & /*project*/, QString &errmsg)
 {
 	// no zone template
 	if(room.m_idZoneTemplate == VICUS::INVALID_ID) {
@@ -1251,8 +1250,13 @@ void SVCoSimCO2VentilationDialog::on_pushButtonGenerate_clicked() {
 	QString parentPath = finfo.dir().absolutePath();	//  -> "/path/to"
 	QString baseName = finfo.baseName();				//  -> "project"
 
+	// replace all spaces with '_'
+	baseName = baseName.replace(' ', '_');
+
 	// get overall base dir
 	QString basePath = parentPath + "/" + baseName;		//  -> "/path/to/project"
+
+
 	QDir baseDir(basePath);
 
 	// remove generation directory if existing
@@ -1469,7 +1473,7 @@ void SVCoSimCO2VentilationDialog::on_pushButtonLaunchMasterSim_clicked() {
 
 		// still no valid path?
 		if (masterSimPath.isEmpty() || !QFileInfo::exists(masterSimPath))
-		return;
+			return;
 	}
 
 	// launch MasterSim - run option is only needed for linux, and otherwise it will always be -1
@@ -1481,7 +1485,7 @@ void SVCoSimCO2VentilationDialog::on_pushButtonLaunchMasterSim_clicked() {
 
 	bool res = SVSettings::startProcess(masterSimPath, QStringList(), m_msimProjectFilePath, runOption);
 	if (!res) {
-		QMessageBox::critical(this, tr("Error starting external application"), tr("MASTERSIM '%1' could not be started.")
+		QMessageBox::critical(this, tr("Error starting external application"), tr("MASTERSIM '%1' or the terminal emulator 'xterm' could not be started (maybe install xterm?).")
 							  .arg(masterSimPath));
 	}
 }

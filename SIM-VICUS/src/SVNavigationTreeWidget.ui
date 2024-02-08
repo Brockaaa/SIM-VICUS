@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>327</width>
+    <width>1026</width>
     <height>637</height>
    </rect>
   </property>
@@ -33,8 +33,8 @@
      </property>
      <property name="iconSize">
       <size>
-       <width>24</width>
-       <height>24</height>
+       <width>32</width>
+       <height>32</height>
       </size>
      </property>
      <property name="floatable">
@@ -43,8 +43,8 @@
      <addaction name="actionRemoveSelected"/>
      <addaction name="actionHideSelected"/>
      <addaction name="actionShowSelected"/>
-     <addaction name="actionSelect_all"/>
-     <addaction name="actionDeselect_all"/>
+     <addaction name="actionSelectAll"/>
+     <addaction name="actionDeselectAll"/>
      <addaction name="actionInvertSelection"/>
      <addaction name="actionSmartSelect"/>
     </widget>
@@ -67,12 +67,24 @@
      </column>
     </widget>
    </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Preferred</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>3</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
   </layout>
   <action name="actionRemoveSelected">
-   <property name="icon">
-    <iconset resource="../resources/icons.qrc">
-     <normaloff>:/gfx/icons8/icons8-loeschen.svg</normaloff>:/gfx/icons8/icons8-loeschen.svg</iconset>
-   </property>
    <property name="text">
     <string>Remove (Del)</string>
    </property>
@@ -84,10 +96,6 @@
    </property>
   </action>
   <action name="actionShowSelected">
-   <property name="icon">
-    <iconset resource="../resources/icons.qrc">
-     <normaloff>:/gfx/icons8/icons8-idee-80.png</normaloff>:/gfx/icons8/icons8-idee-80.png</iconset>
-   </property>
    <property name="text">
     <string>Show selected objects</string>
    </property>
@@ -99,10 +107,6 @@
    </property>
   </action>
   <action name="actionHideSelected">
-   <property name="icon">
-    <iconset resource="../resources/icons.qrc">
-     <normaloff>:/gfx/icons8/icons8-keine-idee-80.png</normaloff>:/gfx/icons8/icons8-keine-idee-80.png</iconset>
-   </property>
    <property name="text">
     <string>Hides selected objects</string>
    </property>
@@ -113,11 +117,7 @@
     <string>F6</string>
    </property>
   </action>
-  <action name="actionSelect_all">
-   <property name="icon">
-    <iconset resource="../resources/icons.qrc">
-     <normaloff>:/gfx/icons8/icons8-checkbox-markiert-2-80.png</normaloff>:/gfx/icons8/icons8-checkbox-markiert-2-80.png</iconset>
-   </property>
+  <action name="actionSelectAll">
    <property name="text">
     <string>Select all</string>
    </property>
@@ -128,11 +128,7 @@
     <string>Ctrl+A</string>
    </property>
   </action>
-  <action name="actionDeselect_all">
-   <property name="icon">
-    <iconset resource="../resources/icons.qrc">
-     <normaloff>:/gfx/icons8/icons8-unausgefuellte-checkbox-80.png</normaloff>:/gfx/icons8/icons8-unausgefuellte-checkbox-80.png</iconset>
-   </property>
+  <action name="actionDeselectAll">
    <property name="text">
     <string>Deselect all</string>
    </property>
@@ -144,10 +140,6 @@
    </property>
   </action>
   <action name="actionSmartSelect">
-   <property name="icon">
-    <iconset resource="../resources/icons.qrc">
-     <normaloff>:/gfx/icons8/icons8-suche-80.png</normaloff>:/gfx/icons8/icons8-suche-80.png</iconset>
-   </property>
    <property name="text">
     <string>Smart select</string>
    </property>
@@ -159,10 +151,6 @@
    </property>
   </action>
   <action name="actionInvertSelection">
-   <property name="icon">
-    <iconset resource="../resources/icons.qrc">
-     <normaloff>:/gfx/icons8/icons8-umkehren-80.png</normaloff>:/gfx/icons8/icons8-umkehren-80.png</iconset>
-   </property>
    <property name="text">
     <string>Invert selection</string>
    </property>
@@ -174,8 +162,6 @@
    </property>
   </action>
  </widget>
- <resources>
-  <include location="../resources/icons.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

@@ -52,7 +52,16 @@
 #include "VICUS_EmbeddedDatabase.h"
 #include "VICUS_PlainGeometry.h"
 #include "VICUS_Drawing.h"
+#include "VICUS_StructuralUnit.h"
 
+#include "VICUS_AcousticTemplate.h"
+#include "VICUS_AcousticReferenceComponent.h"
+#include "VICUS_AcousticBuildingTemplate.h"
+#include "VICUS_AcousticSoundProtectionTemplate.h"
+
+namespace IBK {
+	class NotificationHandler;
+}
 
 namespace VICUS {
 
@@ -104,10 +113,15 @@ public:
 	*/
 	void readXML(const IBK::Path & filename);
 
+	/*! Reads the additional drawing data from an XML file.
+		\param filename  The full path to the drawing file.
+	*/
+	void readDrawingXML(const IBK::Path & filename);
+
 	/*! Reads the project data from an text which contains XML.
 		\param projectText  Text with VICUS project.
 	*/
-	void readXML(const QString & projectText);
+	void readImportedXML(const QString & projectText, IBK::NotificationHandler *notifyer);
 
 	/*! Actual read function, called from both variants of readXML(). */
 	void readXMLDocument(TiXmlElement * rootElement);
@@ -116,6 +130,8 @@ public:
 		\param filename  The full path to the project file.
 	*/
 	void writeXML(const IBK::Path & filename) const;
+
+	void writeDrawingXML(const IBK::Path & filename) const;
 
 	/*! Reads the placeholder section into m_placeholders map. */
 	void readDirectoryPlaceholdersXML(const TiXmlElement * element);
@@ -264,13 +280,14 @@ public:
 		the provided local coordinate system.
 		\returns Returns the dimensions of the bounding box and its center point in argument 'center' in local coordinates.
 	*/
-	static IBKMK::Vector3D boundingBox(std::vector<const VICUS::Surface*> &surfaces,
-										std::vector<const VICUS::SubSurface*> &subsurfaces,
-										IBKMK::Vector3D &center,
-										const IBKMK::Vector3D &offset,
-										const IBKMK::Vector3D &xAxis,
-										const IBKMK::Vector3D &yAxis,
-										const IBKMK::Vector3D &zAxis );
+	static IBKMK::Vector3D boundingBox(std::vector<const Drawing *> & drawings,
+									   std::vector<const VICUS::Surface*> &surfaces,
+									   std::vector<const VICUS::SubSurface*> &subsurfaces,
+									   IBKMK::Vector3D &center,
+									   const IBKMK::Vector3D &offset = IBKMK::Vector3D(0,0,0),
+									   const IBKMK::Vector3D &xAxis = IBKMK::Vector3D(1,0,0),
+									   const IBKMK::Vector3D &yAxis = IBKMK::Vector3D(0,1,0),
+									   const IBKMK::Vector3D &zAxis = IBKMK::Vector3D(0,0,1));
 
 	/*! Attempts to create new surface-surface connections based on the current selection.
 		Newly created component instances are stored in vector newComponentInstances alongside
@@ -309,6 +326,9 @@ public:
 
 	std::vector<Building>								m_buildings;	 			// XML:E
 
+    /*! Store structural units */
+    std::vector<StructuralUnit>							m_structuralUnits;			// XML:E
+
 	/*! All components actually placed in the geometry.
 		This vector is outside buildings, so that two building parts can be connected with
 		a component.
@@ -319,7 +339,7 @@ public:
 	/*! Vector with plain (dumb) geometry. */
 	PlainGeometry										m_plainGeometry;			// XML:E
 
-	std::vector<Drawing>								m_drawings;					// XML:E
+	std::vector<Drawing>								m_drawings;
 
 
 	/*! Path placeholder mappings used to substitute placeholders for database and user databases.
@@ -346,6 +366,9 @@ public:
 	/*! Contains a file name for a IFC model in case of import from IFC. */
 	IBK::Path											m_ifcFilePath;				// XML:E
 
+	/*! Contains a file name for a drawing file. */
+	IBK::Path											m_drawingFilePath;			// XML:E
+
 
 	/*! Mapping element holds the room data for later export. */
 	struct RoomMapping {
@@ -359,8 +382,9 @@ public:
 		std::string								m_nameRoomVicus;
 		std::string								m_nameRoomNandrad;
 		std::string								m_zonetemplateName;
-		double									m_floorArea = 0;		// in m2
-		double									m_volume = 0;			// in m3
+		double									m_floorArea = 0;			// in m2
+		double									m_volume = 0;				// in m3
+		double									m_heatCapacity = 0;			// in J/K
 	};
 
 
@@ -414,7 +438,9 @@ private:
 		This map is updated in updatePointers().
 	*/
 	std::map<unsigned int, VICUS::Object*>		m_objectPtr;
+
 };
+
 
 
 } // namespace VICUS

@@ -37,7 +37,8 @@ public:
 		VisibleFlag = Qt::UserRole + 1,
 		SelectedFlag = Qt::UserRole + 2,
 		ItemType = Qt::UserRole + 3,
-		InvalidGeometryFlag = Qt::UserRole + 4
+		InvalidGeometryFlag = Qt::UserRole + 4,
+		MissingDrawingFile = Qt::UserRole + 5
 	};
 
 	enum TopologyType {
@@ -58,11 +59,15 @@ public:
 	void updateEditorGeometry(QWidget * editor, const QStyleOptionViewItem & option, const QModelIndex & index) const override;
 	QSize sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const override;
 
+	/*! Updates icons */
+	void onStyleChanged();
+
 private:
-	QImage m_lightBulbOn;
-	QImage m_lightBulbOff;
-	QImage m_selectedOn;
-	QImage m_selectedOff;
+	QPixmap		m_lightBulbOn;
+	QPixmap		m_lightBulbOff;
+	QPixmap		m_selectedOn;
+	QPixmap		m_selectedOff;
+	QColor		m_selectionColor;
 
 };
 

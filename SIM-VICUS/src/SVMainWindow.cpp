@@ -24,7 +24,6 @@
 */
 
 #include "SVMainWindow.h"
-#include "SVLcaLccSettingsWidget.h"
 #include "ui_SVMainWindow.h"
 
 #include <QCloseEvent>
@@ -53,11 +52,13 @@
 #include <QGuiApplication>
 #include <QMessageBox>
 #include <QShortcut>
+#include <QProgressDialog>
 
 #include <numeric>
 
 #include <IBK_FileUtils.h>
 #include <IBK_messages.h>
+#include <IBK_NotificationHandler.h>
 
 #include <VICUS_Project.h>
 #include <VICUS_Constants.h>
@@ -70,6 +71,7 @@
 
 #include <NANDRAD_Project.h>
 
+#include "SVLcaLccSettingsWidget.h"
 #include "SVMessageHandler.h"
 #include "SVConstants.h"
 #include "SVSettings.h"
@@ -97,6 +99,7 @@
 #include "SVSimulationShadingOptions.h"
 #include "SVPluginLoader.h"
 #include "SVLcaLccResultsWidget.h"
+#include "SVAcousticConstraintsCheckWidget.h"
 
 #include "SVDatabaseEditDialog.h"
 #include "SVDBZoneTemplateEditDialog.h"
@@ -109,19 +112,30 @@
 #include "SVGeometryView.h"
 #include "Vic3DSceneView.h"
 
-#include "SVUndoModifyProject.h"
-#include "SVUndoAddNetwork.h"
-#include "SVUndoAddBuilding.h"
-#include "SVUndoAddProject.h"
 #include "SVUndoModifySiteData.h"
-
 #include "SVSimulationSettingsView.h"
+#include "SVStructuralUnitCreationDialog.h"
 
 #include "plugins/SVDatabasePluginInterface.h"
 #include "plugins/SVImportPluginInterface.h"
 
 
 static bool copyRecursively(const QString &srcFilePath, const QString &tgtFilePath);
+
+
+class ProgressNotifyer : public IBK::NotificationHandler {
+public:
+	void notify() override {}
+	void notify(double percentage, const char *txt) override;
+	QProgressDialog		*m_prgDlg = nullptr;
+};
+
+void ProgressNotifyer::notify(double percentage, const char *txt) {
+	m_prgDlg->setValue((int)(m_prgDlg->maximum() * percentage));
+	m_prgDlg->setLabelText(txt);
+	qApp->processEvents();
+}
+
 
 SVMainWindow * SVMainWindow::m_self = nullptr;
 
@@ -180,6 +194,19 @@ SVMainWindow::SVMainWindow(QWidget * /*parent*/) :
 	QWindow *w = window()->windowHandle();
 	connect(w, &QWindow::screenChanged, this, &SVMainWindow::onScreenChanged);
 
+	// we need to set the theme name once here
+	if (SVSettings::instance().m_theme == SVSettings::TT_Dark)
+		QIcon::setThemeName("dark");
+	else
+		QIcon::setThemeName("light");
+
+	m_ui->actionFileNew->setIcon(QIcon::fromTheme("file_new"));
+	m_ui->actionFileOpen->setIcon(QIcon::fromTheme("file_open"));
+	m_ui->actionFileSave->setIcon(QIcon::fromTheme("file_save"));
+
+	m_ui->actionGeometryView->setIcon(QIcon::fromTheme("3d_geometry_view"));
+	m_ui->actionSimulationSettings->setIcon(QIcon::fromTheme("simulation_view"));
+	m_ui->actionOpenPostProcessing->setIcon(QIcon::fromTheme("post_processing"));
 }
 
 
@@ -294,6 +321,18 @@ SVDatabaseEditDialog * SVMainWindow::dbSubSurfaceComponentEditDialog() {
 		m_dbSubSurfaceComponentEditDialog = SVDatabaseEditDialog::createSubSurfaceComponentEditDialog(this);
 	m_dbSubSurfaceComponentEditDialog->resizeDBDialog(0.6);
 	return m_dbSubSurfaceComponentEditDialog;
+}
+
+SVDatabaseEditDialog * SVMainWindow::dbAcousticBoundaryConditionEditDialog(){
+	if (m_dbAcousticBoundaryConditionEditDialog == nullptr)
+		m_dbAcousticBoundaryConditionEditDialog = SVDatabaseEditDialog::createAcousticBoundaryConditionEditDialog(this);
+	return m_dbAcousticBoundaryConditionEditDialog;
+}
+
+SVDatabaseEditDialog * SVMainWindow::dbAcousticSoundAbsorptionEditDialog(){
+	if (m_dbAcousticSoundAbsorptionEditDialog == nullptr)
+		m_dbAcousticSoundAbsorptionEditDialog = SVDatabaseEditDialog::createAcousticSoundAbsorptionEditDialog(this);
+	return m_dbAcousticSoundAbsorptionEditDialog;
 }
 
 SVDatabaseEditDialog * SVMainWindow::dbBoundaryConditionEditDialog() {
@@ -664,7 +703,16 @@ void SVMainWindow::closeEvent(QCloseEvent * event) {
 
 void SVMainWindow::moveEvent(QMoveEvent *event) {
 	QMainWindow::moveEvent(event);
-	SVViewStateHandler::instance().m_geometryView->moveMeasurementWidget();
+	SVViewStateHandler::instance().m_geometryView->moveTransparentSceneWidgets();
+}
+
+void SVMainWindow::leaveEvent(QEvent *event) {
+	// Special handling to prevent constant Key_Control press, when window is left
+	// during control-pressing
+	QKeyEvent* ke = new QKeyEvent(QEvent::KeyRelease, Qt::Key_Control, Qt::NoModifier);
+	QCoreApplication::postEvent(this, ke);
+
+	QMainWindow::leaveEvent(event);
 }
 
 
@@ -686,7 +734,7 @@ void SVMainWindow::setup() {
 	m_ui->centralWidget->setLayout(mainLayout);
 	// updates colors and entire content of welcome page
 	m_welcomeScreen->onStyleChanged();
-
+	//m_welcomeScreen->setStyleSheet("QWidget {background-image: url(:/gfx/background/simvicus-background-mail.png);}");
 
 	connect(m_welcomeScreen, SIGNAL(newProjectClicked()), this, SLOT(on_actionFileNew_triggered()));
 	connect(m_welcomeScreen, SIGNAL(openProjectClicked()), this, SLOT(on_actionFileOpen_triggered()));
@@ -718,7 +766,7 @@ void SVMainWindow::setup() {
 
 	m_navigationTreeWidget = new SVNavigationTreeWidget(this);
 	m_geometryViewSplitter->addWidget(m_navigationTreeWidget);
-	m_geometryViewSplitter->setCollapsible(0, true);
+	m_geometryViewSplitter->setCollapsible(0, false);
 
 	// *** Geometry view ***
 
@@ -726,6 +774,9 @@ void SVMainWindow::setup() {
 	m_geometryView->m_focusRootWidgets.insert(m_navigationTreeWidget); // remember as possible focus widget for events
 	m_geometryViewSplitter->addWidget(m_geometryView);
 	m_geometryViewSplitter->setCollapsible(1, false);
+
+	connect(SVMainWindow::instance().preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged,
+			m_geometryView, &SVGeometryView::onStyleChanged);
 
 	// *** Simulation Settings View
 
@@ -745,29 +796,38 @@ void SVMainWindow::setup() {
 	// *** setup tool bar (add actions for undo and redo) ***
 
 	m_undoAction = m_undoStack->createUndoAction(this, tr("Undo"));
-	m_undoAction->setIcon(QIcon(":/gfx/icons8/icons8-back-80.png"));
+	m_undoAction->setIcon(QIcon::fromTheme("undo"));
 	m_undoAction->setShortcut(QKeySequence((int)Qt::CTRL + Qt::Key_Z));
 	m_redoAction = m_undoStack->createRedoAction(this, tr("Redo"));
 	m_redoAction->setShortcut(QKeySequence((int)Qt::CTRL + Qt::SHIFT + Qt::Key_Z));
-	m_redoAction->setIcon(QIcon(":/gfx/icons8/icons8-forward-80.png"));
+	m_redoAction->setIcon(QIcon::fromTheme("redo"));
 
 	// this is a bit messy, but there seems to be no other way, unless we create the whole menu ourselves
 	QList<QAction*> acts = m_ui->menuEdit->actions();
 	m_ui->menuEdit->addAction(m_undoAction);
 	m_ui->menuEdit->addAction(m_redoAction);
 
-	// TODO: Hauke re-arrange actions
-	// now move all the actions to bottom
-//	for (int i=0; i<acts.count(); ++i)
-//		m_ui->menuEdit->addAction(acts[i]);
+	QWidget* spacer = new QWidget();
+	spacer->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	spacer->setFixedSize(QSize(10, 150));
+	m_ui->toolBar->addWidget(spacer);
 
-	m_ui->toolBar->addAction(m_undoAction);
-	m_ui->toolBar->addAction(m_redoAction);
+	QList<QAction*> actions = m_ui->toolBar->actions();
+
+	m_ui->toolBar->insertAction(actions[3], m_undoAction);
+	m_ui->toolBar->insertAction(actions[3], m_redoAction);
+
+	actions = m_ui->toolBar->actions();
+
+	m_ui->toolBar->insertWidget(actions[3], spacer);
+	m_ui->toolBar->insertWidget(actions[5], spacer);
+
+	m_ui->toolBar->insertSeparator(actions[3]);
+
 	m_ui->menuView->addAction(m_ui->toolBar->toggleViewAction());
 
 	// *** Create definition lists dock widgets
 	setupDockWidgets();
-
 
 	// *** restore state of UI ***
 	QByteArray geometry, state;
@@ -817,9 +877,24 @@ void SVMainWindow::setup() {
 	show();
 #endif
 
+	// Set the width of geometryViewSplitter. We do that only once here.
+	// If the stored width of the navigationSplitter is within a reasonable range, we use it.
+	// If not, we reset it to the preferred width of the navigation tree.
+	QScreen *screen = windowHandle()->screen();
+	int storedNavSplitterWidth = (int)(SVSettings::instance().m_navigationSplitterSize / SVSettings::instance().m_ratio);
+	int preferredNavSplitterWidth = 1.05 * m_navigationTreeWidget->sizeHint().width();
+	if (storedNavSplitterWidth > preferredNavSplitterWidth && storedNavSplitterWidth < 1.5*preferredNavSplitterWidth)
+		preferredNavSplitterWidth = storedNavSplitterWidth;
+	QList<int> sizes;
+	sizes << preferredNavSplitterWidth << screen->size().width() - preferredNavSplitterWidth;
+	m_geometryViewSplitter->setSizes(sizes);
+
+	// we want to limit the width, so buttons are always visible
+//	m_navigationTreeWidget->setMinimumWidth(preferredNavSplitterWidth);
+	onScreenChanged(screen);
+
 	// *** Plugins ***
 	setupPlugins();
-
 
 	// *** Auto-Save Timer ***
 
@@ -830,6 +905,7 @@ void SVMainWindow::setup() {
 	// apply settings
 	onAutosaveSettingsChanged();
 
+	m_ui->toolBar->setStyleSheet("QToolBar {spacing: 5px; padding: 5px; }");
 }
 
 
@@ -873,9 +949,15 @@ void SVMainWindow::onImportPluginTriggered() {
 	VICUS::Project p;
 	QString projectText;
 	bool success = importPlugin->import(this, projectText);
+
+	ProgressNotifyer *notifyer = new ProgressNotifyer;
+	notifyer->m_prgDlg = new QProgressDialog(QString(), QString(), 0, 100, this);
+	notifyer->m_prgDlg->setWindowTitle(tr("Import project"));
+	notifyer->m_prgDlg->setMinimumDuration(0);
+	notifyer->notify(0, "");
 	try {
-		p.readXML(projectText);
-//		std::ofstream out("g:\\temp\\VicusImport.txt");
+		p.readImportedXML(projectText, dynamic_cast<IBK::NotificationHandler*>(notifyer));
+//		std::ofstream out("C:/test/VicusImport.xml");
 //		out << projectText.toStdString();
 	}
 	catch(IBK::Exception &ex) {
@@ -894,36 +976,21 @@ void SVMainWindow::onImportPluginTriggered() {
 		if (!m_projectHandler.isValid()) {
 			// create new project
 			m_projectHandler.newProject(&p); // emits updateActions()
-			m_projectHandler.project().writeXML(IBK::Path("g:\\temp\\VicusImport_clean.txt"));
+//			m_projectHandler.project().writeXML(IBK::Path("g:\\temp\\VicusImport_clean.txt"));
 		}
 		else {
-			// ask user about preference
-			int res = QMessageBox::question(this, tr("Replace or merge projects"), tr("Would you like to replace "
-																					  "the current project with the imported project, or would you like to combine both projects into one?"),
-											tr("Replace"), tr("Combine"));
-			if (res == 0) {
-				setFocus();
-				// close project if we have one
-				if (!m_projectHandler.closeProject(this)) // emits updateActions() if project was closed
-					return;
 
-				// create new project
-				m_projectHandler.newProject(&p); // emits updateActions()
-			}
-			else {
-				// The merging of project and referenced data is a bit complicated.
-				// First we must import the embedded database from the imported project
-				// Then, we can copy the buildings to our project.
+			// The merging of project and referenced data is a bit complicated.
+			// First we must import the embedded database from the imported project
+			// Then, we can copy the buildings to our project.
+			m_projectHandler.importEmbeddedDB(p); // this might modify IDs of the imported project
 
-				m_projectHandler.importEmbeddedDB(p); // this might modify IDs of the imported project
+			m_projectHandler.importProject(p);
+			QTimer::singleShot(0, &SVViewStateHandler::instance(), &SVViewStateHandler::refreshColors);
 
-				m_projectHandler.importProject(p);
-				QTimer::singleShot(0, &SVViewStateHandler::instance(), &SVViewStateHandler::refreshColors);
-			}
 		}
 	}
-
-//	m_geometryView->refreshSceneView();
+	notifyer->notify(1, "Finished");
 }
 
 
@@ -947,14 +1014,23 @@ void SVMainWindow::onConfigurePluginTriggered() {
 
 
 void SVMainWindow::onScreenChanged(QScreen *screen) {
+	// set minimum width of navigation tree, buttons shall be visible
+//	m_navigationTreeWidget->setMinimumWidth(m_navigationTreeWidget->sizeHint().width());
 	qDebug() << "Screen Changed: Device pixel ratio has been updated to: " << screen->devicePixelRatio();
 	SVSettings::instance().m_ratio = screen->devicePixelRatio();
 	// let others know (e.g. DB dialogs)
 	emit screenHasChanged(screen);
 }
 
+SVStructuralUnitCreationDialog *SVMainWindow::structuralUnitDialog() {
+	if (m_structuralUnitCreationDialog == nullptr)
+		m_structuralUnitCreationDialog = new SVStructuralUnitCreationDialog(this);
+	return m_structuralUnitCreationDialog;
+}
+
 
 void SVMainWindow::on_actionFileNew_triggered() {
+	m_geometryView->switch2AddGeometry();
 	// move input focus away from any input fields (to allow editingFinished() events to fire)
 	setFocus();
 	// close project if we have one
@@ -963,11 +1039,11 @@ void SVMainWindow::on_actionFileNew_triggered() {
 
 	// create new project
 	m_projectHandler.newProject(); // emits updateActions()
-	SVViewStateHandler::instance().m_geometryView->switch2AddGeometry();
 }
 
 
 void SVMainWindow::on_actionFileOpen_triggered() {
+	m_geometryView->switch2AddGeometry();
 	// move input focus away from any input fields (to allow editingFinished() events to fire)
 	setFocus();
 	// close project if we have one
@@ -1058,7 +1134,7 @@ void SVMainWindow::on_actionFileReload_triggered() {
 }
 
 
-void SVMainWindow::on_actionFileImportEneryPlusIDF_triggered() {
+void SVMainWindow::on_actionEneryPlus_IDF_triggered() {
 	// request IDF file and afterwards open import dialog
 	QString filename = QFileDialog::getOpenFileName(
 				this,
@@ -1124,6 +1200,10 @@ void SVMainWindow::on_actionFileOpenProjectDir_triggered() {
 
 
 void SVMainWindow::on_actionFileClose_triggered() {
+	/* We dont know which project (network/building) will be opened afterwards.
+	 * Also we need to hide transparent widgets (color legend, measurement widget).
+	 */
+	m_geometryView->switch2AddGeometry();
 	// move input focus away from any input fields (to allow editingFinished() events to fire)
 	setFocus();
 	m_projectHandler.closeProject(this);
@@ -1203,32 +1283,6 @@ void SVMainWindow::on_actionEditApplicationLog_triggered() {
 }
 
 
-void SVMainWindow::on_actionBuildingFloorManager_triggered() {
-	SVViewState vs = SVViewStateHandler::instance().viewState();
-	// turn off any special scene modes
-	vs.m_sceneOperationMode = SVViewState::NUM_OM;
-	vs.m_propertyWidgetMode = SVViewState::PM_BuildingProperties;
-	SVViewStateHandler::instance().setViewState(vs);
-
-	// adjust appearance of selector widget
-	SVViewStateHandler::instance().m_propertyWidget->setBuildingPropertyType(BT_FloorManager);
-
-}
-
-
-void SVMainWindow::on_actionBuildingSurfaceHeatings_triggered() {
-	SVViewState vs = SVViewStateHandler::instance().viewState();
-	// turn off any special scene modes
-	vs.m_sceneOperationMode = SVViewState::NUM_OM;
-	vs.m_propertyWidgetMode = SVViewState::PM_BuildingProperties;
-	// adjust appearance of selector widget
-	SVViewStateHandler::instance().m_propertyWidget->setBuildingPropertyType(BT_SurfaceHeating);
-	SVViewStateHandler::instance().setViewState(vs);
-
-	SVViewStateHandler::instance().m_geometryView->switch2BuildingParametrization();
-}
-
-
 void SVMainWindow::on_actionSimulationCO2Balance_triggered() {
 	if (m_coSimCO2VentilationDialog == nullptr)
 		m_coSimCO2VentilationDialog = new SVCoSimCO2VentilationDialog(this);
@@ -1238,7 +1292,7 @@ void SVMainWindow::on_actionSimulationCO2Balance_triggered() {
 
 void SVMainWindow::on_actionViewShowSurfaceNormals_toggled(bool visible) {
 	// set corresponding flag in View
-	const_cast<Vic3D::SceneView*>(SVViewStateHandler::instance().m_geometryView->sceneView())->setNormalVectorsVisible(visible);
+	const_cast<Vic3D::SceneView*>(m_geometryView->sceneView())->setNormalVectorsVisible(visible);
 }
 
 
@@ -1424,7 +1478,7 @@ void SVMainWindow::onActionSwitchLanguage() {
 }
 
 
-void SVMainWindow::on_actionFileImportNetworkGISData_triggered() {
+void SVMainWindow::on_actionNetwork_GIS_data_triggered() {
 	// opens import network dialog
 	if (m_networkImportDialog == nullptr)
 		m_networkImportDialog = new SVNetworkImportDialog(this);
@@ -1478,9 +1532,6 @@ void SVMainWindow::onUpdateActions() {
 
 	m_ui->actionEditTextEditProject->setEnabled(have_project);
 	m_ui->actionEditCleanProject->setEnabled(have_project);
-
-	m_ui->actionBuildingFloorManager->setEnabled(have_project);
-	m_ui->actionBuildingSurfaceHeatings->setEnabled(have_project);
 
 	m_ui->actionViewFindSelectedGeometry->setEnabled(have_project);
 	m_ui->actionViewResetView->setEnabled(have_project);
@@ -1545,23 +1596,6 @@ void SVMainWindow::onUpdateActions() {
 		m_logDockWidget->setVisible(m_dockWidgetVisibility[m_logDockWidget]);
 		m_logDockWidget->toggleViewAction()->setEnabled(true);
 
-		// restore navigation tree width on first call
-		if (SVSettings::instance().m_navigationSplitterSize != 0) {
-			QList<int> sizes;
-			int availableWidth = width();
-			int navSplitterWidth = (int)(SVSettings::instance().m_navigationSplitterSize / SVSettings::instance().m_ratio);
-			// guard against screen resolution changes, for example when SIM-VICUS was opened on an external
-			// 4K screen and splitter size was 1200 of 3800 and now the tool is opened again on laptop fullHD screen
-			// in Window mode where window is only about 1100 wide itself. Then, we rather want to limit the navigation
-			// panel to cover only max 1/3 of the available with
-			if (navSplitterWidth > 0.6*availableWidth)
-				navSplitterWidth = (int)(0.3*availableWidth);
-			sizes << navSplitterWidth << availableWidth - navSplitterWidth;
-			m_geometryViewSplitter->setSizes(sizes);
-
-			SVSettings::instance().m_navigationSplitterSize = 0; // will be set again when the app is being closed
-		}
-
 		bool isVisible = true;
 		if (project().m_viewSettings.m_gridPlanes.size() > 0)
 			isVisible = project().m_viewSettings.m_gridPlanes[0].m_isVisible;
@@ -1576,6 +1610,9 @@ void SVMainWindow::updateMainView() {
 	m_ui->actionGeometryView->setChecked(false);
 	m_ui->actionSimulationSettings->setChecked(false);
 
+	// Prevent updating the ui before we are finished with visibility changes
+	setUpdatesEnabled(false);
+
 	switch (m_mainViewMode) {
 		case MV_None: {
 			m_geometryViewSplitter->setVisible(false);
@@ -1583,6 +1620,7 @@ void SVMainWindow::updateMainView() {
 			m_welcomeScreen->setVisible(true);
 		} break;
 		case MV_GeometryView: {
+			// We avoid unneccessary ui updates here!
 			m_welcomeScreen->setVisible(false);
 			m_simulationSettingsView->setVisible(false);
 			m_geometryViewSplitter->setVisible(true);
@@ -1590,12 +1628,19 @@ void SVMainWindow::updateMainView() {
 			m_geometryView->setFocus();
 		} break;
 		case MV_SimulationView: {
+			// We avoid unneccessary ui updates here!
 			m_welcomeScreen->setVisible(false);
 			m_geometryViewSplitter->setVisible(false);
 			m_simulationSettingsView->setVisible(true);
 			m_ui->actionSimulationSettings->setChecked(true);
 		} break;
 	}
+
+	// toggle visibility and update position of floating transparent widgets (color legend, measurement, snap options)
+	SVViewStateHandler::instance().toggleTransparentWidgetsVisibility(m_mainViewMode);
+	SVViewStateHandler::instance().m_geometryView->moveTransparentSceneWidgets();
+
+	setUpdatesEnabled(true);
 }
 
 
@@ -1687,6 +1732,9 @@ void SVMainWindow::onOpenExampleByFilename(const QString & filename) {
 		QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Overwrite example"), tr("Example project exists already user directory, overwrite it?"), QMessageBox::Yes|QMessageBox::No);
 		if (reply == QMessageBox::No)
 			return;
+		else
+			if (!QFile::remove(targetFile))
+				QMessageBox::critical(this, tr("Write error"), tr("Unable to overwrite example file, maybe missing permissions?"));
 	}
 	QFile::copy(filename, targetFile);
 
@@ -2120,6 +2168,9 @@ SVPreferencesDialog * SVMainWindow::preferencesDialog() {
 				m_geometryView->sceneView(), &Vic3D::SceneView::onStyleChanged);
 		connect(m_preferencesDialog->pageMisc(), &SVPreferencesPageMisc::autosaveSettingsChanged,
 				this, &SVMainWindow::onAutosaveSettingsChanged);
+
+		connect(preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged,
+				m_navigationTreeWidget, &SVNavigationTreeWidget::onStyleChanged);
 	}
 	return m_preferencesDialog;
 }
@@ -2258,4 +2309,18 @@ void SVMainWindow::on_actionDWD_Weather_Data_Converter_triggered() {
 							  .arg(dwdPath));
 	}
 }
+
+
+void SVMainWindow::on_actionDBAcousticBoundaryConditions_triggered() {
+	dbAcousticBoundaryConditionEditDialog()->edit();
+}
+
+
+void SVMainWindow::on_actionDBAcousticSoundAbsorptions_triggered() {
+	dbAcousticSoundAbsorptionEditDialog()->edit();
+}
+
+
+
+
 

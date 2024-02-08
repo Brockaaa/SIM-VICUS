@@ -45,6 +45,7 @@
 #include "SVProjectHandler.h"
 #include "SVUndoModifyClimate.h"
 #include "SVMainWindow.h"
+#include "SVPreferencesDialog.h"
 
 #include <qwt_plot_curve.h>
 #include <qwt_series_data.h>
@@ -56,6 +57,24 @@
 #include <qwt_scale_div.h>
 #include <qwt_scale_widget.h>
 #include <qwt_plot_zoomer.h>
+
+/*! This event filter allows catching click on table view when it is disabled.*/
+class ClickEventFilter : public QObject {
+	QTableView *m_tableView;
+public:
+	ClickEventFilter(QTableView *view) : m_tableView(view) {}
+protected:
+	bool eventFilter(QObject *watched, QEvent *event) override {
+		if (event->type() == QEvent::MouseButtonPress) {
+			if (m_tableView && !m_tableView->isEnabled()) {
+				m_tableView->setEnabled(true);
+				emit m_tableView->clicked(QModelIndex());
+			}
+			return false;
+		}
+		return QObject::eventFilter(watched, event);
+	}
+};
 
 
 SVSimulationLocationOptions::SVSimulationLocationOptions(QWidget *parent) :
@@ -78,6 +97,9 @@ SVSimulationLocationOptions::SVSimulationLocationOptions(QWidget *parent) :
 	SVDBModelDelegate * delegate = new SVDBModelDelegate(this, Role_BuiltIn, Role_Local, Role_Referenced);
 	m_ui->tableViewClimateFiles->setItemDelegate(delegate);
 	SVStyle::formatDatabaseTableView(m_ui->tableViewClimateFiles);
+
+	ClickEventFilter *clickFilter = new ClickEventFilter(m_ui->tableViewClimateFiles);
+	m_ui->tableViewClimateFiles->installEventFilter(clickFilter);
 
 	// stretch column with city name
 	m_ui->tableViewClimateFiles->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
@@ -154,9 +176,6 @@ SVSimulationLocationOptions::~SVSimulationLocationOptions() {
 
 
 void SVSimulationLocationOptions::updateUi(bool updatingPlotsRequired) {
-
-	bool haveDWDConv = QFileInfo(SVSettings::instance().m_DWDConverterExecutable).exists();
-	m_ui->pushButtonOpenDWDConverter->setVisible(haveDWDConv);
 
 	m_ui->tableViewClimateFiles->resizeRowsToContents();
 
@@ -430,7 +449,7 @@ void SVSimulationLocationOptions::minMaxValuesInPlot(const QwtPlot & plot, doubl
 
 void SVSimulationLocationOptions::resizeEvent(QResizeEvent * event) {
 	QWidget::resizeEvent(event);
-	setPlotHeights(event->size().height());
+	// setPlotHeights(event->size().height());
 }
 
 
@@ -533,6 +552,8 @@ void SVSimulationLocationOptions::formatQwtPlot(bool init, QwtPlot &plot, QDateT
 
 void SVSimulationLocationOptions::onModified(int modificationType, ModificationInfo * /*data*/) {
 
+	m_ui->tableViewClimateFiles->blockSignals(true);
+
 	SVProjectHandler::ModificationTypes modType = (SVProjectHandler::ModificationTypes)modificationType;
 
 	switch (modType) {
@@ -631,21 +652,22 @@ void SVSimulationLocationOptions::onModified(int modificationType, ModificationI
 
 		default:;
 	}
+
+	m_ui->tableViewClimateFiles->blockSignals(false);
 }
 
 
 void SVSimulationLocationOptions::onScreenChanged(const QScreen * screen) {
-	setPlotHeights(screen->geometry().height());
+	// setPlotHeights(screen->geometry().height());
 }
 
 
 void SVSimulationLocationOptions::on_tableViewClimateFiles_clicked(const QModelIndex &index) {
-	if (!m_ui->radioButtonCustomFilePath->isChecked()) {
+		m_ui->radioButtonFromDB->setChecked(true);
 		// get filename from current model and then update the climate station info text box
 		QModelIndex srcIndex = m_filterModel->mapToSource(index);
 		const SVClimateFileInfo * climateInfoPtr = (const SVClimateFileInfo *)srcIndex.data(Role_RawPointer).value<void*>();
 		modifyClimateFileAndLocation(climateInfoPtr);
-	}
 }
 
 
@@ -707,7 +729,7 @@ void SVSimulationLocationOptions::modifyClimateFileAndLocation(const SVClimateFi
 										   NANDRAD::Location::P_Latitude, climateInfoPtr->m_latitudeInDegree);
 		NANDRAD::KeywordList::setParameter(location.m_para, "Location::para_t",
 										   NANDRAD::Location::P_Longitude, climateInfoPtr->m_longitudeInDegree);
-		location.m_timeZone = climateInfoPtr->m_timeZone + 12;
+		location.m_timeZone = climateInfoPtr->m_timeZone /*+ 12*/;
 	}
 
 	SVUndoModifyClimate *undo = new SVUndoModifyClimate("Climate file changed", location, true);
@@ -842,14 +864,19 @@ void SVSimulationLocationOptions::on_radioButtonCustomFilePath_toggled(bool chec
 void SVSimulationLocationOptions::on_pushButtonOpenDWDConverter_clicked() {
 	QString dwdPath = SVSettings::instance().m_DWDConverterExecutable;
 	if (dwdPath.isEmpty() || !QFileInfo::exists(dwdPath)) {
-		QMessageBox::information(this, tr("Setup external tool"), tr("Please select first the path to the external "
-																	 "climate editor in the preferences dialog!"));
-		return;
+		QMessageBox::information(this, tr("Setup external tool"), tr("Please select first the path to the DWD "
+																	 "weather downloader in the preferences dialog!"));
+		// spawn preferences dialog
+		SVMainWindow::instance().preferencesDialog()->edit(0);
+		// still not ccm editor selected?
+		dwdPath = SVSettings::instance().m_DWDConverterExecutable;
+		if (dwdPath.isEmpty() || !QFileInfo::exists(dwdPath))
+			return;
 	}
 	bool res = QProcess::startDetached(dwdPath, QStringList(), QString());
 	if (!res) {
-		QMessageBox::critical(this, tr("Error starting external application"), tr("Climate editor '%1' could not be started.")
-							  .arg(dwdPath));
+		QMessageBox::critical(this, tr("Error starting external application"), tr("DWD weather downloader '%1' could not be started.")
+																				   .arg(dwdPath));
 	}
 }
 

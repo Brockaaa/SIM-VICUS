@@ -34,6 +34,7 @@
 
 #include <VICUS_GridPlane.h>
 
+#include "VICUS_Drawing.h"
 #include "VICUS_RotationMatrix.h"
 #include "Vic3DCamera.h"
 #include "Vic3DGridObject.h"
@@ -113,7 +114,7 @@ public:
 	*/
 	void setViewState(const SVViewState & vs);
 
-	/*! This function can be called to specifically update the coloring and/or the network geometry.
+	/*! This function can be called to specifically update the coloring and/or the  geometry.
 		This function is meant to be called whenever the database element's colors have been changed,
 		or in the case of network components, also their geometry-size related properties.
 	*/
@@ -158,6 +159,7 @@ public:
 	/*! Getter for worldToView Matrix. */
 	const QMatrix4x4 & worldToView() const;
 
+	/*! Updates the highlighting mode in surface-connection widget (Building properties widget). */
 	void updatedHighlightingMode(HighlightingMode mode);
 
 private:
@@ -176,11 +178,13 @@ private:
 	*/
 	void pick(PickObject & pickObject);
 
-	/*! Pick drawings. */
-	void pickDrawings(PickObject & pickObject, const IBKMK::Vector3D &nearPoint, const IBKMK::Vector3D &farPoint, const IBKMK::Vector3D &direction);
+	/*! Pick drawing points. */
+	void pickDrawings(PickObject & pickObject, const IBKMK::Vector3D &nearPoint,
+					  const IBKMK::Vector3D &farPoint, const IBKMK::Vector3D &direction);
 
-	/*! Pick all child surfaces. */
-	void pickChildSurfaces();
+	/*! Pick all block depening drawing points. */
+	void pickBlockDrawings(PickObject &pickObject, const VICUS::Drawing &d, const std::vector<VICUS::Drawing::Insert> &inserts,
+						   const IBKMK::Vector3D &nearPoint, const IBKMK::Vector3D &direction);
 
 	/*! Takes the picked objects and applies the snapping rules.
 		Once a snap point has been selected, the local coordinate system is translated to the snap point.
@@ -205,6 +209,7 @@ private:
 	/*! Selects/deselects objects. */
 	void handleSelection(const KeyboardMouseHandler & keyboardHandler, PickObject & o);
 
+	/*! . */
 	IBKMK::Vector3D calculateFarPoint(const QPoint & mousPos, const QMatrix4x4 & projectionMatrixInverted);
 
 	/*! Initializes the pan operation. */

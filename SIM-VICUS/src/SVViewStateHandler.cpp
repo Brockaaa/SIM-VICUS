@@ -24,8 +24,10 @@
 */
 
 #include "SVViewStateHandler.h"
-
 #include "SVProjectHandler.h"
+#include "SVColorLegend.h"
+#include "SVMeasurementWidget.h"
+#include "SVSnapOptionsDialog.h"
 
 SVViewStateHandler * SVViewStateHandler::m_self = nullptr;
 
@@ -53,6 +55,24 @@ SVViewStateHandler::~SVViewStateHandler() {
 void SVViewStateHandler::setViewState(const SVViewState & newViewState) {
 	m_viewState = newViewState;
 	emit viewStateChanged();
+}
+
+
+void SVViewStateHandler::toggleTransparentWidgetsVisibility(SVMainWindow::MainViewMode mainView) {
+	if (mainView == SVMainWindow::MV_GeometryView) {
+		if (m_viewState.m_propertyWidgetMode == SVViewState::PM_ResultsProperties)
+			m_colorLegend->setVisible(true);
+		if (m_viewState.m_sceneOperationMode == SVViewState::OM_MeasureDistance)
+			m_measurementWidget->setVisible(true);
+		m_snapOptionsDialog->setVisible(m_viewState.m_snapEnabled);
+	}
+	else {
+		m_measurementWidget->setVisible(false);
+		m_colorLegend->setVisible(false);
+		m_snapOptionsDialog->setVisible(false);
+	}
+	if (mainView == SVMainWindow::MV_None)
+		m_snapOptionsDialog->setExpanded(false);
 }
 
 

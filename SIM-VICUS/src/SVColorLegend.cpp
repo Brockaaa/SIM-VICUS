@@ -2,13 +2,18 @@
 
 #include <QPainter>
 
-#include "SVStyle.h"
 #include "SVSettings.h"
+#include "SVViewStateHandler.h"
+
 
 SVColorLegend::SVColorLegend(QWidget *parent)
 	: QWidget{parent}
 {
+	setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint | Qt::MSWindowsFixedSizeDialogHint);
 
+	setWindowOpacity(0.8);
+
+	SVViewStateHandler::instance().m_colorLegend = this;
 }
 
 
@@ -29,6 +34,13 @@ void SVColorLegend::setTitle(const QString &title) {
 	update();
 }
 
+void SVColorLegend::setPosition(const double & height, const QPoint & position) {
+	m_containerHeight = height;
+	m_containerBottomRight = position;
+	resize(65, int(m_containerHeight * 0.9));
+	move(m_containerBottomRight.x() - width(), int(m_containerBottomRight.y() - 0.95*m_containerHeight) );
+}
+
 
 void SVColorLegend::paintEvent(QPaintEvent * /*event*/) {
 
@@ -38,8 +50,8 @@ void SVColorLegend::paintEvent(QPaintEvent * /*event*/) {
 		return;
 
 
-	int offsetV = 0;
-	int offsetH = 0;
+	int offsetV = 10;
+	int offsetH = 10;
 	int barWidth = 10;
 	int labelWidth = 55;
 	int titleWidth = 15;
@@ -103,5 +115,7 @@ void SVColorLegend::paintEvent(QPaintEvent * /*event*/) {
 	painter.drawText(-height(), offsetH+barWidth+maxLabelWidth+5, height(), titleWidth, flags, m_title);
 	painter.rotate(90);
 
-	setFixedWidth(offsetH+barWidth+maxLabelWidth+titleWidth+10);
+	setFixedWidth(offsetH + barWidth + maxLabelWidth + titleWidth + 10);
+
+	move(m_containerBottomRight.x() - width(), int(m_containerBottomRight.y() - 0.95*m_containerHeight) );
 }

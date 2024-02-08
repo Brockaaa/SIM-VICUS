@@ -45,6 +45,7 @@ public:
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
 	enum para_t {
+		// FIXME: TimePeriod must be an integer and moved to intPara_t
 		P_TimePeriod,					// Keyword: TimePeriod					[a]		'Time period for consideration [a].'
 		P_FactorBnbSimpleMode,			// Keyword: FactorSimpleMode			[-]		'Calculation factor for simple mode calculation (BNB). [-]'
 		P_NetUsageArea,					// Keyword: NetUsageArea				[m2]	'Net usage area [m2].'
@@ -149,10 +150,13 @@ inline bool LcaSettings::operator!=(const LcaSettings & other) const {
 		if (m_para[i] != other.m_para[i]) return true;
 
 	for(unsigned int i=0; i<NUM_M; ++i)
-		if(m_flags[i].isEnabled() != other.m_flags[i].isEnabled()) return true;
+		if (m_flags[i].isEnabled() != other.m_flags[i].isEnabled()) return true;
 
-	if(m_calculationMode != other.m_calculationMode) return true;
-	if(m_certificationSystem != other.m_certificationSystem) return true;
+	for(unsigned int i=0; i<NUM_UT; ++i)
+		if (m_idUsage[i] != other.m_idUsage[i]) return true;
+
+	if (m_calculationMode != other.m_calculationMode) return true;
+	if (m_certificationSystem != other.m_certificationSystem) return true;
 
 	return false;
 }

@@ -21,6 +21,11 @@ public:
 	/*! Sets title string */
 	void setTitle(const QString & title);
 
+	/*! Moves the widget according to the point position and maps it to the parent widgets position.
+		\param position The bottom-right corner position of the widget.
+	*/
+	void setPosition(const double & height, const QPoint &position);
+
 protected:
 	void paintEvent(QPaintEvent * /*event*/) override;
 
@@ -29,6 +34,9 @@ private:
 	const double					*m_minValue = nullptr;
 	const double					*m_maxValue = nullptr;
 	const SVColorMap				*m_colorMap = nullptr;
+
+	double							m_containerHeight = 600;
+	QPoint							m_containerBottomRight;
 
 	/*! Title string */
 	QString							m_title;

@@ -27,9 +27,7 @@
 #include "VICUS_NetworkLine.h"
 #include "VICUS_NetworkFluid.h"
 #include "VICUS_NetworkPipe.h"
-#include "VICUS_Project.h"
 #include "VICUS_KeywordList.h"
-#include "VICUS_utilities.h"
 
 #include <QFile>
 #include <QJsonParseError>
@@ -47,9 +45,6 @@
 
 #include <IBKMK_3DCalculations.h>
 #include <IBKMK_UTM.h>
-
-
-
 
 #include <fstream>
 #include <algorithm>
@@ -75,6 +70,8 @@ Network::Network() {
 	KeywordList::setParameter(m_para, "Network::para_t", Network::para_t::P_InitialFluidTemperature, 20);
 	KeywordList::setParameter(m_para, "Network::para_t", Network::para_t::P_ReferencePressure, 0);
 
+	// sets the default simultaneity function
+	setDefaultSimultaneity(m_simultaneity);
 }
 
 
@@ -99,7 +96,7 @@ unsigned int Network::addNode(unsigned int preferedId, const IBKMK::Vector3D &v,
 	// if there is an existing node with identical coordinates, return its id and dont add a new one
 	if (consistentCoordinates){
 		for (NetworkNode &n: m_nodes){
-			if (n.m_position.distanceTo(v) < GeometricResolution){
+			if (n.m_position.distanceTo(v) < NetworkGeometricResolution){
 				if(n.m_type != type){
 					n.m_type = type;
 				}
@@ -209,13 +206,13 @@ void Network::updateVisualizationRadius(const VICUS::Database<VICUS::NetworkPipe
 			case NetworkNode::NT_SubStation: {
 				// scale node by heating demand - 1 mm / 1000 W; 4800 W -> 48 * 0.01 = radius = 0.48
 				if (no.m_maxHeatingDemand.value > 0)
-					radius *= no.m_maxHeatingDemand.value / 1000;
+					radius = m_scaleNodes / 50 * (1 + std::sqrt(no.m_maxHeatingDemand.value / 1000) );
 			} break;
 			case NetworkNode::NT_Source:
 			case NetworkNode::NT_Mixer: {
 				// if we have connected pipes, compute max radius of adjacent pipes (our node should be larger than the pipes)
 				for (const VICUS::NetworkEdge * edge: no.m_edges)
-					radius = std::max(radius, edge->m_visualizationRadius*1.2); // enlarge by 20 %  over edge diameter
+					radius = std::max(radius, edge->m_visualizationRadius*1.2);// enlarge by 20 %  over edge diameter
 			} break;
 			default:;
 		}
@@ -251,6 +248,31 @@ void Network::setVisible(bool visible) {
 		edge.m_visible = visible;
 	for (NetworkNode &node: m_nodes)
 		node.m_visible = visible;
+}
+
+
+void Network::setDefaultSimultaneity(IBK::LinearSpline & simultaneity) {
+	simultaneity.clear();
+	// function according to Winter et al., Euroheat & Power 2001
+	double a = 0.449677646267461;
+	double b = 0.551234688;
+	double c = 53.84382392;
+	double d = 1.762743268;
+	unsigned int nmax = 300;
+	std::vector<double> num;
+	std::vector<double> sim;
+	unsigned int i = 1;
+	while (i<nmax) {
+		num.push_back(i);
+		sim.push_back( std::min(1.0, a + (b / (1 + std::pow(i/c, d))) ));
+		if (i<5)
+			i++;
+		else //if (i<50)
+			i+=5;
+//		else
+//			i+=10;
+	}
+	simultaneity.setValues(num, sim);
 }
 
 
@@ -649,24 +671,50 @@ FUNCID(Network::sizePipeDimensions);
 																   std::numeric_limits<double>::lowest(), true,
 																   std::numeric_limits<double>::max(), true, nullptr);
 		} catch (IBK::Exception &ex) {
-			throw IBK::Exception(ex, "Error in sizing pipes algorithm!", FUNC_ID);
+			throw IBK::Exception(ex, "Invalid parameters in pipes sizing algorithm!", FUNC_ID);
 		}
 	}
 
-	// set all edges heating demand = 0
-	for (NetworkEdge &edge: m_edges)
+	// check simultaneity
+	std::string errMsg;
+	m_simultaneity.makeSpline(errMsg);
+	if (!errMsg.empty())
+		throw IBK::Exception(IBK::FormatString("Invalid simultaneity function.\n%1").arg(errMsg), FUNC_ID);
+	for (unsigned int i=0; i<m_simultaneity.size(); ++i) {
+		if (m_simultaneity.x()[i] < 1)
+			errMsg += IBK::FormatString("\nx must be >=1 but is '%1', found in row %2").arg(m_simultaneity.x()[i]).arg(i).str();
+		if (m_simultaneity.y()[i] > 1 || m_simultaneity.y()[i] <= 0 )
+			errMsg += IBK::FormatString("\ny must  be 0 < y <= 1 but is '%1', found in row %2").arg(m_simultaneity.y()[i]).arg(i).str();
+		if (!errMsg.empty())
+			throw IBK::Exception(IBK::FormatString("Invalid simultaneity function.\n%1").arg(errMsg), FUNC_ID);
+	}
+
+	// init all edges
+	for (NetworkEdge &edge: m_edges) {
 		edge.m_nominalHeatingDemand = 0;
+		edge.m_numberDownStreamBuildings = 0;
+	}
 
 	// find shortest path for each building node to closest source node
 	std::map<unsigned int, std::vector<NetworkEdge *> > shortestPaths;
 	findShortestPathForBuildings(shortestPaths);
 
+	// set number of connected buildings to each edge
+	for (auto it = shortestPaths.begin(); it != shortestPaths.end(); ++it){
+		std::vector<NetworkEdge *> &shortestPath = it->second; // for readability
+		for (NetworkEdge * edge: shortestPath) {
+			++edge->m_numberDownStreamBuildings;
+		}
+	}
+
 	// now for each building node: go along shortest path and add the nodes heating demand to each edge along that path
 	for (auto it = shortestPaths.begin(); it != shortestPaths.end(); ++it){
 		NetworkNode *building = nodeById(it->first);			// get pointer to building node
 		std::vector<NetworkEdge *> &shortestPath = it->second; // for readability
-		for (NetworkEdge * edge: shortestPath)
-			edge->m_nominalHeatingDemand += building->m_maxHeatingDemand.value;
+		for (NetworkEdge * edge: shortestPath) {
+			edge->m_nominalHeatingDemand += building->m_maxHeatingDemand.value
+											* m_simultaneity.value(edge->m_numberDownStreamBuildings); // interpolated simultaneity
+		}
 	}
 
 	// in case there is a pipe which is not part of any path (e.g. in circular grid): assign the adjacent heating demand

@@ -200,6 +200,19 @@
        <string>Shading properties</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_5">
+       <item row="0" column="1">
+        <widget class="QtExt::ValidatingLineEdit" name="lineEditReductionFactor">
+         <property name="toolTipDuration">
+          <number>9</number>
+         </property>
+         <property name="text">
+          <string>1</string>
+         </property>
+         <property name="readOnly">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="0">
         <widget class="QLabel" name="labelDisplayName_5">
          <property name="minimumSize">
@@ -220,23 +233,7 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QtExt::ValidatingLineEdit" name="lineEditReductionFactor">
-         <property name="toolTip">
-          <string>Fraction of radiation passed through to the window when the shading is activated.</string>
-         </property>
-         <property name="toolTipDuration">
-          <number>9</number>
-         </property>
-         <property name="text">
-          <string>1</string>
-         </property>
-         <property name="readOnly">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
+       <item row="2" column="1">
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -248,6 +245,24 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="1" column="0" colspan="3">
+        <widget class="QLabel" name="label_5">
+         <property name="font">
+          <font>
+           <italic>true</italic>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">color:rgb(119, 118, 123)</string>
+         </property>
+         <property name="text">
+          <string>Represents the proportion of radiation that passes through the shading system when shading is activated.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -290,7 +305,7 @@
         <item row="0" column="2">
          <widget class="QToolButton" name="toolButtonRemoveBoundaryConditionSideA">
           <property name="icon">
-           <iconset resource="../resources/SIM-VICUS.qrc">
+           <iconset>
             <normaloff>:/gfx/actions/24x24/minus.png</normaloff>:/gfx/actions/24x24/minus.png</iconset>
           </property>
          </widget>
@@ -320,7 +335,7 @@
         <item row="0" column="2">
          <widget class="QToolButton" name="toolButtonRemoveBoundaryConditionSideB">
           <property name="icon">
-           <iconset resource="../resources/SIM-VICUS.qrc">
+           <iconset>
             <normaloff>:/gfx/actions/24x24/minus.png</normaloff>:/gfx/actions/24x24/minus.png</iconset>
           </property>
          </widget>
@@ -350,17 +365,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QtExt::ColorButton</class>
-   <extends>QPushButton</extends>
-   <header location="global">QtExt_ColorButton.h</header>
-  </customwidget>
-  <customwidget>
-   <class>QtExt::LanguageStringEditWidget1</class>
-   <extends>QLineEdit</extends>
-   <header location="global">QtExt_LanguageStringEditWidget1.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>QtExt::ValidatingLineEdit</class>
    <extends>QLineEdit</extends>
    <header location="global">QtExt_ValidatingLineEdit.h</header>
@@ -374,9 +378,21 @@
    <header location="global">qwt_plot.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>QtExt::ColorButton</class>
+   <extends>QPushButton</extends>
+   <header location="global">QtExt_ColorButton.h</header>
+   <slots>
+    <signal>colorChanged()</signal>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>QtExt::LanguageStringEditWidget1</class>
+   <extends>QLineEdit</extends>
+   <header location="global">QtExt_LanguageStringEditWidget1.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
- <resources>
-  <include location="../resources/SIM-VICUS.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

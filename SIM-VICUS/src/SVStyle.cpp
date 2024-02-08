@@ -238,8 +238,8 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 		m_styleSheet = QLatin1String(styleDark.readAll());
 		qApp->setStyleSheet(m_styleSheet);
 		// set specific background/font colors
-		m_alternativeBackgroundBright				= "#73580e";
-		m_alternativeBackgroundDark					= "#57430b";
+		m_alternativeBackgroundBright				= "#324e41";
+		m_alternativeBackgroundDark					= "#283e34";
 		m_alternativeBackgroundText					= "#ffedce";
 
 		m_readOnlyEditFieldBackground				= "#5f7da0";
@@ -249,7 +249,7 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 		m_userDBBackgroundDark						= "#012a4a";
 		m_userDBBackgroundBright					= "#013a63";
 		m_regularDBEntryColorDark					= "#e0e0e0";
-		m_DBSelectionColor							= "#4a8522";
+		m_DBSelectionColor							= "#cc8425";
 
 		m_logProgressText							= "#c0c0c0";
 		m_logErrorText								= "#ff2222";
@@ -259,17 +259,19 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 		m_defaultDrawingColor						= "#FFFFFF";
 
 		// now adjust the style settings for QtExt components
-		QtExt::Style::EditFieldBackground = "#212124";
+		QtExt::Style::EditFieldBackground			= "#212124";
 		QtExt::Style::AlternativeEditFieldBackground = "#3a3b3f";
-		QtExt::Style::ErrorEditFieldBackground = "#ab4e4e";
-		QtExt::Style::ReadOnlyEditFieldBackground = "#5f7da0";
+		QtExt::Style::ErrorEditFieldBackground		= "#ab4e4e";
+		QtExt::Style::ReadOnlyEditFieldBackground	= "#5f7da0";
 
-		QtExt::Style::AlternativeBackgroundBright = "#73580e";
-		QtExt::Style::AlternativeBackgroundDark = "#57430b";
-		QtExt::Style::AlternativeBackgroundText = "#ffedce";
+		QtExt::Style::AlternativeBackgroundBright	= "#73580e";
+		QtExt::Style::AlternativeBackgroundDark		= "#57430b";
+		QtExt::Style::AlternativeBackgroundText		= "#ffedce";
 
-		QtExt::Style::ToolBoxPageBackground		= "#212124";
-		QtExt::Style::ToolBoxPageEdge			= "#3a3b3f";
+		QtExt::Style::ToolBoxPageBackground			= "#212124";
+		QtExt::Style::ToolBoxPageEdge				= "#3a3b3f";
+
+		QIcon::setThemeName("dark");
 	}
 	else if ( theme == SVSettings::TT_White && styleWhite.exists()) {
 
@@ -278,8 +280,8 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 		qApp->setStyleSheet(m_styleSheet);
 
 		// set specific background/font colors
-		m_alternativeBackgroundBright				= "#fff4b8";
-		m_alternativeBackgroundDark					= "#ffe49d";
+		m_alternativeBackgroundBright				= "#e9f5db";
+		m_alternativeBackgroundDark					= "#cfe1b9";
 		m_alternativeBackgroundText					= "#760000";
 		m_readOnlyEditFieldBackground				= "#d6e9ff";
 		m_alternativeReadOnlyEditFieldBackground	= "#b5d8ff";
@@ -287,7 +289,7 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 
 		m_userDBBackgroundDark						= "#cddafd";
 		m_userDBBackgroundBright					= "#dfe7fd";
-		m_DBSelectionColor							= "#4a8522";
+		m_DBSelectionColor							= "#088C54";
 
 		m_logProgressText							= "#202020";
 		m_logErrorText								= "#ab0000";
@@ -307,6 +309,8 @@ void SVStyle::setStyle(SVSettings::ThemeType theme) {
 
 		QtExt::Style::ToolBoxPageBackground						= "#ffffff";
 		QtExt::Style::ToolBoxPageEdge							= "#f0f0f0";
+
+		QIcon::setThemeName("light");
 	}
 	else {
 		// clear style sheet for default style.

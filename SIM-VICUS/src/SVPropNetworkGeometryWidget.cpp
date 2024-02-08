@@ -8,8 +8,7 @@
 #include "SVUndoModifyNetwork.h"
 #include "SVUndoAddNetwork.h"
 #include "SVNetworkDialogSelectPipes.h"
-#include "SVViewStateHandler.h"
-#include "SVNetworkDialogSelectPipes.h"
+#include "SVNetworkSimultaneityDialog.h"
 
 #include <VICUS_Project.h>
 #include <VICUS_utilities.h>
@@ -32,6 +31,11 @@ SVPropNetworkGeometryWidget::SVPropNetworkGeometryWidget(QWidget *parent) :
 
 	m_iconConnected = QPixmap(":/gfx/actions/16x16/ok.png");
 	m_iconUnconnected = QPixmap(":/gfx/actions/16x16/error.png");
+
+	m_ui->pushButtonConnectBuildings->setIcon(QIcon::fromTheme("network_connect_substations"));
+	m_ui->pushButtonGenerateIntersections->setIcon(QIcon::fromTheme("network_add_intersections"));
+	m_ui->pushButtonReduceDeadEnds->setIcon(QIcon::fromTheme("network_reduce_dead_ends"));
+	m_ui->pushButtonSizePipeDimensions->setIcon(QIcon::fromTheme("network_size_pipes"));
 }
 
 SVPropNetworkGeometryWidget::~SVPropNetworkGeometryWidget() {
@@ -90,6 +94,11 @@ void SVPropNetworkGeometryWidget::updateUi() {
 	m_ui->labelTotalLength->setText(QString("%1 m").arg(m_currentNetwork->totalLength()));
 	m_ui->pushButtonConnectBuildings->setEnabled(m_currentNetwork->nextUnconnectedBuilding()>=0);
 	m_ui->pushButtonReduceDeadEnds->setEnabled(m_currentNetwork->checkConnectedGraph() && m_currentNetwork->numberOfBuildings() > 0);
+
+	m_ui->lineEditMaxPressureDrop->setValue(m_currentNetwork->m_para[VICUS::Network::P_MaxPressureLoss].value);
+	m_ui->lineEditTemperatureDifference->setValue(m_currentNetwork->m_para[VICUS::Network::P_TemperatureDifference].value);
+	if (!m_currentNetwork->m_para[VICUS::Network::P_TemperatureSetpoint].empty())
+		m_ui->lineEditTemperatureSetpoint->setValue(m_currentNetwork->m_para[VICUS::Network::P_TemperatureSetpoint].get_value("C"));
 
 	// scales
 	m_ui->horizontalSliderScaleEdges->setValue((int)m_currentNetwork->m_scaleEdges);
@@ -346,3 +355,14 @@ void SVPropNetworkGeometryWidget::on_pushButtonSizePipeDimensions_clicked() {
 	SVUndoModifyNetwork * undo = new SVUndoModifyNetwork(tr("Network visualization properties updated"), network);
 	undo->push(); // modifies project and updates views
 }
+
+void SVPropNetworkGeometryWidget::on_pushButtonEditSimultaneity_clicked() {
+	Q_ASSERT(VICUS::element(project().m_geometricNetworks, m_currentNetwork->m_id) != nullptr);
+	VICUS::Network network = *VICUS::element(project().m_geometricNetworks, m_currentNetwork->m_id);
+
+	SVNetworkSimultaneityDialog *diag = new SVNetworkSimultaneityDialog();
+	diag->edit(network.m_simultaneity);
+	SVUndoModifyNetwork * undo = new SVUndoModifyNetwork(tr("Network simultaneity updated"), network);
+	undo->push(); // modifies project and updates views
+}
+

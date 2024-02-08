@@ -56,6 +56,9 @@ public slots:
 	/*! Expand node if not yet done and scroll to view. */
 	void scrollToObject(unsigned int uniqueID);
 
+	/*! Calls delegate to update icons. */
+	void onStyleChanged();
+
 signals:
 	void removeSelected();
 	void hideSelected();
@@ -69,19 +72,20 @@ private slots:
 	void on_actionRemoveSelected_triggered();
 	void on_actionShowSelected_triggered();
 	void on_actionHideSelected_triggered();
-	void on_actionSelect_all_triggered();
-	void on_actionDeselect_all_triggered();
 	void on_actionSmartSelect_triggered();
 
 	void on_treeWidget_itemChanged(QTreeWidgetItem *item, int column);
 
 	void on_actionInvertSelection_triggered();
 
+	void on_actionSelectAll_triggered();
+	void on_actionDeselectAll_triggered();
+
 private:
 	/*! Recursively collapses all children. */
 	void collapseTreeWidgetItem(QTreeWidgetItem * parent);
 
-    void addChildSurface(QTreeWidgetItem *item, const VICUS::Surface &s);
+	void addChildSurface(QTreeWidgetItem *item, const VICUS::Surface &s);
 
 	/*! Relates unique object ID to tree widget item.
 		This map is updated whenever the tree data is modified entirely in onModified().

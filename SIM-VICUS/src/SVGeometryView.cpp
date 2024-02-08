@@ -38,6 +38,7 @@
 #include <QLine>
 #include <QEvent>
 #include <QKeyEvent>
+#include <QScreen>
 
 #include <IBK_StringUtils.h>
 
@@ -49,7 +50,11 @@
 #include "SVLocalCoordinateView.h"
 #include "Vic3DNewGeometryObject.h"
 #include "SVProjectHandler.h"
-
+#include "SVColorLegend.h"
+#include "SVSnapOptionsDialog.h"
+#include "SVPreferencesDialog.h"
+#include "SVPreferencesPageStyle.h"
+#include "SVSettings.h"
 
 SVGeometryView::SVGeometryView(QWidget *parent) :
 	QWidget(parent),
@@ -102,16 +107,43 @@ SVGeometryView::SVGeometryView(QWidget *parent) :
 
 	// *** create Measurement Widget
 	m_measurementWidget = new SVMeasurementWidget(this); // sets the pointer to the widget in SVViewStateHandler::instance()
+	m_colorLegend = new SVColorLegend(this);
+	m_snapOptionsDialog = new SVSnapOptionsDialog(this);
+	SVViewStateHandler::instance().m_geometryView = this;
 
 	connect(&SVViewStateHandler::instance(), &SVViewStateHandler::viewStateChanged,
 			this, &SVGeometryView::onViewStateChanged);
 	connect(&SVProjectHandler::instance(), &SVProjectHandler::modified,
 			this, &SVGeometryView::onModified);
+	connect(&SVMainWindow::instance(), &SVMainWindow::screenHasChanged,
+			this, &SVGeometryView::onScreenChanged);
 
-	SVViewStateHandler::instance().m_geometryView = this;
 	onViewStateChanged();
 
 	m_focusRootWidgets.insert(this);
+
+	m_ui->actionAcousticParametrization->setIcon(QIcon::fromTheme("properties_acoustic"));
+	m_ui->actionBuildingParametrization->setIcon(QIcon::fromTheme("properties_buildings"));
+	m_ui->actionStructuralUnits->setIcon(QIcon::fromTheme("structure_units"));
+	m_ui->actionNetworkParametrization->setIcon(QIcon::fromTheme("properties_network"));
+	m_ui->actionSiteParametrization->setIcon(QIcon::fromTheme("grid_edit"));
+	m_ui->actionAddGeometry->setIcon(QIcon::fromTheme("geometry_add"));
+	m_ui->actionAlignGeometry->setIcon(QIcon::fromTheme("geometry_other"));
+	m_ui->actionCopyGeometry->setIcon(QIcon::fromTheme("geometry_copy"));
+	m_ui->actionRotateGeometry->setIcon(QIcon::fromTheme("geometry_rotate"));
+	m_ui->actionScaleGeometry->setIcon(QIcon::fromTheme("geometry_scale"));
+	m_ui->actionTranslateGeometry->setIcon(QIcon::fromTheme("geometry_move"));
+	m_ui->actionMeasure->setIcon(QIcon::fromTheme("measure"));
+	m_ui->actionShowResults->setIcon(QIcon::fromTheme("show_results"));
+	m_ui->actionSnap->setIcon(QIcon::fromTheme("snap"));
+
+	m_snapOptionsDialog->updateUi();
+	m_snapOptionsDialog->setExpanded(false);
+//	m_localCoordinateSystemView->setObjectName("BottomBar");
+//	setObjectName("BottomBar");
+	m_lineEditCoordinateInput->setPlaceholderText("<x> <y> <z>");
+
+	onStyleChanged(); // in order to init correct background of toolbar
 }
 
 
@@ -259,15 +291,28 @@ bool SVGeometryView::handleGlobalKeyRelease(QKeyEvent * ke) {
 }
 
 
-void SVGeometryView::moveMeasurementWidget() {
+void SVGeometryView::moveTransparentSceneWidgets() {
 	// Note: this function is called from resizeEvent() and indirectly from showEvent(), but here the
 	//       widget wasn't created, yet. Hence, we need to protect against accessing the pointer.
-	if (SVViewStateHandler::instance().m_measurementWidget == nullptr)
-		return;
-	QPoint point = m_sceneViewContainerWidget->mapToGlobal(m_sceneViewContainerWidget->rect().bottomRight() );
-	point.setX(point.x() - 10);
-	point.setY(point.y() - 10);
-	SVViewStateHandler::instance().m_measurementWidget->setPosition(point);
+	if (SVViewStateHandler::instance().m_measurementWidget != nullptr) {
+		QPoint point = m_sceneViewContainerWidget->mapToGlobal(m_sceneViewContainerWidget->rect().bottomRight() );
+		point.setX(point.x() - 10);
+		point.setY(point.y() - 10);
+		SVViewStateHandler::instance().m_measurementWidget->setPosition(point);
+	}
+
+	if (SVViewStateHandler::instance().m_colorLegend != nullptr) {
+		QPoint point = m_sceneViewContainerWidget->mapToGlobal(m_sceneViewContainerWidget->rect().bottomRight() );
+		point.setX(point.x() - 15);
+		SVViewStateHandler::instance().m_colorLegend->setPosition(m_sceneViewContainerWidget->rect().height(), point);
+	}
+
+	if (SVViewStateHandler::instance().m_snapOptionsDialog != nullptr) {
+		QPoint point = m_sceneViewContainerWidget->mapToGlobal(m_sceneViewContainerWidget->rect().bottomLeft() );
+		point.setX(point.x() + 10);
+		point.setY(point.y() - 10);
+		SVViewStateHandler::instance().m_snapOptionsDialog->setPosition(point);
+	}
 }
 
 
@@ -301,29 +346,24 @@ void SVGeometryView::uncheckAllActionsInButtonBar() {
 	m_ui->actionTranslateGeometry->setChecked(false);
 	m_ui->actionAcousticParametrization->setChecked(false);
 	m_ui->actionShowResults->setChecked(false);
+	m_ui->actionStructuralUnits->setChecked(false);
 }
 
 
 SVColorLegend * SVGeometryView::colorLegend() {
-	return m_ui->colorLegend;
+	return m_colorLegend;
 }
 
 
 void SVGeometryView::onModified(int modificationType, ModificationInfo *) {
 	SVProjectHandler::ModificationTypes modType((SVProjectHandler::ModificationTypes)modificationType);
 
-	// toggle network buttons based on wether we have networks in the project
-	if (modType == SVProjectHandler::AllModified ||
-		modType == SVProjectHandler::NetworkDataChanged ||
-		modType == SVProjectHandler::NetworkGeometryChanged) {
-		const VICUS::Project &p = project();
-		m_ui->actionNetworkParametrization->setEnabled(!p.m_geometricNetworks.empty());
-	}
-
 	switch (modType) {
 		case SVProjectHandler::AllModified:
 		case SVProjectHandler::BuildingGeometryChanged:
-		case SVProjectHandler::NodeStateModified: {
+		case SVProjectHandler::NodeStateModified:
+		case SVProjectHandler::NetworkDataChanged:
+		case SVProjectHandler::NetworkGeometryChanged: {
 			// update our selection lists
 			std::set<const VICUS::Object*> sel;
 
@@ -366,6 +406,13 @@ void SVGeometryView::onModified(int modificationType, ModificationInfo *) {
 			m_ui->actionScaleGeometry->setEnabled(haveSurfaceOrDrawing);
 			m_ui->actionAlignGeometry->setEnabled(haveSurfaceOrDrawing);
 			m_ui->actionCopyGeometry->setEnabled(haveSurfaceOrDrawing || haveSubSurface || haveRoom || haveBuildingLevel || haveBuilding);
+
+			// enable state of actions
+			const VICUS::Project &p = project();
+			m_ui->actionNetworkParametrization->setEnabled(!p.m_geometricNetworks.empty());
+			m_ui->actionBuildingParametrization->setEnabled(!p.m_buildings.empty());
+			m_ui->actionAcousticParametrization->setEnabled(!p.m_buildings.empty());
+			m_ui->actionStructuralUnits->setEnabled(!p.m_buildings.empty());
 		} break;
 
 		default:;
@@ -375,9 +422,6 @@ void SVGeometryView::onModified(int modificationType, ModificationInfo *) {
 
 void SVGeometryView::onViewStateChanged() {
 	const SVViewState & vs = SVViewStateHandler::instance().viewState();
-	m_ui->actionSnap->blockSignals(true);
-	m_ui->actionSnap->setChecked(vs.m_snapEnabled);
-	m_ui->actionSnap->blockSignals(false);
 
 	m_ui->actionMeasure->blockSignals(true);
 	bool state = vs.m_sceneOperationMode == SVViewState::OM_MeasureDistance;
@@ -414,13 +458,27 @@ void SVGeometryView::onViewStateChanged() {
 							  vs.m_propertyWidgetMode == SVViewState::PM_AddGeometry ||
 							  vs.m_propertyWidgetMode == SVViewState::PM_VertexList ||
 							  vs.m_propertyWidgetMode == SVViewState::PM_BuildingProperties ||
+							  vs.m_propertyWidgetMode == SVViewState::PM_BuildingAcousticProperties ||
+							  vs.m_propertyWidgetMode == SVViewState::PM_BuildingStructuralUnitProperties ||
 							  vs.m_propertyWidgetMode == SVViewState::PM_NetworkProperties ;
 	m_ui->geometryToolBar->setEnabled(geometryModeActive);
 	m_ui->actionMeasure->setEnabled(geometryModeActive); // to disable short-cut as well
 
+	// if not in geometry mode: also uncheck snap and hide snap options
+	m_ui->actionSnap->blockSignals(true);
+	if (!geometryModeActive) {
+		m_ui->actionSnap->setChecked(false);
+		m_snapOptionsDialog->setVisible(false);
+	}
+	else {
+		m_ui->actionSnap->setChecked(vs.m_snapEnabled);
+		m_snapOptionsDialog->setVisible(vs.m_snapEnabled);
+	}
+	m_ui->actionSnap->blockSignals(false);
+
+
 	// the local coordinate system is always enabled, except in mode AddSubSurfaceGeometry
 	bool localCoordinateSystemEnabled = vs.m_propertyWidgetMode != SVViewState::PM_AddSubSurfaceGeometry;
-
 
 	if (localCoordinateSystemEnabled) {
 		m_actionlocalCoordinateSystemCoordinates->setEnabled(true);
@@ -449,7 +507,8 @@ void SVGeometryView::onViewStateChanged() {
 	if (vs.m_sceneOperationMode != SVViewState::OM_MeasureDistance)
 		hideMeasurementWidget();
 
-	m_ui->colorLegend->setVisible(vs.m_propertyWidgetMode == SVViewState::PM_ResultsProperties);
+	// show color legend
+	m_colorLegend->setVisible(vs.m_propertyWidgetMode == SVViewState::PM_ResultsProperties);
 }
 
 
@@ -554,6 +613,30 @@ void SVGeometryView::coordinateInputFinished() {
 }
 
 
+void SVGeometryView::onStyleChanged() {
+	if (SVSettings::instance().m_theme == SVSettings::TT_Dark) {
+		m_ui->geometryToolBar->setStyleSheet(m_ui->geometryToolBar->styleSheet() +
+											 "QWidget { background: #3A3B3F;}"
+											 "QToolButton { border: 1px solid #4D4D4D;}"
+											 "QToolButton:hover { border: 1px solid #b19834;}"
+											 "QToolBar QToolButton:checked { border: 1px solid #b19834; background-color: #4D3C18;}");
+		m_lineEditCoordinateInput->setStyleSheet("QLineEdit {background-color: #212124;}");
+	}
+	else {
+		m_ui->geometryToolBar->setStyleSheet("QToolButton {border: 1px solid lightgray;}"
+											 "QToolButton:hover {border: 1px solid #EB992F;}"
+											 "QToolBar QToolButton:checked { border: 1px solid #EB992F; background-color: #FFDFA0;}");
+		m_lineEditCoordinateInput->setStyleSheet("");
+	}
+	m_ui->modeSelectionToolBar->setStyleSheet("QToolBar {spacing: 5px; padding: 5px; }");
+}
+
+
+void SVGeometryView::onScreenChanged(const QScreen * screen) {
+//	int minW = m_ui->propertyWidget->sizeHint().width();
+//	m_ui->propertyWidget->setMinimumWidth((int)(0.9*minW)); // actual size hint is a bit to harsh here
+}
+
 
 void SVGeometryView::on_actionBuildingParametrization_triggered() {
 	uncheckAllActionsInButtonBar();
@@ -577,11 +660,9 @@ void SVGeometryView::on_actionAddGeometry_triggered() {
 
 	SVViewState vs = SVViewStateHandler::instance().viewState();
 	// switch to geometry mode, show addGeometry property widget
-	if (vs.m_propertyWidgetMode != SVViewState::PM_AddGeometry ||
-		vs.inPropertyEditingMode())
-	{
-		vs.m_propertyWidgetMode = SVViewState::PM_AddGeometry;
-		vs.m_objectColorMode = SVViewState::OCM_None;
+	vs.m_propertyWidgetMode = SVViewState::PM_AddGeometry;
+	vs.m_objectColorMode = SVViewState::OCM_None;
+	if (SVProjectHandler::instance().isValid()) {
 		// we choose the operation based on the selection state
 		std::set<const VICUS::Object *> sel;
 		project().selectObjects(sel, VICUS::Project::SG_All, true, true);
@@ -589,9 +670,8 @@ void SVGeometryView::on_actionAddGeometry_triggered() {
 			vs.m_sceneOperationMode = SVViewState::NUM_OM;
 		else
 			vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;
-		SVViewStateHandler::instance().setViewState(vs);
 	}
-
+	SVViewStateHandler::instance().setViewState(vs);
 }
 
 
@@ -727,13 +807,11 @@ void SVGeometryView::on_actionAcousticParametrization_triggered() {
 	SVViewState vs = SVViewStateHandler::instance().viewState();
 	// show building properties widget
 	vs.m_propertyWidgetMode = SVViewState::PM_BuildingAcousticProperties;
-	vs.m_objectColorMode = SVViewState::OCM_AcousticRoomType;
 	// turn off any special scene modes
 	vs.m_sceneOperationMode = SVViewState::NUM_OM;
 	SVViewStateHandler::instance().setViewState(vs);
-//	// we need to manually update the color mode, since above we reset it to OCM_None.
-//	// there is no simple way to obtain the color mode from the currently active tool box index in the property widget
-//	SVViewStateHandler::instance().m_propertyWidget->updateColorMode();
+
+	SVViewStateHandler::instance().m_propertyWidget->updateColorMode();
 }
 
 
@@ -753,6 +831,21 @@ void SVGeometryView::on_actionNetworkParametrization_triggered() {
 }
 
 
+void SVGeometryView::on_actionStructuralUnits_triggered() {
+	uncheckAllActionsInButtonBar();
+	m_ui->actionStructuralUnits->setChecked(true);
+
+	SVViewState vs = SVViewStateHandler::instance().viewState();
+	// show building properties widget
+	vs.m_propertyWidgetMode = SVViewState::PM_BuildingStructuralUnitProperties;
+	// turn off any special scene modes
+	vs.m_sceneOperationMode = SVViewState::NUM_OM;
+	SVViewStateHandler::instance().setViewState(vs);
+	// there is no simple way to obtain the color mode from the currently active tool box index in the property widget
+	SVViewStateHandler::instance().m_propertyWidget->updateColorMode();
+}
+
+
 void SVGeometryView::on_actionSiteParametrization_triggered() {
 	uncheckAllActionsInButtonBar();
 	m_ui->actionSiteParametrization->setChecked(true);
@@ -760,6 +853,7 @@ void SVGeometryView::on_actionSiteParametrization_triggered() {
 	SVViewState vs = SVViewStateHandler::instance().viewState();
 	// show building properties widget
 	vs.m_propertyWidgetMode = SVViewState::PM_SiteProperties;
+	vs.m_objectColorMode = SVViewState::OCM_None;
 	// turn off any special scene modes
 	vs.m_sceneOperationMode = SVViewState::NUM_OM;
 	SVViewStateHandler::instance().setViewState(vs);
@@ -786,7 +880,7 @@ void SVGeometryView::on_actionShowResults_triggered() {
 
 void SVGeometryView::resizeEvent(QResizeEvent *event) {
 	QWidget::resizeEvent(event); // call parent's class implementation
-	moveMeasurementWidget(); // adjust position of measurement widget
+	moveTransparentSceneWidgets(); // adjust position of measurement widget
 }
 
 
@@ -838,6 +932,9 @@ void SVGeometryView::on_actionMeasure_triggered(bool on) {
 
 
 void SVGeometryView::on_actionSnap_triggered(bool on) {
+	if (on)
+		m_snapOptionsDialog->setExpanded(true);
+	m_snapOptionsDialog->setVisible(on);
 	// switch toggle view state
 	m_ui->actionSnap->setChecked(on);
 	SVViewState vs = SVViewStateHandler::instance().viewState();
