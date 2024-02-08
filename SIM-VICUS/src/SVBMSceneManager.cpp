@@ -1068,9 +1068,151 @@ bool SVBMSceneManager::evaluateNewConnection(QString startSocketName, QString ta
 		}
 	}
 
-	// if both Blocks are already connected and have IDs, refuse to connect
+	// if both Blocks are already connected and have IDs
 	else if (startSocket->m_id != VICUS::INVALID_ID && targetSocket->m_id != VICUS::INVALID_ID){
-		return false;
+
+		// if the globalInlet wants to be connected to an existing socket with ID, check first
+		// if the globalInlet is already connected to something. If yes, that means there is an attempt to connect
+		// two areas of the subnetworks with different IDs. Refuse that attempt
+		// if the globalInlet is not connected, that is equivalent to a block that has not an ID assigned to it
+		// in this case, change the ID of the targetSocket and all sockets and connectorBlocks that are connected to
+		// it to the EntranceID and then connect globalInlet to it
+		if(startSocket->m_id == VICUS::ENTRANCE_ID){
+			// if globalInlet already connected, return
+			if(m_blockConnectorMap[startBlock].size() != 0) return false;
+			//check if targetBlock is connected to connectorBlock, if yes, change all sockets connected to connectorBlock to ID of globalInlet
+			VICUS::BMConnector* connectorOfTargetBlock = firstConnectorOfBlock(targetBlock, &targetBlock->m_sockets[0]);
+			const VICUS::BMSocket *connectorSourceSocket;
+			const VICUS::BMBlock *connectorSourceBlock;
+			const VICUS::BMSocket *connectorTargetSocket;
+			const VICUS::BMBlock *connectorTargetBlock;
+			m_network->lookupBlockAndSocket(connectorOfTargetBlock->m_sourceSocket, connectorSourceBlock, connectorSourceSocket);
+			m_network->lookupBlockAndSocket(connectorOfTargetBlock->m_targetSocket, connectorTargetBlock, connectorTargetSocket);
+
+			// if the targetBlock is not connected to a ConnectorBlock:
+			if(!isConnectedToConnectorBlock(&targetBlock->m_sockets[0], connectorOfTargetBlock)){
+				const_cast<VICUS::BMSocket*>(connectorSourceSocket)->m_id = VICUS::ENTRANCE_ID;
+				const_cast<VICUS::BMSocket*>(connectorTargetSocket)->m_id = VICUS::ENTRANCE_ID;
+				convertConnectionToConnectorBlock(targetBlock, targetSocket, startBlock, startSocket, connectorOfTargetBlock);
+				return true;
+			}
+			// if targetBlock is connected to ConnectorBlock
+			else {
+				VICUS::BMBlock *connectorBlockOfTargetBlock;
+				if(connectorSourceBlock->m_name.contains(VICUS::CONNECTORBLOCK_NAME)){
+					connectorBlockOfTargetBlock = const_cast<VICUS::BMBlock*>(connectorSourceBlock);
+				} else if(connectorTargetBlock->m_name.contains(VICUS::CONNECTORBLOCK_NAME)){
+					connectorBlockOfTargetBlock = const_cast<VICUS::BMBlock*>(connectorTargetBlock);
+				} else {
+					return false;
+				}
+
+				QSet<VICUS::BMConnector*> allConnectorsAttachedToConnectorBlock = m_blockConnectorMap[connectorBlockOfTargetBlock];
+				for(VICUS::BMConnector* con : allConnectorsAttachedToConnectorBlock){
+					QString *nameOfSocketNotAttachedToConnectorBlock;
+					QString *nameOfSocketAttachedToConnectorBlock;
+
+					if(con->m_sourceSocket.contains(VICUS::CONNECTORBLOCK_NAME)){
+						nameOfSocketAttachedToConnectorBlock = &con->m_sourceSocket;
+						nameOfSocketNotAttachedToConnectorBlock = &con->m_targetSocket;
+					} else {
+						nameOfSocketAttachedToConnectorBlock = &con->m_targetSocket;
+						nameOfSocketNotAttachedToConnectorBlock = &con->m_sourceSocket;
+					}
+
+					const VICUS::BMBlock *blockNotAttachedToConnectorBlock;
+					const VICUS::BMSocket *socketNotAttachedToConnectorBlock;
+
+					m_network->lookupBlockAndSocket(*nameOfSocketNotAttachedToConnectorBlock, blockNotAttachedToConnectorBlock, socketNotAttachedToConnectorBlock);
+					const_cast<VICUS::BMSocket *>(socketNotAttachedToConnectorBlock)->m_id = VICUS::ENTRANCE_ID;
+					QString newNameOfSocket;
+					if(socketNotAttachedToConnectorBlock->m_isInlet){
+						newNameOfSocket = QString("%1%2.%3").arg(VICUS::CONNECTORBLOCK_NAME).arg(QString::number(VICUS::ENTRANCE_ID)).arg(VICUS::OUTLET_NAME);
+					} else {
+						newNameOfSocket = QString("%1%2.%3").arg(VICUS::CONNECTORBLOCK_NAME).arg(QString::number(VICUS::ENTRANCE_ID)).arg(VICUS::INLET_NAME);
+					}
+					*nameOfSocketAttachedToConnectorBlock = newNameOfSocket;
+				}
+
+				connectorBlockOfTargetBlock->m_sockets[0].m_id = VICUS::ENTRANCE_ID;
+				connectorBlockOfTargetBlock->m_sockets[1].m_id = VICUS::ENTRANCE_ID;
+				connectorBlockOfTargetBlock->m_name = VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::ENTRANCE_ID);
+				createConnection(startBlock, connectorBlockOfTargetBlock, startSocket, &connectorBlockOfTargetBlock->m_sockets[0]);
+				return true;
+			}
+		}
+
+		// if the globalOutlet wants to be connected to an existing socket with ID, check first
+		// if the globalOutlet is already connected to something. If yes, that means there is an attempt to connect
+		// two areas of the subnetworks with different IDs. Refuse that attempt
+		// if the globalOutlet is not connected, that is equivalent to a block that has not an ID assigned to it
+		// in this case, change the ID of the sourceSocket and all sockets and connectorBlocks that are connected to
+		// it to the ExitID and then connect globalOutlet to it
+		else if (targetSocket->m_id == VICUS::EXIT_ID){
+			// if globalInlet already connected, return
+			if(m_blockConnectorMap[targetBlock].size() != 0) return false;
+			//check if targetBlock is connected to connectorBlock, if yes, change all sockets connected to connectorBlock to ID of globalInlet
+			VICUS::BMConnector* connectorOfSourceBlock = firstConnectorOfBlock(startBlock, &startBlock->m_sockets[1]);
+			const VICUS::BMSocket *connectorSourceSocket;
+			const VICUS::BMBlock *connectorSourceBlock;
+			const VICUS::BMSocket *connectorTargetSocket;
+			const VICUS::BMBlock *connectorTargetBlock;
+			m_network->lookupBlockAndSocket(connectorOfSourceBlock->m_sourceSocket, connectorSourceBlock, connectorSourceSocket);
+			m_network->lookupBlockAndSocket(connectorOfSourceBlock->m_targetSocket, connectorTargetBlock, connectorTargetSocket);
+
+			// if the startBlock is not connected to a ConnectorBlock:
+			if(!isConnectedToConnectorBlock(&startBlock->m_sockets[1], connectorOfSourceBlock)){
+				const_cast<VICUS::BMSocket*>(connectorSourceSocket)->m_id = VICUS::EXIT_ID;
+				const_cast<VICUS::BMSocket*>(connectorTargetSocket)->m_id = VICUS::EXIT_ID;
+				convertConnectionToConnectorBlock(startBlock, startSocket, targetBlock, targetSocket, connectorOfSourceBlock);
+				return true;
+			}
+
+			// if startBlock is connected to a ConnectorBlock
+			else {
+				VICUS::BMBlock *connectorBlockOfSourceBlock;
+				if(connectorSourceBlock->m_name.contains(VICUS::CONNECTORBLOCK_NAME)){
+					connectorBlockOfSourceBlock = const_cast<VICUS::BMBlock*>(connectorSourceBlock);
+				} else if(connectorTargetBlock->m_name.contains(VICUS::CONNECTORBLOCK_NAME)){
+					connectorBlockOfSourceBlock = const_cast<VICUS::BMBlock*>(connectorTargetBlock);
+				} else {
+					return false;
+				}
+
+				QSet<VICUS::BMConnector*> allConnectorsAttachedToConnectorBlock = m_blockConnectorMap[connectorBlockOfSourceBlock];
+				for(VICUS::BMConnector* con : allConnectorsAttachedToConnectorBlock){
+					QString *nameOfSocketNotAttachedToConnectorBlock;
+					QString *nameOfSocketAttachedToConnectorBlock;
+
+					if(con->m_sourceSocket.contains(VICUS::CONNECTORBLOCK_NAME)){
+						nameOfSocketAttachedToConnectorBlock = &con->m_sourceSocket;
+						nameOfSocketNotAttachedToConnectorBlock = &con->m_targetSocket;
+					} else {
+						nameOfSocketAttachedToConnectorBlock = &con->m_targetSocket;
+						nameOfSocketNotAttachedToConnectorBlock = &con->m_sourceSocket;
+					}
+
+					const VICUS::BMBlock *blockNotAttachedToConnectorBlock;
+					const VICUS::BMSocket *socketNotAttachedToConnectorBlock;
+
+					m_network->lookupBlockAndSocket(*nameOfSocketNotAttachedToConnectorBlock, blockNotAttachedToConnectorBlock, socketNotAttachedToConnectorBlock);
+					const_cast<VICUS::BMSocket *>(socketNotAttachedToConnectorBlock)->m_id = VICUS::EXIT_ID;
+					QString newNameOfSocket;
+					if(socketNotAttachedToConnectorBlock->m_isInlet){
+						newNameOfSocket = QString("%1%2.%3").arg(VICUS::CONNECTORBLOCK_NAME).arg(QString::number(VICUS::EXIT_ID)).arg(VICUS::OUTLET_NAME);
+					} else {
+						newNameOfSocket = QString("%1%2.%3").arg(VICUS::CONNECTORBLOCK_NAME).arg(QString::number(VICUS::EXIT_ID)).arg(VICUS::INLET_NAME);
+					}
+					*nameOfSocketAttachedToConnectorBlock = newNameOfSocket;
+				}
+
+				connectorBlockOfSourceBlock->m_sockets[0].m_id = VICUS::EXIT_ID;
+				connectorBlockOfSourceBlock->m_sockets[1].m_id = VICUS::EXIT_ID;
+				connectorBlockOfSourceBlock->m_name = VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::EXIT_ID);
+				createConnection(connectorBlockOfSourceBlock, targetBlock, &connectorBlockOfSourceBlock->m_sockets[1], targetSocket);
+				return true;
+			}
+		} else return false;
 	}
 
 	// if no previous connection
