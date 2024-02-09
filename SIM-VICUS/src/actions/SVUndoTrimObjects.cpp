@@ -78,7 +78,10 @@ void SVUndoTrimObjects::redo() {
 			continue;
 
 		VICUS::Surface newSurf(*s);
+
 		unsigned int id = s->m_id; // needed since pointer will be broken after surfaces are added in room
+		QString displayName = s->m_displayName; // needed since pointer will be broken after surfaces are added in room
+
 		const VICUS::Room* room = dynamic_cast<const VICUS::Room*>(s->m_parent);
 		unsigned int nextId = m_project.nextUnusedID();
 
@@ -99,7 +102,8 @@ void SVUndoTrimObjects::redo() {
 
 			newSurf.m_id = nextId;
 			newSurfaceIds.insert(nextId++);
-			newSurf.m_displayName = QString::fromStdString(surfDisplayName + "[" + std::to_string(i+1) + "]");
+			if (i > 0) // only if sub-surface is really trimmed
+				newSurf.m_displayName = m_project.newUniqueSurfaceName(newSurf.m_displayName);
 			newSurf.setPolygon3D(surfPoly);
 			std::vector<VICUS::SubSurface> tempSubsurfaces;
 
@@ -113,6 +117,9 @@ void SVUndoTrimObjects::redo() {
 
 				const VICUS::SubSurface *ss = dynamic_cast<const VICUS::SubSurface *>(oo);
 				if (ss == nullptr)
+					continue;
+
+				if (ss->m_parent == nullptr)
 					continue;
 
 				// If this subsurface was located in this parent surface before trim
@@ -141,19 +148,6 @@ void SVUndoTrimObjects::redo() {
 
 							// *** FIX SUB-SURFACES ***
 
-							/// Sub-Surfaces need to produce a real hole in the parent surface.
-							/// If points of the trimmed sub-surface lie directly on a edge of the parent polygon
-							/// the CDT encounters errors und planes are not visible anymore since triangulation is
-							/// error-prone. We need to fix the trimmed sub-surfaces so that points laying on the edge
-							/// are moved inside the polygon. For now we assume that we move the point 1 cm inwards.
-							///
-							/// Steps:
-							/// 1) Go through all edges of parent polygon
-							/// 2) Check if one of sub-surface polygon's points is on edge of parent
-							/// 3) If point is on edge, take normal of parent and edge vector and construct rectangular vector
-							///	   relative to edge vector
-							/// 4) Take point laying on edge add vector in both possible directions with e.g. 1cm and check if point is in parent-polygon
-
 							fixSubSurfacePolygon(surfPoly, const_cast<IBKMK::Polygon3D&>(subSurfPoly));
 
 							// ************************
@@ -169,7 +163,8 @@ void SVUndoTrimObjects::redo() {
 							}
 							VICUS::SubSurface newSubsurface(*ss);
 							newSubsurface.m_polygon2D = aux2DPolygon;
-							newSubsurface.m_displayName = m_project.newUniqueSurfaceName(newSubsurface.m_displayName);
+							if (k > 0) // only if sub-surface is really trimmed
+								newSubsurface.m_displayName = m_project.newUniqueSubSurfaceName(newSubsurface.m_displayName);
 							newSubsurface.m_id = nextId;
 							tempSubsurfaces.push_back(newSubsurface);
 
@@ -211,7 +206,10 @@ void SVUndoTrimObjects::redo() {
 			}
 			for (unsigned int i = 0; i < room->m_surfaces.size(); ++i) {
 				if (id == room->m_surfaces[i].m_id) {
-					qDebug() << "Removing surface with ID %1" << s->m_id;
+					qDebug() << QString("Removing surface #%1 '%2' of room '%3'")
+								.arg(id)
+								.arg(displayName)
+								.arg(room->m_displayName);
 					const_cast<VICUS::Room *>(room)->m_surfaces.erase(room->m_surfaces.begin() + i);
 					break;
 				}
@@ -265,7 +263,9 @@ void SVUndoTrimObjects::redo() {
 		else {
 			for (unsigned int i=0; i<m_project.m_plainGeometry.m_surfaces.size(); ++i) {
 				if (id == m_project.m_plainGeometry.m_surfaces[i].m_id) {
-					qDebug() << "Removing surface with ID %1" << s->m_id;
+					qDebug() << QString("Removing plane geometry surface #%1 %2")
+								.arg(s->m_id)
+								.arg(s->m_displayName);
 					m_project.m_plainGeometry.m_surfaces.erase(m_project.m_plainGeometry.m_surfaces.begin() + i);
 					break;
 				}
@@ -294,6 +294,19 @@ void SVUndoTrimObjects::fixSubSurfacePolygon(const IBKMK::Polygon3D &parentPoly,
 
 	const double TOL		= 1E-3;
 	const double FIX_WIDTH	= 1E-4;
+
+	/// Sub-Surfaces need to produce a real hole in the parent surface.
+	/// If points of the trimmed sub-surface lie directly on a edge of the parent polygon
+	/// the CDT encounters errors und planes are not visible anymore since triangulation is
+	/// error-prone. We need to fix the trimmed sub-surfaces so that points laying on the edge
+	/// are moved inside the polygon. For now we assume that we move the point 1 cm inwards.
+	///
+	/// Steps:
+	/// 1) Go through all edges of parent polygon
+	/// 2) Check if one of sub-surface polygon's points is on edge of parent
+	/// 3) If point is on edge, take normal of parent and edge vector and construct rectangular vector
+	///	   relative to edge vector
+	/// 4) Take point laying on edge add vector in both possible directions with e.g. 1cm and check if point is in parent-polygon
 
 	unsigned int size = parentPoly.vertexes().size();
 	for (unsigned int i = 0; i < size; ++i) {
