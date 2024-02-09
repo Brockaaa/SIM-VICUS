@@ -469,6 +469,7 @@ bool SVSimulationStartOptions::generateNANDRAD(QString & resultPath) {
 		ex.writeMsgStackToError();
 		QString fullText;
 		fullText = errorStack.join("\n");
+		fullText += "\n----------------------------------\n";
 		fullText += QString::fromStdString(ex.msgStack());
 
 		// create dialog

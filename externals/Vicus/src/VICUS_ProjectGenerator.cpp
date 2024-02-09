@@ -4194,6 +4194,13 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 	for (const VICUS::NetworkNode &node: vicusNetwork.m_nodes){
 		if (node.m_type == VICUS::NetworkNode::NT_Mixer)
 			continue;
+		if (node.m_idSubNetwork == VICUS::INVALID_ID) {
+			errorStack.append(tr("Sub-station node #%1 '%2' is not defined.")
+							  .arg(node.m_id)
+							  .arg(node.m_displayName));
+			continue;
+		}
+
 		subNetworkIds.insert(node.m_idSubNetwork);
 	}
 
