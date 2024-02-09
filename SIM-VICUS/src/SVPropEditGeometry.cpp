@@ -201,6 +201,9 @@ SVPropEditGeometry::SVPropEditGeometry(QWidget *parent) :
 	connect(m_ui->lineEditTranslateX, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditTranslateY, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
 	connect(m_ui->lineEditTranslateZ, &QLineEdit::textChanged, this, &SVPropEditGeometry::onLineEditTextEdited);
+
+	m_ui->pushButtonApply->hide();
+	m_ui->pushButtonCancel->hide();
 }
 
 
@@ -392,6 +395,8 @@ bool SVPropEditGeometry::eventFilter(QObject * target, QEvent * event) {
 	else if ( event->type() == QEvent::Leave ) {
 		if (m_ui->stackedWidget->currentIndex() == MT_Trim)
 			onTrimmingRotationFinished();
+		else
+			on_pushButtonApply_clicked();
 	}
 
 	return false;
