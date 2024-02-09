@@ -89,6 +89,9 @@ protected:
 	/*! Re-implemented to turn off highlighting of the entire connectorBlock + connectorlines when hovered. */
 	virtual void hoverLeaveEvent (QGraphicsSceneHoverEvent *event) override;
 
+	/*! Double click event to allow a new connection by doubleclicking a connectorBlock */
+	virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
 	/*! Overloaded to react on block move.
 		Implements the snap-to-grid functionality, and updates attached connectors. */
 	virtual QVariant itemChange(GraphicsItemChange change, const QVariant & value) override;

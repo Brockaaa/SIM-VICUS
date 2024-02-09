@@ -936,6 +936,19 @@ void SVBMSceneManager::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 	QGraphicsScene::mouseMoveEvent(mouseEvent);
 }
 
+void SVBMSceneManager::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
+{
+	// similar to mousePressEvent, reimplemented to allow doubleclicked connectorBlocks to create new Connection
+	bool alreadyInConnectionProcess = !m_network->m_blocks.empty() && (m_network->m_blocks.back().m_mode == VICUS::BMBlockType::InvisibleBlock);
+	QGraphicsScene::mouseDoubleClickEvent(event);
+	bool inConnectionProcess = !m_network->m_blocks.empty() && (m_network->m_blocks.back().m_mode == VICUS::BMBlockType::InvisibleBlock);
+	if (!alreadyInConnectionProcess && inConnectionProcess) {
+		// make the last item the mouse grabber objects
+		m_blockItems.back()->grabMouse();
+	}
+
+}
+
 
 void SVBMSceneManager::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 

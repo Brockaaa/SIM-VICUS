@@ -336,6 +336,20 @@ void SVBMBlockItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event){
 	}
 }
 
+void SVBMBlockItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event){
+	if(m_block->m_mode != VICUS::ConnectorBlock){
+		QGraphicsItem::mouseDoubleClickEvent(event);
+		return;
+	}
+
+	SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
+	if(sceneManager) {
+		QPointF p = m_socketItems[1]->pos();
+		sceneManager->startSocketConnection(*m_socketItems[1], p);
+		event->accept();
+	}
+}
+
 
 QVariant SVBMBlockItem::itemChange(GraphicsItemChange change, const QVariant & value) {
 	switch (change) {

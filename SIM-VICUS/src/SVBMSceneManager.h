@@ -268,6 +268,9 @@ protected:
 	/*! Listens for right-mouse-button clicks that turn off connection mode. */
 	virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
 
+	/*! Double click event to allow a new connection by doubleclicking a connectorBlock */
+	virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
 	/*! Create a graphics item based on the data in the given block.
 		You can override this method and create your own graphics items, derived from
 		base class BlockItem (which contains all the move/selection logic).
