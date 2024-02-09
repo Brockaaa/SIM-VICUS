@@ -972,13 +972,6 @@ bool SVProjectHandler::importEmbeddedDB(VICUS::Project & pro) {
 	std::map<unsigned int, unsigned int> subNetworksIDMap;
 	for (VICUS::SubNetwork & e : pro.m_embeddedDB.m_subNetworks) {
 
-		// replace IDs referenced from NANDRAD::HydraulicNetworkElement
-
-		for (VICUS::NetworkElement & elem : e.m_elements) {
-			replaceID(elem.m_componentId, netComponentsIDMap);
-			replaceID(elem.m_controlElementId, netControllersIDMap);
-		}
-
 		importDBElement(e, db.m_subNetworks, subNetworksIDMap,
 						"Sub Network '%1' with #%2 imported -> new ID #%3.\n",
 						"Sub Network '%1' with #%2 exists already -> ID #%3.\n"
