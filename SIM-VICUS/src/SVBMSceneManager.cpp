@@ -618,7 +618,7 @@ void SVBMSceneManager::removeBlock(unsigned int blockIndex) {
 		updateConnectorSegmentItems(con, nullptr);
 	}
 
-	// now check if all the saved connectoBlocks have more than one connection on each side
+	// now check if all the saved connectorBlocks have more than one connection on each side
 	for(const VICUS::BMBlock* block : connectorBlocksToBeChecked){
 		if(!isConnectedSocket(block, &block->m_sockets[0]) || !isConnectedSocket(block, &block->m_sockets[1])){
 			removeBlock(block);
@@ -838,6 +838,10 @@ void SVBMSceneManager::removeSelectedConnector()
 		block = targetBlock;
 	else
 		return;
+
+	if(!isConnectedSocket(block, &block->m_sockets[0]) || !isConnectedSocket(block, &block->m_sockets[1])){
+		removeBlock(block);
+	}
 
 	if(checkOneConnectionPerSocket(block)){
 		VICUS::BMConnector newConnector;
