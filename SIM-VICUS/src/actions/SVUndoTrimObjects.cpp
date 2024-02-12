@@ -39,16 +39,16 @@ SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
 									 std::map<unsigned int, std::vector<IBKMK::Polygon3D> > trimmedPolygons,
 									 // trimSurfaces is a vector of tuples, each containing a reference to the selected surface of one trim, and the polyInput vector
 									 // which was handed over to the polyTrim method, and therefore contains the trim result surfaces
-									 std::map<unsigned int, std::vector<IBKMK::Polygon3D> > trimmedSubsurfaces,
+									 std::map<unsigned int, std::vector<IBKMK::Polygon3D> > trimmedSubSurfaces,
 									 const VICUS::Project & oldProject):
-	m_trimmedPolygons(trimmedPolygons),
-	m_trimmedSubsurfaces(trimmedSubsurfaces),
+	m_trimmedSurfaces(trimmedPolygons),
+	m_trimmedSubSurfaces(trimmedSubSurfaces),
 	m_project(oldProject)
-
 {
 	setText( label );
 	m_project.updatePointers();
 }
+
 
 void SVUndoTrimObjects::undo() {
 	std::swap(theProject(), m_project);
@@ -58,11 +58,8 @@ void SVUndoTrimObjects::undo() {
 
 
 void SVUndoTrimObjects::redo() {
-	// iterate over different trims
-	//	std::map<unsigned int, const VICUS::ComponentInstance *> cisA, cisB;
-
-	for (std::map<unsigned int, std::vector<IBKMK::Polygon3D>>::iterator it = m_trimmedPolygons.begin();
-		 it != m_trimmedPolygons.end(); ++it )
+	for (std::map<unsigned int, std::vector<IBKMK::Polygon3D>>::iterator it = m_trimmedSurfaces.begin();
+		 it != m_trimmedSurfaces.end(); ++it )
 	{
 		// new surface ids
 		std::set<unsigned int>							newSurfaceIds;
@@ -107,9 +104,12 @@ void SVUndoTrimObjects::redo() {
 			newSurf.setPolygon3D(surfPoly);
 			std::vector<VICUS::SubSurface> tempSubsurfaces;
 
+			// Store ids of added sub-surfaces
+			std::set<unsigned int> idsAddedSubSurfaces;
+
 			// iterate over all subsurfaces that were trimmed
-			for (std::map<unsigned int, std::vector<IBKMK::Polygon3D>>::iterator ssit = m_trimmedSubsurfaces.begin();
-				 ssit != m_trimmedSubsurfaces.end(); ++ssit )
+			for (std::map<unsigned int, std::vector<IBKMK::Polygon3D>>::iterator ssit = m_trimmedSubSurfaces.begin();
+				 ssit != m_trimmedSubSurfaces.end(); ++ssit )
 			{
 				const VICUS::Object *oo = m_project.objectById(ssit->first);
 				if (oo == nullptr)
@@ -132,7 +132,7 @@ void SVUndoTrimObjects::redo() {
 						aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
 					}
 
-					const std::vector<IBKMK::Polygon3D> &subSurfPolys = m_trimmedSubsurfaces[ssit->first];
+					const std::vector<IBKMK::Polygon3D> &subSurfPolys = m_trimmedSubSurfaces[ssit->first];
 
 					// Add all trimresults of this subsurface, whose centerpoint is contained in this surfacePoly
 					for (unsigned int k = 0; k < subSurfPolys.size(); ++k) {
@@ -157,8 +157,8 @@ void SVUndoTrimObjects::redo() {
 							std::vector<IBKMK::Vector2D> aux2DPolygon;
 
 							// iterate over vertices of 3d subsurface
-							for (unsigned int l = 0; l < m_trimmedSubsurfaces[ssit->first][k].vertexes().size(); ++l) {
-								IBKMK::planeCoordinates(surfPoly.offset(), surfPoly.localX(), surfPoly.localY(), m_trimmedSubsurfaces[ssit->first][k].vertexes()[l], xCoord, yCoord);
+							for (unsigned int l = 0; l < m_trimmedSubSurfaces[ssit->first][k].vertexes().size(); ++l) {
+								IBKMK::planeCoordinates(surfPoly.offset(), surfPoly.localX(), surfPoly.localY(), m_trimmedSubSurfaces[ssit->first][k].vertexes()[l], xCoord, yCoord);
 								aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
 							}
 							VICUS::SubSurface newSubsurface(*ss);
@@ -167,13 +167,19 @@ void SVUndoTrimObjects::redo() {
 								newSubsurface.m_displayName = m_project.newUniqueSubSurfaceName(newSubsurface.m_displayName);
 							newSubsurface.m_id = nextId;
 							tempSubsurfaces.push_back(newSubsurface);
-
+							idsAddedSubSurfaces.insert(nextId);
 							// Store new IDs for subsurface component instance swapping
 							newSubSurfaceIds[ss->m_id].insert(nextId++);
-
 						}
 					}
 				}
+			}
+
+			for (const VICUS::SubSurface &ss : newSurf.subSurfaces()) {
+				if (m_trimmedSubSurfaces.find(ss.m_id) != m_trimmedSubSurfaces.end())
+					continue;
+				// Re-add unhandled sub-surfaces
+				tempSubsurfaces.push_back(ss);
 			}
 
 			std::vector<VICUS::Surface> cs = newSurf.childSurfaces();
@@ -295,18 +301,22 @@ void SVUndoTrimObjects::fixSubSurfacePolygon(const IBKMK::Polygon3D &parentPoly,
 	const double TOL		= 1E-3;
 	const double FIX_WIDTH	= 1E-4;
 
+
+	/// ===========================================================================================
 	/// Sub-Surfaces need to produce a real hole in the parent surface.
 	/// If points of the trimmed sub-surface lie directly on a edge of the parent polygon
 	/// the CDT encounters errors und planes are not visible anymore since triangulation is
 	/// error-prone. We need to fix the trimmed sub-surfaces so that points laying on the edge
 	/// are moved inside the polygon. For now we assume that we move the point 1 cm inwards.
-	///
+	/// ===========================================================================================
 	/// Steps:
 	/// 1) Go through all edges of parent polygon
 	/// 2) Check if one of sub-surface polygon's points is on edge of parent
-	/// 3) If point is on edge, take normal of parent and edge vector and construct rectangular vector
-	///	   relative to edge vector
-	/// 4) Take point laying on edge add vector in both possible directions with e.g. 1cm and check if point is in parent-polygon
+	/// 3) If point is on edge, take normal of parent and edge vector and construct rectangular
+	///	   vector relative to edge vector
+	/// 4) Take point laying on edge add vector in both possible directions with e.g. 1cm and check
+	///	   if point is in parent-polygon
+	/// ===========================================================================================
 
 	unsigned int size = parentPoly.vertexes().size();
 	for (unsigned int i = 0; i < size; ++i) {

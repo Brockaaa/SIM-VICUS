@@ -31,26 +31,28 @@
 
 #include "SVUndoCommandBase.h"
 
-/*! Action for modifying a surface.
-	This action is also used for adding/removing sub-surfaces.
-
-	\warning IDs of modified surfaces MUST NOT change!
+/*! Action for applying trimmed surfaces and/or sub-surfaces
+	\note Trimmed sub-surfaces/surfaces are stored with their id as key inside
+		  the maps m_trimmedSurfaces | m_trimmedSubSurfaces and their resulting
+		  new 3D-Polygons in a vector as value.
+		  The undo action searches for the old
 */
 class SVUndoTrimObjects : public SVUndoCommandBase {
 	Q_DECLARE_TR_FUNCTIONS(SVUndoTrimObjects)
 public:
+
 	/*! Creates the undo-action.
-		Mind: surfaces must be triangulated already, if they contain new sub-surfaces.
 	*/
 	SVUndoTrimObjects(const QString & label,
-					  std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	trimmedPolygons,
-					  std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	trimmedSubsurfaces,
+					  std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	trimmedSurfaces,
+					  std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	trimmedSubSurfaces,
 					  const VICUS::Project & newProject);
 
 	virtual void undo();
 	virtual void redo();
 
 private:
+
 	/*! Fixes sub-surfaces after trimming, so that all points lay inside the parent polygon and
 		triangulation is working properly. Writes a Warning, if sub-surface could not be fixed.
 		\param parenPoly Parent polygon of sub-surface
@@ -60,14 +62,16 @@ private:
 	void fixSubSurfacePolygon(const IBKMK::Polygon3D &parentPoly, IBKMK::Polygon3D &subSurfacePoly);
 
 	/*! Object copies of surfaces to be deleted and added.
-		key is id of surface to be trimmed
-		value is vector with newly produced surfaces
+		key id of surface that has been trimmed
+		value vector with newly produced 3D polygons of surfaces
 	*/
-	std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	m_trimmedPolygons;
-	std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	m_trimmedSubsurfaces;
+	std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	m_trimmedSurfaces;
 
-	/*! Copies of surface component instances. */
-	//std::vector<VICUS::ComponentInstance>														m_compInstances;
+	/*! Object copies of sub-surfaces to be deleted and added.
+		key id of sub-surface that has been trimmed
+		value vector with newly produced 3D polygons of sub-surfaces
+	*/
+	std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	m_trimmedSubSurfaces;
 
 	/*! Cache for entire project data. */
 	VICUS::Project	m_project;
