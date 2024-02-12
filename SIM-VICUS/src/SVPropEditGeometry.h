@@ -26,6 +26,7 @@
 #ifndef SVPropEditGeometryH
 #define SVPropEditGeometryH
 
+#include "VICUS_NetworkEdge.h"
 #include <QWidget>
 
 #include <IBKMK_Vector3D.h>
@@ -318,6 +319,9 @@ private:
 	std::vector<const VICUS::SubSurface*>		m_selSubSurfaces;
 
 	std::vector<const VICUS::Drawing*>			m_selDrawings;
+
+	std::vector<const VICUS::NetworkEdge*>		m_selEdges;
+	std::vector<const VICUS::NetworkNode*>		m_selNodes;
 
 	std::set<QString>					m_subSurfNames;
 	std::set<QString>					m_surfNames;

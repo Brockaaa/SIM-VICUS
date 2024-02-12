@@ -245,13 +245,16 @@ void SVPropEditGeometry::setCoordinates(const Vic3D::Transform3D &t) {
 	m_lcsTransform =  t;
 
 	// compute dimensions of bounding box (dx, dy, dz) and center point of all selected surfaces
-	m_bbDim[OM_Local] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Local],
+	m_bbDim[OM_Local] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces,
+											  m_selEdges, m_selNodes,
+											  m_bbCenter[OM_Local],
 											  QVector2IBKVector(cso->translation() ),
 											  QVector2IBKVector(cso->localXAxis() ),
 											  QVector2IBKVector(cso->localYAxis() ),
 											  QVector2IBKVector(cso->localZAxis() ) );
 
-	m_bbDim[OM_Global] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Global]);
+	m_bbDim[OM_Global] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces,
+											   m_selEdges, m_selNodes, m_bbCenter[OM_Global]);
 
 	m_normal = QVector2IBKVector(cso->localZAxis());
 	updateInputs();
@@ -683,15 +686,29 @@ void SVPropEditGeometry::updateUi(bool resetLCS) {
 			//					m_selDrawings.push_back(d);
 			//			}
 		}
+
+		const VICUS::NetworkNode * nn = dynamic_cast<const VICUS::NetworkNode *>(o);
+		if (nn != nullptr) {
+			if (nn->m_selected && nn->m_visible)
+				m_selNodes.push_back(nn);
+		}
+
+		const VICUS::NetworkEdge * ne = dynamic_cast<const VICUS::NetworkEdge *>(o);
+		if (ne != nullptr) {
+			if (ne->m_selected && ne->m_visible)
+				m_selEdges.push_back(ne);
+		}
 	}
 
 	// compute dimensions of bounding box (dx, dy, dz) and center point of all selected surfaces
-	m_bbDim[OM_Local] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Local],
+	m_bbDim[OM_Local] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces,
+											  m_selEdges, m_selNodes, m_bbCenter[OM_Local],
 											  QVector2IBKVector(cso->translation() ),
 											  QVector2IBKVector(cso->localXAxis() ),
 											  QVector2IBKVector(cso->localYAxis() ),
 											  QVector2IBKVector(cso->localZAxis() ) );
-	m_bbDim[OM_Global] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces, m_bbCenter[OM_Global]);
+	m_bbDim[OM_Global] = project().boundingBox(m_selDrawings, m_selSurfaces, m_selSubSurfaces,
+											   m_selEdges, m_selNodes, m_bbCenter[OM_Global]);
 
 	// NOTE: this function is being called even if edit geometry property widget is not
 	SVViewStateHandler::instance().m_localCoordinateViewWidget->setBoundingBoxDimension(m_bbDim[OM_Global]);
@@ -1209,11 +1226,14 @@ void SVPropEditGeometry::updateTrimmingPlane(const IBKMK::Vector3D &trans) {
 
 	IBKMK::Vector3D center;
 	std::vector<const VICUS::Drawing *> draws;
-	IBKMK::Vector3D bb = prj.boundingBox(draws, surfs, subSurfs, center);
+	std::vector<const VICUS::NetworkNode *> nodes;
+	std::vector<const VICUS::NetworkEdge *> edges;
+	IBKMK::Vector3D bb = prj.boundingBox(draws, surfs, subSurfs, edges, nodes, center);
 
 	Vic3D::CoordinateSystemObject &cso = *SVViewStateHandler::instance().m_coordinateSystemObject;
-//	if (translation != cso.translation())
-//		cso.setTranslation(translation);
+	QVector3D q3dTrans = IBKVector2QVector(trans);
+	if (q3dTrans != cso.translation())
+		cso.setTranslation(q3dTrans);
 
 	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
 	to.setBoundingBoxDimension(center, bb);
