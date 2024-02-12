@@ -40,11 +40,8 @@
 #include <VICUS_Database.h>
 
 
-const int MINIMUMDIALOGWIDTH = 1500;
-const int MINIMUMDIALOGHEIGHT = 980;
-
 SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwork * subNetwork, SVDatabase * db) :
-	QDialog(parent),
+	QWidget(parent),
 	m_ui(new Ui::SVSubNetworkEditDialog)
 {
 	m_ui->setupUi(this);
@@ -112,23 +109,16 @@ void SVSubNetworkEditDialog::setupSubNetwork(VICUS::SubNetwork *subNetwork)
 	updateNetwork();
 }
 
-void SVSubNetworkEditDialog::open()
+void SVSubNetworkEditDialog::show()
 {
-	QDialog::open();
+	QWidget::show();
 
 	// resize window
 	QScreen *screen = QGuiApplication::primaryScreen();
 	Q_ASSERT(screen!=nullptr);
 	QRect rect = screen->geometry();
-	int width = int(rect.width()* 0.95);
-	int height = int(0.8*rect.height());
-
-	if(width < MINIMUMDIALOGWIDTH){
-		width = MINIMUMDIALOGWIDTH;
-	}
-	if(height < MINIMUMDIALOGHEIGHT){
-		height = MINIMUMDIALOGHEIGHT;
-	}
+	int width = int(rect.width()* 0.9);
+	int height = int(0.7*rect.height());
 
 	resize(width, height);
 

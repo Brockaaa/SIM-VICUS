@@ -52,6 +52,7 @@
 
 
 SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
+	QWidget(parent),
 	m_ui(new Ui::SVNetworkComponentEditWidget)
 {
 	m_ui->setupUi(this);

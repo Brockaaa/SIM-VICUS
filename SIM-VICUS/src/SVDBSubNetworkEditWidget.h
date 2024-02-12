@@ -50,7 +50,7 @@ private slots:
 
 	void on_editSubNetworkButton_clicked();
 
-	void on_subNetworkEditDialog_closed(int result);
+	void on_subNetworkEditDialog_closed();
 
 	void on_ThumbNailClicked();
 

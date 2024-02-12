@@ -143,19 +143,19 @@ void SVDBSubNetworkEditWidget::on_editSubNetworkButton_clicked()
 {
 	if(m_editDialog == nullptr){
 		m_editDialog = new SVSubNetworkEditDialog(this, m_currentSubNet, m_db);
+		m_editDialog->setWindowFlag(Qt::Window);
 	} else {
 		m_editDialog->setupSubNetwork(m_currentSubNet);
 	}
 
-	connect(m_editDialog, &SVSubNetworkEditDialog::finished, this, &SVDBSubNetworkEditWidget::on_subNetworkEditDialog_closed);
+	connect(m_editDialog, &SVSubNetworkEditDialog::widgetClosed, this, &SVDBSubNetworkEditWidget::on_subNetworkEditDialog_closed);
 
 	// open() is the recommended QT function. The dialog decides wether the edited sub network shall be saved or not.
-	m_editDialog->open();
+	m_editDialog->show();
 }
 
-void SVDBSubNetworkEditWidget::on_subNetworkEditDialog_closed(int result)
+void SVDBSubNetworkEditWidget::on_subNetworkEditDialog_closed()
 {
-	qDebug() << "on close";
 	updateTableWidget();
 }
 

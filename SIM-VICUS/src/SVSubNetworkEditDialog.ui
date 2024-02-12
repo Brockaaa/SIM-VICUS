@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>SVSubNetworkEditDialog</class>
- <widget class="QDialog" name="SVSubNetworkEditDialog">
+ <widget class="QWidget" name="SVSubNetworkEditDialog">
+  <property name="modal" stdset="0">
+   <bool>false</bool>
+  </property>
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>1500</width>
-    <height>890</height>
+    <height>700</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,9 +27,6 @@
   </property>
   <property name="windowTitle">
    <string>SubNetwork Editor</string>
-  </property>
-  <property name="modal">
-   <bool>true</bool>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
    <item>
@@ -44,7 +47,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <widget class="QWidget" name="layoutWidget">
-      <layout class="QVBoxLayout" name="verticalLayout_6">
+      <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,1">
        <property name="spacing">
         <number>0</number>
        </property>
@@ -223,7 +226,7 @@
       </layout>
      </widget>
      <widget class="QWidget" name="layoutViewWidget">
-      <layout class="QVBoxLayout" name="verticalLayoutViewWidget">
+      <layout class="QVBoxLayout" name="verticalLayoutViewWidget" stretch="1,0">
        <item>
         <widget class="SVBMZoomMeshGraphicsView" name="viewWidget" native="true">
          <property name="sizePolicy">

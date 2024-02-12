@@ -1,7 +1,7 @@
 #ifndef SVSUBNETWORKEDITDIALOGH
 #define SVSUBNETWORKEDITDIALOGH
 
-#include <QDialog>
+#include <QWidget>
 
 namespace Ui {
 class SVSubNetworkEditDialog;
@@ -20,7 +20,7 @@ class SVDatabase;
 class SVNetworkControllerEditDialog;
 class SVSubNetworkEditDialogTable;
 
-class SVSubNetworkEditDialog : public QDialog
+class SVSubNetworkEditDialog : public QWidget
 {
 	Q_OBJECT
 
@@ -33,7 +33,10 @@ public:
 	/*! sets up Subnetwork and calls setNetwork)= */
 	void setupSubNetwork(VICUS::SubNetwork * subNetwork);
 	/*! opens window, sets appropriate height and weight values for the Splitter and the Scene */
-	void open();
+	void show();
+
+signals:
+	void widgetClosed();
 
 private slots:
 	/*! gets called when removeBlockOrConnectorButton is clicked, checks if Block or Connector is selected, then forwards request to SVBMSceneManager */
