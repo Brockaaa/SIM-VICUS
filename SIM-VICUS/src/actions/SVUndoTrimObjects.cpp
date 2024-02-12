@@ -105,7 +105,7 @@ void SVUndoTrimObjects::redo() {
 			std::vector<VICUS::SubSurface> tempSubsurfaces;
 
 			// Store ids of added sub-surfaces
-			std::set<unsigned int> idsAddedSubSurfaces;
+			std::map<unsigned int, unsigned int> idsAddedSubSurfaces;
 
 			// iterate over all subsurfaces that were trimmed
 			for (std::map<unsigned int, std::vector<IBKMK::Polygon3D>>::iterator ssit = m_trimmedSubSurfaces.begin();
@@ -167,7 +167,7 @@ void SVUndoTrimObjects::redo() {
 								newSubsurface.m_displayName = m_project.newUniqueSubSurfaceName(newSubsurface.m_displayName);
 							newSubsurface.m_id = nextId;
 							tempSubsurfaces.push_back(newSubsurface);
-							idsAddedSubSurfaces.insert(nextId);
+							idsAddedSubSurfaces[nextId] = ss->m_id;
 							// Store new IDs for subsurface component instance swapping
 							newSubSurfaceIds[ss->m_id].insert(nextId++);
 						}
@@ -176,7 +176,10 @@ void SVUndoTrimObjects::redo() {
 			}
 
 			for (const VICUS::SubSurface &ss : newSurf.subSurfaces()) {
-				if (m_trimmedSubSurfaces.find(ss.m_id) != m_trimmedSubSurfaces.end())
+				if (idsAddedSubSurfaces.find(ss.m_id) == idsAddedSubSurfaces.end())
+					continue;
+
+				if (m_trimmedSubSurfaces.find(idsAddedSubSurfaces[ss.m_id]) != m_trimmedSubSurfaces.end())
 					continue;
 				// Re-add unhandled sub-surfaces
 				tempSubsurfaces.push_back(ss);
@@ -206,6 +209,7 @@ void SVUndoTrimObjects::redo() {
 			bool foundComponent = false;
 			for (; idx < m_project.m_componentInstances.size(); ++idx) {
 				if (cis[idx].m_idSideASurface == id || cis[idx].m_idSideBSurface == id) {
+					qDebug() << "Found component";
 					foundComponent = true;
 					break;
 				}
@@ -225,17 +229,10 @@ void SVUndoTrimObjects::redo() {
 				for (unsigned newId : newSurfaceIds) {
 					VICUS::ComponentInstance newCi = cis[idx];
 					newCi.m_id = nextId++;
-					if (newCi.m_idSideASurface == id) {
-						newCi.m_idSideASurface = newId;
-						newCi.m_idSideBSurface = VICUS::INVALID_ID;
-						cis.push_back(newCi);
-					}
-					else if (newCi.m_idSideBSurface == id) {
-						newCi.m_idSideASurface = VICUS::INVALID_ID;
-						newCi.m_idSideBSurface = newId;
-						cis.push_back(newCi);
-					}
+					newCi.m_idSideASurface = newCi.m_idSideASurface == id ? newId : VICUS::INVALID_ID;
+					newCi.m_idSideBSurface = newCi.m_idSideBSurface == id ? newId : VICUS::INVALID_ID;
 					// Add new sub surface component instances
+					cis.push_back(newCi);
 				}
 				cis.erase(cis.begin() + idx);
 			}

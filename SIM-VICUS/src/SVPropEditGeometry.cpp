@@ -632,6 +632,8 @@ void SVPropEditGeometry::updateUi(bool resetLCS) {
 	project().selectObjects(sel, VICUS::Project::SG_All, false, false);
 
 	// we also have to cache all existing names, so we take alle existing objects
+	m_selEdges.clear();
+	m_selNodes.clear();
 	m_selDrawings.clear();
 	m_selSurfaces.clear();
 	m_selRooms.clear();

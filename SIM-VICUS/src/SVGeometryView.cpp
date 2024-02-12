@@ -406,6 +406,7 @@ void SVGeometryView::onModified(int modificationType, ModificationInfo *) {
 		m_ui->actionRotateGeometry->setEnabled(haveSurfaceOrDrawing);
 		m_ui->actionScaleGeometry->setEnabled(haveSurfaceOrDrawing);
 		m_ui->actionAlignGeometry->setEnabled(haveSurfaceOrDrawing);
+		m_ui->actionTrimGeometry->setEnabled(haveSurfaceOrDrawing);
 		m_ui->actionCopyGeometry->setEnabled(haveSurfaceOrDrawing || haveSubSurface || haveRoom || haveBuildingLevel || haveBuilding);
 
 		// enable state of actions

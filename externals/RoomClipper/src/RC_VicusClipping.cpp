@@ -829,6 +829,7 @@ void VicusClipper::createComponentInstances(Notification *notify, bool createCon
 			foundOriginCompInstance = true;
 		}
 
+		qDebug() << "Component id: " << compId;
 		VICUS::ComponentInstance ci(++nextId, compId, surfA->m_id, VICUS::INVALID_ID);
 
 		// get old construction instance properties and replace old id
