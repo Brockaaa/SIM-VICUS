@@ -3630,10 +3630,14 @@ void Scene::handleLeftMouseClick(const KeyboardMouseHandler & keyboardHandler, P
 		std::vector<const VICUS::SubSurface *> subSurfs;
 		prj.selectedSurfaces(surfs, VICUS::Project::SG_All);
 		prj.selectedSubSurfaces(subSurfs, VICUS::Project::SG_All);
+		prj.selectedSubSurfaces(subSurfs, VICUS::Project::SG_All);
 
 		IBKMK::Vector3D center;
 		std::vector<const VICUS::Drawing *> drawings;
-		IBKMK::Vector3D bb = prj.boundingBox(drawings, surfs, subSurfs, center);
+		const std::vector<const VICUS::NetworkEdge *> edges;
+		const std::vector<const VICUS::NetworkNode *> nodes;
+		IBKMK::Vector3D bb = prj.boundingBox(drawings, surfs, subSurfs,
+											 edges, nodes, center);
 
 		m_trimmingObject.setBoundingBoxDimension(center, bb);
 

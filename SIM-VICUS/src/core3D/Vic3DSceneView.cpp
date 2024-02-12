@@ -302,7 +302,7 @@ void SceneView::resetCamera(CameraPosition cameraPosition) {
 	if (!edges.empty() || !nodes.empty())
 		bbDim = project().boundingBox(drawings, edges, nodes, center);
 	else
-		bbDim = project().boundingBox(drawings, surfaces, subsurfaces, center);
+		bbDim = project().boundingBox(drawings, surfaces, subsurfaces, edges, nodes, center);
 
 	switch (cameraPosition) {
 		case CP_Reset : { // reset camera position -> go to point (0,0,100) and camera faces down
