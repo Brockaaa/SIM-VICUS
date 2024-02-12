@@ -301,7 +301,6 @@ void SVUndoTrimObjects::fixSubSurfacePolygon(const IBKMK::Polygon3D &parentPoly,
 	const double TOL		= 1E-3;
 	const double FIX_WIDTH	= 1E-4;
 
-
 	/// ===========================================================================================
 	/// Sub-Surfaces need to produce a real hole in the parent surface.
 	/// If points of the trimmed sub-surface lie directly on a edge of the parent polygon
