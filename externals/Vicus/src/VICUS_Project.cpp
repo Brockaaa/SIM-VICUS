@@ -1073,13 +1073,14 @@ void drawingBoundingBox(const VICUS::Drawing &d,
 IBKMK::Vector3D Project::boundingBox(const std::vector<const Drawing *> & drawings,
 									 const std::vector<const Surface*> &surfaces,
 									 const std::vector<const SubSurface*> &subsurfaces,
-									 IBKMK::Vector3D &center,
-									 bool transformPoints)
+									 const std::vector<const NetworkEdge *> & edges,
+									 const std::vector<const NetworkNode *> & nodes,
+									 IBKMK::Vector3D &center)
 {
 	// NOTE: We do not reuse the other boundingBox() function, because this implementation is much faster.
 
 	// store selected surfaces
-	if ( surfaces.empty() && subsurfaces.empty() && drawings.empty() )
+	if ( surfaces.empty() && subsurfaces.empty() && drawings.empty() && edges.empty() && nodes.empty() )
 		return IBKMK::Vector3D ( 0,0,0 );
 
 	IBKMK::Vector3D lowerValues(std::numeric_limits<double>::max(),
@@ -1129,6 +1130,32 @@ IBKMK::Vector3D Project::boundingBox(const std::vector<const Drawing *> & drawin
 		drawingBoundingBox<VICUS::Drawing::Text>(*drawing, drawing->m_texts, upperValues, lowerValues);
 		drawingBoundingBox<VICUS::Drawing::LinearDimension>(*drawing, drawing->m_linearDimensions, upperValues, lowerValues);
 	}
+
+	for (const VICUS::NetworkNode *node : nodes) {
+			upperValues.m_x = std::max(upperValues.m_x, node->m_position.m_x);
+			upperValues.m_y = std::max(upperValues.m_y, node->m_position.m_y);
+			upperValues.m_z = std::max(upperValues.m_z, node->m_position.m_z);
+
+			lowerValues.m_x = std::min(lowerValues.m_x, node->m_position.m_x);
+			lowerValues.m_y = std::min(lowerValues.m_y, node->m_position.m_y);
+			lowerValues.m_z = std::min(lowerValues.m_z, node->m_position.m_z);
+		}
+
+		for (const VICUS::NetworkEdge *edge : edges) {
+			upperValues.m_x = std::max(upperValues.m_x, edge->m_node1->m_position.m_x);
+			upperValues.m_y = std::max(upperValues.m_y, edge->m_node1->m_position.m_y);
+			upperValues.m_z = std::max(upperValues.m_z, edge->m_node1->m_position.m_z);
+			upperValues.m_x = std::max(upperValues.m_x, edge->m_node2->m_position.m_x);
+			upperValues.m_y = std::max(upperValues.m_y, edge->m_node2->m_position.m_y);
+			upperValues.m_z = std::max(upperValues.m_z, edge->m_node2->m_position.m_z);
+
+			lowerValues.m_x = std::min(lowerValues.m_x, edge->m_node1->m_position.m_x);
+			lowerValues.m_y = std::min(lowerValues.m_y, edge->m_node1->m_position.m_y);
+			lowerValues.m_z = std::min(lowerValues.m_z, edge->m_node1->m_position.m_z);
+			lowerValues.m_x = std::min(lowerValues.m_x, edge->m_node2->m_position.m_x);
+			lowerValues.m_y = std::min(lowerValues.m_y, edge->m_node2->m_position.m_y);
+			lowerValues.m_z = std::min(lowerValues.m_z, edge->m_node2->m_position.m_z);
+		}
 
 	// center point of bounding box
 	center = 0.5*(lowerValues+upperValues);
@@ -1180,12 +1207,16 @@ IBKMK::Vector3D Project::boundingBox(const std::vector<const Drawing *> & drawin
 }
 
 
-IBKMK::Vector3D Project::boundingBox(std::vector<const Drawing *> & drawings,
-									 std::vector<const Surface *> & surfaces,
-									 std::vector<const SubSurface *> & subsurfaces,
+IBKMK::Vector3D Project::boundingBox(const std::vector<const Drawing *> & drawings,
+									 const std::vector<const Surface *> & surfaces,
+									 const std::vector<const SubSurface *> & subsurfaces,
+									 const std::vector<const NetworkEdge *> & edges,
+									 const std::vector<const NetworkNode *> & nodes,
 									 IBKMK::Vector3D & center,
-									 const IBKMK::Vector3D & offset, const IBKMK::Vector3D & xAxis,
-									 const IBKMK::Vector3D & yAxis, const IBKMK::Vector3D & zAxis)
+									 const IBKMK::Vector3D & offset,
+									 const IBKMK::Vector3D & xAxis,
+									 const IBKMK::Vector3D & yAxis,
+									 const IBKMK::Vector3D & zAxis)
 {
 	FUNCID(Project::boundingBox);
 
@@ -1268,6 +1299,51 @@ IBKMK::Vector3D Project::boundingBox(std::vector<const Drawing *> & drawings,
 		drawingBoundingBox<VICUS::Drawing::Text>(*d, d->m_texts, upperValues, lowerValues);
 		drawingBoundingBox<VICUS::Drawing::LinearDimension>(*d, d->m_linearDimensions, upperValues, lowerValues);
 	}
+
+	for (const VICUS::NetworkNode *node : nodes) {
+
+			IBKMK::Vector3D v = node->m_position;
+			IBKMK::Vector3D vLocal, point;
+
+			IBKMK::lineToPointDistance(offset, xAxis, v, vLocal.m_x, point);
+			IBKMK::lineToPointDistance(offset, yAxis, v, vLocal.m_y, point);
+			IBKMK::lineToPointDistance(offset, zAxis, v, vLocal.m_z, point);
+
+			v = vLocal;
+
+			( v.m_x > upperValues.m_x ) ? upperValues.m_x = v.m_x : 0;
+			( v.m_y > upperValues.m_y ) ? upperValues.m_y = v.m_y : 0;
+			( v.m_z > upperValues.m_z ) ? upperValues.m_z = v.m_z : 0;
+
+			( v.m_x < lowerValues.m_x ) ? lowerValues.m_x = v.m_x : 0;
+			( v.m_y < lowerValues.m_y ) ? lowerValues.m_y = v.m_y : 0;
+			( v.m_z < lowerValues.m_z ) ? lowerValues.m_z = v.m_z : 0;
+		}
+
+		for (const VICUS::NetworkEdge *edge : edges) {
+
+			std::vector<IBKMK::Vector3D> verts(2);
+			verts[0] = edge->m_node1->m_position;
+			verts[1] = edge->m_node2->m_position;
+
+			for (IBKMK::Vector3D v : verts) {
+				IBKMK::Vector3D vLocal, point;
+
+				IBKMK::lineToPointDistance(offset, xAxis, v, vLocal.m_x, point);
+				IBKMK::lineToPointDistance(offset, yAxis, v, vLocal.m_y, point);
+				IBKMK::lineToPointDistance(offset, zAxis, v, vLocal.m_z, point);
+
+				v = vLocal;
+
+				( v.m_x > upperValues.m_x ) ? upperValues.m_x = v.m_x : 0;
+				( v.m_y > upperValues.m_y ) ? upperValues.m_y = v.m_y : 0;
+				( v.m_z > upperValues.m_z ) ? upperValues.m_z = v.m_z : 0;
+
+				( v.m_x < lowerValues.m_x ) ? lowerValues.m_x = v.m_x : 0;
+				( v.m_y < lowerValues.m_y ) ? lowerValues.m_y = v.m_y : 0;
+				( v.m_z < lowerValues.m_z ) ? lowerValues.m_z = v.m_z : 0;
+			}
+		}
 
 
 	double dX = upperValues.m_x - lowerValues.m_x;

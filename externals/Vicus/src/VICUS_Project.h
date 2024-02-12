@@ -265,8 +265,9 @@ public:
 	static IBKMK::Vector3D boundingBox(const std::vector<const Drawing *> &drawings,
 									   const std::vector<const Surface *> &surfaces,
 									   const std::vector<const SubSurface *> &subsurfaces,
-									   IBKMK::Vector3D &center,
-									   bool transformPoints = true);
+									   const std::vector<const NetworkEdge *> & edges,
+									   const std::vector<const NetworkNode *> & nodes,
+									   IBKMK::Vector3D &center);
 
 	/*! This function computes the global bounding box of all selected edges & nodes and the center point in global coordinates.
 		\returns Returns the dimensions of the bounding box and its center point in argument 'center' in global coordinates.
@@ -280,11 +281,13 @@ public:
 		the provided local coordinate system.
 		\returns Returns the dimensions of the bounding box and its center point in argument 'center' in local coordinates.
 	*/
-	static IBKMK::Vector3D boundingBox(std::vector<const Drawing *> & drawings,
-									   std::vector<const VICUS::Surface*> &surfaces,
-									   std::vector<const VICUS::SubSurface*> &subsurfaces,
+	static IBKMK::Vector3D boundingBox(const std::vector<const Drawing *> &drawings,
+									   const std::vector<const VICUS::Surface*> &surfaces,
+									   const std::vector<const VICUS::SubSurface*> &subsurfaces,
+									   const std::vector<const NetworkEdge *> &edges,
+									   const std::vector<const NetworkNode *> &nodes,
 									   IBKMK::Vector3D &center,
-									   const IBKMK::Vector3D &offset = IBKMK::Vector3D(0,0,0),
+									   const IBKMK::Vector3D &offset,
 									   const IBKMK::Vector3D &xAxis = IBKMK::Vector3D(1,0,0),
 									   const IBKMK::Vector3D &yAxis = IBKMK::Vector3D(0,1,0),
 									   const IBKMK::Vector3D &zAxis = IBKMK::Vector3D(0,0,1));
