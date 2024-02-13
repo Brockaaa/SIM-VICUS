@@ -278,9 +278,9 @@ void SVUndoTrimObjects::redo() {
 		m_project.updatePointers();
 	}
 
-
+	/// Do clippin in order to reconnect surfaces by component instances
+	/// Heavy operation but is needed for successful re-connection
 	RC::VicusClipper vicusClipper(m_project.m_buildings, m_project.m_componentInstances, 5, 1, m_project.nextUnusedID(), true);
-	vicusClipper.clipSurfaces(nullptr);
 	vicusClipper.createComponentInstances(nullptr);
 	m_project.m_buildings = vicusClipper.vicusBuildings();
 	m_project.m_componentInstances = *vicusClipper.vicusCompInstances();
