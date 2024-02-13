@@ -954,8 +954,9 @@ void VicusClipper::createComponentInstances(Notification *notify, bool createCon
 						IBK::nearly_equal<1>(intersections[0].m_polygon.area(), surfA->geometry().area())){
 
 					// find old components
-					if (!foundOriginCompInstance) {
-						compId = findComponentInstanceForSurface(*surfA, true, replaceAllComponentInstances);
+					if (!foundOriginCompInstance && compId == VICUS::INVALID_ID) {
+						// Now look for be side!
+						compId = findComponentInstanceForSurface(*surfB, true, replaceAllComponentInstances);
 					}
 
 					// if both ids are invalid take invalid
