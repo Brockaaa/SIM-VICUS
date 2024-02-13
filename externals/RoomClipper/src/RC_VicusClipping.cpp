@@ -75,7 +75,8 @@ void VicusClipper::findParallelSurfaces(Notification *notify) {
 
 	// the stop watch object and progress counter are used only in a critical section
 	m_stopWatch.start();
-	notify->notify(0);
+	if (notify != nullptr)
+		notify->notify(0);
 
 	std::set<const VICUS::Surface*>	surfaces;
 
@@ -123,12 +124,12 @@ void VicusClipper::findParallelSurfaces(Notification *notify) {
 
 			++currentCount;
 			// only notify every second or so
-			if (!notify->m_aborted && m_stopWatch.difference() > STOPWATCH_INTERVAL) {
+			if (notify != nullptr && !notify->m_aborted && m_stopWatch.difference() > STOPWATCH_INTERVAL) {
 				notify->notify(0.25 * double(currentCount+1) / Count);
 				m_stopWatch.start();
 			}
 
-			if (notify->m_aborted)
+			if (notify != nullptr && notify->m_aborted)
 				throw IBK::Exception("Clipping canceled.", FUNC_ID);
 
 			// Skip already coupled surfaces
@@ -194,12 +195,12 @@ void VicusClipper::findSurfacesInRange(Notification *notify) {
 
 		++currentCount;
 		// only notify every second or so
-		if (!notify->m_aborted && m_stopWatch.difference() > STOPWATCH_INTERVAL) {
+		if (notify != nullptr && !notify->m_aborted && m_stopWatch.difference() > STOPWATCH_INTERVAL) {
 			notify->notify(0.25 + 0.25 * double(currentCount+1) / Count);
 			m_stopWatch.start();
 		}
 
-		if (notify->m_aborted)
+		if (notify != nullptr && notify->m_aborted)
 			throw IBK::Exception("Clipping canceled.", FUNC_ID);
 
 		// look for clipping surface
