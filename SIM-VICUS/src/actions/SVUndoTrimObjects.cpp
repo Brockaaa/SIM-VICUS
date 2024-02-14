@@ -168,8 +168,9 @@ void SVUndoTrimObjects::redo() {
 
 							// iterate over vertices of 3d subsurface
 							for (unsigned int l = 0; l < m_trimmedSubSurfaces[ssit->first][k].vertexes().size(); ++l) {
-								IBKMK::planeCoordinates(surfPoly.offset(), surfPoly.localX(), surfPoly.localY(), m_trimmedSubSurfaces[ssit->first][k].vertexes()[l], xCoord, yCoord);
-								aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
+								IBKMK::planeCoordinates(surfPoly.offset(), surfPoly.localX(), surfPoly.localY(),
+														m_trimmedSubSurfaces[ssit->first][k].vertexes()[l], point.m_x, point.m_y);
+								aux2DPolygon.push_back(point);
 							}
 							VICUS::SubSurface newSubsurface(*ss);
 							newSubsurface.m_polygon2D = aux2DPolygon;
