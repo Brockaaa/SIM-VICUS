@@ -26,6 +26,8 @@
 #ifndef SVUndoCommandBaseH
 #define SVUndoCommandBaseH
 
+#include <IBK_NotificationHandler.h>
+
 #include <QUndoCommand>
 #include <QCoreApplication>
 
@@ -53,6 +55,8 @@ protected:
 	/*! Returns a read/write reference to the project data. */
 	VICUS::Project &	theProject() const;
 
+	/*! Notify object. */
+	IBK::Notification	*m_notify = nullptr;
 };
 
 #endif // SVUndoCommandBaseH
