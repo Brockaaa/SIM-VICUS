@@ -312,6 +312,9 @@ private:
 	*/
 	IBKMK::Vector3D						m_copyTranslationVector;
 
+	/*! Cached values of line edits, to prevent unneccesairy undo-action calls. */
+	std::map<QObject *, double>			m_cachedValues;
+
 	std::vector<const VICUS::Building*>			m_selBuildings;
 	std::vector<const VICUS::BuildingLevel*>	m_selBuildingLevels;
 	std::vector<const VICUS::Room*>				m_selRooms;

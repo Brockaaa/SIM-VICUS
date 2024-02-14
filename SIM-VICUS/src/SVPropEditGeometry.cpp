@@ -368,7 +368,11 @@ void SVPropEditGeometry::onTrimmingRotationFinished() {
 
 bool SVPropEditGeometry::eventFilter(QObject * target, QEvent * event) {
 
-//	qDebug() << "Event type: " << event->type();
+//	qDebug() << "Event type: " << event->type();	
+	QLineEdit *lineEdit = dynamic_cast<QLineEdit *>(target);
+	if (event->type() == QEvent::Leave)
+		qDebug() << "Object: " << target->objectName() << " Event: " << event->type();
+
 	if ( event->type() == QEvent::Wheel ) {
 
 		// We have both types in trimming
@@ -413,11 +417,34 @@ bool SVPropEditGeometry::eventFilter(QObject * target, QEvent * event) {
 			onWheelTurned(offset, qobject_cast<QtExt::ValidatingLineEdit*>(target)); // we know that target points to a ValidatingLineEdit
 		}
 	}
-	else if ( event->type() == QEvent::Leave ) {
+	else if ( lineEdit != nullptr && event->type() == QEvent::Leave ) {
+		// ToDo Stephan: Find out if something really changed!
+		//				 Prevent calling of undo-action calling all the time
+		bool ok;
+		double val = lineEdit->text().toDouble(&ok);
+		if (!ok)
+			return false;
+
+		if (m_cachedValues.find(lineEdit) != m_cachedValues.end()) {
+			double oldVal = m_cachedValues[lineEdit];
+			if (oldVal == val)
+				return false;
+		}
+
+		for (QLineEdit *lEdit : m_ui->stackedWidget->findChildren<QLineEdit*>()) {
+			double valNew = lEdit->text().toDouble(&ok);
+			if (!ok)
+				continue;
+
+			m_cachedValues[lEdit] = valNew;
+		}
+
 		if (m_ui->stackedWidget->currentIndex() == MT_Trim)
 			onTrimmingRotationFinished();
 		else
 			on_pushButtonApply_clicked();
+
+		return false;
 	}
 
 	return false;
