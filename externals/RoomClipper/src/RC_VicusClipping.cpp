@@ -70,7 +70,7 @@ void insertChildSurfaces(std::set<const VICUS::Surface*> &surfaces, const VICUS:
 }
 
 
-void VicusClipper::findParallelSurfaces(Notification *notify) {
+void VicusClipper::findParallelSurfaces(IBK::Notification *notify) {
 	FUNCID(VicusClipper::findParallelSurfaces);
 
 	// the stop watch object and progress counter are used only in a critical section
@@ -181,7 +181,7 @@ void VicusClipper::findParallelSurfaces(Notification *notify) {
 }
 
 
-void VicusClipper::findSurfacesInRange(Notification *notify) {
+void VicusClipper::findSurfacesInRange(IBK::Notification *notify) {
 	FUNCID(VicusClipper::findSurfacesInRange);
 
 	// the stop watch object and progress counter are used only in a critical section
@@ -290,7 +290,7 @@ void saveChildOrigin(std::map<unsigned int, unsigned int> &compInstOriginSurfId,
 }
 
 
-void VicusClipper::clipSurfaces(Notification * notify) {
+void VicusClipper::clipSurfaces(IBK::Notification * notify) {
 	FUNCID(VicusClipper::clipSurfaces);
 
 	// the stop watch object and progress counter are used only in a critical section
@@ -727,7 +727,7 @@ QString VicusClipper::generateUniqueName(QString name) {
 }
 
 
-void VicusClipper::createComponentInstances(Notification *notify, bool createConnections, bool replaceAllComponentInstances) {
+void VicusClipper::createComponentInstances(IBK::Notification *notify, bool createConnections, bool replaceAllComponentInstances) {
 	FUNCID(VicusClipper::createComponentInstances);
 
 	std::set<const VICUS::Surface *>	surfaces;

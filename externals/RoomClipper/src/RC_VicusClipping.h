@@ -33,12 +33,8 @@
 #include "RC_ClippingPolygon.h"
 #include "RC_Constants.h"
 
-namespace RC {
 
-class Notification : public IBK::NotificationHandler {
-public:
-	bool	m_aborted = false;
-};
+namespace RC {
 
 /*! Class for VICUS Clipping. Contains all necessairy data and functionality needed to perform smart clipping. */
 class VicusClipper {
@@ -74,16 +70,16 @@ public:
 	void addClipperPolygons(const std::vector<ClippingPolygon> &polysTemp, std::vector<ClippingPolygon> &mainDiffsTemp);
 
 	/*! Finds all corresponding parallel surfaces for clipping operations. */
-	void findParallelSurfaces(Notification * notify);
+	void findParallelSurfaces(IBK::Notification * notify);
 
 	/*! Finds all corresponding surfaces in range for clipping. */
-	void findSurfacesInRange(Notification * notify);
+	void findSurfacesInRange(IBK::Notification * notify);
 
 	/*! Surfaces are clipped by their corresponding surfaces sorted by distance. */
-	void clipSurfaces(Notification *notify);
+	void clipSurfaces(IBK::Notification *notify);
 
 	/*! Component Instances are beeing created by cutting all produced surfaces by clipper lib. */
-	void createComponentInstances(Notification * notify, bool createConnections = true, bool replaceAllComponentInstances = false);
+	void createComponentInstances(IBK::Notification * notify, bool createConnections = true, bool replaceAllComponentInstances = false);
 
 	/*! Finds the corresponding component instance of specified surface by id. */
 	unsigned int findComponentInstanceForSurface(const VICUS::Surface &s, bool coupledSurface = false, bool replaceComponentInstance = false);
@@ -102,7 +98,7 @@ public:
 	/*! Returns all clipped vicus component instances. */
 	const std::vector<VICUS::ComponentInstance> *vicusCompInstances() const;
 
-	/*! Returns all clipped vicus buildings. */
+	/*! Set project for handling of surface components. */
 	void setPrj(const VICUS::Project &newPrj);
 
 	/*! Returns all clipped vicus buildings. */
