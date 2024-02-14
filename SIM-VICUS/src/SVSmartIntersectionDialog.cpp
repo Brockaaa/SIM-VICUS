@@ -16,7 +16,7 @@
 #include "SVUndoModifyBuildingTopology.h"
 
 
-class SmartClippingProgress : public RC::Notification {
+class SmartClippingProgress : public IBK::Notification {
 public:
 	void notify() override {}
 	void notify(double percentage) override;
