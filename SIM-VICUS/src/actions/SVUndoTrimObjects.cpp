@@ -40,13 +40,14 @@ SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
 									 // trimSurfaces is a vector of tuples, each containing a reference to the selected surface of one trim, and the polyInput vector
 									 // which was handed over to the polyTrim method, and therefore contains the trim result surfaces
 									 std::map<unsigned int, std::vector<IBKMK::Polygon3D> > trimmedSubSurfaces,
-									 const VICUS::Project & oldProject):
+									 const VICUS::Project & oldProject, IBK::Notification *notify):
 	m_trimmedSurfaces(trimmedPolygons),
 	m_trimmedSubSurfaces(trimmedSubSurfaces),
 	m_project(oldProject)
 {
 	setText( label );
 	m_project.updatePointers();
+	m_notify = notify;
 }
 
 
@@ -58,6 +59,15 @@ void SVUndoTrimObjects::undo() {
 
 
 void SVUndoTrimObjects::redo() {
+
+	// ToDo Moritz: Trimming of child surfaces
+
+	std::vector<VICUS::ComponentInstance> cis = m_project.m_componentInstances;
+	m_project.m_componentInstances.clear();
+
+	if (m_notify != nullptr)
+		m_notify->notify(0);
+	unsigned int counter = 0;
 	for (std::map<unsigned int, std::vector<IBKMK::Polygon3D>>::iterator it = m_trimmedSurfaces.begin();
 		 it != m_trimmedSurfaces.end(); ++it )
 	{
@@ -88,8 +98,7 @@ void SVUndoTrimObjects::redo() {
 		std::string surfDisplayName = s->m_displayName.toStdString();
 
 		// initialize for planeCoordinates()
-		double xCoord;
-		double yCoord;
+		IBKMK::Vector2D point;
 
 		// iterate over different trim result surfaces (of one trim / one original surface)
 		for (unsigned int i = 0; i < polys.size(); ++i) {
@@ -128,10 +137,11 @@ void SVUndoTrimObjects::redo() {
 					// transform the trimmed polygon to 2d for testing pointInPolygon with each former subsurface's centerpoint later
 					std::vector<IBKMK::Vector2D> aux2DPolygon(surfPoly.vertexes().size());
 					for (unsigned int j = 0; j < surfPoly.vertexes().size(); ++j) {
-						IBKMK::planeCoordinates(surfPoly.offset(), surfPoly.localX(), surfPoly.localY(), surfPoly.vertexes()[j], xCoord, yCoord);
-						aux2DPolygon.push_back(IBKMK::Vector2D(xCoord, yCoord));
+						IBKMK::planeCoordinates(surfPoly.offset(), surfPoly.localX(), surfPoly.localY(), surfPoly.vertexes()[j], point.m_x, point.m_y);
+						aux2DPolygon.push_back(point);
 					}
 
+					// Reference to current trimmed sub-surface
 					const std::vector<IBKMK::Polygon3D> &subSurfPolys = m_trimmedSubSurfaces[ssit->first];
 
 					// Add all trimresults of this subsurface, whose centerpoint is contained in this surfacePoly
@@ -185,7 +195,7 @@ void SVUndoTrimObjects::redo() {
 				tempSubsurfaces.push_back(ss);
 			}
 
-			std::vector<VICUS::Surface> cs = newSurf.childSurfaces();
+			std::vector<VICUS::Surface> cs;
 			newSurf.setChildAndSubSurfaces(tempSubsurfaces, cs);
 
 			if (room != nullptr) {
@@ -204,10 +214,10 @@ void SVUndoTrimObjects::redo() {
 
 			// Remove old component id
 			unsigned int idx = 0;
-			std::vector<VICUS::ComponentInstance>			&cis    = m_project.m_componentInstances;
+			// std::vector<VICUS::ComponentInstance>			&cis    = m_project.m_componentInstances;
 			std::vector<VICUS::SubSurfaceComponentInstance> &subCis = m_project.m_subSurfaceComponentInstances;
 			bool foundComponent = false;
-			for (; idx < m_project.m_componentInstances.size(); ++idx) {
+			for (; idx < cis.size(); ++idx) {
 				if (cis[idx].m_idSideASurface == id || cis[idx].m_idSideBSurface == id) {
 					qDebug() << "Found component";
 					foundComponent = true;
@@ -228,11 +238,30 @@ void SVUndoTrimObjects::redo() {
 			if (foundComponent) {
 				for (unsigned newId : newSurfaceIds) {
 					VICUS::ComponentInstance newCi = cis[idx];
+					unsigned int idSideA = newCi.m_idSideASurface;
+					unsigned int idSideB = newCi.m_idSideBSurface;
+
 					newCi.m_id = nextId++;
-					newCi.m_idSideASurface = newCi.m_idSideASurface == id ? newId : VICUS::INVALID_ID;
-					newCi.m_idSideBSurface = newCi.m_idSideBSurface == id ? newId : VICUS::INVALID_ID;
-					// Add new sub surface component instances
-					cis.push_back(newCi);
+					newCi.m_idSideASurface = VICUS::INVALID_ID;
+					newCi.m_idSideBSurface = VICUS::INVALID_ID;
+
+					if (idSideA == id) {
+						newCi.m_idSideASurface = newId;
+						cis.push_back(newCi);
+						if (idSideB != VICUS::INVALID_ID) {
+							newCi.m_idSideBSurface = idSideB;
+							cis.push_back(newCi);
+						}
+					}
+
+					if (idSideB == id) {
+						newCi.m_idSideBSurface = newId;
+						cis.push_back(newCi);
+						if (idSideA != VICUS::INVALID_ID) {
+							newCi.m_idSideASurface = idSideA;
+							cis.push_back(newCi);
+						}
+					}
 				}
 				cis.erase(cis.begin() + idx);
 			}
@@ -275,14 +304,20 @@ void SVUndoTrimObjects::redo() {
 			}
 		}
 
+		if (m_notify != nullptr)
+			m_notify->notify(counter / m_trimmedSurfaces.size());
+
 		m_project.updatePointers();
+
+		counter++;
 	}
 
-	/// Do clippin in order to reconnect surfaces by component instances
+	m_project.m_componentInstances = cis;
+	/// Do clipping with comp instances in order to reconnect surfaces with component
 	/// Heavy operation but is needed for successful re-connection
-	RC::VicusClipper vicusClipper(m_project.m_buildings, m_project.m_componentInstances, 5, 1, m_project.nextUnusedID(), true);
-	vicusClipper.createComponentInstances(nullptr);
-	m_project.m_buildings = vicusClipper.vicusBuildings();
+	RC::VicusClipper vicusClipper(m_project.m_buildings, cis, 5, 1, m_project.nextUnusedID(), true);
+	vicusClipper.createComponentInstances(m_notify);
+
 	m_project.m_componentInstances = *vicusClipper.vicusCompInstances();
 
 	std::swap(theProject(), m_project);

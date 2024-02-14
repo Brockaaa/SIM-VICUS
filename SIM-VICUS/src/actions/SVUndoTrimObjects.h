@@ -46,7 +46,8 @@ public:
 	SVUndoTrimObjects(const QString & label,
 					  std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	trimmedSurfaces,
 					  std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	trimmedSubSurfaces,
-					  const VICUS::Project & newProject);
+					  const VICUS::Project & newProject,
+					  IBK::Notification *notify = nullptr);
 
 	virtual void undo();
 	virtual void redo();
