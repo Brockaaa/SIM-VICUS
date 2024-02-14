@@ -25,6 +25,7 @@
 
 #include "SVPropEditGeometry.h"
 #include "IBKMK_2DCalculations.h"
+#include "RC_VicusClipping.h"
 #include "ui_SVPropEditGeometry.h"
 
 #include <IBK_physics.h>
@@ -67,6 +68,7 @@
 
 #include <QLocale>
 #include <QWheelEvent>
+#include <QProgressDialog>
 
 
 ///*! helper function to compare two IBKMK vectors */
@@ -76,6 +78,22 @@
 //			 IBK::nearly_equal<digits>(v1.m_y, v2.m_y) &&
 //			 IBK::nearly_equal<digits>(v1.m_z, v2.m_z) );
 //}
+
+class TrimmingProgress : public IBK::Notification {
+public:
+	void notify() override {}
+	void notify(double percentage) override;
+
+	char				pad[7]; // fix padding, silences compiler warning
+	QProgressDialog		*m_prgDlg = nullptr;
+};
+
+void TrimmingProgress::notify(double percentage) {
+	m_prgDlg->setValue((int)(m_prgDlg->maximum() * percentage));
+	qApp->processEvents();
+	if (m_prgDlg->wasCanceled())
+		m_aborted = true;
+}
 
 
 class LineEditFormater : public QtExt::FormatterBase {
@@ -1680,6 +1698,10 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 	/// 4) Translate 3D points back to 2D point by IBKMK::planeCoordinates
 	/// 5) Set sub-surfaces in parent polygon
 
+	TrimmingProgress progressNotifyer;
+	progressNotifyer.m_prgDlg = new QProgressDialog(tr("Trimming"), tr("Cancel"), 0, 100, this);
+	progressNotifyer.m_prgDlg->setMinimumDuration(500);
+
 	std::vector<IBKMK::Vector3D> trimmingPolygon;
 	Vic3D::TrimmingObject &to = *SVViewStateHandler::instance().m_trimmingObject;
 
@@ -1789,7 +1811,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 	// create a copy of the whole project
 	VICUS::Project projectCopy = SVProjectHandler::instance().project();
-	SVUndoTrimObjects * undo = new SVUndoTrimObjects(tr("Trimming performed."), trimmedSurfacePolygons, trimmedSubSurfacePolygons, projectCopy);
+	SVUndoTrimObjects * undo = new SVUndoTrimObjects(tr("Trimming performed."), trimmedSurfacePolygons, trimmedSubSurfacePolygons, projectCopy, &progressNotifyer);
 	undo->push();
 
 }
