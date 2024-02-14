@@ -161,12 +161,12 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		// if we have a selection, switch scene operation mode to OM_SelectedGeometry
 		SVViewState vs = SVViewStateHandler::instance().viewState();
 		if (!vs.inPropertyEditingMode()) {
-			if (selectedObjects.empty()) {
+			if (vs.m_sceneOperationMode == SVViewState::OM_TrimObjects) {
+				m_trimmingObject.updateTrimmingPlane();
+			}
+			else if (selectedObjects.empty()) {
 				vs.m_sceneOperationMode = SVViewState::NUM_OM;
 				vs.m_propertyWidgetMode = SVViewState::PM_AddGeometry;
-			}
-			else if (vs.m_sceneOperationMode == SVViewState::OM_TrimObjects) {
-				m_trimmingObject.updateTrimmingPlane();
 			}
 			SVViewStateHandler::instance().setViewState(vs);
 		}
