@@ -70,7 +70,7 @@ static bool solve(double a, double b, double c,  double d,  double e,  double f,
 */
 
 bool planeCoordinates(const Vector3D & offset, const Vector3D & a, const Vector3D & b,
-							 const Vector3D & v, double & x, double & y, double tolerance, bool showWarings)
+					  const Vector3D & v, double & x, double & y, double tolerance, bool showWarings)
 {
 	FUNCID(IBKMK::planeCoordinates);
 	// compute projection of vector v onto plane
@@ -99,14 +99,14 @@ bool planeCoordinates(const Vector3D & offset, const Vector3D & a, const Vector3
 	IBKMK::Vector3D anorm = a.normalized();
 	IBKMK::Vector3D bnorm = b.normalized();
 	if (std::fabs(anorm.scalarProduct(bnorm)) < 1e-10) {
-//		IBK::IBK_Message("scalar");
+		//		IBK::IBK_Message("scalar");
 		x = rhs.scalarProduct(anorm);
 		x /= a.magnitude();
 		y = rhs.scalarProduct(bnorm);
 		y /= b.magnitude();
 	}
 	else {
-//		IBK::IBK_Message("gleichungssystem");
+		//		IBK::IBK_Message("gleichungssystem");
 		// rows 1 and 2
 		bool success = solve(a.m_x, a.m_y, b.m_x, b.m_y, rhs.m_x, rhs.m_y, x, y);
 		if (!success)
@@ -123,7 +123,7 @@ bool planeCoordinates(const Vector3D & offset, const Vector3D & a, const Vector3
 	IBKMK::Vector3D v3 = offset + x*a + y*b;
 	IBKMK::Vector3D v3offset = v3 - v;
 	if (showWarings && v3offset.magnitude() > tolerance) {
-			IBK::IBK_Message(IBK::FormatString("Plane coordinate calculation incorrect: deviation = %1").arg(v3offset.magnitude()), IBK::MSG_WARNING, FUNC_ID);
+		IBK::IBK_Message(IBK::FormatString("Plane coordinate calculation incorrect: deviation = %1").arg(v3offset.magnitude()), IBK::MSG_WARNING, FUNC_ID);
 		return false;
 	}
 	else
@@ -132,7 +132,7 @@ bool planeCoordinates(const Vector3D & offset, const Vector3D & a, const Vector3
 
 
 double lineToPointDistance(const Vector3D & a, const Vector3D & d, const Vector3D & p,
-												   double & lineFactor, Vector3D & p2)
+						   double & lineFactor, Vector3D & p2)
 {
 	// vector from starting point of line to target point
 	Vector3D v = p - a;
@@ -177,8 +177,8 @@ bool lineShereIntersection(const Vector3D & a, const Vector3D & d, const Vector3
 
 
 double lineToLineDistance(const Vector3D & a1, const Vector3D & d1,
-												  const Vector3D & a2, const Vector3D & d2,
-												  double & l1, Vector3D & p1, double & l2)
+						  const Vector3D & a2, const Vector3D & d2,
+						  double & l1, Vector3D & p1, double & l2)
 {
 	/// source: http://geomalgorithms.com/a02-_lines.html
 	Vector3D v = a1 - a2;
@@ -287,7 +287,7 @@ void eliminateCollinearPoints(std::vector<IBKMK::Vector3D> & polygon, double eps
 
 
 bool linePlaneIntersectionWithNormalCheck(const Vector3D & a, const Vector3D & normal, const Vector3D & p,
-		const IBKMK::Vector3D & d, IBKMK::Vector3D & intersectionPoint, double & dist, bool checkNormal)
+										  const IBKMK::Vector3D & d, IBKMK::Vector3D & intersectionPoint, double & dist, bool checkNormal)
 {
 	// plane is given by offset 'a' and normal vector 'normal'.
 	// line is given by point 'p' and its line vector 'd'
@@ -316,7 +316,7 @@ bool linePlaneIntersectionWithNormalCheck(const Vector3D & a, const Vector3D & n
 
 
 bool linePlaneIntersection(const Vector3D & a, const Vector3D & normal, const Vector3D & p,
-		const IBKMK::Vector3D & d, IBKMK::Vector3D & intersectionPoint, double & dist)
+						   const IBKMK::Vector3D & d, IBKMK::Vector3D & intersectionPoint, double & dist)
 {
 	// plane is given by offset 'a' and normal vector 'normal'.
 	// line is given by point 'p' and its line vector 'd'
@@ -385,6 +385,7 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> polygon, const IBK::poi
 
 
 bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<Vector3D> & vertsBexact) {
+
 	IBK_ASSERT(vertsAexact.size() >= 3);
 	IBK_ASSERT(vertsBexact.size() >= 3);
 
@@ -393,29 +394,36 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 
 	const double coordFactor = 1e4;
 
-	std::vector<Vector3D> vertsA;
-	std::vector<Vector3D> vertsB;
+	std::vector<Vector3D> vertsA(vertsAexact.size());
+	std::vector<Vector3D> vertsB(vertsBexact.size());
 
 	// rounding all vertices to achieve near_equal precision
-	for (Vector3D i : vertsAexact) {
-			vertsA.push_back(Vector3D(std::round(i.m_x*coordFactor)/coordFactor,std::round(i.m_y*coordFactor)/coordFactor,std::round(i.m_z*coordFactor)/coordFactor));
+
+	// ToDo Moritz: Why std::round?
+	for (unsigned int i = 0; i < vertsA.size(); ++i) {
+		const Vector3D &vertA = vertsAexact[i];
+		vertsA[i]= Vector3D(std::round(vertA.m_x*coordFactor)/coordFactor,
+							std::round(vertA.m_y*coordFactor)/coordFactor,
+							std::round(vertA.m_z*coordFactor)/coordFactor);
 	}
-	for (Vector3D i : vertsBexact) {
-			vertsB.push_back(Vector3D(std::round(i.m_x*coordFactor)/coordFactor,std::round(i.m_y*coordFactor)/coordFactor,std::round(i.m_z*coordFactor)/coordFactor));
+	for (unsigned int i = 0; i < vertsA.size(); ++i) {
+		const Vector3D &vertB = vertsBexact[i];
+		vertsA[i]= Vector3D(std::round(vertB.m_x*coordFactor)/coordFactor,
+							std::round(vertB.m_y*coordFactor)/coordFactor,
+							std::round(vertB.m_z*coordFactor)/coordFactor);
 	}
-
-
-
 	// get arbitrary base vectors for polygon A and B's planes
 	// TODO: error handling in case polygon is malformatted and first 3 points are located on a straight line .. eliminateCollinearPoints?
 	// compensating for different sizes of span vectors to have later calculations in the same order of magnitude
 	IBKMK::Vector3D vectorA1 = vertsA[1] - vertsA[0];
 	vectorA1 = vectorA1 * (10/vectorA1.magnitude());
+
 	IBKMK::Vector3D vectorA2 = vertsA[2] - vertsA[0];
 	vectorA2 = vectorA2 * (10/vectorA2.magnitude());
 
 	IBKMK::Vector3D vectorB1 = vertsB[1] - vertsB[0];
 	vectorB1 = vectorB1 * (10/vectorB1.magnitude());
+
 	IBKMK::Vector3D vectorB2 = vertsB[2] - vertsB[0];
 	vectorB2 = vectorB2 * (10/vectorB2.magnitude());
 
@@ -621,7 +629,7 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 			}
 		}
 	}
-return false;
+	return false;
 }
 
 } // namespace IBKMK
