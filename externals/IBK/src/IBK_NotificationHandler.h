@@ -103,6 +103,13 @@ public:
 	virtual void notify(double, const char *) { notify(); }
 };
 
+/*! Notification class, also stores  if notification has been aborted by user. */
+class Notification : public IBK::NotificationHandler {
+public:
+	// indicates, if prgress bar is aborted
+	bool	m_aborted = false;
+};
+
 } // namespace IBK
 
 #endif // IBK_NotificationHandlerH
