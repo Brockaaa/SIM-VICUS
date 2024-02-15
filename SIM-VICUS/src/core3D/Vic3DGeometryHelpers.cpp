@@ -313,11 +313,11 @@ void addCylinder(const IBKMK::Vector3D & p1, const IBKMK::Vector3D & p2, const Q
 
 
 void addCone(const IBKMK::Vector3D & p1, const IBKMK::Vector3D & p2, const QColor & c, double radius,
-				 unsigned int & currentVertexIndex, unsigned int & currentElementIndex,
-				 std::vector<Vertex> & vertexBufferData,
-				 std::vector<ColorRGBA> & colorBufferData,
-				 std::vector<GLuint> & indexBufferData, bool closed) {
-	#define PI_CONST 3.14159265
+			 unsigned int & currentVertexIndex, unsigned int & currentElementIndex,
+			 std::vector<Vertex> & vertexBufferData,
+			 std::vector<ColorRGBA> & colorBufferData,
+			 std::vector<GLuint> & indexBufferData, bool closed) {
+#define PI_CONST 3.14159265
 
 	IBKMK::Vector3D coneAxis = p2-p1;
 	double L = coneAxis.magnitude();
@@ -713,11 +713,6 @@ void addSurface(const VICUS::Surface & s,
 	addPlane(s.geometry().triangulationData(), col, currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, false);
 	// then add the plane again inverted
 	addPlane(s.geometry().triangulationData(), col, currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, true);
-
-	for(const VICUS::Surface &s : s.childSurfaces()) {
-		addSurface(s, currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData);
-		addSurface(s, currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData);
-	}
 }
 
 
