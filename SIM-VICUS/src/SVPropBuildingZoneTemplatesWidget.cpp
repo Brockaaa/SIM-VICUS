@@ -124,12 +124,12 @@ void SVPropBuildingZoneTemplatesWidget::updateUi() {
 		else { // otherwise show info about the selected zone template
 			m_selectedZoneTemplateId = zt->m_id;
 			m_ui->labelSelectedZoneTemplates->setText(tr("%1 [%2]")
-			   .arg(QtExt::MultiLangString2QString(zt->m_displayName)).arg(zt->m_id) );
+													  .arg(QtExt::MultiLangString2QString(zt->m_displayName)).arg(zt->m_id) );
 		}
 	}
 	else {
 		m_ui->labelSelectedZoneTemplates->setText(tr("%1 different templates")
-		   .arg(selectedZoneTemplate.size()));
+												  .arg(selectedZoneTemplate.size()));
 	}
 	// update table related button states
 	on_tableWidgetZoneTemplates_itemSelectionChanged();
@@ -174,8 +174,8 @@ void SVPropBuildingZoneTemplatesWidget::zoneTemplateVisibleZonesSelectionChanged
 void SVPropBuildingZoneTemplatesWidget::on_pushButtonAssignZoneTemplate_clicked() {
 	// ask user to select a the zone template to assign
 	SVSettings::instance().showDoNotShowAgainMessage(this, "PropertyWidgetInfoAssignZoneTemplate",
-		tr("Assign zone template"), tr("You may now select a zone template from the database, which will then be "
-								   "assigned to the selected rooms."));
+													 tr("Assign zone template"), tr("You may now select a zone template from the database, which will then be "
+																					"assigned to the selected rooms."));
 	unsigned int selectedId = SVMainWindow::instance().dbZoneTemplateEditDialog()->select(m_selectedZoneTemplateId);
 	if (selectedId == VICUS::INVALID_ID)
 		return; // user aborted the dialog
@@ -232,8 +232,8 @@ void SVPropBuildingZoneTemplatesWidget::on_pushButtonExchangeZoneTemplates_click
 	const VICUS::ZoneTemplate * zt = currentlySelectedZoneTemplate();
 	Q_ASSERT(zt != nullptr); // if nullptr, the button should be disabled!
 	SVSettings::instance().showDoNotShowAgainMessage(this, "PropertyWidgetInfoReplaceComponent",
-		tr("Replace template"), tr("This will replace all associations with zone template '%1 [%2]' with another template.")
-			 .arg(QtExt::MultiLangString2QString(zt->m_displayName)).arg(zt->m_id));
+													 tr("Replace template"), tr("This will replace all associations with zone template '%1 [%2]' with another template.")
+													 .arg(QtExt::MultiLangString2QString(zt->m_displayName)).arg(zt->m_id));
 	unsigned int oldId = zt->m_id;
 	unsigned int newId = SVMainWindow::instance().dbZoneTemplateEditDialog()->select(oldId);
 	if (newId == VICUS::INVALID_ID)
@@ -308,8 +308,8 @@ void SVPropBuildingZoneTemplatesWidget::on_pushButtonSelectObjectsWithZoneTempla
 			objIds.insert(s.m_id);
 			for (const VICUS::SubSurface &ss : s.subSurfaces())
 				objIds.insert(ss.m_id);
-			for (const VICUS::Surface &ss : s.childSurfaces())
-				objIds.insert(ss.m_id);
+			// for (const VICUS::Surface &ss : s.holes())
+			// 	objIds.insert(ss.m_id);
 		}
 	}
 
