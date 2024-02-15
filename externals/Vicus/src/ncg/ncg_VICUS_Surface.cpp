@@ -77,15 +77,15 @@ void Surface::readXMLPrivate(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
-			else if (cName == "ChildSurfaces") {
+			else if (cName == "Holes") {
 				const TiXmlElement * c2 = c->FirstChildElement();
 				while (c2) {
 					const std::string & c2Name = c2->ValueStr();
-					if (c2Name != "Surface")
+					if (c2Name != "Polygon2D")
 						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
-					Surface obj;
+					Polygon2D obj;
 					obj.readXML(c2);
-					m_childSurfaces.push_back(obj);
+					m_holes.push_back(obj);
 					c2 = c2->NextSiblingElement();
 				}
 			}
@@ -131,12 +131,12 @@ TiXmlElement * Surface::writeXMLPrivate(TiXmlElement * parent) const {
 	}
 
 
-	if (!m_childSurfaces.empty()) {
-		TiXmlElement * child = new TiXmlElement("ChildSurfaces");
+	if (!m_holes.empty()) {
+		TiXmlElement * child = new TiXmlElement("Holes");
 		e->LinkEndChild(child);
 
-		for (std::vector<Surface>::const_iterator it = m_childSurfaces.begin();
-			it != m_childSurfaces.end(); ++it)
+		for (std::vector<Polygon2D>::const_iterator it = m_holes.begin();
+			it != m_holes.end(); ++it)
 		{
 			it->writeXML(child);
 		}
