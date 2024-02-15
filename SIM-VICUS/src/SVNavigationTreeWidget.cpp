@@ -139,11 +139,7 @@ void SVNavigationTreeWidget::addChildSurface(QTreeWidgetItem *item, const VICUS:
 				childSurface->setData(0, SVNavigationTreeItemDelegate::InvalidGeometryFlag, true);
 				childSurface->setData(0, Qt::ToolTipRole, tr("Invalid child-surface polygon"));
 			}
-
-			for(const VICUS::Surface &childSurf : s.childSurfaces())
-				addChildSurface(childSurface, childSurf);
 		}
-
 	}
 }
 
