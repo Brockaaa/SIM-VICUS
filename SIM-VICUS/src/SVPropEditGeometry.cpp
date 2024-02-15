@@ -247,7 +247,7 @@ void SVPropEditGeometry::setModificationType(ModificationType modType) {
 		// Note: setting new coordinates to the local coordinate system object will in turn call setCoordinates()
 		//       and indirectly also updateInputs()
 		updateCoordinateSystemLook();
-//		updateTrimmingPlane();
+		//		updateTrimmingPlane();
 		adjustLocalCoordinateSystemForRotateToAngle();
 	}
 
@@ -368,7 +368,7 @@ void SVPropEditGeometry::onTrimmingRotationFinished() {
 
 bool SVPropEditGeometry::eventFilter(QObject * target, QEvent * event) {
 
-//	qDebug() << "Event type: " << event->type();	
+	//	qDebug() << "Event type: " << event->type();
 	QLineEdit *lineEdit = dynamic_cast<QLineEdit *>(target);
 	if (event->type() == QEvent::Leave)
 		qDebug() << "Object: " << target->objectName() << " Event: " << event->type();
@@ -658,14 +658,6 @@ void SVPropEditGeometry::on_lineEditCopyZ_editingFinishedSuccessfully() {
 
 // *** PRIVATE FUNCTIONS ***
 
-void selectChildSurfaces(std::vector<const VICUS::Surface*>	&selSurfaces, const VICUS::Surface &s) {
-	for(const VICUS::Surface &cs : s.childSurfaces() ) {
-		if(cs.m_selected && cs.m_visible)
-			selSurfaces.push_back(&cs);
-		selectChildSurfaces(selSurfaces, cs);
-	}
-}
-
 void SVPropEditGeometry::updateUi(bool resetLCS) {
 	Vic3D::CoordinateSystemObject *cso = SVViewStateHandler::instance().m_coordinateSystemObject;
 	Q_ASSERT(cso != nullptr);
@@ -785,10 +777,10 @@ void SVPropEditGeometry::updateUi(bool resetLCS) {
 
 	setEnabled(!noSelection);
 
-//	if (m_selDrawings.size() == 1)
-//		m_ui->lineEditScaleFactor->setValue(m_selDrawings.back()->m_scalingFactor);
-//	else
-//		m_ui->lineEditScaleFactor->setValue(1.0);
+	//	if (m_selDrawings.size() == 1)
+	//		m_ui->lineEditScaleFactor->setValue(m_selDrawings.back()->m_scalingFactor);
+	//	else
+	//		m_ui->lineEditScaleFactor->setValue(1.0);
 
 	updateInputs();
 }
@@ -1316,45 +1308,6 @@ void SVPropEditGeometry::on_pushButtonCancel_clicked() {
 	const_cast<Vic3D::SceneView*>(SVViewStateHandler::instance().m_geometryView->sceneView())->renderLater();
 }
 
-void rotateChild(VICUS::Surface &s, std::vector<VICUS::Surface> &modifiedSurfaces,
-				 const QQuaternion &rotation, const QVector3D &translation) {
-	std::vector<VICUS::Surface> childs;
-	std::vector<VICUS::SubSurface> subs = s.subSurfaces();
-	for (const VICUS::Surface &cs : s.childSurfaces()) {
-		VICUS::Surface modS(cs);
-
-		IBKMK::Polygon3D poly = cs.polygon3D();
-
-		// we copy the surface's local, normal and offset
-		IBKMK::Vector3D localX = poly.localX();
-		IBKMK::Vector3D normal = poly.normal();
-		IBKMK::Vector3D offset = poly.offset();
-		IBKMK::Vector3D trans = QVector2IBKVector(translation);
-
-		if (rotation != QQuaternion()) {
-			// we rotate our axis and offset
-			IBKMK::Quaternion rotate = QQuaternion2IBKQuaternion(rotation);
-			rotate.rotateVector(localX);
-			rotate.rotateVector(normal);
-			rotate.rotateVector(offset);
-		}
-
-		trans = QVector2IBKVector(translation);
-
-		// we set our rotated axises
-		poly.setRotation(normal, localX);
-		// we have to mind the we rotate around our
-		// local coordinate system center point
-		poly.translate(offset-poly.offset()+trans);
-
-		// Polygon3D is dirty, but geometry is not
-		modS.setPolygon3D((VICUS::Polygon3D)poly); // now geometry is also marked as dirty
-		childs.push_back(modS);
-		rotateChild(modS, modifiedSurfaces, rotation, translation);
-		// modifiedSurfaces.push_back(modS);
-	}
-	s.setChildAndSubSurfaces(subs, childs);
-}
 
 void SVPropEditGeometry::on_pushButtonApply_clicked() {
 	FUNCID(SVPropEditGeometry::on_pushButtonApply_clicked);
@@ -1417,7 +1370,6 @@ void SVPropEditGeometry::on_pushButtonApply_clicked() {
 			double scaleY = diffNew.m_y/diffOrig.m_y;
 
 			std::vector<VICUS::SubSurface> modSubs = modS.subSurfaces();
-			std::vector<VICUS::Surface>    modChilds = modS.childSurfaces();
 			for (VICUS::SubSurface & sub : modSubs) {
 				std::vector<IBKMK::Vector2D> polyVerts = sub.m_polygon2D.vertexes();
 				for (unsigned int i=0; i<polyVerts.size(); ++i) {
@@ -1427,17 +1379,18 @@ void SVPropEditGeometry::on_pushButtonApply_clicked() {
 				// now set the new subsurface polygon
 				sub.m_polygon2D.setVertexes(polyVerts);
 			}
-//			for (VICUS::Surface & child : modChilds) {
-//				std::vector<IBKMK::Vector3D> verts = child.polygon3D().vertexes();
-//				for (IBKMK::Vector3D & v : verts) {
-//					v = QVector2IBKVector( transMat*IBKVector2QVector(v) );
-//				}
-//				// now set the new subsurface polygon
-//				const_cast<IBKMK::Polygon3D &>(child.polygon3D()).setVertexes(verts);
-//			}
+			//			for (VICUS::Surface & child : modChilds) {
+			//				std::vector<IBKMK::Vector3D> verts = child.polygon3D().vertexes();
+			//				for (IBKMK::Vector3D & v : verts) {
+			//					v = QVector2IBKVector( transMat*IBKVector2QVector(v) );
+			//				}
+			//				// now set the new subsurface polygon
+			//				const_cast<IBKMK::Polygon3D &>(child.polygon3D()).setVertexes(verts);
+			//			}
 
 			modS.setPolygon3D((VICUS::Polygon3D)poly);
-			modS.setChildAndSubSurfaces(modSubs, modChilds);
+			modS.setSubSurfaces(modSubs);
+			modS.updateGeometryHoles();
 			modifiedSurfaces.push_back(modS);
 		}
 		else {
@@ -1517,7 +1470,7 @@ void SVPropEditGeometry::on_pushButtonApply_clicked() {
 
 			// number of sub-surfaces and holes should always be equal
 			// Just in order to be safe
-			Q_ASSERT( ( newSurf.subSurfaces().size() + newSurf.childSurfaces().size() ) == newSurf.geometry().holes().size());
+			Q_ASSERT( ( newSurf.subSurfaces().size() + newSurf.holes().size() ) == newSurf.geometry().holes().size());
 
 			// we only modify our selected sub surface
 			VICUS::SubSurface &subS = newSubSurfs[i];
@@ -1549,9 +1502,9 @@ void SVPropEditGeometry::on_pushButtonApply_clicked() {
 
 		handledSurfaces.insert(parentSurf);
 
-		std::vector<VICUS::Surface> childs = parentSurf->childSurfaces();
 		// we update the 2D polyline
-		newSurf.setChildAndSubSurfaces(newSubSurfs, childs);
+		newSurf.setSubSurfaces(newSubSurfs);
+		newSurf.updateGeometryHoles();
 		modifiedSurfaces.push_back(newSurf);
 	}
 
@@ -1751,7 +1704,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 		IBKMK::Polygon3D surfacePolygon = surf->polygon3D();
 		std::vector<IBKMK::Polygon3D> trimmedPolygons;
 
-		// *** TRIMMING OF POLYGONS HANDLED HERE ***		
+		// *** TRIMMING OF POLYGONS HANDLED HERE ***
 		bool trimmingSuccessful = surfacePolygon.trimByPlane(to.trimmingPolygon(), trimmedPolygons);
 		// *****************************************
 
@@ -1791,7 +1744,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 		for (unsigned int i = 0; i < verts.size(); ++i) {
 			const IBKMK::Vector2D & point2d = verts[i];
 			verts3D[i] = offset3D + surf->polygon3D().localX() * point2d.m_x +
-									surf->polygon3D().localY() * point2d.m_y;
+					surf->polygon3D().localY() * point2d.m_y;
 		}
 
 		IBKMK::Polygon3D subSurfacePolygon(verts3D);
