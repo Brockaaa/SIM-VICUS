@@ -2012,23 +2012,6 @@ void Scene::generate2DDrawingGeometry() {
 	m_drawingGeometryObject.m_transparentStartIndex = m_drawingGeometryObject.m_indexBufferData.size();
 }
 
-// Helper to color all child surfaces (recursive)
-void colorSubSurfaces(const VICUS::Surface &surf, const QColor &color) {
-	for(const VICUS::Surface &cs : surf.childSurfaces()) {
-		cs.m_color = color;
-		colorSubSurfaces(cs, color);
-	}
-}
-
-void colorChildSurfaces(const VICUS::Surface &s, const QColor &color) {
-	// now the subsurfaces
-	for (const VICUS::Surface & cs : s.childSurfaces()) {
-		cs.m_color = color; // will be drawn opaque in most modes
-		colorChildSurfaces(cs, color);
-	}
-}
-
-
 void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) const {
 	// Note: the meaning of the filter id depends on the coloring mode
 
@@ -2080,8 +2063,6 @@ void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) co
 							sub.m_color = QColor(72,72,82,192); // will be drawn opaque in most modes
 						}
 					}
-
-					colorChildSurfaces(s, s.m_color.darker(120));
 				}
 			}
 		}
@@ -2116,8 +2097,6 @@ void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) co
 						// change color of selected surfaces
 						if (s.m_selected)
 							s.m_color = QColor(255,144,0,255); // nice orange
-
-						colorChildSurfaces(s, QColor(255,144,0,255));
 					}
 				}
 			}
@@ -2356,8 +2335,8 @@ void Scene::recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) co
 						// color all surfaces of room based on zone template color
 						for (const VICUS::Surface & s : r.m_surfaces) {
 							s.m_color = zt->m_color;
-							colorSubSurfaces(s, zt->m_color);
-							colorChildSurfaces(s, zt->m_color);
+							for (const VICUS::SubSurface &ss : s.subSurfaces())
+								ss.m_color = zt->m_color;
 						}
 					}
 				}
@@ -2507,13 +2486,6 @@ void Scene::selectAll() {
 	undo->push();
 }
 
-void deselectChildSurfaces(std::set<unsigned int> &objIDs, const VICUS::Surface &s) {
-	for(const VICUS::Surface &cs : s.childSurfaces()) {
-		if(cs.m_selected)
-			objIDs.insert(cs.m_id);
-		deselectChildSurfaces(objIDs, cs);
-	}
-}
 
 void Scene::deselectAll() {
 	std::set<unsigned int> objIDs;
@@ -2537,7 +2509,6 @@ void Scene::deselectAll() {
 						if (sub.m_selected)
 							objIDs.insert(sub.m_id);
 					}
-					deselectChildSurfaces(objIDs, s);
 				}
 			}
 		}
