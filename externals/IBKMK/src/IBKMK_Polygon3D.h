@@ -151,22 +151,36 @@ public:
 	*/
 	void enlargeBoundingBox(IBKMK::Vector3D & lowerValues, IBKMK::Vector3D & upperValues) const;
 
-	/*! \ToDo Moritz: Documentation
-		\returns Returns true if point is on a line with and contained within two points.
+	/*! Helper function, that takes a point and two other points in 3d space, and tests if the point is
+	 *  located inbetween or nearly equal to the other points in all 3 dimensions.
+	 *  \param point Vector3D point
+	 *  \param edgeA Vector3D point
+	 *  \param edgeB Vector3D point
+		\returns Returns true if point is contained within two points in all 3 dimensions. Else returns false.
 	*/
-	bool pointInEdge(const Vector3D &point, const Vector3D &edgeA, const Vector3D &edgeB);
+	bool pointBetweenPoints(const Vector3D &point, const Vector3D &otherA, const Vector3D &otherB);
 
-	/*! Helper function for polyCyclesAfterTrim.
-		\ToDo Moritz more documentation
-		\param ToDo Moritz
+	/*! Helper function for polyCyclesAfterTrimming.
+	 *  This function detects disjunct polygons that remain after trimming with a plane and divides it into multiple polygons accordingly.
+		\param verts input Polygon that may contain multiple disjunct polygons
+		\param trimPlaneNormal normal vector of the plane that has been used to trim
+		\param offset offset of the plane that has been used to trim
+		\param outputVerts
+		\returns true if disjunct polygons have been found and separated, else false.
 	*/
 	bool dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vector3D trimPlaneNormal,
 						  const double offset, std::vector<std::vector<Vector3D>> & outputVerts);
 
-	/*! Detects disjunct polygons that remain after trimming with a plane and divides into multiple polygons.
-		\param ToDo Moritz
+	/*! Helper function for trimByPlane.
+	 *  After vertices have been sorted by sides of the trim plane they're located on, these two "side" groups might each contain more than 1 polygon
+	 *  (e.g. after trimming a U shape horizontally).
+	 *  This function runs dividePolyCycles to detect disjunct polygons that remain after trimming with a plane and divides it into multiple polygons accordingly.
+	 *  Returns nothing but works on vertsArray itself.
+		\param polys Vector of polygons (each being one side of the plane) that remain after trimming.
+		\param trimPlaneNormal Normalvector of the trimming plane that has been used for trimming
+		\param offset Offset of the trimming plane that has been used for trimming
 	*/
-	void polyCyclesAfterTrimming(std::vector<IBKMK::Polygon3D> &vertsArray, const IBKMK::Vector3D &trimPlaneNormal,
+	void polyCyclesAfterTrimming(std::vector<IBKMK::Polygon3D> &polys, const IBKMK::Vector3D &trimPlaneNormal,
 								 const double offset);
 
 	/*! Trims a polygon along the plane of another support polygon.
