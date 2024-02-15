@@ -568,15 +568,6 @@ void Project::writeDirectoryPlaceholdersXML(TiXmlElement * parent) const {
 }
 
 
-void Project::addChildSurface(const VICUS::Surface &s) {
-	for (VICUS::Surface & childSurf : const_cast<std::vector<VICUS::Surface> &>(s.childSurfaces()) ) {
-		addAndCheckForUniqueness(&childSurf);
-		childSurf.m_componentInstance = nullptr;
-		addChildSurface(childSurf);
-	}
-}
-
-
 void Project::updatePointers() {
 	FUNCID(Project::updatePointers);
 
@@ -611,7 +602,6 @@ void Project::updatePointers() {
 						addAndCheckForUniqueness(&sub);
 						sub.m_subSurfaceComponentInstance = nullptr;
 					}
-					addChildSurface(s);
 				}
 			}
 		}
@@ -865,7 +855,6 @@ void Project::selectObjects(std::set<const Object*> &selectedObjs, SelectionGrou
 							if (selectionCheck(sub, takeSelected, takeVisible))
 								selectedObjs.insert(&sub);
 						}
-						selectChildSurfaces(selectedObjs, s, takeSelected, takeVisible);
 					}
 					if (selectionCheck(r, takeSelected, takeVisible))
 						selectedObjs.insert(&r);
@@ -918,13 +907,6 @@ void Project::selectObjects(std::set<const Object*> &selectedObjs, SelectionGrou
 	}
 }
 
-void Project::selectChildSurfaces(std::set<const Object *> &selectedObjs, const Surface &s, bool takeSelected, bool takeVisible) const {
-	for (const VICUS::Surface &childSurf : s.childSurfaces()) {
-		if (selectionCheck(childSurf, takeSelected, takeVisible))
-			selectedObjs.insert(&childSurf);
-		selectChildSurfaces(selectedObjs, childSurf, takeSelected, takeVisible);
-	}
-}
 
 bool Project::selectedSubSurfaces(std::vector<const SubSurface *> & subSurfaces, const Project::SelectionGroups & sg) const {
 	std::set<const Object*> objs;
