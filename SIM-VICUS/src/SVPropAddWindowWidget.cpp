@@ -69,28 +69,28 @@ SVPropAddWindowWidget::~SVPropAddWindowWidget() {
 void SVPropAddWindowWidget::onModified(int modificationType, ModificationInfo * /*data*/) {
 	// react on selection changes only, then update properties
 	switch ((SVProjectHandler::ModificationTypes)modificationType) {
-		case SVProjectHandler::AllModified:
-		case SVProjectHandler::NodeStateModified:
-		case SVProjectHandler::BuildingGeometryChanged:
-			if (isVisible())
-				updateUi();
+	case SVProjectHandler::AllModified:
+	case SVProjectHandler::NodeStateModified:
+	case SVProjectHandler::BuildingGeometryChanged:
+		if (isVisible())
+			updateUi();
 		break;
 
 		// nothing to do for the remaining modification types
-		case SVProjectHandler::BuildingTopologyChanged: // used when zone templates are assigned
-		case SVProjectHandler::ComponentInstancesModified:
-		case SVProjectHandler::SubSurfaceComponentInstancesModified:
-		case SVProjectHandler::ObjectRenamed:
-		case SVProjectHandler::SolverParametersModified:
-		case SVProjectHandler::ClimateLocationModified:
-		case SVProjectHandler::GridModified:
-		case SVProjectHandler::NetworkGeometryChanged:
-		case SVProjectHandler::NetworkDataChanged:
-		case SVProjectHandler::ClimateLocationAndFileModified:
-		case SVProjectHandler::OutputsModified:
-		case SVProjectHandler::DrawingModified:
-		case SVProjectHandler::LcaLccModified:
-		case SVProjectHandler::StructuralUnitsModified:
+	case SVProjectHandler::BuildingTopologyChanged: // used when zone templates are assigned
+	case SVProjectHandler::ComponentInstancesModified:
+	case SVProjectHandler::SubSurfaceComponentInstancesModified:
+	case SVProjectHandler::ObjectRenamed:
+	case SVProjectHandler::SolverParametersModified:
+	case SVProjectHandler::ClimateLocationModified:
+	case SVProjectHandler::GridModified:
+	case SVProjectHandler::NetworkGeometryChanged:
+	case SVProjectHandler::NetworkDataChanged:
+	case SVProjectHandler::ClimateLocationAndFileModified:
+	case SVProjectHandler::OutputsModified:
+	case SVProjectHandler::DrawingModified:
+	case SVProjectHandler::LcaLccModified:
+	case SVProjectHandler::StructuralUnitsModified:
 		break;
 	}
 }
@@ -280,8 +280,8 @@ void SVPropAddWindowWidget::on_pushButtonCreate_clicked() {
 
 		// now add subsurface objects for each hole in the polygon
 		std::vector<VICUS::SubSurface> subs;
-        for (const VICUS::PlaneGeometry::Hole & h : geometries[i].holes()) {
-            const VICUS::Polygon2D &p = h.m_holeGeometry;
+		for (const VICUS::PlaneGeometry::Hole & h : geometries[i].holes()) {
+			const VICUS::Polygon2D &p = h.m_holeGeometry;
 
 			VICUS::SubSurface subsurf;
 			subsurf.m_id = lastFreeId++;
@@ -301,8 +301,8 @@ void SVPropAddWindowWidget::on_pushButtonCreate_clicked() {
 			// also create subsurface component instances
 			// but only if we have a valid subsurface component selected
 			if (s->m_componentInstance != nullptr &&
-				m_ui->comboBoxSubSurfaceComponent->count() != 0 &&
-				m_ui->comboBoxSubSurfaceComponent->currentIndex() != -1)
+					m_ui->comboBoxSubSurfaceComponent->count() != 0 &&
+					m_ui->comboBoxSubSurfaceComponent->currentIndex() != -1)
 			{
 				VICUS::SubSurfaceComponentInstance subInstance;
 				subInstance.m_id = lastFreeId++;
@@ -313,9 +313,9 @@ void SVPropAddWindowWidget::on_pushButtonCreate_clicked() {
 			}
 		}
 
-        std::vector<VICUS::Surface> childs = newSurf.childSurfaces();
+		newSurf.setSubSurfaces(subs);
+		newSurf.updateGeometryHoles();
 
-        newSurf.setChildAndSubSurfaces(subs, childs);
 		modSurfaces.push_back(newSurf);
 	}
 
@@ -345,7 +345,7 @@ void SVPropAddWindowWidget::on_pushButtonChangeLocalOrigin_clicked() {
 		modSurfaces.push_back(*s);
 	}
 	SVUndoModifySurfaceGeometry * undo = new SVUndoModifySurfaceGeometry(tr("New polygon origin."),
-		modSurfaces, modDrawings, nullptr);
+																		 modSurfaces, modDrawings, nullptr);
 	undo->push();
 }
 
