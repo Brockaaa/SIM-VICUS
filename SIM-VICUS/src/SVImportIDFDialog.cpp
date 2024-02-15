@@ -93,10 +93,10 @@ SVImportIDFDialog::ImportResults SVImportIDFDialog::import(const QString & fname
 	try {
 		EP::IDFParser parser;
 		parser.read(IBK::Path(fname.toStdString()));
-//		if(parser.m_version > EP::VN_8_7) {
-//			throw IBK::Exception(IBK::FormatString("Energy Plus Version is not supported!\n"
-//												   "Only Versions up to 8.9.0 are supported.").arg(m_idfProject->m_version), FUNC_ID);
-//		}
+		//		if(parser.m_version > EP::VN_8_7) {
+		//			throw IBK::Exception(IBK::FormatString("Energy Plus Version is not supported!\n"
+		//												   "Only Versions up to 8.9.0 are supported.").arg(m_idfProject->m_version), FUNC_ID);
+		//		}
 
 		IBK::IBK_Message("Parsing IDF...\n", IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
 		*m_idfProject = EP::Project();
@@ -522,98 +522,98 @@ void SVImportIDFDialog::transferData(const EP::Project & prj, unsigned int start
 		idfConstruction2VicusConIDs.push_back(std::make_pair(VICUS::INVALID_ID,false));
 		idfWindow2VicusWindowIDs.push_back(std::make_pair(VICUS::INVALID_ID,false));
 		switch(matType){
-			case Opaque:{
-				con.m_displayName = name;
-				con.m_color = color;
-				con.m_dataSource.setEncodedString("IDF Import");
+		case Opaque:{
+			con.m_displayName = name;
+			con.m_color = color;
+			con.m_dataSource.setEncodedString("IDF Import");
 
-				VICUS::Construction conRev(con);
-				conRev.m_id = ++nextID;
-				std::reverse(conRev.m_materialLayers.begin(), conRev.m_materialLayers.end());
+			VICUS::Construction conRev(con);
+			conRev.m_id = ++nextID;
+			std::reverse(conRev.m_materialLayers.begin(), conRev.m_materialLayers.end());
 
-				bool found = false;
-				// now check if construction (or its reverse) does already exist in VICUS DB
-				// color and ID don't matter for now, try to find similar material in DB
-				for (const std::pair<const unsigned int, VICUS::Construction> & dbCon : db.m_constructions) {
-					if (dbCon.second.equal(&con) != VICUS::AbstractDBElement::Different) {
-						// re-use this construction
-						IBK::IBK_Message( IBK::FormatString("  %1 -> using existing construction '%2' [#%3]\n")
-										  .arg("'"+conName.toStdString()+"'", 40, std::ios_base::left)
-										  .arg(dbCon.second.m_displayName.string(IBK::MultiLanguageString::m_language, true)).arg(dbCon.first),
-										  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
-						idfConstruction2VicusConIDs.back() = std::make_pair(dbCon.first, false) ; // not a reverse construction
-						found = true;
-						break;
-					}
-					if (dbCon.second.equal(&conRev) != VICUS::AbstractDBElement::Different) {
-						// re-use this construction
-						IBK::IBK_Message( IBK::FormatString("  %1 -> using existing construction '%2' [#%3] (reversed)\n")
-										  .arg("'"+conName.toStdString()+"'", 40, std::ios_base::left)
-										  .arg(dbCon.second.m_displayName.string(IBK::MultiLanguageString::m_language, true)).arg(dbCon.first),
-										  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
-						idfConstruction2VicusConIDs.back() = std::make_pair(dbCon.first, true) ; // a reverse construction
-						found = true;
-						break;
-					}
+			bool found = false;
+			// now check if construction (or its reverse) does already exist in VICUS DB
+			// color and ID don't matter for now, try to find similar material in DB
+			for (const std::pair<const unsigned int, VICUS::Construction> & dbCon : db.m_constructions) {
+				if (dbCon.second.equal(&con) != VICUS::AbstractDBElement::Different) {
+					// re-use this construction
+					IBK::IBK_Message( IBK::FormatString("  %1 -> using existing construction '%2' [#%3]\n")
+									  .arg("'"+conName.toStdString()+"'", 40, std::ios_base::left)
+									  .arg(dbCon.second.m_displayName.string(IBK::MultiLanguageString::m_language, true)).arg(dbCon.first),
+									  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
+					idfConstruction2VicusConIDs.back() = std::make_pair(dbCon.first, false) ; // not a reverse construction
+					found = true;
+					break;
 				}
-
-				if (!found) {
-					// no matching construction found, add new to DB
-					unsigned int newID = db.m_constructions.add(con);
-					IBK::IBK_Message( IBK::FormatString("  %1 -> imported with ID #%2\n")
-									  .arg("'"+conName.toStdString()+"'", 40, std::ios_base::left).arg(newID), IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
-					idfConstruction2VicusConIDs.back() = std::make_pair(newID, false) ; // not a reverse construction
+				if (dbCon.second.equal(&conRev) != VICUS::AbstractDBElement::Different) {
+					// re-use this construction
+					IBK::IBK_Message( IBK::FormatString("  %1 -> using existing construction '%2' [#%3] (reversed)\n")
+									  .arg("'"+conName.toStdString()+"'", 40, std::ios_base::left)
+									  .arg(dbCon.second.m_displayName.string(IBK::MultiLanguageString::m_language, true)).arg(dbCon.first),
+									  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
+					idfConstruction2VicusConIDs.back() = std::make_pair(dbCon.first, true) ; // a reverse construction
+					found = true;
+					break;
 				}
 			}
-				break;
-			case Window:{
-				window.m_displayName = name;
-				window.m_color = color;
-				window.m_dataSource = "IDF Import";
-				for(unsigned int i=0; i<constructionNameToFrameNames[construction.m_name].size(); ++i){
-					const std::string &frameName = constructionNameToFrameNames[construction.m_name][i];
-					if(frameName.empty()){
-						window.m_methodFrame = VICUS::Window::M_None;
-						window.m_methodDivider = VICUS::Window::M_None;
-					}
-					else{
-						VICUS::WindowFrame winFrame;
-						VICUS::WindowDivider windDivider;
 
-
-					}
+			if (!found) {
+				// no matching construction found, add new to DB
+				unsigned int newID = db.m_constructions.add(con);
+				IBK::IBK_Message( IBK::FormatString("  %1 -> imported with ID #%2\n")
+								  .arg("'"+conName.toStdString()+"'", 40, std::ios_base::left).arg(newID), IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
+				idfConstruction2VicusConIDs.back() = std::make_pair(newID, false) ; // not a reverse construction
+			}
+		}
+			break;
+		case Window:{
+			window.m_displayName = name;
+			window.m_color = color;
+			window.m_dataSource = "IDF Import";
+			for(unsigned int i=0; i<constructionNameToFrameNames[construction.m_name].size(); ++i){
+				const std::string &frameName = constructionNameToFrameNames[construction.m_name][i];
+				if(frameName.empty()){
+					window.m_methodFrame = VICUS::Window::M_None;
+					window.m_methodDivider = VICUS::Window::M_None;
 				}
-				//now we have no frame
-				///TODO Dirk->Andreas wie können wir die Frames hinzufügen die aber erst in Verbindung mit den FSD's bereit stehen?
+				else{
+					VICUS::WindowFrame winFrame;
+					VICUS::WindowDivider windDivider;
 
-				bool found = false;
-				// now check if window construction (or its reverse) does already exist in VICUS DB
-				// color and ID don't matter for now, try to find similar material in DB
-				for (const std::pair<const unsigned int, VICUS::Window> & dbWinCon : db.m_windows) {
-					if (dbWinCon.second.equal(&window) != VICUS::AbstractDBElement::Different) {
-						// re-use this construction
-						IBK::IBK_Message( IBK::FormatString("  %1 -> using existing window construction '%2' [#%3]\n")
-										  .arg("'"+conName.toStdString()+"'", 40, std::ios_base::left)
-										  .arg(dbWinCon.second.m_displayName.string(IBK::MultiLanguageString::m_language, true)).arg(dbWinCon.first),
-										  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
-						idfWindow2VicusWindowIDs.back() = std::make_pair(dbWinCon.first, false) ; // not a reverse construction
-						found = true;
-						break;
-					}
-				}
 
-				if (!found) {
-					// no matching window construction found, add new to DB
-					unsigned int newID = db.m_windows.add(window);
-					IBK::IBK_Message( IBK::FormatString("  %1 -> imported with ID #%2\n")
-									  .arg("'"+conName.toStdString()+"'", 40, std::ios_base::left).arg(newID), IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
-					idfWindow2VicusWindowIDs.back() = std::make_pair(newID, false) ; // not a reverse construction
 				}
 			}
-				break;
-			case NUM_MT:
-				// only for compiler
-				break;
+			//now we have no frame
+			///TODO Dirk->Andreas wie können wir die Frames hinzufügen die aber erst in Verbindung mit den FSD's bereit stehen?
+
+			bool found = false;
+			// now check if window construction (or its reverse) does already exist in VICUS DB
+			// color and ID don't matter for now, try to find similar material in DB
+			for (const std::pair<const unsigned int, VICUS::Window> & dbWinCon : db.m_windows) {
+				if (dbWinCon.second.equal(&window) != VICUS::AbstractDBElement::Different) {
+					// re-use this construction
+					IBK::IBK_Message( IBK::FormatString("  %1 -> using existing window construction '%2' [#%3]\n")
+									  .arg("'"+conName.toStdString()+"'", 40, std::ios_base::left)
+									  .arg(dbWinCon.second.m_displayName.string(IBK::MultiLanguageString::m_language, true)).arg(dbWinCon.first),
+									  IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
+					idfWindow2VicusWindowIDs.back() = std::make_pair(dbWinCon.first, false) ; // not a reverse construction
+					found = true;
+					break;
+				}
+			}
+
+			if (!found) {
+				// no matching window construction found, add new to DB
+				unsigned int newID = db.m_windows.add(window);
+				IBK::IBK_Message( IBK::FormatString("  %1 -> imported with ID #%2\n")
+								  .arg("'"+conName.toStdString()+"'", 40, std::ios_base::left).arg(newID), IBK::MSG_PROGRESS, FUNC_ID, IBK::VL_STANDARD);
+				idfWindow2VicusWindowIDs.back() = std::make_pair(newID, false) ; // not a reverse construction
+			}
+		}
+			break;
+		case NUM_MT:
+			// only for compiler
+			break;
 
 		}
 	}
@@ -947,39 +947,39 @@ void SVImportIDFDialog::transferData(const EP::Project & prj, unsigned int start
 
 		switch (bsd.m_outsideBoundaryCondition) {
 
-			// OC_Surface represents a connection from one wall surface to the other
-			case EP::BuildingSurfaceDetailed::OC_Surface : {
-				// we require an opposite surface set
-				if (bsd.m_outsideBoundaryConditionObject.empty())
-					throw IBK::Exception(IBK::FormatString("BSD '%1' of type 'Surface' does not reference outside BC object.")
-										 .arg(bsdName.toStdString()), FUNC_ID);
-				com.m_idSideABoundaryCondition = bcIDSurface;
-				com.m_idSideBBoundaryCondition = bcIDSurface;
+		// OC_Surface represents a connection from one wall surface to the other
+		case EP::BuildingSurfaceDetailed::OC_Surface : {
+			// we require an opposite surface set
+			if (bsd.m_outsideBoundaryConditionObject.empty())
+				throw IBK::Exception(IBK::FormatString("BSD '%1' of type 'Surface' does not reference outside BC object.")
+									 .arg(bsdName.toStdString()), FUNC_ID);
+			com.m_idSideABoundaryCondition = bcIDSurface;
+			com.m_idSideBBoundaryCondition = bcIDSurface;
 
-				// store ID of other surface
-				if ( brokenBSD.find(bsd.m_outsideBoundaryConditionObject) != brokenBSD.end() )
-					continue;
+			// store ID of other surface
+			if ( brokenBSD.find(bsd.m_outsideBoundaryConditionObject) != brokenBSD.end() )
+				continue;
 
-				otherSurfaceID = mapBsdNameIDmap[bsd.m_outsideBoundaryConditionObject];
-				IBK_ASSERT(otherSurfaceID != 0);
-			} break;
+			otherSurfaceID = mapBsdNameIDmap[bsd.m_outsideBoundaryConditionObject];
+			IBK_ASSERT(otherSurfaceID != 0);
+		} break;
 
-			case EP::BuildingSurfaceDetailed::OC_Ground : {
-				com.m_idSideABoundaryCondition = bcIDSurface;
-				com.m_idSideBBoundaryCondition = bcIDGround;
-			} break;
+		case EP::BuildingSurfaceDetailed::OC_Ground : {
+			com.m_idSideABoundaryCondition = bcIDSurface;
+			com.m_idSideBBoundaryCondition = bcIDGround;
+		} break;
 
-			case EP::BuildingSurfaceDetailed::OC_Outdoors : {
-				com.m_idSideABoundaryCondition = bcIDSurface;
-				com.m_idSideBBoundaryCondition = bcIDOutside;
-			} break;
+		case EP::BuildingSurfaceDetailed::OC_Outdoors : {
+			com.m_idSideABoundaryCondition = bcIDSurface;
+			com.m_idSideBBoundaryCondition = bcIDOutside;
+		} break;
 
-			case EP::BuildingSurfaceDetailed::OC_Adiabatic : {
-				com.m_idSideABoundaryCondition = bcIDSurface;
-				//no other boundary condition --> adiabatic
-			} break;
+		case EP::BuildingSurfaceDetailed::OC_Adiabatic : {
+			com.m_idSideABoundaryCondition = bcIDSurface;
+			//no other boundary condition --> adiabatic
+		} break;
 
-			case EP::BuildingSurfaceDetailed::NUM_OC : ; // just to make compiler happy
+		case EP::BuildingSurfaceDetailed::NUM_OC : ; // just to make compiler happy
 		}
 
 
@@ -1130,10 +1130,10 @@ void SVImportIDFDialog::transferData(const EP::Project & prj, unsigned int start
 			continue;
 		}
 		std::vector<VICUS::SubSurface> subs = surf->subSurfaces();
-		std::vector<VICUS::Surface> childs = surf->childSurfaces();
 
 		subs.push_back(subSurf);
-		surf->setChildAndSubSurfaces(subs, childs);
+		surf->setSubSurfaces(subs);
+		surf->updateGeometryHoles();
 
 		IBK::IBK_Message( IBK::FormatString("  %1.%2 [#%3]\n")
 						  .arg(surf->m_displayName.toStdString())
@@ -1170,19 +1170,19 @@ void SVImportIDFDialog::transferData(const EP::Project & prj, unsigned int start
 
 		//set up type
 		switch (fsd.m_surfaceType ) {
-			case EP::FenestrationSurfaceDetailed::ST_Door:
-				com.m_type = VICUS::SubSurfaceComponent::CT_Door;
-				break;
-			case EP::FenestrationSurfaceDetailed::ST_GlassDoor:
-			case EP::FenestrationSurfaceDetailed::ST_Window:
-				com.m_type = VICUS::SubSurfaceComponent::CT_Window;
-				break;
-			case EP::FenestrationSurfaceDetailed::NUM_ST: {
-				IBK::IBK_Message(IBK::FormatString("FSD '%1' does not have a supported type.")
-								 .arg(codec->toUnicode(fsd.m_constructionName.c_str()).toStdString())
-								 .arg(fsdName.toStdString()), IBK::MSG_ERROR, FUNC_ID);
-				continue;
-			}
+		case EP::FenestrationSurfaceDetailed::ST_Door:
+			com.m_type = VICUS::SubSurfaceComponent::CT_Door;
+			break;
+		case EP::FenestrationSurfaceDetailed::ST_GlassDoor:
+		case EP::FenestrationSurfaceDetailed::ST_Window:
+			com.m_type = VICUS::SubSurfaceComponent::CT_Window;
+			break;
+		case EP::FenestrationSurfaceDetailed::NUM_ST: {
+			IBK::IBK_Message(IBK::FormatString("FSD '%1' does not have a supported type.")
+							 .arg(codec->toUnicode(fsd.m_constructionName.c_str()).toStdString())
+							 .arg(fsdName.toStdString()), IBK::MSG_ERROR, FUNC_ID);
+			continue;
+		}
 		}
 
 		// lookup construction
@@ -1328,13 +1328,13 @@ void SVImportIDFDialog::transferData(const EP::Project & prj, unsigned int start
 		// Mind: nullptr is possible here!
 		if (subsurf != nullptr) {
 			switch (com.m_type) {
-				case VICUS::SubSurfaceComponent::CT_Window:
-					subsurf->m_color = QColor(96,96,255,64);
-					break;
-				case VICUS::SubSurfaceComponent::CT_Door:
-				case VICUS::SubSurfaceComponent::CT_Miscellaneous:
-				case VICUS::SubSurfaceComponent::NUM_CT:
-					subsurf->m_color = QColor(164,164,164,255);
+			case VICUS::SubSurfaceComponent::CT_Window:
+				subsurf->m_color = QColor(96,96,255,64);
+				break;
+			case VICUS::SubSurfaceComponent::CT_Door:
+			case VICUS::SubSurfaceComponent::CT_Miscellaneous:
+			case VICUS::SubSurfaceComponent::NUM_CT:
+				subsurf->m_color = QColor(164,164,164,255);
 			}
 		}
 
@@ -1507,18 +1507,18 @@ void SVImportMessageHandler::msg(const std::string& msg,
 		msg2 = msg;
 
 	switch (t) {
-		case IBK::MSG_WARNING :
-			msg2 = "<span style=\"color:#e0c000\">" + msg2 + "</span><br>";
-			m_plainTextEdit->appendHtml(QString::fromStdString(msg2));
-			break;
+	case IBK::MSG_WARNING :
+		msg2 = "<span style=\"color:#e0c000\">" + msg2 + "</span><br>";
+		m_plainTextEdit->appendHtml(QString::fromStdString(msg2));
+		break;
 
-		case IBK::MSG_ERROR :
-			msg2 = "<span style=\"color:#d00000\">" + msg2 + "</span><br>";
-			m_plainTextEdit->appendHtml(QString::fromStdString(msg2));
-			break;
+	case IBK::MSG_ERROR :
+		msg2 = "<span style=\"color:#d00000\">" + msg2 + "</span><br>";
+		m_plainTextEdit->appendHtml(QString::fromStdString(msg2));
+		break;
 
-		default:
-			m_plainTextEdit->appendPlainText(QString::fromStdString(msg2));
+	default:
+		m_plainTextEdit->appendPlainText(QString::fromStdString(msg2));
 	}
 	m_plainTextEdit->verticalScrollBar()->setValue(m_plainTextEdit->verticalScrollBar()->maximum());
 
