@@ -386,32 +386,45 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> polygon, const IBK::poi
 
 bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<Vector3D> & vertsBexact) {
 
-	IBK_ASSERT(vertsAexact.size() >= 3);
-	IBK_ASSERT(vertsBexact.size() >= 3);
 
-	IBK::NearEqual<double> near_equal5(1e-5);
-	IBK::NearEqual<double> near_equal1(1e-1);
+	struct IntersectionPoint {
+
+		IntersectionPoint(double factor, const IBKMK::Vector3D &point) :
+			m_factor(factor),
+			m_point(point)
+		{}
+
+		bool operator<(IntersectionPoint &other) {
+			return m_factor < other.m_factor;
+		}
+
+		double				m_factor;
+		IBKMK::Vector3D		m_point;
+
+	};
+
+	IBK_ASSERT(vertsAexact.size() > 2);
+	IBK_ASSERT(vertsBexact.size() > 2);
 
 	const double coordFactor = 1e4;
 
 	std::vector<Vector3D> vertsA(vertsAexact.size());
 	std::vector<Vector3D> vertsB(vertsBexact.size());
 
-	// rounding all vertices to achieve near_equal precision
-
-	// ToDo Moritz: Why std::round?
+	// rounding all vertices to achieve near_equal precision, writing to vertsA/B
 	for (unsigned int i = 0; i < vertsA.size(); ++i) {
 		const Vector3D &vertA = vertsAexact[i];
 		vertsA[i]= Vector3D(std::round(vertA.m_x*coordFactor)/coordFactor,
 							std::round(vertA.m_y*coordFactor)/coordFactor,
 							std::round(vertA.m_z*coordFactor)/coordFactor);
 	}
-	for (unsigned int i = 0; i < vertsA.size(); ++i) {
+	for (unsigned int i = 0; i < vertsB.size(); ++i) {
 		const Vector3D &vertB = vertsBexact[i];
-		vertsA[i]= Vector3D(std::round(vertB.m_x*coordFactor)/coordFactor,
+		vertsB[i]= Vector3D(std::round(vertB.m_x*coordFactor)/coordFactor,
 							std::round(vertB.m_y*coordFactor)/coordFactor,
 							std::round(vertB.m_z*coordFactor)/coordFactor);
 	}
+
 	// get arbitrary base vectors for polygon A and B's planes
 	// TODO: error handling in case polygon is malformatted and first 3 points are located on a straight line .. eliminateCollinearPoints?
 	// compensating for different sizes of span vectors to have later calculations in the same order of magnitude
@@ -437,17 +450,21 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 	// check if polygon planes A & B are parallel
 	// if crossProduct of normal vectors returns 0-vector then normal vectors are parallel
 	// magnitude of normal vector will quickly exceed 1e+2 for small rotations, so 1e-2 check is suited
-	if (near_equal1(normalVectorA.crossProduct(normalVectorB).magnitude(), 0)) {
+	if (IBK::nearly_equal<1>(normalVectorA.crossProduct(normalVectorB).magnitude(), 0)) {
 		// planes are parallel
-		// ### for parallel cases intersection is not intended.
-		// ### otherwise 2D intersection for the coplanar case can be implemented like this:
-		/*
+
+		// If 2D intersection for the coplanar case is intended, enable below.
+		// Otherwise parallel planes are treated as never intersecting by default.
+
+//#define COPLANAR_CALCULATION
+#ifdef COPLANAR_CALCULATION
+
 		// check if they are coplanar
 
 		//get distance of plane B from plane A by inserting first point of B into HesseNormalForm of plane A (i.e. normal vector)
 		double distBFromPlaneA = normalVectorA.scalarProduct(vertsB[0]) - offsetA;
 
-		if (distBFromPlaneA != 0) {
+		if (!IBK::near_zero(distBFromPlaneA)) {
 			// planes are parallel but not coplanar, intersection is impossible
 			return false;
 		} else {
@@ -455,20 +472,20 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 			// due to the polygons being parallel, we can create a 2d projection of our polygons
 			// simply by eliminating one dimension, as long as both the
 			// remaining 2 dimensions are not orthogonal to our polygon plane
-			std::vector<Vector2D> vertsA2D;
-			std::vector<Vector2D> vertsB2D;
-			if (normalVectorA.m_z != 0) {
+			std::vector<Vector2D> vertsA2D (vertsA.size());
+			std::vector<Vector2D> vertsB2D (vertsB.size());
+			if (!IBK::near_zero(normalVectorA.m_z)) {
 				//normal vector contains a "z" component, i.e. polygons contain x&y components, and can be projected in x-y-plane.
 				//other cases respective
 				for (unsigned int i = 0, count = vertsA.size(); i<count; ++i ) {
 					vertsA2D[i].m_x = vertsA[i].m_x;
-					vertsA2D[i].m_y = vertsA[i].m_y;
+					vertsA2D[i].m_y = vertsA[i].m_y; // eliminate z
 				}
 				for (unsigned int i = 0, count = vertsB.size(); i<count; ++i ) {
 					vertsB2D[i].m_x = vertsB[i].m_x;
 					vertsB2D[i].m_y = vertsB[i].m_y;
 				}
-			} else if (normalVectorA.m_y != 0) {
+			} else if (!IBK::near_zero(normalVectorA.m_y)) {
 				for (unsigned int i = 0, count = vertsA.size(); i<count; ++i ) {
 					vertsA2D[i].m_x = vertsA[i].m_x;
 					vertsA2D[i].m_y = vertsA[i].m_z; // eliminate y
@@ -477,7 +494,7 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 					vertsB2D[i].m_x = vertsB[i].m_x;
 					vertsB2D[i].m_y = vertsB[i].m_z;
 				}
-			} else if (normalVectorA.m_x != 0) {
+			} else if (!IBK::near_zero(normalVectorA.m_x)) {
 				for (unsigned int i = 0, count = vertsA.size(); i<count; ++i ) {
 					vertsA2D[i].m_x = vertsA[i].m_z; // eliminate x
 					vertsA2D[i].m_y = vertsA[i].m_y;
@@ -493,7 +510,8 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 
 			return polyIntersect2D(vertsA2D, vertsB2D);
 		}
-		*/
+
+#endif
 		return false;
 	} else {
 		// planes are not parallel
@@ -510,7 +528,7 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 		for (unsigned int i = 0, count = vertsA.size(); i<count; ++i ) {
 			edgeA = vertsA[(i+1)%vertsA.size()] - vertsA[i];
 			// ensure edge is not in parallel to the other polygon plane, i.e. edge is not orthogonal to normal vector
-			if (normalVectorB.scalarProduct(edgeA) != 0) {
+			if (!IBK::near_zero(normalVectorB.scalarProduct(edgeA))) {
 				// if vertices inserted into HNF have different signs -> they are on different sides of the plane (i.e. edge-plane intersection exists)
 				if (( (normalVectorB.scalarProduct(vertsA[i])-offsetB) * (normalVectorB.scalarProduct(vertsA[(i+1)%vertsA.size()])-offsetB) ) < 0) {
 					// calculating point of intersection
@@ -530,7 +548,7 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 		// edges(B) intersecting plane(A) respective
 		for (unsigned int i = 0, count = vertsB.size(); i<count; ++i ) {
 			edgeB = vertsB[(i+1)%vertsB.size()] - vertsB[i];
-			if (normalVectorA.scalarProduct(edgeB) != 0) {
+			if (!IBK::near_zero(normalVectorA.scalarProduct(edgeB))) {
 				if (( (normalVectorA.scalarProduct(vertsB[i])-offsetA) * (normalVectorA.scalarProduct(vertsB[(i+1)%vertsB.size()])-offsetA) ) < 0) {
 					r = (offsetA - normalVectorA.scalarProduct(vertsB[i])) / normalVectorA.scalarProduct(edgeB);
 					pointOfIntersection = vertsB[i] + r * edgeB;
@@ -543,7 +561,7 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 		}
 
 		// We now know the planes intersect, but none of the edges create an intersection point within the other polygon.
-		// Next we check for the case of the polygons sharing points or edges
+		// Next we check if the polygons are sharing vertices or edges
 
 		// directional vector of intersection line:
 		IBKMK::Vector3D dirVector = normalVectorA.crossProduct(normalVectorB);
@@ -562,7 +580,8 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 		IBKMK::Vector3D supportVector = (vectorParallelPlaneA * factorVectorAPlaneB) + (vectorParallelPlaneB * factorVectorBPlaneA);
 
 		// find all polygon vertices which lie on the line
-		std::map<double, IBKMK::Vector3D> polyPointsOnIntersectionLine = {/*{ 1, IBKMK::Vector3D( 1,  2,  3) }*/};
+		std::vector<IntersectionPoint> polyPointsOnIntersectionLine;
+
 		double intersectionToPolyvertexFactor;
 		Vector3D temporaryVector;
 
@@ -576,9 +595,9 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 				intersectionToPolyvertexFactor = (vertsA[i].m_z - supportVector.m_z) / dirVector.m_z;
 			}
 			temporaryVector = (supportVector + intersectionToPolyvertexFactor * dirVector);
-			if (near_equal5(temporaryVector.m_x, vertsA[i].m_x) && near_equal5(temporaryVector.m_y, vertsA[i].m_y) && near_equal5(temporaryVector.m_z, vertsA[i].m_z)) {
+			if (IBK::nearly_equal<5>(temporaryVector.m_x, vertsA[i].m_x) && IBK::nearly_equal<5>(temporaryVector.m_y, vertsA[i].m_y) && IBK::nearly_equal<5>(temporaryVector.m_z, vertsA[i].m_z)) {
 				//using a map avoids duplicates
-				polyPointsOnIntersectionLine.insert({intersectionToPolyvertexFactor, vertsA[i]});
+				polyPointsOnIntersectionLine.push_back(IntersectionPoint(intersectionToPolyvertexFactor, vertsA[i]));
 			}
 		}
 		for (unsigned int i = 0, count = vertsB.size(); i<count; ++i ) {
@@ -591,13 +610,13 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 				intersectionToPolyvertexFactor = (vertsB[i].m_z - supportVector.m_z) / dirVector.m_z;
 			}
 			temporaryVector = (supportVector + intersectionToPolyvertexFactor * dirVector);
-			if (near_equal5(temporaryVector.m_x, vertsB[i].m_x) && near_equal5(temporaryVector.m_y, vertsB[i].m_y) && near_equal5(temporaryVector.m_z, vertsB[i].m_z)) {
+			if (IBK::nearly_equal<5>(temporaryVector.m_x, vertsB[i].m_x) && IBK::nearly_equal<5>(temporaryVector.m_y, vertsB[i].m_y) && IBK::nearly_equal<5>(temporaryVector.m_z, vertsB[i].m_z)) {
 				//using a map avoids duplicates
-				polyPointsOnIntersectionLine.insert({intersectionToPolyvertexFactor, vertsB[i]});
+				polyPointsOnIntersectionLine.push_back(IntersectionPoint(intersectionToPolyvertexFactor, vertsB[i]));
 			}
 		}
 
-		//add the points, where poly edges intersect the other polygons plane, to the map
+		//add the points to the map, where poly edges intersect the other polygon's plane
 		for (unsigned int i = 0, count = intersectionPointsOfPolyEdgeAndIntersectionLine.size(); i<count; ++i ) {
 			//we already know the points lie on the intersection line, but for automatic sorting we need to calculate the intersectionToPolyvertexFactor
 			//avoid division by zero
@@ -608,19 +627,26 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 			} else /*if (dirVector.m_z != 0)*/ {
 				intersectionToPolyvertexFactor = (intersectionPointsOfPolyEdgeAndIntersectionLine[i].m_z - supportVector.m_z) / dirVector.m_z;
 			}
-			polyPointsOnIntersectionLine.insert({intersectionToPolyvertexFactor, intersectionPointsOfPolyEdgeAndIntersectionLine[i]});
+			polyPointsOnIntersectionLine.push_back(IntersectionPoint(intersectionToPolyvertexFactor, intersectionPointsOfPolyEdgeAndIntersectionLine[i]));
 
 		}
 
-		// std::map is already ordered by key
-		if (polyPointsOnIntersectionLine.size() >=2) {
+		// order by key
+		std::sort(polyPointsOnIntersectionLine.begin(), polyPointsOnIntersectionLine.end());
+
+		// size >1 so we can access next element without error
+		if (polyPointsOnIntersectionLine.size() > 1) {
 
 			// iterate over all center points inbetween poly vertices on intersection lines
 			IBKMK::Vector3D centerpoint;
+			for ( unsigned int i = 0; i < polyPointsOnIntersectionLine.size() - 1; ++i ) {
 
-			for (auto it = polyPointsOnIntersectionLine.begin(); it != std::prev(polyPointsOnIntersectionLine.end()); ++it) {
-				auto next = std::next(it);
-				centerpoint = it->second + (next->second - it->second) * 0.5;
+			//for (IntersectionPoint polyPointsOnIntersectionLine.begin(); it != std::prev(polyPointsOnIntersectionLine.end()); ++it) {
+				//std::map<double, IBKMK::Vector3D>::iterator next = std::next(it);
+				const IntersectionPoint & point = polyPointsOnIntersectionLine.at(i);
+				const IntersectionPoint & nextP = polyPointsOnIntersectionLine.at(i+1);
+
+				centerpoint = point.m_point + (nextP.m_point - point.m_point) * 0.5;
 
 				// test if centerpoint is contained within both polygons
 				if ((coplanarPointInPolygon3D(vertsA, centerpoint) == 1) && (coplanarPointInPolygon3D(vertsB, centerpoint) == 1)) {
