@@ -52,24 +52,6 @@ void VicusClipper::addClipperPolygons(const std::vector<ClippingPolygon> &polysT
 }
 
 
-void insertChildSurfaces(std::set<const VICUS::Surface*> &surfaces, const VICUS::Surface &s, bool onlySelected, std::set<unsigned int> *surfaceIds = nullptr) {
-	for (const VICUS::Surface &cs : s.childSurfaces()) {
-
-		if (surfaceIds != nullptr)
-			surfaceIds->insert(cs.m_id);
-
-		bool selected = true;
-		if (onlySelected && !cs.m_selected)
-			selected = false;
-
-		if (selected)
-			surfaces.insert(&cs);
-
-		insertChildSurfaces(surfaces, cs, onlySelected, surfaceIds);
-	}
-}
-
-
 void VicusClipper::findParallelSurfaces(IBK::Notification *notify) {
 	FUNCID(VicusClipper::findParallelSurfaces);
 
@@ -88,8 +70,6 @@ void VicusClipper::findParallelSurfaces(IBK::Notification *notify) {
 						continue;
 
 					surfaces.insert(const_cast<VICUS::Surface*>(&s));
-
-					insertChildSurfaces(surfaces, s, m_onlySelected);
 				}
 			}
 		}
@@ -191,7 +171,7 @@ void VicusClipper::findSurfacesInRange(IBK::Notification *notify) {
 	unsigned int currentCount = 0;
 
 	for (std::map<unsigned int, std::set<unsigned int>>::iterator it = m_surfaceConnections.begin();
-		it != m_surfaceConnections.end(); ++it){
+		 it != m_surfaceConnections.end(); ++it){
 
 		++currentCount;
 		// only notify every second or so
@@ -247,7 +227,7 @@ void VicusClipper::findSurfacesInRange(IBK::Notification *notify) {
 
 
 void VicusClipper::addSurfaceToClippingPolygons(const VICUS::Surface &surf, std::vector<ClippingPolygon> &clippingPolygons) {
-	if (surf.childSurfaces().empty())
+	if (surf.holes().empty())
 		clippingPolygons.push_back(surf.geometry().polygon2D());
 	else {
 		std::vector<IBKMK::Polygon2D> holes;
@@ -281,12 +261,12 @@ const std::vector<VICUS::Building> VicusClipper::vicusBuildings() const {
 }
 
 void saveChildOrigin(std::map<unsigned int, unsigned int> &compInstOriginSurfId, const VICUS::Surface &s) {
-	for (const VICUS::Surface &cs : s.childSurfaces()) {
-		if (cs.m_componentInstance == nullptr)
-			continue; // skip invalid comp instances
-		compInstOriginSurfId[cs.m_id] = cs.m_componentInstance->m_idComponent;
-		saveChildOrigin(compInstOriginSurfId, cs);
-	}
+	// for (const VICUS::Surface &cs : s.holes()) {
+	// 	if (cs.m_componentInstance == nullptr)
+	// 		continue; // skip invalid comp instances
+	// 	compInstOriginSurfId[cs.m_id] = cs.m_componentInstance->m_idComponent;
+	// 	saveChildOrigin(compInstOriginSurfId, cs);
+	// }
 }
 
 
@@ -300,7 +280,7 @@ void VicusClipper::clipSurfaces(IBK::Notification * notify) {
 	unsigned int currentConnectionCount = 0;
 
 	for (std::map<unsigned int, std::set<unsigned int>>::const_iterator it = m_surfaceConnections.begin();
-		it != m_surfaceConnections.end(); ++it){
+		 it != m_surfaceConnections.end(); ++it){
 
 		// only notify every second or so
 		if (notify != nullptr && !notify->m_aborted && m_stopWatch.difference() > STOPWATCH_INTERVAL) {
@@ -447,12 +427,13 @@ void VicusClipper::clipSurfaces(IBK::Notification * notify) {
 					///
 					///
 					/// ============================================================
-					std::vector<VICUS::Surface> newChilds;
-					for (const VICUS::Surface &cs : originSurf.childSurfaces()) {
-						const IBKMK::Polygon3D &polyChild = cs.polygon3D();
-						bool inPoly = true;
+					std::vector<VICUS::Polygon2D> newHoles;
+					for (const VICUS::Polygon2D &h : originSurf.holes()) {
 
-						for (const IBKMK::Vector3D &v3D : polyChild.vertexes()) {
+						VICUS::Polygon3D poly3D = originSurf.generatePolygon3D(h);
+
+						bool inPoly = false;
+						for (const IBKMK::Vector3D &v3D : poly3D.vertexes()) {
 							IBKMK::Vector2D v2D;
 							if (!IBKMK::planeCoordinates(offset, localX, localY, v3D, v2D.m_x, v2D.m_y))
 								continue;
@@ -464,11 +445,12 @@ void VicusClipper::clipSurfaces(IBK::Notification * notify) {
 						}
 
 						if (inPoly)
-							newChilds.push_back(cs);
+							newHoles.push_back(h);
 					}
 
 					// Remove original window
-					originSurf.setChildAndSubSurfaces(std::vector<VICUS::SubSurface>(), newChilds);
+					originSurf.setSubSurfaces(std::vector<VICUS::SubSurface>());
+					originSurf.setHoles(newHoles);
 
 				}
 				catch (IBK::Exception &ex) {
@@ -535,7 +517,7 @@ void VicusClipper::clipSurfaces(IBK::Notification * notify) {
 
 			// calculate new offset 3D
 			IBKMK::Vector3D newOffset3D = offset	+ localX * poly.m_polygon.vertexes()[0].m_x
-													+ localY * poly.m_polygon.vertexes()[0].m_y;
+					+ localY * poly.m_polygon.vertexes()[0].m_y;
 			// calculate new ofsset 2D
 			IBKMK::Vector2D newOffset2D = poly.m_polygon.vertexes()[0];
 
@@ -554,10 +536,11 @@ void VicusClipper::clipSurfaces(IBK::Notification * notify) {
 			// CRAZY HOLE ACTION INCOMING
 			// Now we start to handle all holes
 			// =================================
-			std::vector<VICUS::Surface> childSurfaces /*= originSurf.childSurfaces()*/; // Do not store holes.
+			std::vector<VICUS::Surface>		newHoleSurfaces;
+			std::vector<VICUS::Polygon2D>	newHoles;
 
 			// Reset all child and sub-surfaces
-			originSurf.setChildAndSubSurfaces(originSurfCopy.subSurfaces(), std::vector<VICUS::Surface>());
+			originSurf.setSubSurfaces(originSurfCopy.subSurfaces());
 
 			// Convert all holes
 			if (poly.m_haveRealHole && poly.m_holePolygons.size() > 0) {
@@ -573,22 +556,23 @@ void VicusClipper::clipSurfaces(IBK::Notification * notify) {
 						const IBKMK::Vector2D &v2d = holePoly.vertexes()[j];
 
 						vertexes[j] = offset + localX * v2d.m_x
-								+ localY * v2d.m_y;
+											 + localY * v2d.m_y;
 
 						IBKMK::planeCoordinates(newOffset3D, originSurf.geometry().localX(),
 												originSurf.geometry().localY(), vertexes[j], holePoints[j].m_x, holePoints[j].m_y);
 					}
 
-					VICUS::Surface childSurf = originSurf;
-					childSurf.setPolygon3D(vertexes);
-					childSurf.m_id = ++m_nextVicusId;
-					childSurf.m_displayName = QString("%1 - Child Surface [%2]").arg(originSurf.m_displayName ).arg(i);
+					VICUS::Surface holeSurf = originSurf;
+					holeSurf.setPolygon3D(vertexes);
+					holeSurf.m_id = ++m_nextVicusId;
+					holeSurf.m_displayName = QString("%1 [HS %2]").arg(originSurf.m_displayName ).arg(i);
 
-					IBKMK::Vector3D normalDiff = childSurf.geometry().normal() + originSurf.geometry().normal();
+					IBKMK::Vector3D normalDiff = holeSurf.geometry().normal() + originSurf.geometry().normal();
 					if (normalDiff.magnitudeSquared() < 1)
-						childSurf.flip();
+						holeSurf.flip();
 
-					childSurfaces.push_back(childSurf);
+					newHoleSurfaces.push_back(holeSurf);
+					newHoles.push_back(holePoints);
 				}
 			}
 
@@ -647,19 +631,26 @@ void VicusClipper::clipSurfaces(IBK::Notification * notify) {
 				}
 			}
 			// Update all child and sub-surfaces
-			originSurf.setChildAndSubSurfaces(subs, childSurfaces);
-
+			originSurf.setSubSurfaces(subs);
+			originSurf.setHoles(newHoles);
+			originSurf.updateGeometryHoles();
 			originSurf.updateParents();
 
 			// Add back holes to data structure
 			r->m_surfaces.push_back(originSurf);
+			// Add back holes
+			r->m_surfaces.insert(r->m_surfaces.end(), newHoleSurfaces.begin(), newHoleSurfaces.end());
 
 			// save id origin
-			if (surfOriginId != VICUS::INVALID_ID && originSurf.m_componentInstance != nullptr)
+			if (surfOriginId != VICUS::INVALID_ID && originSurf.m_componentInstance != nullptr) {
 				m_compInstOriginSurfId[originSurf.m_id] = originSurf.m_componentInstance->m_idComponent;
+				for (const VICUS::Surface &newHoleSurf : newHoleSurfaces)
+					m_compInstOriginSurfId[newHoleSurf.m_id] = originSurf.m_componentInstance->m_idComponent;
+			}
 
 			// Save Child origin
-			saveChildOrigin(m_compInstOriginSurfId, originSurf);
+			// saveChildOrigin(m_compInstOriginSurfId, originSurf);
+
 
 			r->updateParents();
 		}
@@ -751,7 +742,7 @@ void VicusClipper::createComponentInstances(IBK::Notification *notify, bool crea
 
 					if (selected)
 						surfaces.insert(&s);
-					insertChildSurfaces(surfaces, s, m_onlySelected, &surfaceIds);
+					// insertChildSurfaces(surfaces, s, m_onlySelected, &surfaceIds);
 
 					for (const VICUS::SubSurface &sub : s.subSurfaces())
 						subSurfaceIds.insert(sub.m_id);
@@ -964,8 +955,8 @@ void VicusClipper::createComponentInstances(IBK::Notification *notify, bool crea
 					// qDebug() << "Fläche " << surfA->m_displayName << " wird mit Fläche " << surfB->m_displayName<< " gekoppelt.";
 
 					IBK::FormatString roomString = IBK::FormatString("'%1 | %2'")
-														 .arg(s1->m_displayName.toStdString())
-														 .arg(s1->m_parent->m_displayName.toStdString());
+							.arg(s1->m_displayName.toStdString())
+							.arg(s1->m_parent->m_displayName.toStdString());
 
 					IBK::IBK_Message(IBK::FormatString("%1 %2 <-> %3 %4")
 									 .arg(s1->m_parent->m_displayName.toStdString(), 20, std::ios_base::left)
@@ -996,7 +987,7 @@ void VicusClipper::createComponentInstances(IBK::Notification *notify, bool crea
 			handledSurfaces.insert(surfA->m_id);
 
 #ifdef DETAILED_INFO
-		qDebug() << "Surface '" << surfA->m_displayName << "' contains component #" << ci.m_idComponent << " after connection.";
+			qDebug() << "Surface '" << surfA->m_displayName << "' contains component #" << ci.m_idComponent << " after connection.";
 #endif
 		}
 	}
@@ -1050,13 +1041,13 @@ ClippingSurface & VicusClipper::findClippingSurface(unsigned int id, const std::
 
 
 void findChildSurfaces(unsigned int id, const VICUS::Surface &s, const VICUS::Surface* &surf) {
-	for (const VICUS::Surface &cs : s.childSurfaces()) {
-		if (id == cs.m_id) {
-			surf = &cs;
-			break;
-		}
-		findChildSurfaces(id, cs, surf);
-	}
+	// for (const VICUS::Surface &cs : s.holes()) {
+	// 	if (id == cs.m_id) {
+	// 		surf = &cs;
+	// 		break;
+	// 	}
+	// 	findChildSurfaces(id, cs, surf);
+	// }
 }
 
 
@@ -1070,7 +1061,7 @@ const VICUS::Surface &VicusClipper::findVicusSurface(unsigned int id, const std:
 						surf = &s;
 						break;
 					}
-					findChildSurfaces(id, s, surf);
+					// findChildSurfaces(id, s, surf);
 				}
 			}
 		}

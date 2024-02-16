@@ -196,8 +196,8 @@ void SVUndoTrimObjects::redo() {
 				tempSubsurfaces.push_back(ss);
 			}
 
-			std::vector<VICUS::Surface> cs;
-			newSurf.setChildAndSubSurfaces(tempSubsurfaces, cs);
+			newSurf.setSubSurfaces(tempSubsurfaces);
+			newSurf.updateGeometryHoles();
 
 			if (room != nullptr) {
 				// add surface to room surfaces

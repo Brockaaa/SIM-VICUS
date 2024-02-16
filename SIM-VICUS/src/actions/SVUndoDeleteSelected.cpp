@@ -40,13 +40,6 @@ public:
 	unsigned int m_uID;
 };
 
-void selectChildSurfaces(const VICUS::Surface &surf, std::set<unsigned int> &selectedUniqueIDs) {
-	for (const VICUS::Surface &cs : surf.childSurfaces()) {
-		selectedUniqueIDs.insert(cs.m_id);
-		selectChildSurfaces(cs, selectedUniqueIDs);
-	}
-}
-
 
 SVUndoDeleteSelected::SVUndoDeleteSelected(const QString & label,
 										   const std::set<const VICUS::Object *> & objectsToBeRemoved)
@@ -73,7 +66,6 @@ SVUndoDeleteSelected::SVUndoDeleteSelected(const QString & label,
 					if (selectedUniqueIDs.find(r.m_surfaces[sIdx].m_id) != selectedUniqueIDs.end()) {
 						for(const VICUS::SubSurface &sub : r.m_surfaces[sIdx].subSurfaces())
 							selectedUniqueIDs.insert(sub.m_id);
-						selectChildSurfaces(r.m_surfaces[sIdx], selectedUniqueIDs);
 						r.m_surfaces.erase(r.m_surfaces.begin() + sIdx); // remove surface, keep counter
 					}
 					else {
@@ -82,11 +74,8 @@ SVUndoDeleteSelected::SVUndoDeleteSelected(const QString & label,
 						for (const VICUS::SubSurface & sub : r.m_surfaces[sIdx].subSurfaces())
 							if (selectedUniqueIDs.find(sub.m_id) == selectedUniqueIDs.end() )
 								remainingSubSurfaces.push_back(sub); // keep only those that are not selected
-						std::vector<VICUS::Surface> remainingChildSurfaces;
-						for (const VICUS::Surface & child : r.m_surfaces[sIdx].childSurfaces())
-							if (selectedUniqueIDs.find(child.m_id) == selectedUniqueIDs.end() )
-								remainingChildSurfaces.push_back(child); // keep only those that are not selected
-						r.m_surfaces[sIdx].setChildAndSubSurfaces(remainingSubSurfaces, remainingChildSurfaces); // keep remaining subs
+						r.m_surfaces[sIdx].setSubSurfaces(remainingSubSurfaces); // keep remaining subs
+						r.m_surfaces[sIdx].updateGeometryHoles();
 						++sIdx; // go to next surface
 					}
 				}
@@ -206,7 +195,7 @@ SVUndoDeleteSelected::SVUndoDeleteSelected(const QString & label,
 				if (e.m_node2->m_type == VICUS::NetworkNode::NT_Mixer && e.m_node2->m_edges.size()==1)
 					selectedUniqueIDs.insert(e.nodeId2());
 				net.m_edges.erase(net.m_edges.begin() + idxE);
-				}
+			}
 			else
 				++idxE;
 		}

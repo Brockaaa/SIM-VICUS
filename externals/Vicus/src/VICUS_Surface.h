@@ -67,14 +67,19 @@ public:
 	/*! Sets the polygon. */
 	void setPolygon3D(const IBKMK::Polygon3D & polygon3D);
 
-	const std::vector<SubSurface> &		subSurfaces() const { return m_subSurfaces; }
-	const std::vector<Surface> &		childSurfaces() const { return m_childSurfaces; }
+	const std::vector<SubSurface> &subSurfaces() const	{ return m_subSurfaces; }
+	const std::vector<Polygon2D>  &holes() const		{ return m_holes; }
 
-	void setChildAndSubSurfaces(const std::vector<SubSurface>  &subSurfaces,
-								const std::vector<Surface>     &childSurfaces);
+	void setSubSurfaces(const std::vector<SubSurface>  &subSurfaces);
+	void setHoles(const std::vector<VICUS::Polygon2D>  &holes);
+
+	/*! Updates plane geometry and sets all holes. */
+	void updateGeometryHoles();
 
 	/*! Gives read-access to the surface's geometry. */
 	const PlaneGeometry & geometry() const { return m_geometry; }
+
+	Polygon3D generatePolygon3D(const Polygon2D &poly2D);
 
 	/*! Subtracts the subsurface are from the surface area */
 	double areaWithoutSubsurfaces() const ;
@@ -122,8 +127,8 @@ private:
 	/*! Subsurfaces of the surface. */
 	std::vector<SubSurface>				m_subSurfaces;				// XML:E
 
-	/*! ChildSurfaces of the surface. */
-	std::vector<Surface>				m_childSurfaces;			// XML:E
+	/*! Holes inside the surface. */
+	std::vector<Polygon2D>				m_holes;					// XML:E
 
 	// *** RUNTIME VARIABLES ***
 

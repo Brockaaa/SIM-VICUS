@@ -76,7 +76,7 @@ SVPropVertexListWidget::SVPropVertexListWidget(QWidget *parent) :
 	m_ui->lineEditFlapTileHeight->setup(0, std::numeric_limits<double>::max(), tr("Zone flap tile height in [m]."),false, true);
 
 	m_ui->lineEditSubStationMaxHeatingDemand->setup(std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
-									tr("Maximum/Nominal heating demand [kW]."), false, true);
+													tr("Maximum/Nominal heating demand [kW]."), false, true);
 
 	SVViewStateHandler::instance().m_propVertexListWidget = this;
 
@@ -149,32 +149,32 @@ void SVPropVertexListWidget::setup(int newGeometryType) {
 
 	// initialize new geometry object
 	switch ((Vic3D::NewGeometryObject::NewGeometryMode)newGeometryType) {
-		case Vic3D::NewGeometryObject::NGM_Rect :
-			SVViewStateHandler::instance().m_newGeometryObject->startNewGeometry(Vic3D::NewGeometryObject::NGM_Rect);
-			m_ui->groupBoxPolygonVertexes->setTitle(tr("Rectangle vertexes"));
-			m_ui->pushButtonCompletePolygon->setText(tr("Complete Rectangle"));
+	case Vic3D::NewGeometryObject::NGM_Rect :
+		SVViewStateHandler::instance().m_newGeometryObject->startNewGeometry(Vic3D::NewGeometryObject::NGM_Rect);
+		m_ui->groupBoxPolygonVertexes->setTitle(tr("Rectangle vertexes"));
+		m_ui->pushButtonCompletePolygon->setText(tr("Complete Rectangle"));
 		break;
 
-		case Vic3D::NewGeometryObject::NGM_Polygon :
-		case Vic3D::NewGeometryObject::NGM_Zone :
-		case Vic3D::NewGeometryObject::NGM_Roof :
-			SVViewStateHandler::instance().m_newGeometryObject->startNewGeometry(Vic3D::NewGeometryObject::NGM_Polygon);
-			m_ui->groupBoxPolygonVertexes->setTitle(tr("Polygon vertexes"));
-			m_ui->pushButtonCompletePolygon->setText(tr("Complete polygon"));
+	case Vic3D::NewGeometryObject::NGM_Polygon :
+	case Vic3D::NewGeometryObject::NGM_Zone :
+	case Vic3D::NewGeometryObject::NGM_Roof :
+		SVViewStateHandler::instance().m_newGeometryObject->startNewGeometry(Vic3D::NewGeometryObject::NGM_Polygon);
+		m_ui->groupBoxPolygonVertexes->setTitle(tr("Polygon vertexes"));
+		m_ui->pushButtonCompletePolygon->setText(tr("Complete polygon"));
 		break;
 
-		case Vic3D::NewGeometryObject::NGM_Pipeline:
-			SVViewStateHandler::instance().m_newGeometryObject->startNewGeometry(Vic3D::NewGeometryObject::NGM_Pipeline);
-			m_ui->groupBoxPolygonVertexes->setTitle(tr("Polyline vertexes"));
-			m_ui->pushButtonCompletePolygon->setText(tr("Complete polyline"));
+	case Vic3D::NewGeometryObject::NGM_Pipeline:
+		SVViewStateHandler::instance().m_newGeometryObject->startNewGeometry(Vic3D::NewGeometryObject::NGM_Pipeline);
+		m_ui->groupBoxPolygonVertexes->setTitle(tr("Polyline vertexes"));
+		m_ui->pushButtonCompletePolygon->setText(tr("Complete polyline"));
 		break;
-		case Vic3D::NewGeometryObject::NGM_SubStations:
-			SVViewStateHandler::instance().m_newGeometryObject->startNewGeometry(Vic3D::NewGeometryObject::NGM_SubStations);
-			m_ui->groupBoxPolygonVertexes->setTitle(tr("Vertexes"));
-			m_ui->pushButtonCompletePolygon->setText(tr("Complete vertexes"));
+	case Vic3D::NewGeometryObject::NGM_SubStations:
+		SVViewStateHandler::instance().m_newGeometryObject->startNewGeometry(Vic3D::NewGeometryObject::NGM_SubStations);
+		m_ui->groupBoxPolygonVertexes->setTitle(tr("Vertexes"));
+		m_ui->pushButtonCompletePolygon->setText(tr("Complete vertexes"));
 		break;
 
-		case Vic3D::NewGeometryObject::NUM_NGM: ; // just for the compiler
+	case Vic3D::NewGeometryObject::NUM_NGM: ; // just for the compiler
 	}
 	m_geometryMode = newGeometryType;
 }
@@ -244,35 +244,35 @@ void SVPropVertexListWidget::setZoneHeight(double dist) {
 
 bool SVPropVertexListWidget::completePolygonIfPossible() {
 	switch (m_ui->stackedWidget->currentIndex()) {
-		case 0 :
-			if (m_ui->pushButtonCompletePolygon->isEnabled()) {
-				m_ui->pushButtonCompletePolygon->click();
-				return true;
-			}
+	case 0 :
+		if (m_ui->pushButtonCompletePolygon->isEnabled()) {
+			m_ui->pushButtonCompletePolygon->click();
+			return true;
+		}
 		break;
 
-		case 1 :
-			m_ui->pushButtonCreateSurface->click();
-			return true;
+	case 1 :
+		m_ui->pushButtonCreateSurface->click();
+		return true;
 
-		case 2 :
-			m_ui->pushButtonCreateZone->click();
-			return true;
+	case 2 :
+		m_ui->pushButtonCreateZone->click();
+		return true;
 
-		case 3 :
-			m_ui->pushButtonCreateRoof->click();
-			return true;
+	case 3 :
+		m_ui->pushButtonCreateRoof->click();
+		return true;
 
-		case 4 :
-			if (m_ui->pushButtonCreatePipeline->isEnabled()) {
-				m_ui->pushButtonCreatePipeline->click();
-				return true;
-			} break;
-		case 5 :
-			if (m_ui->pushButtonCreateSubStation->isEnabled()) {
-				m_ui->pushButtonCreateSubStation->click();
-				return true;
-			} break;
+	case 4 :
+		if (m_ui->pushButtonCreatePipeline->isEnabled()) {
+			m_ui->pushButtonCreatePipeline->click();
+			return true;
+		} break;
+	case 5 :
+		if (m_ui->pushButtonCreateSubStation->isEnabled()) {
+			m_ui->pushButtonCreateSubStation->click();
+			return true;
+		} break;
 	}
 	return false;
 }
@@ -285,28 +285,28 @@ void SVPropVertexListWidget::onModified(int modificationType, ModificationInfo *
 
 	// we always update our combo boxes whenever anything related to the building topology has changed
 	switch (mod) {
-		case SVProjectHandler::BuildingTopologyChanged:
-		case SVProjectHandler::BuildingGeometryChanged:
-		case SVProjectHandler::NetworkGeometryChanged:
-		case SVProjectHandler::NetworkDataChanged:
-		case SVProjectHandler::AllModified:
-			updateBuildingComboBox(m_ui->comboBoxBuilding);
-			updateBuildingLevelsComboBox(m_ui->comboBoxBuildingLevel, m_ui->comboBoxBuilding);
-			updateZoneComboBox(m_ui->comboBoxZone, m_ui->comboBoxBuildingLevel);
+	case SVProjectHandler::BuildingTopologyChanged:
+	case SVProjectHandler::BuildingGeometryChanged:
+	case SVProjectHandler::NetworkGeometryChanged:
+	case SVProjectHandler::NetworkDataChanged:
+	case SVProjectHandler::AllModified:
+		updateBuildingComboBox(m_ui->comboBoxBuilding);
+		updateBuildingLevelsComboBox(m_ui->comboBoxBuildingLevel, m_ui->comboBoxBuilding);
+		updateZoneComboBox(m_ui->comboBoxZone, m_ui->comboBoxBuildingLevel);
 
-			updateBuildingComboBox(m_ui->comboBoxBuilding2);
-			updateBuildingLevelsComboBox(m_ui->comboBoxBuildingLevel2, m_ui->comboBoxBuilding2);
+		updateBuildingComboBox(m_ui->comboBoxBuilding2);
+		updateBuildingLevelsComboBox(m_ui->comboBoxBuildingLevel2, m_ui->comboBoxBuilding2);
 
-			updateBuildingComboBox(m_ui->comboBoxBuilding3);
-			updateBuildingLevelsComboBox(m_ui->comboBoxBuildingLevel3, m_ui->comboBoxBuilding3);
+		updateBuildingComboBox(m_ui->comboBoxBuilding3);
+		updateBuildingLevelsComboBox(m_ui->comboBoxBuildingLevel3, m_ui->comboBoxBuilding3);
 
-			updateSurfaceComboBox(m_ui->comboBoxSurface);
+		updateSurfaceComboBox(m_ui->comboBoxSurface);
 
-			updateNetworksComboBox(m_ui->comboBoxNetwork);
-			updateNetworksComboBox(m_ui->comboBoxNetwork2);
-			updateNetworkButtons();
+		updateNetworksComboBox(m_ui->comboBoxNetwork);
+		updateNetworksComboBox(m_ui->comboBoxNetwork2);
+		updateNetworkButtons();
 		break;
-		default: ;// nothing to be done here
+	default: ;// nothing to be done here
 	}
 
 	updateButtonStates();
@@ -355,61 +355,61 @@ void SVPropVertexListWidget::on_pushButtonCompletePolygon_clicked() {
 	Vic3D::NewGeometryObject * po = SVViewStateHandler::instance().m_newGeometryObject;
 	// switch to different stacked widget, depending on geometry to be created
 	switch ((Vic3D::NewGeometryObject::NewGeometryMode)m_geometryMode) {
-		case Vic3D::NewGeometryObject::NGM_Rect:
-		case Vic3D::NewGeometryObject::NGM_Polygon:
-			m_ui->stackedWidget->setCurrentIndex(1);
-			updateComponentComboBoxes(); // update all component combo boxes in surface page
-			m_ui->lineEditName->setText(tr("Surface"));
-			po->m_passiveMode = true; // disallow changes to surface geometry
-			updateButtonStates();
+	case Vic3D::NewGeometryObject::NGM_Rect:
+	case Vic3D::NewGeometryObject::NGM_Polygon:
+		m_ui->stackedWidget->setCurrentIndex(1);
+		updateComponentComboBoxes(); // update all component combo boxes in surface page
+		m_ui->lineEditName->setText(tr("Surface"));
+		po->m_passiveMode = true; // disallow changes to surface geometry
+		updateButtonStates();
 		break;
 
-		case Vic3D::NewGeometryObject::NGM_Zone:
-			m_ui->stackedWidget->setCurrentIndex(2);
+	case Vic3D::NewGeometryObject::NGM_Zone:
+		m_ui->stackedWidget->setCurrentIndex(2);
 
-			updateComponentComboBoxes(); // update all component combo boxes in zone page
+		updateComponentComboBoxes(); // update all component combo boxes in zone page
 
-			// switch to zone construction mode - this also orients the polygon to have a normal pointing upwards
-			po->setNewGeometryMode(Vic3D::NewGeometryObject::NGM_Zone);
+		// switch to zone construction mode - this also orients the polygon to have a normal pointing upwards
+		po->setNewGeometryMode(Vic3D::NewGeometryObject::NGM_Zone);
 
-			// transfer zone height into line edit, if we have already a building level defined
-			on_comboBoxBuildingLevel2_currentIndexChanged(0); // index argument does not matter, not used
-			on_lineEditZoneHeight_editingFinishedSuccessfully();
-			m_ui->lineEditNameZone->setText(tr("Room"));
+		// transfer zone height into line edit, if we have already a building level defined
+		on_comboBoxBuildingLevel2_currentIndexChanged(0); // index argument does not matter, not used
+		on_lineEditZoneHeight_editingFinishedSuccessfully();
+		m_ui->lineEditNameZone->setText(tr("Room"));
 		break;
 
-		case Vic3D::NewGeometryObject::NGM_Roof: {
-			m_ui->stackedWidget->setCurrentIndex(3);
-			updateComponentComboBoxes(); // update all component combo boxes in roof page
-			const VICUS::PlaneGeometry & pg = po->planeGeometry();
-			if (pg.polygon3D().type() != IBKMK::Polygon2D::T_Rectangle)
-				m_ui->comboBoxRoofType->setCurrentIndex(4); // not a rectangle, select complex roof
+	case Vic3D::NewGeometryObject::NGM_Roof: {
+		m_ui->stackedWidget->setCurrentIndex(3);
+		updateComponentComboBoxes(); // update all component combo boxes in roof page
+		const VICUS::PlaneGeometry & pg = po->planeGeometry();
+		if (pg.polygon3D().type() != IBKMK::Polygon2D::T_Rectangle)
+			m_ui->comboBoxRoofType->setCurrentIndex(4); // not a rectangle, select complex roof
 
-			// switch to roof construction mode - this also orients the polygon to have a normal pointing upwards
-			po->setNewGeometryMode(Vic3D::NewGeometryObject::NGM_Roof);
-			m_ui->lineEditNameRoof->setText(tr("Roof"));
+		// switch to roof construction mode - this also orients the polygon to have a normal pointing upwards
+		po->setNewGeometryMode(Vic3D::NewGeometryObject::NGM_Roof);
+		m_ui->lineEditNameRoof->setText(tr("Roof"));
 
-			m_roofPolygon = po->planeGeometry().polygon3D().vertexes();
-			m_currentIdxOfStartpoint = 0;
-			updateRoofGeometry();
-		}
+		m_roofPolygon = po->planeGeometry().polygon3D().vertexes();
+		m_currentIdxOfStartpoint = 0;
+		updateRoofGeometry();
+	}
 		break;
-		case Vic3D::NewGeometryObject::NGM_Pipeline: {
-			m_ui->stackedWidget->setCurrentIndex(4);
-			updateNetworksComboBox(m_ui->comboBoxNetwork);
-			updatePipePropertiesComboBox();
-			updateNetworkButtons();
-		}
+	case Vic3D::NewGeometryObject::NGM_Pipeline: {
+		m_ui->stackedWidget->setCurrentIndex(4);
+		updateNetworksComboBox(m_ui->comboBoxNetwork);
+		updatePipePropertiesComboBox();
+		updateNetworkButtons();
+	}
 		break;
-		case Vic3D::NewGeometryObject::NGM_SubStations: {
-			m_ui->stackedWidget->setCurrentIndex(5);
-			updateNetworksComboBox(m_ui->comboBoxNetwork2);
-			updateSubStationLineEdits();
-			updateNetworkButtons();
-		}
+	case Vic3D::NewGeometryObject::NGM_SubStations: {
+		m_ui->stackedWidget->setCurrentIndex(5);
+		updateNetworksComboBox(m_ui->comboBoxNetwork2);
+		updateSubStationLineEdits();
+		updateNetworkButtons();
+	}
 		break;
 
-		case Vic3D::NewGeometryObject::NUM_NGM: ; // just for the compiler
+	case Vic3D::NewGeometryObject::NUM_NGM: ; // just for the compiler
 	}
 }
 
@@ -709,7 +709,7 @@ void SVPropVertexListWidget::on_pushButtonCreateSurface_clicked() {
 			// also create subsurface component instances
 			// but only if we have a valid subsurface component selected
 			if (m_ui->comboBoxSubSurfComponent->count() != 0 &&
-				m_ui->comboBoxSubSurfComponent->currentIndex() != -1)
+					m_ui->comboBoxSubSurfComponent->currentIndex() != -1)
 			{
 				VICUS::SubSurfaceComponentInstance subInstance;
 				subInstance.m_id = ++nextId;
@@ -720,15 +720,14 @@ void SVPropVertexListWidget::on_pushButtonCreateSurface_clicked() {
 			}
 
 			subSurfs.push_back(newSubsurface);
+			newSurf.setSubSurfaces(subSurfs);
+			newSurf.updateGeometryHoles();
 
-			std::vector<VICUS::Surface> childs = newSurf.childSurfaces();
-
-			newSurf.setChildAndSubSurfaces(subSurfs, childs);
 			modSurfaces.push_back(newSurf);
 
 			std::vector<VICUS::Drawing>			modifiedDrawings;
 			SVUndoModifySurfaceGeometry * undo = new SVUndoModifySurfaceGeometry(tr("Added sub-surface/window"),
-				modSurfaces, modifiedDrawings, &subSurfaceComponentInstances);
+																				 modSurfaces, modifiedDrawings, &subSurfaceComponentInstances);
 			undo->push();
 		}
 		else {
@@ -871,12 +870,12 @@ void SVPropVertexListWidget::on_pushButtonCreateZone_clicked() {
 	unsigned int conInstID = VICUS::largestUniqueId(project().m_componentInstances);
 	// Note: surface is attached to "Side A"
 	componentInstances.push_back(VICUS::ComponentInstance(++conInstID,
-		 m_ui->comboBoxComponentFloor->currentData().toUInt(), sFloor.m_id, VICUS::INVALID_ID));
+														  m_ui->comboBoxComponentFloor->currentData().toUInt(), sFloor.m_id, VICUS::INVALID_ID));
 
 	sCeiling.initializeColorBasedOnInclination();
 	// Note: surface is attached to "Side A"
 	componentInstances.push_back(VICUS::ComponentInstance(++conInstID,
-		 m_ui->comboBoxComponentCeiling->currentData().toUInt(), sCeiling.m_id, VICUS::INVALID_ID));
+														  m_ui->comboBoxComponentCeiling->currentData().toUInt(), sCeiling.m_id, VICUS::INVALID_ID));
 
 	r.m_surfaces.push_back(sFloor);
 	r.m_surfaces.push_back(sCeiling);
@@ -903,7 +902,7 @@ void SVPropVertexListWidget::on_pushButtonCreateZone_clicked() {
 		sWall.initializeColorBasedOnInclination();
 		// wall surface is attached to "Side A"
 		componentInstances.push_back(VICUS::ComponentInstance(++conInstID,
-													  wallComponentID, sWall.m_id, VICUS::INVALID_ID));
+															  wallComponentID, sWall.m_id, VICUS::INVALID_ID));
 
 		r.m_surfaces.push_back(sWall);
 	}
@@ -1035,100 +1034,100 @@ void SVPropVertexListWidget::on_pushButtonCreateRoof_clicked() {
 		//if (m_ui->checkBoxFlapTile->isChecked()) {
 		// TODO Dirk: for flap-tile surfaces adjust sRoof.m_displayName and componentID
 		switch ((Vic3D::NewGeometryObject::RoofInputData::RoofType)m_ui->comboBoxRoofType->currentIndex()) {
-			case Vic3D::NewGeometryObject::RoofInputData::SinglePitchRoof:{
-				unsigned int roofElements = 1;
-				if (i< roofElements) {
-					sRoof.m_displayName =  tr("Roof surface %1").arg(++roofSurfaceCount);
-					if (m_ui->comboBoxComponentRoof3->count() == 0)
-						componentID = VICUS::INVALID_ID;
-					else
-						componentID = m_ui->comboBoxComponentRoof3->currentData().toUInt();
-					sRoof.m_displayColor = QColor(150,50,20,255);	//for roofs
-				}
-				else {
-					sRoof.m_displayName =  tr("Wall surface %1").arg(++wallCount);
-					if (m_ui->comboBoxComponentWall3->count() == 0)
-						componentID = VICUS::INVALID_ID;
-					else
-						componentID = m_ui->comboBoxComponentWall3->currentData().toUInt();
-				}
+		case Vic3D::NewGeometryObject::RoofInputData::SinglePitchRoof:{
+			unsigned int roofElements = 1;
+			if (i< roofElements) {
+				sRoof.m_displayName =  tr("Roof surface %1").arg(++roofSurfaceCount);
+				if (m_ui->comboBoxComponentRoof3->count() == 0)
+					componentID = VICUS::INVALID_ID;
+				else
+					componentID = m_ui->comboBoxComponentRoof3->currentData().toUInt();
+				sRoof.m_displayColor = QColor(150,50,20,255);	//for roofs
 			}
+			else {
+				sRoof.m_displayName =  tr("Wall surface %1").arg(++wallCount);
+				if (m_ui->comboBoxComponentWall3->count() == 0)
+					componentID = VICUS::INVALID_ID;
+				else
+					componentID = m_ui->comboBoxComponentWall3->currentData().toUInt();
+			}
+		}
 			break;
-			case Vic3D::NewGeometryObject::RoofInputData::DoublePitchRoof:{
-				unsigned int roofElements = 2;
-				if (i< roofElements) {
-					sRoof.m_displayName =  tr("Roof surface %1").arg(++roofSurfaceCount);
-					if (m_ui->comboBoxComponentRoof3->count() == 0)
-						componentID = VICUS::INVALID_ID;
-					else
-						componentID = m_ui->comboBoxComponentRoof3->currentData().toUInt();
-					sRoof.m_displayColor = QColor("#566094");	//for roofs
-				}
-				else{
-					sRoof.m_displayName =  tr("Wall surface %1").arg(++wallCount);
-					if (m_ui->comboBoxComponentWall3->count() == 0)
-						componentID = VICUS::INVALID_ID;
-					else
-						componentID = m_ui->comboBoxComponentWall3->currentData().toUInt();
-				}
+		case Vic3D::NewGeometryObject::RoofInputData::DoublePitchRoof:{
+			unsigned int roofElements = 2;
+			if (i< roofElements) {
+				sRoof.m_displayName =  tr("Roof surface %1").arg(++roofSurfaceCount);
+				if (m_ui->comboBoxComponentRoof3->count() == 0)
+					componentID = VICUS::INVALID_ID;
+				else
+					componentID = m_ui->comboBoxComponentRoof3->currentData().toUInt();
+				sRoof.m_displayColor = QColor("#566094");	//for roofs
 			}
+			else{
+				sRoof.m_displayName =  tr("Wall surface %1").arg(++wallCount);
+				if (m_ui->comboBoxComponentWall3->count() == 0)
+					componentID = VICUS::INVALID_ID;
+				else
+					componentID = m_ui->comboBoxComponentWall3->currentData().toUInt();
+			}
+		}
 			break;
-			case Vic3D::NewGeometryObject::RoofInputData::MansardRoof:{
-				unsigned int roofElements = 4;
-				if (i< roofElements) {
-					sRoof.m_displayName =  tr("Roof surface %1").arg(++roofSurfaceCount);
-					if (m_ui->comboBoxComponentRoof3->count() == 0)
-						componentID = VICUS::INVALID_ID;
-					else
-						componentID = m_ui->comboBoxComponentRoof3->currentData().toUInt();
-					sRoof.m_displayColor = QColor("#566094");	//for roofs
-				}
-				else {
-					sRoof.m_displayName =  tr("Wall surface %1").arg(++wallCount);
-					if (m_ui->comboBoxComponentWall3->count() == 0)
-						componentID = VICUS::INVALID_ID;
-					else
-						componentID = m_ui->comboBoxComponentWall3->currentData().toUInt();
-				}
+		case Vic3D::NewGeometryObject::RoofInputData::MansardRoof:{
+			unsigned int roofElements = 4;
+			if (i< roofElements) {
+				sRoof.m_displayName =  tr("Roof surface %1").arg(++roofSurfaceCount);
+				if (m_ui->comboBoxComponentRoof3->count() == 0)
+					componentID = VICUS::INVALID_ID;
+				else
+					componentID = m_ui->comboBoxComponentRoof3->currentData().toUInt();
+				sRoof.m_displayColor = QColor("#566094");	//for roofs
 			}
+			else {
+				sRoof.m_displayName =  tr("Wall surface %1").arg(++wallCount);
+				if (m_ui->comboBoxComponentWall3->count() == 0)
+					componentID = VICUS::INVALID_ID;
+				else
+					componentID = m_ui->comboBoxComponentWall3->currentData().toUInt();
+			}
+		}
 			break;
-			case Vic3D::NewGeometryObject::RoofInputData::HipRoof:{
-				unsigned int roofElements = 4;
-				if (i< roofElements) {
-					sRoof.m_displayName =  tr("Roof surface %1").arg(++roofSurfaceCount);
-					if (m_ui->comboBoxComponentRoof3->count() == 0)
-						componentID = VICUS::INVALID_ID;
-					else
-						componentID = m_ui->comboBoxComponentRoof3->currentData().toUInt();
-					sRoof.m_displayColor = QColor("#566094");	//for roofs
-				}
-				else {
-					sRoof.m_displayName =  tr("Wall surface %1").arg(++wallCount);
-					if (m_ui->comboBoxComponentWall3->count() == 0)
-						componentID = VICUS::INVALID_ID;
-					else
-						componentID = m_ui->comboBoxComponentWall3->currentData().toUInt();
-				}
+		case Vic3D::NewGeometryObject::RoofInputData::HipRoof:{
+			unsigned int roofElements = 4;
+			if (i< roofElements) {
+				sRoof.m_displayName =  tr("Roof surface %1").arg(++roofSurfaceCount);
+				if (m_ui->comboBoxComponentRoof3->count() == 0)
+					componentID = VICUS::INVALID_ID;
+				else
+					componentID = m_ui->comboBoxComponentRoof3->currentData().toUInt();
+				sRoof.m_displayColor = QColor("#566094");	//for roofs
 			}
+			else {
+				sRoof.m_displayName =  tr("Wall surface %1").arg(++wallCount);
+				if (m_ui->comboBoxComponentWall3->count() == 0)
+					componentID = VICUS::INVALID_ID;
+				else
+					componentID = m_ui->comboBoxComponentWall3->currentData().toUInt();
+			}
+		}
 			break;
-			case Vic3D::NewGeometryObject::RoofInputData::Complex:{
-				//TODO: Dirk später noch den Kniestock beachten
-				if (true) {
-					sRoof.m_displayName =  tr("Roof surface %1").arg(++roofSurfaceCount);
-					if (m_ui->comboBoxComponentRoof3->count() == 0)
-						componentID = VICUS::INVALID_ID;
-					else
-						componentID = m_ui->comboBoxComponentRoof3->currentData().toUInt();
-					sRoof.m_displayColor = QColor("#566094");	//for roofs
-				}
-//				else if(i>0){
-//					sRoof.m_displayName =  tr("Wall surface %1").arg(++wallCount);
-//					if (m_ui->comboBoxComponentWall3->count() == 0)
-//						componentID = VICUS::INVALID_ID;
-//					else
-//						componentID = m_ui->comboBoxComponentWall3->currentData().toUInt();
-//				}
+		case Vic3D::NewGeometryObject::RoofInputData::Complex:{
+			//TODO: Dirk später noch den Kniestock beachten
+			if (true) {
+				sRoof.m_displayName =  tr("Roof surface %1").arg(++roofSurfaceCount);
+				if (m_ui->comboBoxComponentRoof3->count() == 0)
+					componentID = VICUS::INVALID_ID;
+				else
+					componentID = m_ui->comboBoxComponentRoof3->currentData().toUInt();
+				sRoof.m_displayColor = QColor("#566094");	//for roofs
 			}
+			//				else if(i>0){
+			//					sRoof.m_displayName =  tr("Wall surface %1").arg(++wallCount);
+			//					if (m_ui->comboBoxComponentWall3->count() == 0)
+			//						componentID = VICUS::INVALID_ID;
+			//					else
+			//						componentID = m_ui->comboBoxComponentWall3->currentData().toUInt();
+			//				}
+		}
 			break;
 		}
 		//}
@@ -1146,10 +1145,10 @@ void SVPropVertexListWidget::on_pushButtonCreateRoof_clicked() {
 	//TODO Dirk hier muss noch die Floor Schaltfläche rein sobald Andreas die nachgerüstet hat
 	if (m_ui->comboBoxComponentWall3->count() == 0)
 		componentInstances.push_back(
-				VICUS::ComponentInstance(++compInstID, VICUS::INVALID_ID, sFloor.m_id, VICUS::INVALID_ID));
+					VICUS::ComponentInstance(++compInstID, VICUS::INVALID_ID, sFloor.m_id, VICUS::INVALID_ID));
 	else
 		componentInstances.push_back(
-				VICUS::ComponentInstance(++compInstID, m_ui->comboBoxComponentWall3->currentData().toUInt(), sFloor.m_id, VICUS::INVALID_ID));
+					VICUS::ComponentInstance(++compInstID, m_ui->comboBoxComponentWall3->currentData().toUInt(), sFloor.m_id, VICUS::INVALID_ID));
 
 	double area = sFloor.geometry().area();
 	VICUS::KeywordList::setParameter(r.m_para, "Room::para_t", VICUS::Room::P_Area, area);
@@ -1470,8 +1469,8 @@ void SVPropVertexListWidget::updateNetworkButtons() {
 	bool canCreateSubStation = true;
 	netId = m_ui->comboBoxNetwork2->currentData().toUInt();
 	if (m_ui->comboBoxNetwork2->currentIndex() == -1 ||
-		!m_ui->lineEditSubStationMaxHeatingDemand->isValid() ||
-		m_ui->lineEditSubStationName->text().isEmpty())
+			!m_ui->lineEditSubStationMaxHeatingDemand->isValid() ||
+			m_ui->lineEditSubStationName->text().isEmpty())
 		canCreateSubStation = false;
 	else if (netId == VICUS::INVALID_ID)
 		canCreateSubStation = false;
@@ -1484,8 +1483,8 @@ void SVPropVertexListWidget::updateNetworkButtons() {
 			const VICUS::NetworkLine line(e);
 			for (const IBKMK::Vector3D &point: geomObj->vertexList()) {
 				if ( line.containsPoint(point) ||
-					e.m_node1->m_position == point ||
-					e.m_node2->m_position == point )
+					 e.m_node1->m_position == point ||
+					 e.m_node2->m_position == point )
 					canCreateSubStation = false;
 			}
 		}
@@ -1532,38 +1531,38 @@ void SVPropVertexListWidget::updateComponentComboBox(QComboBox * combo, int type
 		const VICUS::Component & c = it->second;
 
 		switch (c.m_type) {
-			case VICUS::Component::CT_OutsideWall :
-			case VICUS::Component::CT_OutsideWallToGround :
-			case VICUS::Component::CT_InsideWall :
-				if (type == -1 || type == 0)
-					selectedComponents.push_back(c.m_id);
-				else
-					otherComponents.push_back(c.m_id);
-			break;
-
-			case VICUS::Component::CT_FloorToCellar :
-			case VICUS::Component::CT_FloorToAir :
-			case VICUS::Component::CT_FloorToGround :
-				if (type == -1 || type == 1)
-					selectedComponents.push_back(c.m_id);
-				else
-					otherComponents.push_back(c.m_id);
-			break;
-
-			case VICUS::Component::CT_Ceiling :
-			case VICUS::Component::CT_SlopedRoof :
-			case VICUS::Component::CT_FlatRoof :
-			case VICUS::Component::CT_ColdRoof :
-			case VICUS::Component::CT_WarmRoof :
-				if (type == -1 || type == 2)
-					selectedComponents.push_back(c.m_id);
-				else
-					otherComponents.push_back(c.m_id);
-			break;
-
-			case VICUS::Component::CT_Miscellaneous :
-			case VICUS::Component::NUM_CT:
+		case VICUS::Component::CT_OutsideWall :
+		case VICUS::Component::CT_OutsideWallToGround :
+		case VICUS::Component::CT_InsideWall :
+			if (type == -1 || type == 0)
+				selectedComponents.push_back(c.m_id);
+			else
 				otherComponents.push_back(c.m_id);
+			break;
+
+		case VICUS::Component::CT_FloorToCellar :
+		case VICUS::Component::CT_FloorToAir :
+		case VICUS::Component::CT_FloorToGround :
+			if (type == -1 || type == 1)
+				selectedComponents.push_back(c.m_id);
+			else
+				otherComponents.push_back(c.m_id);
+			break;
+
+		case VICUS::Component::CT_Ceiling :
+		case VICUS::Component::CT_SlopedRoof :
+		case VICUS::Component::CT_FlatRoof :
+		case VICUS::Component::CT_ColdRoof :
+		case VICUS::Component::CT_WarmRoof :
+			if (type == -1 || type == 2)
+				selectedComponents.push_back(c.m_id);
+			else
+				otherComponents.push_back(c.m_id);
+			break;
+
+		case VICUS::Component::CT_Miscellaneous :
+		case VICUS::Component::NUM_CT:
+			otherComponents.push_back(c.m_id);
 			break;
 		}
 	}

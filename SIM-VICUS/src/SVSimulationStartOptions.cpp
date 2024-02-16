@@ -265,13 +265,6 @@ void SVSimulationStartOptions::on_lineEditDuration_editingFinishedSuccessfully()
 	undo->push();
 }
 
-void selectChildSurfaces(const VICUS::Surface &s, std::vector<const VICUS::Surface*> &selectedSurfaces) {
-	for (const VICUS::Surface &cs : s.childSurfaces()) {
-		selectedSurfaces.push_back(&cs);
-		selectChildSurfaces(cs, selectedSurfaces);
-	}
-}
-
 
 bool SVSimulationStartOptions::startSimulation(bool testInit, bool forceForegroundProcess, bool waitForFinishedProcess, bool calculateViewFactors) {
 
