@@ -696,7 +696,7 @@ void Polygon3D::polyCyclesAfterTrimming(std::vector<IBKMK::Polygon3D> &polys,
 		std::vector<std::vector<Vector3D>> outputVerts;
 		std::vector<Vector3D> verts;
 		try {
-			std::vector<Vector3D> verts = polys[polysIterator].vertexes();
+			verts = polys[polysIterator].vertexes();
 		}
 		catch (IBK::Exception &ex) {
 			IBK::IBK_Message("Vertexes of polygon after trimming are empty. Skipping.");
