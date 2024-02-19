@@ -161,7 +161,8 @@ public:
 	bool pointBetweenPoints(const Vector3D &point, const Vector3D &otherA, const Vector3D &otherB);
 
 	/*! Helper function for polyCyclesAfterTrimming.
-	 *  This function detects disjunct polygons that remain after trimming with a plane and divides it into multiple polygons accordingly.
+	 *  This function detects disjunct polygons within a shape (that remain after trimming with a plane) and divides it into multiple polygons accordingly.
+	 *  Therefore it checks if any polygon edges along the trimming plane are contained within each other.
 		\param verts input Polygon that may contain multiple disjunct polygons
 		\param trimPlaneNormal normal vector of the plane that has been used to trim
 		\param offset offset of the plane that has been used to trim
@@ -172,10 +173,11 @@ public:
 						  const double offset, std::vector<std::vector<Vector3D>> & outputVerts);
 
 	/*! Helper function for trimByPlane.
-	 *  After vertices have been sorted by sides of the trim plane they're located on, these two "side" groups might each contain more than 1 polygon
+	 *  After vertices have been sorted by sides of the trim plane they're located on, these two "side" groups might still contain more than 1 polygon each
 	 *  (e.g. after trimming a U shape horizontally).
-	 *  This function runs dividePolyCycles to detect disjunct polygons that remain after trimming with a plane and divides it into multiple polygons accordingly.
-	 *  Returns nothing but works on vertsArray itself.
+	 *  This function manages running the dividePolyCycles function on the output, which detects disjunct polygons that remain after trimming with a plane
+	 *  and divides it into multiple polygons accordingly.
+	 *  Returns nothing but works on the input itself.
 		\param polys Vector of polygons (each being one side of the plane) that remain after trimming.
 		\param trimPlaneNormal Normalvector of the trimming plane that has been used for trimming
 		\param offset Offset of the trimming plane that has been used for trimming
