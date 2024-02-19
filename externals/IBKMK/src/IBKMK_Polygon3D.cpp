@@ -621,7 +621,7 @@ bool Polygon3D::dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vec
 							std::vector<std::vector<Vector3D>> outputVertsA = {};
 							std::vector<std::vector<Vector3D>> outputVertsB = {};
 							if (dividePolyCycles(subPolyA, trimPlaneNormal, offset, outputVertsA)) {
-								for (std::vector<Vector3D> verts : outputVertsA) {
+								for (const std::vector<Vector3D> & verts : outputVertsA) {
 									outputVerts.push_back(verts);
 								}
 							} else {
@@ -629,7 +629,7 @@ bool Polygon3D::dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vec
 							}
 
 							if (dividePolyCycles(subPolyB, trimPlaneNormal, offset, outputVertsB)) {
-								for (std::vector<Vector3D> verts : outputVertsB) {
+								for (const std::vector<Vector3D> & verts : outputVertsB) {
 									outputVerts.push_back(verts);
 								}
 							} else {
@@ -661,7 +661,7 @@ bool Polygon3D::dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vec
 							std::vector<std::vector<Vector3D>> outputVertsB = {};
 
 							if (dividePolyCycles(subPolyA, trimPlaneNormal, offset, outputVertsA)) {
-								for (std::vector<Vector3D> verts : outputVertsA) {
+								for (const std::vector<Vector3D> & verts : outputVertsA) {
 									outputVerts.push_back(verts);
 								}
 							} else {
@@ -669,7 +669,7 @@ bool Polygon3D::dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vec
 							}
 
 							if (dividePolyCycles(subPolyB, trimPlaneNormal, offset, outputVertsB)) {
-								for (std::vector<Vector3D> verts : outputVertsB) {
+								for (const std::vector<Vector3D> & verts : outputVertsB) {
 									outputVerts.push_back(verts);
 								}
 							} else {
