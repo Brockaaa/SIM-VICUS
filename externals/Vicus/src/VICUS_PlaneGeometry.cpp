@@ -105,8 +105,8 @@ double PlaneGeometry::orientation(int digits) const {
 
 double PlaneGeometry::area(int digits) const {
 	double area = 0.0;
-	for(const VICUS::PlaneGeometry::Hole &h : m_holes) {
-		if(h.m_isChildSurface)
+	for (const VICUS::PlaneGeometry::Hole &h : m_holes) {
+		if (h.m_idObject == VICUS::INVALID_ID)
 			area -= h.m_holeGeometry.area(digits);
 	}
 	return area + m_polygon.polyline().area(digits);
