@@ -2066,7 +2066,7 @@ void Drawing::generatePlanesFromText(const std::string &text, double textHeight,
 
 			const std::vector<VICUS::PlaneGeometry::Hole> &holes = planeGeometries.back().holes();
 			const_cast<std::vector<VICUS::PlaneGeometry::Hole> &>(holes).push_back(
-						VICUS::PlaneGeometry::Hole(VICUS::INVALID_ID, verts2D, false));
+						VICUS::PlaneGeometry::Hole(VICUS::INVALID_ID, verts2D));
 			planeGeometries.back().setHoles(holes);
 		}
 		else
