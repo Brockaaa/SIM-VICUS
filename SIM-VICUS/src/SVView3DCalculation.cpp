@@ -225,7 +225,7 @@ void SVView3DCalculation::calculateViewFactors(QWidget * parent, std::vector<con
 
 			const VICUS::PlaneTriangulationData &planeTriangulation = holesTriangles[i];
 
-			if (holes[i].m_isChildSurface)
+			if (holes[i].m_idObject == VICUS::INVALID_ID)
 				continue;
 
 			const VICUS::SubSurface &subS = subSurfs[i];
