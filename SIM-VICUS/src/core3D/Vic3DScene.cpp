@@ -1726,7 +1726,7 @@ void Scene::generateTransparentBuildingGeometry(const HighlightingMode &mode) {
 								// Find correct hole index
 								for(;idx<s.geometry().holes().size(); ++idx) {
 									const VICUS::PlaneGeometry::Hole & h = s.geometry().holes()[idx];
-									if(!h.m_isChildSurface && h.m_idObject == sub.m_id) {
+									if(h.m_idObject != VICUS::INVALID_ID && h.m_idObject == sub.m_id) {
 										foundHole = true;
 										break;
 									}
@@ -3463,7 +3463,7 @@ void Scene::snapLocalCoordinateSystem(const PickObject & pickObject) {
 	}
 
 	// take closest snap point and snap to it
-	qDebug() << "Snap point: " << snapPoint.m_x << " | " << snapPoint.m_y << " | " <<  snapPoint.m_z;
+	// qDebug() << "Snap point: " << snapPoint.m_x << " | " << snapPoint.m_y << " | " <<  snapPoint.m_z;
 
 	QVector3D newCoordinatePoint = IBKVector2QVector(snapPoint);
 	m_coordinateSystemObject.setTranslation(newCoordinatePoint);
@@ -3763,7 +3763,7 @@ void Scene::setDefaultViewState() {
 			if (vs.m_propertyWidgetMode == SVViewState::PM_EditGeometry)
 				vs.m_propertyWidgetMode = SVViewState::PM_AddGeometry;
 		}
-		else if (m_coordinateSystemObject.m_geometryTransformMode == Vic3D::CoordinateSystemObject::TM_TrimMask)
+		else if (m_coordinateSystemObject.m_geometryTransformMode == Vic3D::CoordinateSystemObject::TM_Trim)
 			vs.m_sceneOperationMode = SVViewState::OM_TrimObjects;
 		else
 			vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;
