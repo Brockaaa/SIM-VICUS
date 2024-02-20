@@ -77,7 +77,7 @@ void SVUndoCopySubSurfaces::redo() {
 		if (s != nullptr) {
 			const_cast<std::vector<VICUS::SubSurface> &>(s->subSurfaces()).push_back(ss);
 			std::vector<VICUS::PlaneGeometry::Hole> holes = s->geometry().holes();
-			holes.push_back(VICUS::PlaneGeometry::Hole(ss.m_id, ss.m_polygon2D, false));
+			holes.push_back(VICUS::PlaneGeometry::Hole(ss.m_id, ss.m_polygon2D));
 			const_cast<VICUS::PlaneGeometry &>(s->geometry()).setHoles(holes);
 		}
 	}
