@@ -46,6 +46,7 @@ public:
 	SVUndoTrimObjects(const QString & label,
 					  std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	trimmedSurfaces,
 					  std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	trimmedSubSurfaces,
+					  std::map<unsigned int, std::map<unsigned int, std::vector<VICUS::Polygon2D>>> trimmedSurfaceHoles,
 					  const VICUS::Project & newProject,
 					  IBK::Notification *notify = nullptr);
 
@@ -73,6 +74,13 @@ private:
 		value vector with newly produced 3D polygons of sub-surfaces
 	*/
 	std::map<unsigned int, std::vector<IBKMK::Polygon3D>>	m_trimmedSubSurfaces;
+
+	/*! Object copies of 2d holes to be added to surfaces.
+		first key id of surface that contains the respective holes
+		second key index of trim-result-polygon in vector, that the respective hole(s) is/are located within
+		value vector with holes in 2D according to respective Surface
+	 */
+	std::map<unsigned int, std::map<unsigned int, std::vector<VICUS::Polygon2D>>> m_trimmedSurfaceHoles;
 
 	/*! Cache for entire project data. */
 	VICUS::Project	m_project;

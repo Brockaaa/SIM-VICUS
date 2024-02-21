@@ -558,7 +558,7 @@ void Polygon3D::update2DPolyline(const std::vector<Vector3D> & verts) {
 }
 
 
-bool Polygon3D::pointBetweenPoints(const Vector3D &point, const Vector3D &otherA, const Vector3D &otherB) {
+bool Polygon3D::pointBetweenPoints(const Vector3D &point, const Vector3D &otherA, const Vector3D &otherB) const {
 	return ((point.m_x > std::min(otherA.m_x, otherB.m_x) || IBK::nearly_equal<5>(point.m_x, std::min(otherA.m_x, otherB.m_x)))
 		 && (point.m_x < std::max(otherA.m_x, otherB.m_x) || IBK::nearly_equal<5>(point.m_x, std::max(otherA.m_x, otherB.m_x)))
 		 && (point.m_y > std::min(otherA.m_y, otherB.m_y) || IBK::nearly_equal<5>(point.m_y, std::min(otherA.m_y, otherB.m_y)))
@@ -569,7 +569,7 @@ bool Polygon3D::pointBetweenPoints(const Vector3D &point, const Vector3D &otherA
 
 
 bool Polygon3D::dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vector3D trimPlaneNormal,
-								 const double offset, std::vector<std::vector<Vector3D>> & outputVerts) {
+								 const double offset, std::vector<std::vector<Vector3D>> & outputVerts) const {
 
 	if (verts.size() > 3) {
 
@@ -689,7 +689,7 @@ bool Polygon3D::dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vec
 
 void Polygon3D::polyCyclesAfterTrimming(std::vector<IBKMK::Polygon3D> &polys,
 										const IBKMK::Vector3D &trimPlaneNormal,
-										const double offset) {
+										const double offset) const {
 
 	std::vector<int> indicesToBeRemovedAfter;
 	for (unsigned int polysIterator = 0, count = polys.size(); polysIterator<count; ++polysIterator ) {
@@ -723,7 +723,7 @@ void Polygon3D::polyCyclesAfterTrimming(std::vector<IBKMK::Polygon3D> &polys,
 }
 
 
-bool Polygon3D::trimByPlane(const IBKMK::Polygon3D &plane, std::vector<IBKMK::Polygon3D> &trimmedPolygons) {
+bool Polygon3D::trimByPlane(const IBKMK::Polygon3D &plane, std::vector<IBKMK::Polygon3D> &trimmedPolygons) const {
 	const std::vector<Vector3D> &vertsA = vertexes();
 	const std::vector<Vector3D> &vertsB = plane.vertexes();
 

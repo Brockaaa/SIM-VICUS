@@ -79,7 +79,7 @@ public:
 	/*! Gives read-access to the surface's geometry. */
 	const PlaneGeometry & geometry() const { return m_geometry; }
 
-	Polygon3D generatePolygon3D(const Polygon2D &poly2D);
+	Polygon3D generatePolygon3D(const Polygon2D &poly2D) const;
 
 	/*! Subtracts the subsurface are from the surface area */
 	double areaWithoutSubsurfaces() const ;

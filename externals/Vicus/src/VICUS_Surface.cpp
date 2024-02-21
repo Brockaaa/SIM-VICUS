@@ -138,7 +138,7 @@ void Surface::updateGeometryHoles() {
 	m_geometry.setHoles(holes);
 }
 
-Polygon3D Surface::generatePolygon3D(const Polygon2D &poly2D) {
+Polygon3D Surface::generatePolygon3D(const Polygon2D &poly2D) const {
 	std::vector<IBKMK::Vector3D> verts3D(poly2D.vertexes().size());
 	for (unsigned int i = 0; i < poly2D.vertexes().size(); ++i) {
 		verts3D[i] = m_geometry.offset() + geometry().localX() * poly2D.vertexes()[i].m_x

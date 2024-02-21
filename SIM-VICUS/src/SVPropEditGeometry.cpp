@@ -1693,6 +1693,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 	VICUS::ComponentInstance compInstance;
 	std::map<unsigned int, std::vector<IBKMK::Polygon3D>> trimmedSurfacePolygons;
 	std::map<unsigned int, std::vector<IBKMK::Polygon3D>> trimmedSubSurfacePolygons;
+	std::map<unsigned int, std::map<unsigned int, std::vector<VICUS::Polygon2D>>> trimmedSurfaceHoles;
 
 	// *** selected surfaces ***
 	for (const VICUS::Object* o : sel) {
@@ -1713,6 +1714,29 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 			continue;
 		}
 
+		// Iterate over all holes in polygon, divide them into two vectors:
+		// holes that will be relocated to their new parent surface, and
+		// holes that got trimmed along the surface and will be base for new polyline calculation,
+		// as they're now sharing a polygon border with the new polygon
+		std::vector<IBKMK::Polygon3D> resultingHoles;
+		std::vector<IBKMK::Polygon3D> holesToBeRemoved;
+		const std::vector<VICUS::Polygon2D> & polyHoles = surf->holes();
+		for (const VICUS::Polygon2D & trimPolyHole : polyHoles) {
+			const IBKMK::Polygon3D polyHole3D = surf->generatePolygon3D(trimPolyHole);
+			std::vector<IBKMK::Polygon3D> trimmedHoles;
+			bool holeTrimSuccess = polyHole3D.trimByPlane(to.trimmingPolygon(), trimmedHoles);
+			if (holeTrimSuccess) {
+				// Hole intersected plane, has to be removed after
+				for (const IBKMK::Polygon3D & trimmedHole : trimmedHoles) {
+					if (trimmedHole.isValid())
+						holesToBeRemoved.push_back(trimmedHole);
+				}
+			} else {
+				// Hole not intersecting plane, add to corresponding polygon
+				resultingHoles.push_back(polyHole3D);
+			}
+		}
+
 		std::vector<IBKMK::Polygon3D> validTrimmedPolys;
 		for (const IBKMK::Polygon3D &trimmedPoly : trimmedPolygons) {
 			if (!trimmedPoly.isValid())
@@ -1720,6 +1744,29 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 			validTrimmedPolys.push_back(trimmedPoly);
 		}
 		trimmedSurfacePolygons[surf->m_id] = validTrimmedPolys;
+
+		// initialize for planeCoordinates()
+		IBKMK::Vector2D point;
+
+		// Transform holes back to 2d and attach them to corresponding surface and corresponding id of post-trim-surfaces
+		for (const IBKMK::Polygon3D & holeToBeInserted : resultingHoles) {
+			for (unsigned int i = 0; i < validTrimmedPolys.size(); ++i) {
+				const IBKMK::Polygon3D & polyAtIndex = validTrimmedPolys.at(i);
+				// one vertex can lie ON poly line (==0) but not outside (==-1)
+				if (IBKMK::coplanarPointInPolygon3D(polyAtIndex.vertexes(), holeToBeInserted.vertexes().front()) > -1) {
+					// Matching surface found, transforming hole back into 2d
+					// Insert it into map accordingly and break loop to process next hole
+					std::vector<IBKMK::Vector2D> holeToBeInserted2D(holeToBeInserted.vertexes().size());
+					for (unsigned int j = 0; j < holeToBeInserted.vertexes().size(); ++j) {
+						IBKMK::planeCoordinates(polyAtIndex.offset(), polyAtIndex.localX(), polyAtIndex.localY(), holeToBeInserted.vertexes()[j], point.m_x, point.m_y);
+						holeToBeInserted2D.at(j) = point;
+					}
+					VICUS::Polygon2D holeToBeInsertedPolygon2D(holeToBeInserted2D);
+					trimmedSurfaceHoles[surf->m_id][i].push_back(holeToBeInsertedPolygon2D);
+					break;
+				}
+			}
+		}
 
 		//		qDebug() << QString("Trimming of surface %1 successful.").arg(surf->info());
 		++successfulTrims;
@@ -1739,6 +1786,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 		const std::vector<IBKMK::Vector2D> &verts = subSurf->m_polygon2D.vertexes();
 
 		// Transforming 2d SubSurface into 3d surface
+		// ToDo Moritz: Can this be done with generatePolygon3D ?
 		std::vector<IBKMK::Vector3D> verts3D(verts.size());
 
 		for (unsigned int i = 0; i < verts.size(); ++i) {
@@ -1791,7 +1839,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 	// create a copy of the whole project
 	VICUS::Project projectCopy = SVProjectHandler::instance().project();
-	SVUndoTrimObjects * undo = new SVUndoTrimObjects(tr("Trimming performed."), trimmedSurfacePolygons, trimmedSubSurfacePolygons, projectCopy, &progressNotifyer);
+	SVUndoTrimObjects * undo = new SVUndoTrimObjects(tr("Trimming performed."), trimmedSurfacePolygons, trimmedSubSurfacePolygons, trimmedSurfaceHoles, projectCopy, &progressNotifyer);
 	undo->push();
 
 }
@@ -1807,7 +1855,7 @@ void SVPropEditGeometry::on_pushButtonApplyRotation_clicked() {
 void SVPropEditGeometry::on_pushButtonApplyTrimmingRotation_clicked() {
 	Q_ASSERT(SVViewStateHandler::instance().m_trimmingObject != nullptr);
 	SVViewStateHandler::instance().m_trimmingObject->setTrimmingPlaneNormal(m_trimingPlaneNormal);
-} 
+}
 
 void SVPropEditGeometry::on_comboBoxUnit_currentIndexChanged(int /*index*/) {
 	enableTransformation();

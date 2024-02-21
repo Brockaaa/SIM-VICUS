@@ -40,9 +40,11 @@ SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
 									 // trimSurfaces is a vector of tuples, each containing a reference to the selected surface of one trim, and the polyInput vector
 									 // which was handed over to the polyTrim method, and therefore contains the trim result surfaces
 									 std::map<unsigned int, std::vector<IBKMK::Polygon3D> > trimmedSubSurfaces,
+									 std::map<unsigned int, std::map<unsigned int, std::vector<VICUS::Polygon2D>>> trimmedSurfaceHoles,
 									 const VICUS::Project & oldProject, IBK::Notification *notify):
 	m_trimmedSurfaces(trimmedPolygons),
 	m_trimmedSubSurfaces(trimmedSubSurfaces),
+	m_trimmedSurfaceHoles(trimmedSurfaceHoles),
 	m_project(oldProject)
 {
 	setText( label );
@@ -111,6 +113,7 @@ void SVUndoTrimObjects::redo() {
 			if (i > 0) // only if sub-surface is really trimmed
 				newSurf.m_displayName = m_project.newUniqueSurfaceName(newSurf.m_displayName);
 			newSurf.setPolygon3D(surfPoly);
+			newSurf.setHoles(m_trimmedSurfaceHoles[id][i]);
 			std::vector<VICUS::SubSurface> tempSubsurfaces;
 
 			// Store ids of added sub-surfaces

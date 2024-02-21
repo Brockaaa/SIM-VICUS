@@ -158,7 +158,7 @@ public:
 	 *  \param edgeB Vector3D point
 		\returns Returns true if point is contained within two points in all 3 dimensions. Else returns false.
 	*/
-	bool pointBetweenPoints(const Vector3D &point, const Vector3D &otherA, const Vector3D &otherB);
+	bool pointBetweenPoints(const Vector3D &point, const Vector3D &otherA, const Vector3D &otherB) const;
 
 	/*! Helper function for polyCyclesAfterTrimming.
 	 *  This function detects disjunct polygons within a shape (that remain after trimming with a plane) and divides it into multiple polygons accordingly.
@@ -170,7 +170,7 @@ public:
 		\returns true if disjunct polygons have been found and separated, else false.
 	*/
 	bool dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vector3D trimPlaneNormal,
-						  const double offset, std::vector<std::vector<Vector3D>> & outputVerts);
+						  const double offset, std::vector<std::vector<Vector3D>> & outputVerts) const;
 
 	/*! Helper function for trimByPlane.
 	 *  After vertices have been sorted by sides of the trim plane they're located on, these two "side" groups might still contain more than 1 polygon each
@@ -183,7 +183,7 @@ public:
 		\param offset Offset of the trimming plane that has been used for trimming
 	*/
 	void polyCyclesAfterTrimming(std::vector<IBKMK::Polygon3D> &polys, const IBKMK::Vector3D &trimPlaneNormal,
-								 const double offset);
+								 const double offset) const;
 
 	/*! Trims a polygon along the plane of another support polygon.
 		The intersection line is calculated, and the first polygon is trimmed along.
@@ -193,7 +193,7 @@ public:
 		\returns Retruns true after success, returns false if planes are coplanar or intersection
 				 line does not intersect with polygon.
 	 */
-	bool trimByPlane(const IBKMK::Polygon3D &plane, std::vector<Polygon3D> &trimmedPolygons);
+	bool trimByPlane(const IBKMK::Polygon3D &plane, std::vector<Polygon3D> &trimmedPolygons) const;
 
 
 private:
