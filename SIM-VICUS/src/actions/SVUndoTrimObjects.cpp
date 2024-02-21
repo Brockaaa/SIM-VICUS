@@ -40,7 +40,7 @@ SVUndoTrimObjects::SVUndoTrimObjects(const QString & label,
 									 // trimSurfaces is a vector of tuples, each containing a reference to the selected surface of one trim, and the polyInput vector
 									 // which was handed over to the polyTrim method, and therefore contains the trim result surfaces
 									 std::map<unsigned int, std::vector<IBKMK::Polygon3D> > trimmedSubSurfaces,
-									 std::map<unsigned int, std::map<unsigned int, std::vector<VICUS::Polygon2D>>> trimmedSurfaceHoles,
+									 std::map<unsigned int, std::map<unsigned int, std::vector<VICUS::Hole>>> trimmedSurfaceHoles,
 									 const VICUS::Project & oldProject, IBK::Notification *notify):
 	m_trimmedSurfaces(trimmedPolygons),
 	m_trimmedSubSurfaces(trimmedSubSurfaces),

@@ -1693,7 +1693,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 	VICUS::ComponentInstance compInstance;
 	std::map<unsigned int, std::vector<IBKMK::Polygon3D>> trimmedSurfacePolygons;
 	std::map<unsigned int, std::vector<IBKMK::Polygon3D>> trimmedSubSurfacePolygons;
-	std::map<unsigned int, std::map<unsigned int, std::vector<VICUS::Polygon2D>>> trimmedSurfaceHoles;
+	std::map<unsigned int, std::map<unsigned int, std::vector<VICUS::Hole>>> trimmedSurfaceHoles;
 
 	// *** selected surfaces ***
 	for (const VICUS::Object* o : sel) {
@@ -1720,9 +1720,9 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 		// as they're now sharing a polygon border with the new polygon
 		std::vector<IBKMK::Polygon3D> resultingHoles;
 		std::vector<IBKMK::Polygon3D> holesToBeRemoved;
-		const std::vector<VICUS::Polygon2D> & polyHoles = surf->holes();
-		for (const VICUS::Polygon2D & trimPolyHole : polyHoles) {
-			const IBKMK::Polygon3D polyHole3D = surf->generatePolygon3D(trimPolyHole);
+		const std::vector<VICUS::Hole> & polyHoles = surf->holes();
+		for (const VICUS::Hole & trimPolyHole : polyHoles) {
+			const IBKMK::Polygon3D polyHole3D = surf->generatePolygon3D(trimPolyHole.m_holePolygon);
 			std::vector<IBKMK::Polygon3D> trimmedHoles;
 			bool holeTrimSuccess = polyHole3D.trimByPlane(to.trimmingPolygon(), trimmedHoles);
 			if (holeTrimSuccess) {
@@ -1749,20 +1749,20 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 		IBKMK::Vector2D point;
 
 		// Transform holes back to 2d and attach them to corresponding surface and corresponding id of post-trim-surfaces
-		for (const IBKMK::Polygon3D & holeToBeInserted : resultingHoles) {
+		for (const IBKMK::Polygon3D & holeToBeInserted3D : resultingHoles) {
 			for (unsigned int i = 0; i < validTrimmedPolys.size(); ++i) {
 				const IBKMK::Polygon3D & polyAtIndex = validTrimmedPolys.at(i);
 				// one vertex can lie ON poly line (==0) but not outside (==-1)
-				if (IBKMK::coplanarPointInPolygon3D(polyAtIndex.vertexes(), holeToBeInserted.vertexes().front()) > -1) {
+				if (IBKMK::coplanarPointInPolygon3D(polyAtIndex.vertexes(), holeToBeInserted3D.vertexes().front()) > -1) {
 					// Matching surface found, transforming hole back into 2d
 					// Insert it into map accordingly and break loop to process next hole
-					std::vector<IBKMK::Vector2D> holeToBeInserted2D(holeToBeInserted.vertexes().size());
-					for (unsigned int j = 0; j < holeToBeInserted.vertexes().size(); ++j) {
-						IBKMK::planeCoordinates(polyAtIndex.offset(), polyAtIndex.localX(), polyAtIndex.localY(), holeToBeInserted.vertexes()[j], point.m_x, point.m_y);
+					std::vector<IBKMK::Vector2D> holeToBeInserted2D(holeToBeInserted3D.vertexes().size());
+					for (unsigned int j = 0; j < holeToBeInserted3D.vertexes().size(); ++j) {
+						IBKMK::planeCoordinates(polyAtIndex.offset(), polyAtIndex.localX(), polyAtIndex.localY(), holeToBeInserted3D.vertexes()[j], point.m_x, point.m_y);
 						holeToBeInserted2D.at(j) = point;
 					}
-					VICUS::Polygon2D holeToBeInsertedPolygon2D(holeToBeInserted2D);
-					trimmedSurfaceHoles[surf->m_id][i].push_back(holeToBeInsertedPolygon2D);
+					VICUS::Hole holeToBeInserted(holeToBeInserted2D);
+					trimmedSurfaceHoles[surf->m_id][i].push_back(holeToBeInserted);
 					break;
 				}
 			}
