@@ -229,6 +229,11 @@ void CoordinateSystemObject::renderOpaque() {
 		case TM_Translate :
 			DRAW_ELEMENT(ELEMENT_CENTER_SPHERE_TRANSLATION_INDEX);
 			DRAW_ELEMENT(ELEMENT_AXES_SPHERE_INDEX);
+
+		case TM_Trim :
+			DRAW_ELEMENT(ELEMENT_CENTER_SPHERE_TRANSLATION_INDEX);
+			DRAW_ELEMENT(ELEMENT_AXES_SPHERE_INDEX);
+
 		break;
 	}
 
@@ -292,7 +297,8 @@ bool CoordinateSystemObject::pick(const IBKMK::Vector3D & nearPoint, const IBKMK
 	IBKMK::Vector3D closestPoint;
 	IBKMK::Vector3D lotPoint;
 	switch (m_geometryTransformMode) {
-		case Vic3D::CoordinateSystemObject::TM_Translate : {
+		case Vic3D::CoordinateSystemObject::TM_Translate :
+		case Vic3D::CoordinateSystemObject::TM_Trim : {
 			bool hit = IBKMK::lineShereIntersection(nearPoint,
 													direction,							// line of sight
 													QVector2IBKVector(translation()),

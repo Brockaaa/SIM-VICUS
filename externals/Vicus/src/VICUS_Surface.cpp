@@ -87,10 +87,10 @@ void Surface::readXML(const TiXmlElement * element) {
 	// copy polygon to plane geometry
 	std::vector<PlaneGeometry::Hole> holes;
 	for(const SubSurface & s : m_subSurfaces)
-		holes.push_back(PlaneGeometry::Hole(s.m_id, s.m_polygon2D, false));
+		holes.push_back(PlaneGeometry::Hole(s.m_id, s.m_polygon2D));
 
-	for(const Polygon2D & h : m_holes) {
-		holes.push_back(PlaneGeometry::Hole(VICUS::INVALID_ID, h, true) );
+	for(const Hole & h : m_holes) {
+		holes.push_back(PlaneGeometry::Hole(VICUS::INVALID_ID, h.m_holePolygon) );
 	}
 	// if we didn't get a Polygon3D element, the next call will throw an exception
 	m_geometry.setGeometry( poly3D, holes);
@@ -124,16 +124,16 @@ void Surface::setSubSurfaces(const std::vector<SubSurface>  & subSurfaces) {
 	m_subSurfaces = subSurfaces;
 }
 
-void Surface::setHoles(const std::vector<Polygon2D> &holes) {
+void Surface::setHoles(const std::vector<Hole> &holes) {
 	m_holes = holes;
 }
 
 void Surface::updateGeometryHoles() {
 	std::vector<PlaneGeometry::Hole> holes;
 	for (const SubSurface & s : m_subSurfaces)
-		holes.push_back(PlaneGeometry::Hole(s.m_id, s.m_polygon2D, false));
-	for (const Polygon2D & h : m_holes) {
-		holes.push_back(PlaneGeometry::Hole(VICUS::INVALID_ID, h, true) );
+		holes.push_back(PlaneGeometry::Hole(s.m_id, s.m_polygon2D));
+	for (const Hole & h : m_holes) {
+		holes.push_back(PlaneGeometry::Hole(VICUS::INVALID_ID, h.m_holePolygon) );
 	}
 	m_geometry.setHoles(holes);
 }
@@ -150,7 +150,7 @@ Polygon3D Surface::generatePolygon3D(const Polygon2D &poly2D) const {
 
 void Surface::flip() {
 	m_geometry.flip(); // the hole polygons have been adjusted here already
-	IBK_ASSERT(m_subSurfaces.size() == m_geometry.holes().size());
+	IBK_ASSERT(m_subSurfaces.size() + m_holes.size() == m_geometry.holes().size());
 	for (unsigned int i=0, count=m_subSurfaces.size(); i<count; ++i)
 		m_subSurfaces[i].m_polygon2D = m_geometry.holes()[i].m_holeGeometry;
 }

@@ -32,6 +32,7 @@
 #include "VICUS_Object.h"
 #include "VICUS_SubSurface.h"
 #include "VICUS_Polygon3D.h"
+#include "VICUS_Hole.h"
 
 #include <IBK_LinearSpline.h>
 
@@ -68,10 +69,10 @@ public:
 	void setPolygon3D(const IBKMK::Polygon3D & polygon3D);
 
 	const std::vector<SubSurface> &subSurfaces() const	{ return m_subSurfaces; }
-	const std::vector<Polygon2D>  &holes() const		{ return m_holes; }
+	const std::vector<Hole> &holes() const		{ return m_holes; }
 
-	void setSubSurfaces(const std::vector<SubSurface>  &subSurfaces);
-	void setHoles(const std::vector<VICUS::Polygon2D>  &holes);
+	void setSubSurfaces(const std::vector<SubSurface>	&subSurfaces);
+	void setHoles(const std::vector<Hole>				&holes);
 
 	/*! Updates plane geometry and sets all holes. */
 	void updateGeometryHoles();
@@ -127,8 +128,8 @@ private:
 	/*! Subsurfaces of the surface. */
 	std::vector<SubSurface>				m_subSurfaces;				// XML:E
 
-	/*! Holes inside the surface. */
-	std::vector<Polygon2D>				m_holes;					// XML:E
+	/*! Holes inside the surface. Needed for smart-trimming or breachs in walls. */
+	std::vector<Hole>					m_holes;					// XML:E
 
 	// *** RUNTIME VARIABLES ***
 

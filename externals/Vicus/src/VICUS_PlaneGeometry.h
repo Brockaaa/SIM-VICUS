@@ -52,22 +52,19 @@ namespace VICUS {
 class PlaneGeometry {
 public:
 
-    /*! Struct for Holes- */
-    struct Hole {
+	/*! Struct for Holes- */
+	struct Hole {
 
-        Hole(unsigned int idObj, const VICUS::Polygon2D &hole, bool isChildSurface) :
-            m_idObject(idObj),
-            m_holeGeometry(hole),
-            m_isChildSurface(isChildSurface)
-        {}
+		Hole(unsigned int idObj, const VICUS::Polygon2D &hole) :
+			m_idObject(idObj),
+			m_holeGeometry(hole)
+		{}
 
 		/*! ID to corresponding vicus hole object. */
-        unsigned int            m_idObject = INVALID_ID;
-        /*! Hole geometry. */
-        VICUS::Polygon2D        m_holeGeometry;
-        /*! Hole is part of an child surface. */
-        bool                    m_isChildSurface;
-    };
+		unsigned int            m_idObject = INVALID_ID;
+		/*! Hole geometry. */
+		VICUS::Polygon2D        m_holeGeometry;
+	};
 
 
 	// *** PUBLIC MEMBER FUNCTIONS ***

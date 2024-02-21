@@ -347,10 +347,11 @@ void SVUndoTrimObjects::fixSubSurfacePolygon(const IBKMK::Polygon3D &parentPoly,
 	/// Steps:
 	/// 1) Go through all edges of parent polygon
 	/// 2) Check if one of sub-surface polygon's points is on edge of parent
-	/// 3) If point is on edge, take normal of parent and edge vector and construct rectangular
+	/// 3) If point is on edge, take normal of parent and edge vector and construct perpendicular
 	///	   vector relative to edge vector
-	/// 4) Take point laying on edge add vector in both possible directions with e.g. 1cm and check
+	/// 4) Take point laying on edge add vector in both possible directions with e.g. 1 mm and check
 	///	   if point is in parent-polygon
+	/// 5) if point lays within, we take take this point
 	/// ===========================================================================================
 
 	unsigned int size = parentPoly.vertexes().size();

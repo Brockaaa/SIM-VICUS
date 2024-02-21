@@ -84,9 +84,9 @@ public:
 			set separetely)
 		*/
 		TM_Translate							= 0x100,
+		TM_Trim									= 0x200,
 		TM_RotateMask							= TM_RotateX | TM_RotateY | TM_RotateZ,
 		TM_ScaleMask							= TM_ScaleX | TM_ScaleY | TM_ScaleZ,
-		TM_TrimMask								= TM_Translate
 	};
 
 

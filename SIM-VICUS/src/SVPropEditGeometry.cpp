@@ -1243,8 +1243,8 @@ void SVPropEditGeometry::updateCoordinateSystemLook() {
 			break;
 
 		case MT_Trim:
-			if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_TrimMask) {
-				cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_TrimMask;
+			if (cso->m_geometryTransformMode != Vic3D::CoordinateSystemObject::TM_Trim) {
+				cso->m_geometryTransformMode = Vic3D::CoordinateSystemObject::TM_Trim;
 				SVViewStateHandler::instance().m_geometryView->refreshSceneView();
 			}
 			break;

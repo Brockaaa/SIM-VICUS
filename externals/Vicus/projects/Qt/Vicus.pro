@@ -61,6 +61,7 @@ HEADERS += \
 	../../src/VICUS_EpdDataset.h \
 	../../src/VICUS_EpdModuleDataset.h \
 	../../src/VICUS_GridPlane.h \
+	../../src/VICUS_Hole.h \
 	../../src/VICUS_Infiltration.h \
 	../../src/VICUS_InterfaceHeatConduction.h \
 	../../src/VICUS_InternalLoad.h \
@@ -138,6 +139,7 @@ SOURCES += \
 	../../src/VICUS_EpdModuleDataset.cpp \
 	../../src/VICUS_GridPlane.cpp \
 	../../src/VICUS_HeatLoad12831Export.cpp \
+    ../../src/VICUS_Hole.cpp \
 	../../src/VICUS_Infiltration.cpp \
 	../../src/VICUS_InterfaceHeatConduction.cpp \
 	../../src/VICUS_InternalLoad.cpp \
@@ -202,6 +204,7 @@ SOURCES += \
 	../../src/ncg/ncg_VICUS_EmbeddedDatabase.cpp \
 	../../src/ncg/ncg_VICUS_EpdDataset.cpp \
 	../../src/ncg/ncg_VICUS_GridPlane.cpp \
+    ../../src/ncg/ncg_VICUS_Hole.cpp \
 	../../src/ncg/ncg_VICUS_Infiltration.cpp \
 	../../src/ncg/ncg_VICUS_InterfaceHeatConduction.cpp \
 	../../src/ncg/ncg_VICUS_InternalLoad.cpp \

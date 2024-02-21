@@ -90,10 +90,10 @@ void NewSubSurfaceObject::create(QOpenGLShaderProgram * shaderProgram) {
 #define COLOR_ARRAY_INDEX 2
 
 	m_vertexBufferObject.bind(); // this registers this buffer data object in the currently bound vao; in subsequent
-				  // calls to shaderProgramm->setAttributeBuffer() the buffer object is associated with the
-				  // respective attribute array that's fed into the shader. When the vao is later bound before
-				  // rendering, this association is remembered so that the vertex fetch stage pulls data from
-				  // this vbo
+	// calls to shaderProgramm->setAttributeBuffer() the buffer object is associated with the
+	// respective attribute array that's fed into the shader. When the vao is later bound before
+	// rendering, this association is remembered so that the vertex fetch stage pulls data from
+	// this vbo
 
 	// coordinates
 	shaderProgram->enableAttributeArray(VERTEX_ARRAY_INDEX);
@@ -232,7 +232,7 @@ bool NewSubSurfaceObject::generateSubSurfaces(const std::vector<const VICUS::Sur
 		double wMax = widthSurface - 2 * minDistance;
 
 		// vector for each window to be created as polygon within the surface polygon
-        std::vector<VICUS::PlaneGeometry::Hole> windows;
+		std::vector<VICUS::PlaneGeometry::Hole> windows;
 
 
 		// *** Generate by percentage ***
@@ -309,102 +309,102 @@ bool NewSubSurfaceObject::generateSubSurfaces(const std::vector<const VICUS::Sur
 
 			// we keep precomputed count, but adjust geometry based on prio
 			switch (prio){
-				case Height: {
-					heightWin = std::min(heightWinPre, heightWinMax1);
-					double areaSurfaceMax = (widthSurface - 2 * minDistance) * heightWin;
+			case Height: {
+				heightWin = std::min(heightWinPre, heightWinMax1);
+				double areaSurfaceMax = (widthSurface - 2 * minDistance) * heightWin;
 
-					if (areaSurfaceMax > areaWindow){
-						widthWin = areaWindow / ( heightWin * count);
-					}
-					else {
-						widthWin = ( widthSurface - (count + 1) * minDistance ) / count;
-						heightWin = std::min(heightWinMax1, areaWindow / ( widthWin * count));
-					}
+				if (areaSurfaceMax > areaWindow){
+					widthWin = areaWindow / ( heightWin * count);
 				}
-				break;
-				case Width:{
-					widthWin = std::min(widthWinPre, widthWinMax);
-					double areaSurfaceWidth = widthWinPre * count * heightWinMax1;
-					if(areaSurfaceWidth >= areaWindow){
-						heightWin = areaWindow / ( widthWin * count);
-					}
-					else{
-						heightWin = heightWinMax1;
-						// if necessary adjust width
-						// we know we get a little error on the wwr
-						widthWin = std::min (widthWinMax, areaWindow / ( heightWin * count));
-						wwrError = 1 - heightWin * widthWin * count / areaWindow;
-					}
+				else {
+					widthWin = ( widthSurface - (count + 1) * minDistance ) / count;
+					heightWin = std::min(heightWinMax1, areaWindow / ( widthWin * count));
 				}
+			}
 				break;
-				case SillHeight:{
-					// Priority 1 sill height
-					if (inputData.m_priorities[2] < inputData.m_priorities[1] && inputData.m_priorities[2] < inputData.m_priorities[0]) {
-						// Priority 2 window height
-						double heightWinMax2 = heightSurface - minDistance - heightSill;
-						// This area is calculated from the width and height minus the sill height
-						double areaSurfaceSill = (widthSurface - 2 * minDistance) * heightWinMax2;
+			case Width:{
+				widthWin = std::min(widthWinPre, widthWinMax);
+				double areaSurfaceWidth = widthWinPre * count * heightWinMax1;
+				if(areaSurfaceWidth >= areaWindow){
+					heightWin = areaWindow / ( widthWin * count);
+				}
+				else{
+					heightWin = heightWinMax1;
+					// if necessary adjust width
+					// we know we get a little error on the wwr
+					widthWin = std::min (widthWinMax, areaWindow / ( heightWin * count));
+					wwrError = 1 - heightWin * widthWin * count / areaWindow;
+				}
+			}
+				break;
+			case SillHeight:{
+				// Priority 1 sill height
+				if (inputData.m_priorities[2] < inputData.m_priorities[1] && inputData.m_priorities[2] < inputData.m_priorities[0]) {
+					// Priority 2 window height
+					double heightWinMax2 = heightSurface - minDistance - heightSill;
+					// This area is calculated from the width and height minus the sill height
+					double areaSurfaceSill = (widthSurface - 2 * minDistance) * heightWinMax2;
 
-						// height is next prio
-						if(inputData.m_priorities[0] > inputData.m_priorities[1] ){
-							/// TODO Dirk das wäre die ganz normale Berechnung für die
-							/// Höhe als oberste Priorität
-							heightWin = std::min(heightWinPre, heightWinMax2);
-							areaSurfaceSill = (widthSurface - 2 * minDistance) * heightWin;
-							if(areaSurfaceSill > areaWindow){
-								widthWin = areaWindow / ( heightWin * count);
-							}
-							else{
-								widthWin = ( widthSurface - (count + 1) * minDistance ) / count;
-								heightWin = std::min(heightWinMax1, areaWindow / ( widthWin * count));
-							}
+					// height is next prio
+					if(inputData.m_priorities[0] > inputData.m_priorities[1] ){
+						/// TODO Dirk das wäre die ganz normale Berechnung für die
+						/// Höhe als oberste Priorität
+						heightWin = std::min(heightWinPre, heightWinMax2);
+						areaSurfaceSill = (widthSurface - 2 * minDistance) * heightWin;
+						if(areaSurfaceSill > areaWindow){
+							widthWin = areaWindow / ( heightWin * count);
 						}
-						// Priority 2 window width
-						else if(true){
-							// This is the maximum possible area that results when the windows are calculated
-							// with the maximum possible window height, taking into account the sill height.
-							widthWin = std::min(widthWinPre, widthWinMax);
-							double areaSurfaceWidth = widthWinPre * count * heightWinMax2;
-							if( areaSurfaceWidth >= areaWindow){
-								heightWin = areaWindow / ( widthWin * count );
+						else{
+							widthWin = ( widthSurface - (count + 1) * minDistance ) / count;
+							heightWin = std::min(heightWinMax1, areaWindow / ( widthWin * count));
+						}
+					}
+					// Priority 2 window width
+					else if(true){
+						// This is the maximum possible area that results when the windows are calculated
+						// with the maximum possible window height, taking into account the sill height.
+						widthWin = std::min(widthWinPre, widthWinMax);
+						double areaSurfaceWidth = widthWinPre * count * heightWinMax2;
+						if( areaSurfaceWidth >= areaWindow){
+							heightWin = areaWindow / ( widthWin * count );
+						}
+						else{
+							if(areaSurfaceSill >= areaWindow){
+								heightWin = heightWinMax2;
+								// if necessary adjust width
+								// we know we get a little error on the wwr
+								widthWin = std::min (widthWinMax, areaWindow / ( heightWin * count));
+								wwrError = 1 - heightWin * widthWin * count / areaWindow;
 							}
 							else{
-								if(areaSurfaceSill >= areaWindow){
-									heightWin = heightWinMax2;
+								/// TODO Dirk das wäre die ganz normale Berechnung für die
+								/// Breite als oberste Priorität
+								widthWin = std::min(widthWinPre, widthWinMax);
+								areaSurfaceWidth = widthWin * count * heightWinMax1;
+								if(areaSurfaceWidth >= areaWindow){
+									heightWin = areaWindow / ( widthWin * count);
+								}
+								else{
+									heightWin = heightWinMax1;
 									// if necessary adjust width
 									// we know we get a little error on the wwr
 									widthWin = std::min (widthWinMax, areaWindow / ( heightWin * count));
 									wwrError = 1 - heightWin * widthWin * count / areaWindow;
 								}
-								else{
-									/// TODO Dirk das wäre die ganz normale Berechnung für die
-									/// Breite als oberste Priorität
-									widthWin = std::min(widthWinPre, widthWinMax);
-									areaSurfaceWidth = widthWin * count * heightWinMax1;
-									if(areaSurfaceWidth >= areaWindow){
-										heightWin = areaWindow / ( widthWin * count);
-									}
-									else{
-										heightWin = heightWinMax1;
-										// if necessary adjust width
-										// we know we get a little error on the wwr
-										widthWin = std::min (widthWinMax, areaWindow / ( heightWin * count));
-										wwrError = 1 - heightWin * widthWin * count / areaWindow;
-									}
-								}
 							}
 						}
 					}
-					else {
-						/// TODO : Dirk, else case is missing
-						continue;
-					}
 				}
-				break;
-				case Distance:{
-					/// TODO Dirk implement
+				else {
+					/// TODO : Dirk, else case is missing
 					continue;
 				}
+			}
+				break;
+			case Distance:{
+				/// TODO Dirk implement
+				continue;
+			}
 			}
 			height = heightWin;
 			width = widthWin;
@@ -426,7 +426,7 @@ bool NewSubSurfaceObject::generateSubSurfaces(const std::vector<const VICUS::Sur
 				verts.push_back(IBKMK::Vector2D((1 + i) * (dist + width), sillHeight));
 				verts.push_back(IBKMK::Vector2D((1 + i) * (dist + width), sillHeight + height));
 				verts.push_back(IBKMK::Vector2D(dist + i * (dist + width), sillHeight + height));
-                windows.push_back(VICUS::PlaneGeometry::Hole(s->m_id, VICUS::Polygon2D(verts), false));
+				windows.push_back(VICUS::PlaneGeometry::Hole(s->m_id, VICUS::Polygon2D(verts)));
 			}
 		}
 		else {
@@ -447,8 +447,8 @@ bool NewSubSurfaceObject::generateSubSurfaces(const std::vector<const VICUS::Sur
 				verts.push_back(IBKMK::Vector2D((1 + i) * (dist + widthWinPre), heightSill));
 				verts.push_back(IBKMK::Vector2D((1 + i) * (dist + widthWinPre), heightSill + heightWinPre));
 				verts.push_back(IBKMK::Vector2D(dist + i * (dist + widthWinPre), heightSill + heightWinPre));
-                windows.push_back(VICUS::PlaneGeometry::Hole(s->m_id, VICUS::Polygon2D(verts), false));
-            }
+				windows.push_back(VICUS::PlaneGeometry::Hole(s->m_id, VICUS::Polygon2D(verts)));
+			}
 		}
 
 		// no windows generated? skip surface
@@ -542,8 +542,8 @@ void NewSubSurfaceObject::renderOpaque() {
 	glDrawElements(GL_TRIANGLES, (GLsizei)m_lineIndex, GL_UNSIGNED_INT, nullptr);
 
 	// here we render the lines around the sub-surfaces; invalid surfaces get a red line
-//	glDrawElements(GL_LINES, (GLsizei)m_lineIndex, GL_UNSIGNED_INT,
-//				   (const GLvoid*)(sizeof(GLuint) * (unsigned long)((GLsizei)m_indexBufferData.size() - m_transparentStartIndex)) );
+	//	glDrawElements(GL_LINES, (GLsizei)m_lineIndex, GL_UNSIGNED_INT,
+	//				   (const GLvoid*)(sizeof(GLuint) * (unsigned long)((GLsizei)m_indexBufferData.size() - m_transparentStartIndex)) );
 	// release buffers again
 	m_vao.release();
 }
@@ -562,7 +562,7 @@ void NewSubSurfaceObject::renderTransparent() {
 		m_vao.bind();
 
 		glDrawElements(GL_TRIANGLES, (GLsizei)(m_lineIndex - m_transparentStartIndex),
-			GL_UNSIGNED_INT, (const GLvoid*)(sizeof(GLuint) * (unsigned long)m_transparentStartIndex));
+					   GL_UNSIGNED_INT, (const GLvoid*)(sizeof(GLuint) * (unsigned long)m_transparentStartIndex));
 
 		// put OpenGL in offset mode
 		glEnable(GL_POLYGON_OFFSET_FILL);
@@ -570,7 +570,7 @@ void NewSubSurfaceObject::renderTransparent() {
 		glPolygonOffset(-0.1f, -2.0f);
 		// now draw the geometry
 		glDrawElements(GL_TRIANGLES, 0,
-			GL_UNSIGNED_INT, (const GLvoid*)(sizeof(GLuint) * (unsigned long)m_lineIndex));
+					   GL_UNSIGNED_INT, (const GLvoid*)(sizeof(GLuint) * (unsigned long)m_lineIndex));
 		// turn off line offset mode
 		glDisable(GL_POLYGON_OFFSET_FILL);
 

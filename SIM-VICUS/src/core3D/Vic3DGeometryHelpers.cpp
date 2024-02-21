@@ -1160,7 +1160,7 @@ void addText(const std::string &text, const QFont &font, Qt::Alignment alignment
 
 			const std::vector<VICUS::PlaneGeometry::Hole> &holes = planeGeometries.back().holes();
 			const_cast<std::vector<VICUS::PlaneGeometry::Hole> &>(holes).push_back(
-						VICUS::PlaneGeometry::Hole(VICUS::INVALID_ID, verts2D, false));
+						VICUS::PlaneGeometry::Hole(VICUS::INVALID_ID, verts2D));
 			planeGeometries.back().setHoles(holes);
 		}
 		else
