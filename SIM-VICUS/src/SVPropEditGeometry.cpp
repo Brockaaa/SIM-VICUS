@@ -1737,6 +1737,34 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 			}
 		}
 
+		// Detect Holes that didn't get trimmed due to sharing a border with the trimming plane,
+		// however these have to be fixed as they're now part of an outside border of the resulting polygon
+		// Iterating backwards so removal can be performed without messing up the indices
+		IBKMK::Vector3D trimVector1 = to.trimmingPolygon().vertexes().at(1) - to.trimmingPolygon().vertexes().at(0);
+		IBKMK::Vector3D trimVector2 = to.trimmingPolygon().vertexes().at(2) - to.trimmingPolygon().vertexes().at(0);
+		trimVector1 = trimVector1 * (10/trimVector1.magnitude());
+		trimVector2 = trimVector2 * (10/trimVector2.magnitude());
+		const IBKMK::Vector3D trimNormalVector = trimVector1.crossProduct(trimVector2);
+		const int trimOffset = trimNormalVector.scalarProduct(to.trimmingPolygon().vertexes().at(0));
+
+		for (int i = resultingHoles.size()-1; i >= 0; --i) {
+			const std::vector<IBKMK::Vector3D> & holeVerts = resultingHoles.at(i).vertexes();
+			double prev_dist = trimNormalVector.scalarProduct(holeVerts.back())-trimOffset;;
+			double dist;
+			for (const IBKMK::Vector3D & point : holeVerts) {
+				dist = trimNormalVector.scalarProduct(point)-trimOffset;
+				if (IBK::near_zero(dist) && IBK::near_zero(prev_dist)) {
+					holesToBeRemoved.push_back(resultingHoles.at(i));
+					resultingHoles.erase(resultingHoles.begin() + i);
+					break;
+				} else {
+					prev_dist = dist;
+				}
+			}
+		}
+
+		//qDebug() << "HolesToBeRemoved: " << holesToBeRemoved.size() << " / resultingHoles: " << resultingHoles.size();
+
 		std::vector<IBKMK::Polygon3D> validTrimmedPolys;
 		for (const IBKMK::Polygon3D &trimmedPoly : trimmedPolygons) {
 			if (!trimmedPoly.isValid())
@@ -1745,15 +1773,15 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 		}
 		trimmedSurfacePolygons[surf->m_id] = validTrimmedPolys;
 
-		// initialize for planeCoordinates()
-		IBKMK::Vector2D point;
-
 		// Transform holes back to 2d and attach them to corresponding surface and corresponding id of post-trim-surfaces
+		IBKMK::Vector2D point;		// initialize for planeCoordinates()
 		for (const IBKMK::Polygon3D & holeToBeInserted3D : resultingHoles) {
+			if (holeToBeInserted3D.vertexes().size() < 3) break; // malformated
 			for (unsigned int i = 0; i < validTrimmedPolys.size(); ++i) {
 				const IBKMK::Polygon3D & polyAtIndex = validTrimmedPolys.at(i);
-				// one vertex can lie ON poly line (==0) but not outside (==-1)
-				if (IBKMK::coplanarPointInPolygon3D(polyAtIndex.vertexes(), holeToBeInserted3D.vertexes().front()) > -1) {
+				// vertices can lie ON poly line (==0) but among two neighbouring one has to be inside the polygon
+				if (IBKMK::coplanarPointInPolygon3D(polyAtIndex.vertexes(), holeToBeInserted3D.vertexes().front()) > 0 ||
+					IBKMK::coplanarPointInPolygon3D(polyAtIndex.vertexes(), holeToBeInserted3D.vertexes().at(1)) > 0) {
 					// Matching surface found, transforming hole back into 2d
 					// Insert it into map accordingly and break loop to process next hole
 					std::vector<IBKMK::Vector2D> holeToBeInserted2D(holeToBeInserted3D.vertexes().size());

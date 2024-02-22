@@ -748,7 +748,7 @@ bool Polygon3D::trimByPlane(const IBKMK::Polygon3D &plane, std::vector<IBKMK::Po
 	const IBKMK::Vector3D normalVectorA = vectorA1.crossProduct(vectorA2);
 	const IBKMK::Vector3D normalVectorB = vectorB1.crossProduct(vectorB2);
 
-	int offsetB = normalVectorB.scalarProduct(vertsB[0]);
+	const int offsetB = normalVectorB.scalarProduct(vertsB[0]);
 
 	// check if polygon planes A & B are parallel
 	// if crossProduct of normal vectors returns 0-vector then normal vectors are parallel
