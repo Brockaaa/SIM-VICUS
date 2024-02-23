@@ -1762,8 +1762,125 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 				}
 			}
 		}
-
 		//qDebug() << "HolesToBeRemoved: " << holesToBeRemoved.size() << " / resultingHoles: " << resultingHoles.size();
+
+		// Attribute holes to their parent surfaces, adjust the parent geometry vertices to effectively remove the hole by shaping a new outline
+		for (const IBKMK::Polygon3D & holePoly : holesToBeRemoved) {
+			// Find parent polygon
+			bool found = false;
+			for (unsigned int i = 0; i < trimmedPolygons.size(); ++i) {
+				IBKMK::Polygon3D & poly = trimmedPolygons.at(i);
+				for (const IBKMK::Vector3D & vert : holePoly.vertexes()) {
+					int pointInPoly = IBKMK::coplanarPointInPolygon3D(poly.vertexes(), vert);
+					if (pointInPoly == -1) { // Definitely the wrong polygon
+						break;
+					} else if (pointInPoly == 1) { // Definitely the right polygon
+						found = true;
+
+						std::vector<IBKMK::Vector3D> polyVerts = poly.vertexes();
+						std::vector<IBKMK::Vector3D> holeVerts = holePoly.vertexes();
+
+						// algorithm robustness: if ALL hole or poly verts are near_zero: discard now,
+						// otherwise we're facing an endless loop later
+						unsigned int polyVertsNotOnTrimLine = 0;
+						unsigned int holeVertsNotOnTrimLine = 0;
+						for (const IBKMK::Vector3D & polyVert : polyVerts) if (!IBK::near_zero(trimNormalVector.scalarProduct(polyVert)-trimOffset)) polyVertsNotOnTrimLine++;
+						for (const IBKMK::Vector3D & holeVert : holeVerts) if (!IBK::near_zero(trimNormalVector.scalarProduct(holeVert)-trimOffset)) holeVertsNotOnTrimLine++;
+						if (polyVertsNotOnTrimLine == 0 || holeVertsNotOnTrimLine == 0) break;
+
+						// Find all polygon / hole edges that lie on the trimming line
+						std::vector<std::pair<int, int>> polyVertsOnTrimLine;
+						std::vector<std::pair<int, int>> holeVertsOnTrimLine;
+
+						// Find all hole edges that lie on the trimming line
+						int k;
+						for (int j = 0; j < holeVerts.size(); ++j) {
+							k = (j-1+holeVerts.size()) % holeVerts.size();
+							if (IBK::near_zero(trimNormalVector.scalarProduct(holeVerts.at(j))-trimOffset) &&
+								IBK::near_zero(trimNormalVector.scalarProduct(holeVerts.at(k))-trimOffset)) {
+								holeVertsOnTrimLine.push_back(std::pair<int, int>(k,j));
+							}
+						}
+
+						if (holeVertsOnTrimLine.size() > 1) {
+							// Hole has multiple contact edges with trimming line.
+							// To prevent recursion, we will move this hole slightly into the polygon, instead of cutting it out.
+							IBKMK::Vector3D trimNormalVectorSmall = trimNormalVector.normalized();
+							trimNormalVectorSmall /= 1E4;
+
+							// Adjust trimNormalVectorSmall to point in the right direction
+							for (const IBKMK::Vector3D & holeVert : holeVerts) {
+								double dist = trimNormalVector.scalarProduct(holeVert)-trimOffset;
+								if (!IBK::near_zero(dist)) {
+									if (dist < 0) trimNormalVectorSmall *= -1;
+									break;
+								}
+							}
+
+							// Move border verts into poly
+							for (IBKMK::Vector3D & holeVert : holeVerts) {
+								double dist = trimNormalVector.scalarProduct(holeVert)-trimOffset;
+								if (IBK::near_zero(dist)) {
+									holeVert += trimNormalVectorSmall;
+								}
+							}
+							resultingHoles.push_back(VICUS::Polygon3D(holeVerts));
+							break;
+						}
+
+						// Find all polygon edges that lie on the trimming line
+						for (int j = 0; j < polyVerts.size(); ++j) {
+							k = (j-1+polyVerts.size()) % polyVerts.size();
+							if (IBK::nearly_equal<1>(trimNormalVector.scalarProduct(polyVerts.at(j))-trimOffset,0) &&
+								IBK::nearly_equal<1>(trimNormalVector.scalarProduct(polyVerts.at(k))-trimOffset,0)) {
+								/// TODO MORITZ!!!! Das (und unten 2x) wieder zu near_zero umbauen nachher. near_equal<1> nur zum testen weil ich near_zero nicht
+								/// in der verbuggten 3d Szene reproduziert bekomme
+
+								// Extend j and k to find border points near_zero.
+								// This is only necessary to prevent malfunction in the rare case, that a vertex happened to be in near_zero distance to the
+								// trimming line already before trimming. Otherwise this would result in adding the hole vertices at the wrong index.
+								while (IBK::nearly_equal<1>(trimNormalVector.scalarProduct(polyVerts.at((j+1)%polyVerts.size()))-trimOffset,0)) j++;
+								while (IBK::nearly_equal<1>(trimNormalVector.scalarProduct(polyVerts.at((k-1+polyVerts.size())%polyVerts.size()))-trimOffset,0)) k--;
+								polyVertsOnTrimLine.push_back(std::pair<int, int>(k,j));
+							}
+						}
+
+						// Remove the detected redundant vertices and adjust the indices
+						for (unsigned int j = 0; j < polyVertsOnTrimLine.size(); ++j) {
+							std::pair<int, int> & polyPair = polyVertsOnTrimLine.at(j);
+							int pair_difference = ((polyPair.second - polyPair.first) + polyVerts.size()) % polyVerts.size();
+							if (pair_difference > 1) {
+								for (unsigned int k = 1; k < pair_difference; ++k) {
+									// Delete the vert following the first vert, as many times as there are verts inbetween beginning and end
+									polyVerts.erase(polyVerts.begin() + ((polyPair.first + 1) % polyVerts.size()));
+								}
+								for (std::pair<int, int> & polyPair2 : polyVertsOnTrimLine) {
+									// reduce every higher index by the amount of verts we removed, i.e the amount the
+									// difference exceeds the default difference of 1
+									if (polyPair2.first > polyPair.first) { // value above removed index
+										polyPair2.first -= pair_difference-1;
+									}
+									if (polyPair2.second > polyPair.first) {
+										polyPair2.second -= pair_difference-1;
+									}
+								}
+							}
+						}
+
+
+						/// TODO MORITZ: ADJUST POLYLINE HERE
+
+						/// * Holes können in beide richtungen drehen:
+						///		ich muss also erst beide punkte finden, und anhand deren reihenfolge und der
+						///		reihenfolge der punkte im poly dann die richtige einordnung bestimmen
+
+						poly.setVertexes(polyVerts);
+						break;
+					}
+				}
+				if (found) break;
+			}
+		}
 
 		std::vector<IBKMK::Polygon3D> validTrimmedPolys;
 		for (const IBKMK::Polygon3D &trimmedPoly : trimmedPolygons) {
