@@ -540,6 +540,7 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 		}
 	}
 
+	emit widgetClosed();
 	this->close();
 }
 
