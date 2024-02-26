@@ -62,8 +62,6 @@ void SVUndoTrimObjects::undo() {
 
 void SVUndoTrimObjects::redo() {
 
-	// ToDo Moritz: Trimming of child surfaces
-
 	std::vector<VICUS::ComponentInstance> cis = m_project.m_componentInstances;
 	m_project.m_componentInstances.clear();
 

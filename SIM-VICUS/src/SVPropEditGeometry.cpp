@@ -1820,6 +1820,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 							// Move border verts into poly
 							for (IBKMK::Vector3D & holeVert : holeVerts) {
 								double dist = trimNormalVector.scalarProduct(holeVert)-trimOffset;
+								/// TODO MORITZ FIX
 								if (IBK::near_zero(dist)) {
 									holeVert += trimNormalVectorSmall;
 								}
@@ -1867,12 +1868,49 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 							}
 						}
 
+						// Find vertpair that surrounds hole
+						std::pair<unsigned int, unsigned int> holeVertsOnTrimLinePair = holeVertsOnTrimLine.front();
+						for (const std::pair<unsigned int, unsigned int> vertPair : polyVertsOnTrimLine) {
+							if (holePoly.pointBetweenPoints(holeVerts.at(holeVertsOnTrimLinePair.first), polyVerts.at(vertPair.first), polyVerts.at(vertPair.second)) &&
+								holePoly.pointBetweenPoints(holeVerts.at(holeVertsOnTrimLinePair.second), polyVerts.at(vertPair.first), polyVerts.at(vertPair.second))) {
+								// Find out in which direction the two polygons (hole and trimPoly) turn
 
-						/// TODO MORITZ: ADJUST POLYLINE HERE
+								bool polyDir;
+								bool holeDir;
+								std::pair<IBKMK::Vector3D, IBKMK::Vector3D> polyVertsAB(polyVerts.at(vertPair.first),polyVerts.at(vertPair.second));
+								std::pair<IBKMK::Vector3D, IBKMK::Vector3D> holeVertsAB(holeVerts.at(holeVertsOnTrimLinePair.first),holeVerts.at(holeVertsOnTrimLinePair.second));
+								if (polyVertsAB.first.m_x == polyVertsAB.second.m_x) {
+									if (polyVertsAB.first.m_y == polyVertsAB.second.m_y) {
+										if (polyVertsAB.first.m_z == polyVertsAB.second.m_z) {
+											break; // Something went wrong.
+										} else polyDir = polyVertsAB.first.m_z < polyVertsAB.second.m_z;
+									} else polyDir = polyVertsAB.first.m_y < polyVertsAB.second.m_y;
+								} else polyDir = polyVertsAB.first.m_x < polyVertsAB.second.m_x;
 
-						/// * Holes können in beide richtungen drehen:
-						///		ich muss also erst beide punkte finden, und anhand deren reihenfolge und der
-						///		reihenfolge der punkte im poly dann die richtige einordnung bestimmen
+
+								if (holeVertsAB.first.m_x == holeVertsAB.second.m_x) {
+									if (holeVertsAB.first.m_y == holeVertsAB.second.m_y) {
+										if (holeVertsAB.first.m_z == holeVertsAB.second.m_z) {
+											break; // Something went wrong
+										} else holeDir = holeVertsAB.first.m_z < holeVertsAB.second.m_z;
+									} else holeDir = holeVertsAB.first.m_y < holeVertsAB.second.m_y;
+								} else holeDir = holeVertsAB.first.m_x < holeVertsAB.second.m_x;
+
+
+								if (polyDir == holeDir) {
+									for (unsigned int j = 0; j < holeVerts.size(); ++j) {
+										polyVerts.insert(polyVerts.begin() + vertPair.second, holeVerts.at((holeVertsOnTrimLinePair.second + j)%holeVerts.size()));
+										// holeverts from second to first, long way round
+									}
+								} else {
+									for (unsigned int j = 0; j < holeVerts.size(); ++j) {
+										polyVerts.insert(polyVerts.begin() + vertPair.second, holeVerts.at((holeVertsOnTrimLinePair.first - j + holeVerts.size())%holeVerts.size()));
+										// holeverts from first to second, long way round
+									}
+								}
+								break;
+							}
+						}
 
 						poly.setVertexes(polyVerts);
 						break;
