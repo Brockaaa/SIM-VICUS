@@ -336,6 +336,110 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 		return false;
 	}
 
+	// find cycles to check for "shortcircuiting" of parts of the subnetwork
+	// first we will find all cycles in the graph, then we will check if the cycle "reattaches" to the remaining subnetwork in one spot
+	// such that a short circuit is created
+	// based on https://www.baeldung.com/cs/detecting-cycles-in-directed-graph
+
+	//reuse previous connections graph
+	std::map<int, bool> visited;
+	// ID -1 denotes globalInlet, ID -2 is globalOutlet
+	visited[-1] = false;
+	visited[-2] = false;
+
+	// fill up visited map with all available Block IDs
+	for(const VICUS::BMBlock &block : m_sceneManager->network().m_blocks){
+		int id = block.m_name.toInt();
+		visited[id] = false;
+	}
+
+	for(auto mapIterator = visited.begin(); mapIterator != visited.end(); mapIterator++){
+		qDebug() << "Block ID: " << mapIterator->first;
+	}
+	// build connection graph
+	std::map<int, std::set<int>> neighbors;
+
+	// first find all neighbors of the globalInlet
+	for(const VICUS::BMConnector &con : m_sceneManager->network().m_connectors){
+		if(!con.m_sourceSocket.contains(VICUS::SUBNETWORK_INLET_NAME) && !con.m_targetSocket.contains(VICUS::SUBNETWORK_INLET_NAME)) continue;
+
+		QString sourceSocket, targetSocket;
+		bool sourceSocketBelongstoGlobalInlet = con.m_sourceSocket.contains(VICUS::SUBNETWORK_INLET_NAME);
+		sourceSocket = sourceSocketBelongstoGlobalInlet ? con.m_sourceSocket : con.m_targetSocket;
+		targetSocket = sourceSocketBelongstoGlobalInlet ? con.m_targetSocket : con.m_sourceSocket;
+
+		if(targetSocket.contains(VICUS::CONNECTORBLOCK_NAME)){
+			QString nameOfConnectorBlock = targetSocket.split(".")[0];
+			for(const VICUS::BMConnector& tmpCon : m_sceneManager->network().m_connectors){
+				if(!tmpCon.m_sourceSocket.contains(nameOfConnectorBlock)) continue;
+
+				QString ConnectorSourceSocket, ConnectorTargetSocket;
+				bool sourceSocketBelongsToConnectorBlock = tmpCon.m_sourceSocket.contains(VICUS::CONNECTORBLOCK_NAME);
+				ConnectorSourceSocket = sourceSocketBelongsToConnectorBlock ? tmpCon.m_sourceSocket : tmpCon.m_targetSocket;
+				ConnectorTargetSocket = sourceSocketBelongsToConnectorBlock ? tmpCon.m_targetSocket : tmpCon.m_sourceSocket;
+
+				neighbors[-1].insert(ConnectorTargetSocket.split(".")[0].toInt());
+			}
+		} else {
+			neighbors[-1].insert(targetSocket.split(".")[0].toInt());
+		}
+	}
+
+	// then find all neighbors of all other NetworkComponentBlocks
+	for(const VICUS::BMBlock &block : m_sceneManager->network().m_blocks){
+		if(block.m_mode != VICUS::NetworkComponentBlock) continue;
+		int id = block.m_name.toInt();
+		for(const VICUS::BMConnector &con : m_sceneManager->network().m_connectors){
+			if(con.m_sourceSocket != block.m_name + "." + VICUS::OUTLET_NAME && con.m_targetSocket != block.m_name+ "." + VICUS::OUTLET_NAME) continue;
+
+			QString sourceSocket, targetSocket;
+			bool sourceSocketBelongsToBlock = con.m_sourceSocket.contains(block.m_name + "." + VICUS::OUTLET_NAME);
+			sourceSocket = sourceSocketBelongsToBlock ? con.m_sourceSocket : con.m_targetSocket;
+			targetSocket = sourceSocketBelongsToBlock ? con.m_targetSocket : con.m_sourceSocket;
+
+			if(targetSocket.contains(VICUS::CONNECTORBLOCK_NAME)){
+				QString nameOfConnectorBlock = targetSocket.split(".")[0];
+				for(const VICUS::BMConnector& tmpCon : m_sceneManager->network().m_connectors){
+					if(!tmpCon.m_sourceSocket.contains(nameOfConnectorBlock + "." + VICUS::OUTLET_NAME) && !tmpCon.m_targetSocket.contains(nameOfConnectorBlock+ "." + VICUS::OUTLET_NAME)) continue;
+
+					QString ConnectorSourceSocket, ConnectorTargetSocket;
+					bool sourceSocketBelongsToConnectorBlock = tmpCon.m_sourceSocket.contains(nameOfConnectorBlock);
+					ConnectorSourceSocket = sourceSocketBelongsToConnectorBlock ? tmpCon.m_sourceSocket : tmpCon.m_targetSocket;
+					ConnectorTargetSocket = sourceSocketBelongsToConnectorBlock ? tmpCon.m_targetSocket : tmpCon.m_sourceSocket;
+
+					QString idOfNeighbor = ConnectorTargetSocket.split(".")[0];
+					if(idOfNeighbor.contains(VICUS::SUBNETWORK_OUTLET_NAME)){
+						neighbors[id].insert(-2);
+					} else {
+						neighbors[id].insert(idOfNeighbor.toInt());
+					}
+				}
+			} else {
+				QString idOfNeighbor = targetSocket.split(".")[0];
+				if(idOfNeighbor.contains(VICUS::SUBNETWORK_OUTLET_NAME)){
+					neighbors[id].insert(-2);
+				} else {
+					neighbors[id].insert(idOfNeighbor.toInt());
+				}
+			}
+		}
+	}
+
+	qDebug() << "Mapping of Blocks to Neighbors";
+	for(auto mapIterator : neighbors){
+		qDebug() << "Block: " << mapIterator.first << ":";
+		for(unsigned idIt : mapIterator.second){
+			qDebug() << "		" << idIt;
+		}
+	}
+
+	//// Traversal throuth the map
+
+
+	//for(unsigned int blockVertex : visitedBlocks){
+
+	//}
+
 	return true;
 }
 
