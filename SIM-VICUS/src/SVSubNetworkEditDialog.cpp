@@ -433,12 +433,46 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 		}
 	}
 
-	//// Traversal throuth the map
+	std::function<void(int, std::vector<int>&, std::set<int>&)> printCycle;
+	printCycle = [&visited](int startVertex, std::vector<int>& stack, std::set<int>& localVisited) {
+		qDebug() << "Cycle found!";
+	};
 
+	std::function<bool(int)> processDFSTree = [&](int v) {
+		std::vector<int> stack;
+		std::set<int> localVisited;
+		bool cycleFound = false;
+		std::function<void(int)> dfs = [&](int current) {
+			visited[current] = true;
+			localVisited.insert(current);
+			stack.push_back(current);
 
-	//for(unsigned int blockVertex : visitedBlocks){
+			for (int u : neighbors[current]) {
+				if (std::find(stack.begin(), stack.end(), u) != stack.end()) {
+					cycleFound = true;
+					return;
+				} else if (!visited[u]) {
+					dfs(u);
+				}
+			}
 
-	//}
+			stack.pop_back();
+			visited[v] = false;
+		};
+
+		return cycleFound;
+	};
+
+	bool foundCycle;
+	for (const auto& pair : neighbors) {
+		if (!visited[pair.first]) {
+			foundCycle = processDFSTree(pair.first);
+			if(foundCycle) {
+				QMessageBox::warning(this, tr("Invalid Network"), tr("Not all Blocks are reachable from globalInlet and globalOutlet. Invalid networks can not be saved."));
+				return false;
+			}
+		}
+	}
 
 	return true;
 }
@@ -830,7 +864,7 @@ bool SVSubNetworkEditDialog::checkValidityOfNetworkElementsAndGraphicalNetwork()
 
 			// check if node is connected to ConnectorBlock or is directly connected
 			// if directly connected, check if ENTRANCE_ID and construct source and targetName accordingly
-			if(connectedElements.size() <= 2){
+			if(connectedElements.size() <= 2 && element.m_inletNodeId != VICUS::ENTRANCE_ID && element.m_inletNodeId != VICUS::EXIT_ID && element.m_outletNodeId != VICUS::ENTRANCE_ID && element.m_outletNodeId != VICUS::EXIT_ID ){
 				bool foundConnector = false;
 				QString targetName = QString::number(element.m_id) + "." + VICUS::INLET_NAME;
 				QString sourceName;
@@ -858,7 +892,7 @@ bool SVSubNetworkEditDialog::checkValidityOfNetworkElementsAndGraphicalNetwork()
 	//Check if globalInlet is connected, verify that all necessary BMConnections exist
 	std::vector<const VICUS::NetworkElement*> connectedElementsGlobalInlet;
 	for(const VICUS::NetworkElement& element : m_subNetwork->m_elements){
-		if(element.m_inletNodeId == VICUS::ENTRANCE_ID)
+		if(element.m_inletNodeId == VICUS::ENTRANCE_ID || element.m_outletNodeId == VICUS::ENTRANCE_ID)
 			connectedElementsGlobalInlet.push_back(&element);
 	}
 
@@ -886,10 +920,18 @@ bool SVSubNetworkEditDialog::checkValidityOfNetworkElementsAndGraphicalNetwork()
 	else {
 		QString sourceName;
 		QString targetName;
+		// determine if connectorBlock has globalInlet as inlet or another NetworkElementBlock
 
-		sourceName = VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::ENTRANCE_ID) + "." + VICUS::OUTLET_NAME;
 		for(const VICUS::NetworkElement* element : connectedElementsGlobalInlet){
-			targetName = QString::number(element->m_id) + "." + VICUS::INLET_NAME;
+			bool inletConnectorBlock = element->m_inletNodeId == VICUS::ENTRANCE_ID ? true : false;
+
+			if(inletConnectorBlock){
+				sourceName = VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::ENTRANCE_ID) + "." + VICUS::OUTLET_NAME;
+				targetName = QString::number(element->m_id) + "." + VICUS::INLET_NAME;
+			} else {
+				targetName = sourceName = VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::ENTRANCE_ID) + "." + VICUS::INLET_NAME;
+				sourceName = QString::number(element->m_id) + "." + VICUS::OUTLET_NAME;
+			}
 
 			bool foundConnector = false;
 			for(VICUS::BMConnector &connector : m_subNetwork->m_graphicalNetwork.m_connectors){
@@ -907,7 +949,7 @@ bool SVSubNetworkEditDialog::checkValidityOfNetworkElementsAndGraphicalNetwork()
 	//Check if globalOutlet is connected, verify that all necessary BMConnections exist
 	std::vector<const VICUS::NetworkElement*> connectedElementsGlobalOutlet;
 	for(const VICUS::NetworkElement& element : m_subNetwork->m_elements){
-		if(element.m_outletNodeId == VICUS::EXIT_ID)
+		if(element.m_outletNodeId == VICUS::EXIT_ID || element.m_inletNodeId == VICUS::EXIT_ID)
 			connectedElementsGlobalOutlet.push_back(&element);
 	}
 
@@ -942,6 +984,16 @@ bool SVSubNetworkEditDialog::checkValidityOfNetworkElementsAndGraphicalNetwork()
 
 			bool foundConnector = false;
 			for(VICUS::BMConnector &connector : m_subNetwork->m_graphicalNetwork.m_connectors){
+				bool inletConnectorBlock = element->m_inletNodeId == VICUS::EXIT_ID ? true : false;
+
+				if(inletConnectorBlock){
+					sourceName = VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::EXIT_ID) + "." + VICUS::OUTLET_NAME;
+					targetName = QString::number(element->m_id) + "." + VICUS::INLET_NAME;
+				} else {
+					targetName = sourceName = VICUS::CONNECTORBLOCK_NAME + QString::number(VICUS::EXIT_ID) + "." + VICUS::INLET_NAME;
+					sourceName = QString::number(element->m_id) + "." + VICUS::OUTLET_NAME;
+				}
+
 				if(connector.m_targetSocket == targetName && connector.m_sourceSocket == sourceName){
 					foundConnector = true;
 					break;
