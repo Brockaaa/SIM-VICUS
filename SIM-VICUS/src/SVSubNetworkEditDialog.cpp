@@ -356,7 +356,10 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 	for(auto mapIterator = visited.begin(); mapIterator != visited.end(); mapIterator++){
 		qDebug() << "Block ID: " << mapIterator->first;
 	}
-	// build connection graph
+
+
+
+	// build connection graph to find all cycles
 	std::map<int, std::set<int>> neighbors;
 
 	// first find all neighbors of the globalInlet
@@ -433,24 +436,20 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 		}
 	}
 
-	std::function<void(int, std::vector<int>&, std::set<int>&)> printCycle;
-	printCycle = [&visited](int startVertex, std::vector<int>& stack, std::set<int>& localVisited) {
-		qDebug() << "Cycle found!";
-	};
+	// then find all cycles and save them
+	std::vector<int> stack;
+	std::function<void(int startVertex)> printCycle;
+	std::set<std::set<int>> cyclesFound;
 
-	std::function<bool(int)> processDFSTree = [&](int v) {
-		std::vector<int> stack;
-		bool cycleFound = false;
+	std::function<void(int)> processDFSTree = [&](int v) {
+
 		std::function<void(int)> dfs = [&](int current) {
-			if (cycleFound) return;
 			visited[current] = true;
 			stack.push_back(current);
 
 			for (int u : neighbors[current]) {
-				if (cycleFound) return;
 				if (std::find(stack.begin(), stack.end(), u) != stack.end()) {
-					cycleFound = true;
-					return;
+					printCycle(u);
 				} else if (!visited[u]) {
 					dfs(u);
 				}
@@ -460,17 +459,29 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 		};
 
 		dfs(v);
-		return cycleFound;
 	};
 
-	bool foundCycle;
+	printCycle = [&](int startVertex) {
+		qDebug() << "Cycle found! " + QString::number(startVertex);
+		std::set<int> cycle;
+		bool foundStart = false;
+		for (auto it = stack.begin(); it != stack.end(); ++it) {
+			if (*it == startVertex) foundStart = true;
+			if (foundStart) cycle.insert(*it);
+		}
+
+		if (!cycle.empty() && cyclesFound.find(cycle) == cyclesFound.end()) {
+			cyclesFound.insert(cycle);
+			for (int v : cycle) {
+				std::cout << v << " ";
+			}
+			std::cout << std::endl;
+		}
+	};
+
 	for (const auto& pair : neighbors) {
 		if (!visited[pair.first]) {
-			foundCycle = processDFSTree(pair.first);
-			if(foundCycle) {
-				QMessageBox::warning(this, tr("Invalid Network"), tr("Cycle found. Invalid networks can not be saved."));
-				return false;
-			}
+			processDFSTree(pair.first);
 		}
 	}
 
