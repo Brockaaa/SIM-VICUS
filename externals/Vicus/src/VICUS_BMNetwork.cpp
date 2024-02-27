@@ -71,12 +71,10 @@ void VICUS::BMNetwork::BMNetwork::readXML(const TiXmlElement *element) {
 		while (c) {
 			const std::string & cName = c->ValueStr();
 			if (cName == "Blocks"){
-				qDebug() << "Blocks found!";
 				const TiXmlElement * b = c->FirstChildElement();
 				while (b) {
 					const std::string & bName = b->ValueStr();
 					if (bName == "Block"){
-						qDebug() << "Block found!";
 						BMBlock * block = new BMBlock();
 						block->readXML(b);
 						m_blocks.push_back(*block);
@@ -85,12 +83,10 @@ void VICUS::BMNetwork::BMNetwork::readXML(const TiXmlElement *element) {
 				}
 			}
 			else if(cName == "Connectors"){
-				qDebug() << "Connectors found!";
 				const TiXmlElement * con = c->FirstChildElement();
 				while (con) {
 					const std::string & conName = con->ValueStr();
 					if (conName == "Connector"){
-						qDebug() << "Connector found!";
 						BMConnector * connector = new BMConnector();
 						connector->readXML(con);
 						m_connectors.push_back(*connector);
