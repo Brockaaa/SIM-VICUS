@@ -1770,6 +1770,11 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 			bool found = false;
 			for (unsigned int i = 0; i < trimmedPolygons.size(); ++i) {
 				IBKMK::Polygon3D & poly = trimmedPolygons.at(i);
+
+				// make sure we're on the same side of the trimming plane
+				if (((trimNormalVector.scalarProduct(holePoly.centerPoint())-trimOffset) *
+					(trimNormalVector.scalarProduct(poly.centerPoint())-trimOffset)) < 0) break;
+
 				for (const IBKMK::Vector3D & vert : holePoly.vertexes()) {
 					int pointInPoly = IBKMK::coplanarPointInPolygon3D(poly.vertexes(), vert);
 					if (pointInPoly == -1) { // Definitely the wrong polygon
