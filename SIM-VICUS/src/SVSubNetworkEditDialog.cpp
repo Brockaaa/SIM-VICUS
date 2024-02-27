@@ -343,9 +343,12 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 
 	//reuse previous connections graph
 	std::map<int, bool> visited;
-	// ID -1 denotes globalInlet, ID -2 is globalOutlet
-	visited[-1] = false;
-	visited[-2] = false;
+
+	static int IDGLOBALINLET = -1;
+	static int IDGLOBALOUTLET = -2;
+
+	visited[IDGLOBALINLET] = false;
+	visited[IDGLOBALOUTLET] = false;
 
 	// fill up visited map with all available Block IDs
 	for(const VICUS::BMBlock &block : m_sceneManager->network().m_blocks){
@@ -356,8 +359,6 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 	for(auto mapIterator = visited.begin(); mapIterator != visited.end(); mapIterator++){
 		qDebug() << "Block ID: " << mapIterator->first;
 	}
-
-
 
 	// build connection graph to find all cycles
 	std::map<int, std::set<int>> neighbors;
@@ -381,7 +382,7 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 				ConnectorSourceSocket = sourceSocketBelongsToConnectorBlock ? tmpCon.m_sourceSocket : tmpCon.m_targetSocket;
 				ConnectorTargetSocket = sourceSocketBelongsToConnectorBlock ? tmpCon.m_targetSocket : tmpCon.m_sourceSocket;
 
-				neighbors[-1].insert(ConnectorTargetSocket.split(".")[0].toInt());
+				neighbors[IDGLOBALINLET].insert(ConnectorTargetSocket.split(".")[0].toInt());
 			}
 		} else {
 			neighbors[-1].insert(targetSocket.split(".")[0].toInt());
@@ -412,7 +413,7 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 
 					QString idOfNeighbor = ConnectorTargetSocket.split(".")[0];
 					if(idOfNeighbor.contains(VICUS::SUBNETWORK_OUTLET_NAME)){
-						neighbors[id].insert(-2);
+						neighbors[id].insert(IDGLOBALOUTLET);
 					} else {
 						neighbors[id].insert(idOfNeighbor.toInt());
 					}
@@ -420,7 +421,7 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 			} else {
 				QString idOfNeighbor = targetSocket.split(".")[0];
 				if(idOfNeighbor.contains(VICUS::SUBNETWORK_OUTLET_NAME)){
-					neighbors[id].insert(-2);
+					neighbors[id].insert(IDGLOBALOUTLET);
 				} else {
 					neighbors[id].insert(idOfNeighbor.toInt());
 				}
@@ -485,6 +486,34 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 		}
 	}
 
+	/* next find all paths. The purpose is to filter all paths connecting the gobalInlet to globalOutlet
+	* to see if they cross a cycle without flowing through it to detect a "short circuit" */
+	// std::map<int, std::set<int>> neighbors;
+	std::set<std::vector<int>> allPaths;
+	std::vector<int> currentPath = {IDGLOBALINLET};
+	int destination = IDGLOBALOUTLET;
+
+
+	std::function<void(int, std::vector<int>&)> recursiveFindAllPaths = [&](int currentNode, std::vector<int>& currentPath){
+
+		if(currentNode == destination) {
+			allPaths.insert(currentPath);
+			return;
+		}
+
+		auto it = neighbors.find(currentNode);
+		if(it != neighbors.end()) {
+			for(const auto& neighbor : it->second) {
+				if(std::find(currentPath.begin(), currentPath.end(), neighbor) == currentPath.end()) {
+					currentPath.push_back(neighbor);
+					recursiveFindAllPaths(neighbor, currentPath);
+					currentPath.pop_back();
+				}
+			}
+		}
+	};
+
+	recursiveFindAllPaths(-1, currentPath);
 	return true;
 }
 
