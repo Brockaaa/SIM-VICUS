@@ -39,6 +39,7 @@
 #include "IBKMK_3DCalculations.h"
 #include "IBKMK_2DCalculations.h"
 
+#include "IBKMK_Polygon3D.h"
 #include "IBKMK_Vector3D.h"
 #include <IBK_messages.h>
 
@@ -353,7 +354,19 @@ void enlargeBoundingBox(const Vector3D & v, Vector3D & minVec, Vector3D & maxVec
 
 int coplanarPointInPolygon3D(const std::vector<Vector3D> polygon, const IBK::point3D<double> point) {
 	IBK_ASSERT(polygon.size() >= 3);
-	// Todo: eliminateCollinearPoints
+	IBKMK::Vector2D point2d;
+	IBKMK::Polygon3D polygon3d(polygon);
+	std::vector<Vector2D> polygon2d;
+	polygon2d.reserve(polygon.size());
+	for (const Vector3D & vert : polygon) {
+		IBKMK::planeCoordinates(polygon3d.offset(), polygon3d.localX(), polygon3d.localY(), vert, point2d.m_x, point2d.m_y);
+		polygon2d.push_back(Vector2D(point2d));
+	}
+	IBKMK::planeCoordinates(polygon3d.offset(), polygon3d.localX(), polygon3d.localY(), point, point2d.m_x, point2d.m_y);
+	return pointInPolygon(polygon2d, point2d);
+
+
+	/// TODO MORITZ: Testen und Löschen
 	// use cross product to obtain normal vector
 	IBKMK::Vector3D polyNormalVector = (polygon[1] - polygon[0]).crossProduct(polygon[2] - polygon[0]);
 

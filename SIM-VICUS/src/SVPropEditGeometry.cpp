@@ -1912,8 +1912,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 		std::vector<IBKMK::Polygon3D> validTrimmedPolys;
 		for (const IBKMK::Polygon3D &trimmedPoly : trimmedPolygons) {
-			if (!trimmedPoly.isValid())
-				continue; // skip broken polygons
+			if (!trimmedPoly.isValid()) continue; // skip broken polygons
 			validTrimmedPolys.push_back(trimmedPoly);
 		}
 		trimmedSurfacePolygons[surf->m_id] = validTrimmedPolys;
