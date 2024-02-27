@@ -1772,10 +1772,12 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 				IBKMK::Polygon3D & poly = trimmedPolygons.at(i);
 
 				// make sure we're on the same side of the trimming plane
-				if (((trimNormalVector.scalarProduct(holePoly.centerPoint())-trimOffset) *
-					(trimNormalVector.scalarProduct(poly.centerPoint())-trimOffset)) < 0) break;
+				double holeCenterDist = trimNormalVector.scalarProduct(holePoly.centerPoint())-trimOffset;
+				double polyCenterDist = trimNormalVector.scalarProduct(poly.centerPoint())-trimOffset;
+				if (holeCenterDist * polyCenterDist < 0) continue;
 
 				for (const IBKMK::Vector3D & vert : holePoly.vertexes()) {
+
 					int pointInPoly = IBKMK::coplanarPointInPolygon3D(poly.vertexes(), vert);
 					if (pointInPoly == -1) { // Definitely the wrong polygon
 						break;
@@ -1807,15 +1809,16 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 							}
 						}
 
+						// If hole has multiple contact edges with trimming line,
+						// to prevent recursion, we will move this hole slightly into the polygon, instead of cutting it out.
 						if (holeVertsOnTrimLine.size() > 1) {
-							// Hole has multiple contact edges with trimming line.
-							// To prevent recursion, we will move this hole slightly into the polygon, instead of cutting it out.
+
 							IBKMK::Vector3D trimNormalVectorSmall = trimNormalVector.normalized();
 							trimNormalVectorSmall /= 1E4;
 
 							// Adjust trimNormalVectorSmall to point in the right direction
 							for (const IBKMK::Vector3D & holeVert : holeVerts) {
-								double dist = trimNormalVector.scalarProduct(holeVert)-trimOffset;
+								double dist = trimNormalVector.scalarProduct(holeVert);
 								if (!IBK::near_zero(dist)) {
 									if (dist < 0) trimNormalVectorSmall *= -1;
 									break;
@@ -1825,7 +1828,6 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 							// Move border verts into poly
 							for (IBKMK::Vector3D & holeVert : holeVerts) {
 								double dist = trimNormalVector.scalarProduct(holeVert)-trimOffset;
-								/// TODO MORITZ FIX
 								if (IBK::near_zero(dist)) {
 									holeVert += trimNormalVectorSmall;
 								}
@@ -1873,36 +1875,19 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 							}
 						}
 
-						// Find vertpair that surrounds hole
+						// Find vertpair that surrounds hole and insert hole into polygon line
 						std::pair<unsigned int, unsigned int> holeVertsOnTrimLinePair = holeVertsOnTrimLine.front();
 						for (const std::pair<unsigned int, unsigned int> vertPair : polyVertsOnTrimLine) {
 							if (holePoly.pointBetweenPoints(holeVerts.at(holeVertsOnTrimLinePair.first), polyVerts.at(vertPair.first), polyVerts.at(vertPair.second)) &&
 								holePoly.pointBetweenPoints(holeVerts.at(holeVertsOnTrimLinePair.second), polyVerts.at(vertPair.first), polyVerts.at(vertPair.second))) {
 								// Find out in which direction the two polygons (hole and trimPoly) turn
 
-								bool polyDir;
-								bool holeDir;
 								std::pair<IBKMK::Vector3D, IBKMK::Vector3D> polyVertsAB(polyVerts.at(vertPair.first),polyVerts.at(vertPair.second));
 								std::pair<IBKMK::Vector3D, IBKMK::Vector3D> holeVertsAB(holeVerts.at(holeVertsOnTrimLinePair.first),holeVerts.at(holeVertsOnTrimLinePair.second));
-								if (polyVertsAB.first.m_x == polyVertsAB.second.m_x) {
-									if (polyVertsAB.first.m_y == polyVertsAB.second.m_y) {
-										if (polyVertsAB.first.m_z == polyVertsAB.second.m_z) {
-											break; // Something went wrong.
-										} else polyDir = polyVertsAB.first.m_z < polyVertsAB.second.m_z;
-									} else polyDir = polyVertsAB.first.m_y < polyVertsAB.second.m_y;
-								} else polyDir = polyVertsAB.first.m_x < polyVertsAB.second.m_x;
 
+								bool flipVertDir =(holeVertsAB.first - polyVertsAB.first).magnitude() < (holeVertsAB.second - polyVertsAB.first).magnitude();
 
-								if (holeVertsAB.first.m_x == holeVertsAB.second.m_x) {
-									if (holeVertsAB.first.m_y == holeVertsAB.second.m_y) {
-										if (holeVertsAB.first.m_z == holeVertsAB.second.m_z) {
-											break; // Something went wrong
-										} else holeDir = holeVertsAB.first.m_z < holeVertsAB.second.m_z;
-									} else holeDir = holeVertsAB.first.m_y < holeVertsAB.second.m_y;
-								} else holeDir = holeVertsAB.first.m_x < holeVertsAB.second.m_x;
-
-
-								if (polyDir == holeDir) {
+								if (flipVertDir) {
 									for (unsigned int j = 0; j < holeVerts.size(); ++j) {
 										polyVerts.insert(polyVerts.begin() + vertPair.second, holeVerts.at((holeVertsOnTrimLinePair.second + j)%holeVerts.size()));
 										// holeverts from second to first, long way round

@@ -359,7 +359,7 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> polygon, const IBK::poi
 
 	std::vector<Vector2D> polygon2D;
 	IBK::point2D<double> point2D;
-	if (!IBK::near_zero(polyNormalVector.m_z)) {
+	if (polyNormalVector.m_z == 0) {
 		//normal vector contains a "z" component, i.e. polygon contains x&y components, and can be projected in x-y-plane.
 		//other cases respective, point respective
 		point2D.m_x = point.m_x;
@@ -367,24 +367,17 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> polygon, const IBK::poi
 		for (Vector3D i : polygon) {
 			polygon2D.push_back(Vector2D(i.m_x,i.m_y)); // eliminate z
 		}
-	} else if (!IBK::near_zero(polyNormalVector.m_y)) {
+	} else if (polyNormalVector.m_y == 0) {
 		point2D.m_x = point.m_x;
 		point2D.m_y = point.m_z;
 		for (Vector3D i : polygon) {
 			polygon2D.push_back(Vector2D(i.m_x,i.m_z)); // eliminate y
 		}
-	} else if (!IBK::near_zero(polyNormalVector.m_x)) {
+	} else if (polyNormalVector.m_x == 0) {
 		point2D.m_x = point.m_z;
 		point2D.m_y = point.m_y;
 		for (Vector3D i : polygon) {
 			polygon2D.push_back(Vector2D(i.m_z,i.m_y)); // eliminate x
-		}
-	} else {
-		IBK::IBK_Message("coplanarPointInPolygon3D received invalid input", IBK::MSG_ERROR);
-		point2D.m_x = point.m_x;
-		point2D.m_y = point.m_y;
-		for (Vector3D i : polygon) {
-			polygon2D.push_back(Vector2D(i.m_x,i.m_y));
 		}
 	}
 	return pointInPolygon(polygon2D, point2D);
