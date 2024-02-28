@@ -53,6 +53,9 @@ public:
 
 	const VICUS::BMBlock * block() const { return m_block; }
 
+	/* checks if blockItem can accept connection */
+	bool acceptingConnection(const QPointF & scenePos);
+
 	/*! Searches for a socket item at the given scene position and returns a pointer to it, if
 		it is not yet connected.
 	*/

@@ -964,6 +964,15 @@ void SVBMSceneManager::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 					if (bi->block()->m_mode == VICUS::BMBlockType::InvisibleBlock)
 						continue;
 
+					// checks if connection was dropped on a connectorBlock, if yes, connect to it
+					if(bi->acceptingConnection(p)){
+						connectionFound = true;
+						if(evaluateNewConnection(m_network->m_connectors.back().m_sourceSocket,  bi->block()->m_name + "." + bi->block()->m_sockets[0].m_name)){
+							emit newConnectionAdded();
+						}
+						break;
+					}
+
 					// now search for sockets that may be hovered
 					SVBMSocketItem * si = bi->inletSocketAcceptingConnection(p);
 					if (si != nullptr) {

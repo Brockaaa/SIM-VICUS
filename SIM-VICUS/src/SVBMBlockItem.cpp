@@ -67,6 +67,15 @@ SVBMBlockItem::SVBMBlockItem(VICUS::BMBlock * b) :
 	createSocketItems();
 }
 
+bool SVBMBlockItem::acceptingConnection(const QPointF & scenePos){
+	if(this->m_block->m_mode != VICUS::ConnectorBlock) return false;
+
+	if(this->boundingRect().contains(scenePos - this->pos())){
+		return true;
+	}
+	return false;
+}
+
 
 SVBMSocketItem * SVBMBlockItem::inletSocketAcceptingConnection(const QPointF & scenePos) {
 	for (SVBMSocketItem * si : m_socketItems) {
@@ -74,7 +83,7 @@ SVBMSocketItem * SVBMBlockItem::inletSocketAcceptingConnection(const QPointF & s
 
 		socketScenePos -= scenePos;
 		double d = socketScenePos.manhattanLength();
-		if (d < 9) { // half grid spacing snapping tolerance
+		if (d < 11) { // half grid spacing snapping tolerance
 
 			return si;
 		}
@@ -114,7 +123,6 @@ void SVBMBlockItem::resize(int newWidth, int newHeight) {
 
 QRectF SVBMBlockItem::boundingRect() const {
 	QRectF r = QGraphicsRectItem::boundingRect();
-	/// \todo Later, if we draw text annotations outside the rectangle, adjust the bounding rect here
 	return r;
 }
 
