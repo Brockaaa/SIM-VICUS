@@ -718,8 +718,10 @@ void Polygon3D::polyCyclesAfterTrimming(std::vector<IBKMK::Polygon3D> &polys,
 	// reverse indices so we don't interfere with the iterator
 	// remove polygons
 	for (unsigned int i = indicesToBeRemovedAfter.size(); i > 0; --i) {
-		polys.erase(polys.begin() + i - 1);
+		polys.erase(polys.begin() + indicesToBeRemovedAfter.at(i-1));
 	}
+
+
 }
 
 
