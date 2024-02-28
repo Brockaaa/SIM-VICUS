@@ -44,6 +44,7 @@
 #include <QGraphicsScene>
 #include <QDebug>
 #include <QFontMetrics>
+#include <QApplication>
 
 #include "NANDRAD_HydraulicNetworkControlElement.h"
 #include "NANDRAD_HydraulicNetworkComponent.h"
@@ -346,6 +347,8 @@ void SVBMBlockItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event){
 	if(sceneManager) {
 		QPointF p = m_socketItems[1]->pos();
 		sceneManager->startSocketConnection(*m_socketItems[1], p);
+		if (QApplication::overrideCursor() == nullptr)
+			QApplication::setOverrideCursor(Qt::CrossCursor);
 		event->accept();
 	}
 }
