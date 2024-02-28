@@ -1837,16 +1837,14 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 						// Find all polygon edges that lie on the trimming line
 						for (int j = 0; j < (int)polyVerts.size(); ++j) {
 							k = (j-1+polyVerts.size()) % polyVerts.size();
-							if (IBK::nearly_equal<1>(trimNormalVector.scalarProduct(polyVerts.at(j))-trimOffset,0) &&
-								IBK::nearly_equal<1>(trimNormalVector.scalarProduct(polyVerts.at(k))-trimOffset,0)) {
-								/// TODO MORITZ!!!! Das (und unten 2x) wieder zu near_zero umbauen nachher. near_equal<1> nur zum testen weil ich near_zero nicht
-								/// in der verbuggten 3d Szene reproduziert bekomme
+							if (IBK::near_zero(trimNormalVector.scalarProduct(polyVerts.at(j))-trimOffset) &&
+								IBK::near_zero(trimNormalVector.scalarProduct(polyVerts.at(k))-trimOffset)) {
 
 								// Extend j and k to find border points near_zero.
 								// This is only necessary to prevent malfunction in the rare case, that a vertex happened to be in near_zero distance to the
 								// trimming line already before trimming. Otherwise this would result in adding the hole vertices at the wrong index.
-								while (IBK::nearly_equal<1>(trimNormalVector.scalarProduct(polyVerts.at((j+1)%polyVerts.size()))-trimOffset,0)) j++;
-								while (IBK::nearly_equal<1>(trimNormalVector.scalarProduct(polyVerts.at((k-1+polyVerts.size())%polyVerts.size()))-trimOffset,0)) k--;
+								while (IBK::near_zero(trimNormalVector.scalarProduct(polyVerts.at((j+1)%polyVerts.size()))-trimOffset)) j++;
+								while (IBK::near_zero(trimNormalVector.scalarProduct(polyVerts.at((k-1+polyVerts.size())%polyVerts.size()))-trimOffset)) k--;
 								polyVertsOnTrimLine.push_back(std::pair<int, int>(k,j));
 							}
 						}

@@ -356,6 +356,7 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> polygon, const IBK::poi
 	IBK_ASSERT(polygon.size() >= 3);
 	IBKMK::Vector2D point2d;
 	IBKMK::Polygon3D polygon3d(polygon);
+	// Project 3d Polygon into 2d plane using IBKMK::planeCoordinates
 	std::vector<Vector2D> polygon2d;
 	polygon2d.reserve(polygon.size());
 	for (const Vector3D & vert : polygon) {
@@ -364,36 +365,6 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> polygon, const IBK::poi
 	}
 	IBKMK::planeCoordinates(polygon3d.offset(), polygon3d.localX(), polygon3d.localY(), point, point2d.m_x, point2d.m_y);
 	return pointInPolygon(polygon2d, point2d);
-
-
-	/// TODO MORITZ: Testen und Löschen
-	// use cross product to obtain normal vector
-	IBKMK::Vector3D polyNormalVector = (polygon[1] - polygon[0]).crossProduct(polygon[2] - polygon[0]);
-
-	std::vector<Vector2D> polygon2D;
-	IBK::point2D<double> point2D;
-	if (polyNormalVector.m_z == 0) {
-		//normal vector contains a "z" component, i.e. polygon contains x&y components, and can be projected in x-y-plane.
-		//other cases respective, point respective
-		point2D.m_x = point.m_x;
-		point2D.m_y = point.m_y;
-		for (Vector3D i : polygon) {
-			polygon2D.push_back(Vector2D(i.m_x,i.m_y)); // eliminate z
-		}
-	} else if (polyNormalVector.m_y == 0) {
-		point2D.m_x = point.m_x;
-		point2D.m_y = point.m_z;
-		for (Vector3D i : polygon) {
-			polygon2D.push_back(Vector2D(i.m_x,i.m_z)); // eliminate y
-		}
-	} else if (polyNormalVector.m_x == 0) {
-		point2D.m_x = point.m_z;
-		point2D.m_y = point.m_y;
-		for (Vector3D i : polygon) {
-			polygon2D.push_back(Vector2D(i.m_z,i.m_y)); // eliminate x
-		}
-	}
-	return pointInPolygon(polygon2D, point2D);
 }
 
 

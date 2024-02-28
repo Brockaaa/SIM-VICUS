@@ -122,7 +122,7 @@ inline double angleBetweenVectorsDeg360(const IBKMK::Vector3D &v1, const IBKMK::
 /*! Takes the vector v and enlarges the current bounding box defined through 'minVec' and 'maxVec'. */
 void enlargeBoundingBox(const IBKMK::Vector3D & v, IBKMK::Vector3D & minVec, IBKMK::Vector3D & maxVec);
 
-/*! Transforms 3D Polygon to 2D by eliminating one dimension and applies 2D Point in Polygon.
+/*! Transforms 3D Polygon to 2D using planeCoordinates and applies 2D Point in Polygon.
 	It's assumed the point is already coplanar. This should previously be tested.
 
 	Point in Polygon function. Result:
