@@ -1779,9 +1779,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 				for (const IBKMK::Vector3D & vert : holePoly.vertexes()) {
 
 					int pointInPoly = IBKMK::coplanarPointInPolygon3D(poly.vertexes(), vert);
-					if (pointInPoly == -1) { // Definitely the wrong polygon
-						break;
-					} else if (pointInPoly == 1) { // Definitely the right polygon
+					if (pointInPoly == 1) {
 						found = true;
 
 						std::vector<IBKMK::Vector3D> polyVerts = poly.vertexes();
@@ -1801,7 +1799,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 						// Find all hole edges that lie on the trimming line
 						int k;
-						for (int j = 0; j < holeVerts.size(); ++j) {
+						for (int j = 0; j < (int)holeVerts.size(); ++j) {
 							k = (j-1+holeVerts.size()) % holeVerts.size();
 							if (IBK::near_zero(trimNormalVector.scalarProduct(holeVerts.at(j))-trimOffset) &&
 								IBK::near_zero(trimNormalVector.scalarProduct(holeVerts.at(k))-trimOffset)) {
@@ -1818,7 +1816,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 							// Adjust trimNormalVectorSmall to point in the right direction
 							for (const IBKMK::Vector3D & holeVert : holeVerts) {
-								double dist = trimNormalVector.scalarProduct(holeVert);
+								double dist = trimNormalVector.scalarProduct(holeVert)-trimOffset;
 								if (!IBK::near_zero(dist)) {
 									if (dist < 0) trimNormalVectorSmall *= -1;
 									break;
@@ -1837,7 +1835,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 						}
 
 						// Find all polygon edges that lie on the trimming line
-						for (int j = 0; j < polyVerts.size(); ++j) {
+						for (int j = 0; j < (int)polyVerts.size(); ++j) {
 							k = (j-1+polyVerts.size()) % polyVerts.size();
 							if (IBK::nearly_equal<1>(trimNormalVector.scalarProduct(polyVerts.at(j))-trimOffset,0) &&
 								IBK::nearly_equal<1>(trimNormalVector.scalarProduct(polyVerts.at(k))-trimOffset,0)) {
@@ -1858,7 +1856,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 							std::pair<int, int> & polyPair = polyVertsOnTrimLine.at(j);
 							int pair_difference = ((polyPair.second - polyPair.first) + polyVerts.size()) % polyVerts.size();
 							if (pair_difference > 1) {
-								for (unsigned int k = 1; k < pair_difference; ++k) {
+								for (int k = 1; k < pair_difference; ++k) {
 									// Delete the vert following the first vert, as many times as there are verts inbetween beginning and end
 									polyVerts.erase(polyVerts.begin() + ((polyPair.first + 1) % polyVerts.size()));
 								}
