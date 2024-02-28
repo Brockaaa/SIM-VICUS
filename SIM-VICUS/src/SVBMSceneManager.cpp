@@ -968,6 +968,9 @@ void SVBMSceneManager::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 					if(bi->acceptingConnection(p)){
 						connectionFound = true;
 						if(evaluateNewConnection(m_network->m_connectors.back().m_sourceSocket,  bi->block()->m_name + "." + bi->block()->m_sockets[0].m_name)){
+							for(SVBMSocketItem *socketItem : bi->m_socketItems){
+								socketItem->m_hovered = false;
+							}
 							emit newConnectionAdded();
 						}
 						break;
