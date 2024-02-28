@@ -68,7 +68,7 @@ SVBMBlockItem::SVBMBlockItem(VICUS::BMBlock * b) :
 }
 
 bool SVBMBlockItem::acceptingConnection(const QPointF & scenePos){
-	if(this->m_block->m_mode != VICUS::ConnectorBlock) return false;
+	if(this->m_block->m_mode == VICUS::InvisibleBlock || this->m_block->m_mode == VICUS::GlobalInlet) return false;
 
 	if(this->boundingRect().contains(scenePos - this->pos())){
 		return true;
@@ -346,7 +346,7 @@ void SVBMBlockItem::hoverLeaveEvent (QGraphicsSceneHoverEvent *event){
 }
 
 void SVBMBlockItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event){
-	if(m_block->m_mode != VICUS::ConnectorBlock){
+	if(m_block->m_mode == VICUS::InvisibleBlock || m_block->m_mode == VICUS::GlobalOutlet){
 		QGraphicsItem::mouseDoubleClickEvent(event);
 		return;
 	}
@@ -354,7 +354,8 @@ void SVBMBlockItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event){
 	SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
 	if(sceneManager) {
 		QPointF p = event->lastScenePos();
-		sceneManager->startSocketConnection(*m_socketItems[1], p);
+		SVBMSocketItem *socketItem = (this->block()->m_mode == VICUS::GlobalInlet) ? m_socketItems[0] : m_socketItems[1];
+		sceneManager->startSocketConnection(*socketItem, p);
 		if (QApplication::overrideCursor() == nullptr)
 			QApplication::setOverrideCursor(Qt::CrossCursor);
 		event->accept();
