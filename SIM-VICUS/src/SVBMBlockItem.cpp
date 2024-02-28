@@ -353,7 +353,7 @@ void SVBMBlockItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event){
 
 	SVBMSceneManager * sceneManager = qobject_cast<SVBMSceneManager *>(scene());
 	if(sceneManager) {
-		QPointF p = m_socketItems[1]->pos();
+		QPointF p = event->lastScenePos();
 		sceneManager->startSocketConnection(*m_socketItems[1], p);
 		if (QApplication::overrideCursor() == nullptr)
 			QApplication::setOverrideCursor(Qt::CrossCursor);
