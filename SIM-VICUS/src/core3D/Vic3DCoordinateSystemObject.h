@@ -151,6 +151,8 @@ public:
 	/*! Holds the original rotation at begin of an interactive transformation operation. */
 	QQuaternion				m_originalRotation;
 
+	void setCurrentRotationAngle(double newCurrentRotationAngle);
+
 private:
 	/*! Updates the inverse matrix. */
 	void updateInverse();
@@ -159,6 +161,9 @@ private:
 		the scene.
 	*/
 	Transform3D					m_transform;
+
+	/*! Current rotation angle. */
+	double						m_currentRotationAngle = 0.0;
 
 	/*! Inverse transformation, needed to fix light/view position for phong shader. */
 	QMatrix4x4					m_inverseMatrix;

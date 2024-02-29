@@ -220,10 +220,11 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		// If we no longer have a selection, and we are in geometry mode+edit mode -> switch back to default operation mode NUM_OP
 		SVViewState vs = SVViewStateHandler::instance().viewState();
 		// Stay in Polygon Trimming when you deselect all surfaces
-		if (selectedObjects.empty() && vs.m_sceneOperationMode != SVViewState::OM_TrimObjects) {
-			vs.m_sceneOperationMode = SVViewState::NUM_OM;
-
-			// vs.m_propertyWidgetMode = SVViewState::PM_AddGeometry;
+		if (vs.m_sceneOperationMode != SVViewState::OM_TrimObjects) {
+			if (selectedObjects.empty())
+				vs.m_sceneOperationMode = SVViewState::NUM_OM;
+			else
+				vs.m_sceneOperationMode = SVViewState::OM_SelectedGeometry;
 		}
 
 		SVViewStateHandler::instance().setViewState(vs);
@@ -772,8 +773,9 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 								angle = 360 + angle;
 
 							// snap angle
+							const int STEP_SIZE = 5;
 							if (!keyboardHandler.keyDown(Qt::Key_Shift))
-								angle = std::floor(angle/10 + 0.5)*10;
+								angle = std::floor(angle/STEP_SIZE + 0.5)*STEP_SIZE;
 							IBK::IBK_Message(IBK::FormatString("Rotation angle = %1 deg\n").arg(angle), IBK::MSG_PROGRESS);
 
 							// compute rotation for local coordinate system
@@ -782,6 +784,7 @@ bool Scene::inputEvent(const KeyboardMouseHandler & keyboardHandler, const QPoin
 
 							// rotate local coordinate system (translation isn't needed)
 							m_coordinateSystemObject.setRotation(coordinateSystemRotation);
+							m_coordinateSystemObject.setCurrentRotationAngle(angle);
 
 							// determine new center point if selected geometry were rotated around origin
 							IBKMK::Vector3D newCenter = QVector2IBKVector( q.rotatedVector( m_coordinateSystemObject.m_originalTranslation ) );
@@ -3785,6 +3788,7 @@ void Scene::setDefaultViewState() {
 		break;
 	} // switchd
 }
+
 
 const QMatrix4x4 & Scene::worldToView() const {
 	return m_worldToView;
