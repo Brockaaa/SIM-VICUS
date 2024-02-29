@@ -410,7 +410,6 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 	}
 
 	// get arbitrary base vectors for polygon A and B's planes
-	// TODO: error handling in case polygon is malformatted and first 3 points are located on a straight line .. eliminateCollinearPoints?
 	// compensating for different sizes of span vectors to have later calculations in the same order of magnitude
 	IBKMK::Vector3D vectorA1 = vertsA[1] - vertsA[0];
 	vectorA1 = vectorA1 * (10/vectorA1.magnitude());

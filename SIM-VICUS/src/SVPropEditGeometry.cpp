@@ -1812,7 +1812,10 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 						if (holeVertsOnTrimLine.size() > 1) {
 
 							IBKMK::Vector3D trimNormalVectorSmall = trimNormalVector.normalized();
-							trimNormalVectorSmall /= 1E4;
+							trimNormalVectorSmall /= 9.9e3;
+							// this has to be smaller than 1e4 because otherwise the verts can get joined
+							// after an additional diagonal trim, and the polygon shape may become invalid.
+
 
 							// Adjust trimNormalVectorSmall to point in the right direction
 							for (const IBKMK::Vector3D & holeVert : holeVerts) {
