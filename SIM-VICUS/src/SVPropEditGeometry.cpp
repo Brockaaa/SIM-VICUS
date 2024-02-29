@@ -1800,7 +1800,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 						// Find all hole edges that lie on the trimming line
 						int k;
 						for (int j = 0; j < (int)holeVerts.size(); ++j) {
-							k = (j-1+holeVerts.size()) % holeVerts.size();
+							k = (j+holeVerts.size()-1) % holeVerts.size();
 							if (IBK::near_zero(trimNormalVector.scalarProduct(holeVerts.at(j))-trimOffset) &&
 								IBK::near_zero(trimNormalVector.scalarProduct(holeVerts.at(k))-trimOffset)) {
 								holeVertsOnTrimLine.push_back(std::pair<int, int>(k,j));
@@ -1839,7 +1839,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 
 						// Find all polygon edges that lie on the trimming line
 						for (int j = 0; j < (int)polyVerts.size(); ++j) {
-							k = (j-1+polyVerts.size()) % polyVerts.size();
+							k = (j+polyVerts.size()-1) % polyVerts.size();
 							if (IBK::near_zero(trimNormalVector.scalarProduct(polyVerts.at(j))-trimOffset) &&
 								IBK::near_zero(trimNormalVector.scalarProduct(polyVerts.at(k))-trimOffset)) {
 
@@ -1847,7 +1847,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 								// This is only necessary to prevent malfunction in the rare case, that a vertex happened to be in near_zero distance to the
 								// trimming line already before trimming. Otherwise this would result in adding the hole vertices at the wrong index.
 								while (IBK::near_zero(trimNormalVector.scalarProduct(polyVerts.at((j+1)%polyVerts.size()))-trimOffset)) j++;
-								while (IBK::near_zero(trimNormalVector.scalarProduct(polyVerts.at((k-1+polyVerts.size())%polyVerts.size()))-trimOffset)) k--;
+								while (IBK::near_zero(trimNormalVector.scalarProduct(polyVerts.at((k+polyVerts.size()-1)%polyVerts.size()))-trimOffset)) k--;
 								polyVertsOnTrimLine.push_back(std::pair<int, int>(k,j));
 							}
 						}
@@ -1855,7 +1855,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 						// Remove the detected redundant vertices and adjust the indices
 						for (unsigned int j = 0; j < polyVertsOnTrimLine.size(); ++j) {
 							std::pair<int, int> & polyPair = polyVertsOnTrimLine.at(j);
-							int pair_difference = ((polyPair.second - polyPair.first) + polyVerts.size()) % polyVerts.size();
+							int pair_difference = (polyVerts.size() + polyPair.second - polyPair.first) % polyVerts.size();
 							if (pair_difference > 1) {
 								for (int k = 1; k < pair_difference; ++k) {
 									// Delete the vert following the first vert, as many times as there are verts inbetween beginning and end
@@ -1893,7 +1893,7 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 									}
 								} else {
 									for (unsigned int j = 0; j < holeVerts.size(); ++j) {
-										polyVerts.insert(polyVerts.begin() + vertPair.second, holeVerts.at((holeVertsOnTrimLinePair.first - j + holeVerts.size())%holeVerts.size()));
+										polyVerts.insert(polyVerts.begin() + vertPair.second, holeVerts.at((holeVertsOnTrimLinePair.first + holeVerts.size() - j)%holeVerts.size()));
 										// holeverts from first to second, long way round
 									}
 								}
