@@ -463,7 +463,6 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 	};
 
 	printCycle = [&](int startVertex) {
-		qDebug() << "Cycle found! " + QString::number(startVertex);
 		std::set<int> cycle;
 		bool foundStart = false;
 		for (auto it = stack.begin(); it != stack.end(); ++it) {
@@ -488,23 +487,42 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 
 	/* next find all paths. The purpose is to filter all paths connecting the gobalInlet to globalOutlet
 	* to see if they cross a cycle without flowing through it to detect a "short circuit" */
-	// std::map<int, std::set<int>> neighbors;
 	std::set<std::vector<int>> allPaths;
 	std::vector<int> currentPath = {IDGLOBALINLET};
 	int destination = IDGLOBALOUTLET;
 
-
+	/* finds all paths by recursively traversing through the graph. Prevents entering cycles more than two times by
+				 * by first checking if the next neighbor is in a graph and then checking if that cycle was already traversed twice in the current path */
 	std::function<void(int, std::vector<int>&)> recursiveFindAllPaths = [&](int currentNode, std::vector<int>& currentPath){
 
+		/* if the current node is the destination, finish exploring that path recursively */
 		if(currentNode == destination) {
 			allPaths.insert(currentPath);
 			return;
 		}
 
+		/* finds all neighbors of the current node */
 		auto it = neighbors.find(currentNode);
 		if(it != neighbors.end()) {
 			for(const auto& neighbor : it->second) {
-				if(std::find(currentPath.begin(), currentPath.end(), neighbor) == currentPath.end()) {
+
+				bool currentPathAlreadyVisitedCycle = false;
+				for(const std::set<int>& cycle : cyclesFound){
+					/* checks if next neighbor is in a cycle */
+					if(std::find(cycle.begin(), cycle.end(), neighbor) != cycle.end()){
+						/* if neighbor is in a cycle, checks if that cycle was already traversed twice */
+						for(int cycleMember : cycle){
+							currentPathAlreadyVisitedCycle = true;
+							if(std::count(currentPath.begin(), currentPath.end(), cycleMember) < 2){
+								currentPathAlreadyVisitedCycle = false;
+								break;
+							}
+						}
+					}
+					if(currentPathAlreadyVisitedCycle) break;
+				}
+				/* if neighbor is a valid next node by checking if it is in a cycle, add it to the current path and traverse it recursively */
+				if(!currentPathAlreadyVisitedCycle) {
 					currentPath.push_back(neighbor);
 					recursiveFindAllPaths(neighbor, currentPath);
 					currentPath.pop_back();
@@ -514,6 +532,17 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 	};
 
 	recursiveFindAllPaths(-1, currentPath);
+
+	// print all paths
+	qDebug() << "allPaths:";
+	for(auto path : allPaths)
+	{
+		QString storePath =  "Path: ";
+		for(auto member : path){
+			storePath = storePath + " " + QString::number(member);
+		}
+		qDebug() << storePath;
+	}
 	return true;
 }
 
