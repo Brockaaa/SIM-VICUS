@@ -533,16 +533,52 @@ bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 
 	recursiveFindAllPaths(-1, currentPath);
 
-	// print all paths
-	qDebug() << "allPaths:";
-	for(auto path : allPaths)
-	{
-		QString storePath =  "Path: ";
-		for(auto member : path){
-			storePath = storePath + " " + QString::number(member);
+	//build a list of all neighbors of all path
+	std::map<std::set<int>, std::vector<int>> mapWithNeighborsOfPaths;
+	for(auto path : allPaths){
+		std::set<int> neighborsOfThisPath;
+		for(auto elementInPath : path){
+			auto it = neighbors.find(elementInPath);
+			if(it == neighbors.end()) continue;
+			for(auto neighbor : it->second){
+				neighborsOfThisPath.insert(neighbor);
+			}
 		}
-		qDebug() << storePath;
+		mapWithNeighborsOfPaths[neighborsOfThisPath] = path;
 	}
+
+	/* now iterate over all cycles. Check if a path borders a cycle by checking all neighbors of a path
+	 * if yes, check that that path atleast partially crosses the cycle,
+	 * otherwise interpret it as shortcircuiting the path */
+	for (auto cycle : cyclesFound) {
+		for (auto mapIt : mapWithNeighborsOfPaths) {
+			bool cycleBordered = false;
+			// evaluate if a path borders a cycle
+			for(auto cycleElement : cycle){
+				if(std::find(mapIt.first.begin(), mapIt.first.end(), cycleElement) != mapIt.first.end()){
+					cycleBordered = true;
+					break;
+				}
+			}
+			// if it borders a cycle, continue
+			if(!cycleBordered) continue;
+
+			// make sure that path crosses a cycle
+			bool cycleCrossed = false;
+			for(auto cycleElement : cycle){
+				if(std::find(mapIt.second.begin(), mapIt.second.end(), cycleElement) != mapIt.second.end()){
+					cycleCrossed = true;
+					break;
+				}
+			}
+
+			if(!cycleCrossed) {
+				QMessageBox::warning(this, tr("Invalid Network"), tr("\"Shortcircuiting\" found. Invalid networks can not be saved."));
+				return false;
+			}
+		}
+	}
+
 	return true;
 }
 
