@@ -257,7 +257,7 @@ void SVBMSceneManager::mergeConnectorSegments(VICUS::BMConnector & con) {
 				updateSegments = true;
 			}
 
-			if (VICUS::BMGlobals::nearZero(seg.m_offset)) {
+			if (std::fabs(seg.m_offset) < 5) {
 				break;
 			}
 		}

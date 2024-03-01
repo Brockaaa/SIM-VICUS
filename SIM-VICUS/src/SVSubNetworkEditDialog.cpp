@@ -776,7 +776,7 @@ void SVSubNetworkEditDialog::keyPressEvent(QKeyEvent *event)
 			m_sceneManager->removeSelectedBlocks();
 		}
 		else if(m_sceneManager->selectedConnector() != nullptr){
-			m_sceneManager->removeConnector(m_sceneManager->selectedConnector());
+			m_sceneManager->removeSelectedConnector();
 		}
 	}
 }
