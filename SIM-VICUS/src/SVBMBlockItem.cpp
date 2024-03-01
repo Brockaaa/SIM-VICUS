@@ -382,16 +382,6 @@ QVariant SVBMBlockItem::itemChange(GraphicsItemChange change, const QVariant & v
 			if (sceneManager != nullptr)
 				sceneManager->blockMoved(m_block, oldPos);
 		}
-		// notify scene of changed scene rect
-		if (sceneManager == nullptr)
-			return pos;
-		QRectF srect = sceneManager->sceneRect();
-		if (pos.x() < srect.left() || pos.y() < srect.top() ||
-			(pos.x() + rect().width()) > srect.right() ||
-			(pos.y() + rect().height()) > srect.bottom())
-		{
-			sceneManager->setSceneRect( QRectF()); // tell scene to recompute scene rect
-		}
 		return pos;
 	}
 

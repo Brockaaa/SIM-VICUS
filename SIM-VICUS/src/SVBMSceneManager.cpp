@@ -1263,6 +1263,41 @@ void SVBMSceneManager::triggerItemChange()
 	}
 }
 
+void SVBMSceneManager::centerOnScene()
+{
+	qreal minXPosition = std::numeric_limits<qreal>::max();
+	qreal maxXPosition = std::numeric_limits<qreal>::lowest();
+	qreal minYPosition = std::numeric_limits<qreal>::max();
+	qreal maxYPosition = std::numeric_limits<qreal>::lowest();
+
+	for(const auto &block : m_network->m_blocks){
+		if(minXPosition > block.m_pos.x()){
+			minXPosition = block.m_pos.x();
+		}
+		if(maxXPosition < block.m_pos.x()){
+			maxXPosition = block.m_pos.x();
+		}
+		if(minYPosition > block.m_pos.y()){
+			minYPosition = block.m_pos.y();
+		}
+		if(maxYPosition < block.m_pos.y()){
+			maxYPosition = block.m_pos.y();
+		}
+	}
+
+	int offsetLeftTop = 30;
+	int offsetRight = offsetLeftTop + VICUS::ENTRANCEEXITBLOCK_WIDTH;
+	int offsetBottom = offsetLeftTop + VICUS::ENTRANCEEXITBLOCK_HEIGHT;
+	minXPosition -= offsetLeftTop;
+	maxXPosition += offsetRight;
+	minYPosition -= offsetLeftTop;
+	maxYPosition += offsetBottom;
+
+	SVBMZoomMeshGraphicsView *view = qobject_cast<SVBMZoomMeshGraphicsView *>(parent());
+	view->fitInView(QRectF(minXPosition, minYPosition, maxXPosition - minXPosition, maxYPosition - minYPosition), Qt::KeepAspectRatio);
+
+}
+
 
 bool SVBMSceneManager::checkOneConnectionPerSocket(const VICUS::BMBlock *block)
 {

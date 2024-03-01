@@ -53,7 +53,7 @@ SVBMZoomMeshGraphicsView::SVBMZoomMeshGraphicsView(QWidget *parent) :
 	m_resolution(10000), // 1000 px/m
 	m_gridStep(100),
 	m_gridEnabled( true ),
-	m_zoomLevel(0),
+	m_zoomLevel(1),
 	m_gridColor( 175, 175, 255 ),
 	m_gridSpacingPixLast(0),
 	m_sceneManager(new SVBMSceneManager(this))
@@ -233,47 +233,18 @@ void SVBMZoomMeshGraphicsView::setGridEnabled( bool enabled ) {
 void SVBMZoomMeshGraphicsView::zoomIn() {
 
 	if(m_zoomLevel  >= 10) return;
-	m_zoomLevel = std::min(m_zoomLevel+1, 3000);
-	double factor = std::pow(10,m_zoomLevel/20.0);
-	QTransform m(factor, 0, 0, factor, 0, 0);
-	setTransform(m);
-	changeResolutionEvent();
+	m_zoomLevel *= 1.2;
+	scale(1.2, 1.2);
 
 }
-
 
 void SVBMZoomMeshGraphicsView::zoomOut() {
 
-	if(m_zoomLevel  <= -3) return;
-	m_zoomLevel = std::max(m_zoomLevel-1, -3000);
-	double factor = std::pow(10,m_zoomLevel/20.0);
-	QTransform m(factor, 0, 0, factor, 0, 0);
-	setTransform(m);
-	changeResolutionEvent();
+	if(m_zoomLevel  <= -5) return;
+	m_zoomLevel *= 0.8;
+	scale(0.8, 0.8);
 
 }
-
-
-void SVBMZoomMeshGraphicsView::setZoomLevel(int zoomLevel) {
-
-	m_zoomLevel = std::max(zoomLevel, -3000);
-	m_zoomLevel = std::min(m_zoomLevel, 3000);
-
-	double factor = std::pow(10,m_zoomLevel/20.0);
-	QTransform m(factor, 0, 0, factor, 0, 0);
-	setTransform(m);
-	changeResolutionEvent();
-
-}
-
-
-void SVBMZoomMeshGraphicsView::resetZoom() {
-
-	m_zoomLevel = 0;
-	resetTransform();
-
-}
-
 
 void SVBMZoomMeshGraphicsView::setGridStep(double gridStep) {
 	if (gridStep <=0) return;
@@ -300,7 +271,6 @@ void SVBMZoomMeshGraphicsView::dropEvent(QDropEvent *event){
 	event->acceptProposedAction();
 	QString sentText = event->mimeData()->text();
 	QPoint point = event->pos();
-	qDebug() << "dropEvent " << sentText << " x: " << QString::number(point.x()) << " y: " << QString::number(point.y());
 
 	SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry entry(sentText);
 

@@ -232,6 +232,9 @@ public:
 	/*! Helper Function to trigger itemChange() in SVBMConnectorSegmentItem to adjust the connector segment positions */
 	void triggerItemChange();
 
+	/* centers view on the scene */
+	void centerOnScene();
+
 signals:
 	/*! Emitted when a new connection was made and a connector was added.
 		The new connector is added to the end of the connectors in the network.

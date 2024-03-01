@@ -126,13 +126,8 @@ void SVSubNetworkEditDialog::show()
 	ratio << 300 << m_ui->splitter->width()-300;
 	m_ui->splitter->setSizes(ratio);
 
-	int viewWidth = m_ui->viewWidget->size().width();
-	int viewHeight = m_ui->viewWidget->size().height();
-	double aspectRatio = double(viewWidth)/double(viewHeight);
-	int sceneWidth = 1151;
-	int sceneHeight = int(sceneWidth/aspectRatio);
-	m_sceneManager->setSceneRect(0,450-sceneHeight/2,sceneWidth,450+sceneHeight/2);
-	m_ui->viewWidget->fitInView(m_sceneManager->sceneRect(), Qt::KeepAspectRatio);
+	m_sceneManager->setSceneRect(QRectF(-1500, -1500, 4000, 4000));
+	m_sceneManager->centerOnScene();
 	selectionClearedEvent();
 	m_sceneManager->update();
 	updateToolBoxPages();

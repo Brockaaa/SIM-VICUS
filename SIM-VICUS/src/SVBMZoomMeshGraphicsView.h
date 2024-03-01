@@ -89,12 +89,6 @@ public slots:
 	/*! Decreases zoom level. */
 	void zoomOut();
 
-	/*! Sets new zoom level. */
-	void setZoomLevel(int zoomLevel);
-
-	/*! Reset the zoom to 0. */
-	void resetZoom();
-
 	/*! Sets a new grid step/grid spacing (this is the major grid).
 		A minor grid is shown with 10 % smaller grid spacing.
 		\param gridStep Grid spacing in [m], must be > 0.
@@ -125,10 +119,6 @@ protected:
 
 	/*! Draws the mesh. */
 	void paintEvent(QPaintEvent *i_event) override;
-
-	/*! This event is called from this class and can be used in derived classes to
-		react on changes to the zoom factor. */
-	virtual void changeResolutionEvent() {}
 
 	/*! Defines resolution to be used with graphics scene in [pix/m]. */
 	double	m_resolution;
