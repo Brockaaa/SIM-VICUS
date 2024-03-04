@@ -76,6 +76,9 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 	// create chart and curve
 	configureChart(m_ui->widgetPlot1);
 	configureChart(m_ui->widgetPlot2);
+
+	// workaround for stubborn layout bug
+	m_ui->tableWidgetParameters->setMaximumHeight(0);
 }
 
 
