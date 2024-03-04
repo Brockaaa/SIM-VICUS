@@ -104,6 +104,7 @@ public:
 		ColA2ADPF,
 		ColA2ADPE,
 		ColA2WDP,
+		NumColEpds
 	};
 
 	SVLcaLccSettingsWidget(QWidget *parent);

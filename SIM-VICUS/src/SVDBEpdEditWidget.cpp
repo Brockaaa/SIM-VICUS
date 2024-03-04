@@ -58,7 +58,7 @@ SVDBEpdEditWidget::SVDBEpdEditWidget(QWidget * parent) :
 	SVStyle::formatDatabaseTableView(m_ui->tableWidgetEpdData);
 	m_ui->tableWidgetEpdData->setColumnCount(8);
 	QStringList header;
-	header << "Module" << "GWP\n[kg]" << "ODP\n[kg]" << "POCP\n[kg]" << "AP\n[kg]" << "EP\n[kg]" << "PERT\n[W/mK]" << "PENRT\n[W/mK]";
+	header << "Module" << "GWP\n[kg]" << "ODP\n[kg]" << "POCP\n[kg]" << "AP\n[kg]" << "EP\n[kg]" << "PERT\n[MJ]" << "PENRT\n[MJ]";
 	m_ui->tableWidgetEpdData->setHorizontalHeaderLabels(header);
 
 	m_ui->tableWidgetEpdData->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
@@ -143,9 +143,9 @@ void SVDBEpdEditWidget::updateInput(int id) {
 			else if(para.name == "EP")
 				row = 5;
 			else if(para.name == "PENRT")
-				row = 6;
-			else if(para.name == "PERT")
 				row = 7;
+			else if(para.name == "PERT")
+				row = 6;
 			else
 				continue;
 			//            else if(para.name == "PENRT")
