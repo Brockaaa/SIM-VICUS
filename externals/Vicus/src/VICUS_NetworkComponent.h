@@ -39,6 +39,7 @@
 #include "VICUS_AbstractDBElement.h"
 #include "VICUS_Database.h"
 #include "VICUS_Schedule.h"
+#include "VICUS_NetworkHeatExchange.h"
 
 #include <NANDRAD_HydraulicNetworkComponent.h>
 
@@ -193,6 +194,8 @@ public:
 	/*! Array parameters of the flow component */
 	NANDRAD::DataTable					m_polynomCoefficients;							// XML:E
 
+	/*! Heat Exchange Component of NetworkComponent */
+	VICUS::NetworkHeatExchange			m_heatExchange;									// XML:E
 
 	/*! Categories in SubnetworkEditDialog */
 	enum ComponentCategory{
@@ -203,12 +206,17 @@ public:
 		NUM_CC
 	};
 
+	// *** Static functions ***
+
 	// Helper function to get iconFile from ModelType
 	static QString iconFileFromModelType(VICUS::NetworkComponent::ModelType modelType);
 
-
 	// Helper function to get NetComCategory from ModelType
 	static ComponentCategory componentCategoryFromModelType(VICUS::NetworkComponent::ModelType modelType);
+
+	// Returns which heat exchanger types you can use with a given NetworkComponent type
+	static std::vector<VICUS::NetworkHeatExchange::ModelType> availableHeatExchangeTypes(const VICUS::NetworkComponent::ModelType modelType);
+
 };
 
 } // namespace VICUS

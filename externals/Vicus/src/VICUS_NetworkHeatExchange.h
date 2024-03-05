@@ -30,7 +30,7 @@
 #include "VICUS_Constants.h"
 #include "VICUS_AbstractDBElement.h"
 
-#include "VICUS_NetworkComponent.h"
+#include <IBK_Parameter.h>
 
 namespace VICUS {
 
@@ -40,12 +40,18 @@ namespace VICUS {
 	Definition of heat exchange is done in each flow element definition. If missing, the flow
 	element is treated as adiabat.
 */
-class NetworkHeatExchange
+class NetworkHeatExchange : AbstractDBElement
 {
 public:
 	NetworkHeatExchange() = default;
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
+
+	VICUS_READWRITE_OVERRIDE
+	VICUS_COMP(NetworkHeatExchange)
+	VICUS_COMPARE_WITH_ID
+
+	ComparisonResult equal(const AbstractDBElement * other) const;
 
 	/*! Defines the type of heat exchange */
 	enum ModelType {
@@ -79,16 +85,13 @@ public:
 		NUM_SPL
 	};
 
-	/*! Integer/whole number parameters. */
-	enum References {
-		ID_ZoneId,							// Keyword: ZoneId								[-]		'ID of coupled zone for thermal exchange'
-		ID_ConstructionInstanceId,			// Keyword: ConstructionInstanceId				[-]		'ID of coupled construction instance for thermal exchange'
-		NUM_ID
-	};
+	// *** Public Member variables ***
 
-	// *** Static functions ***
+	/*! Model Type */
+	ModelType							m_modelType		= NUM_T;						// XML:E
 
-	static std::vector<ModelType> availableHeatExchangeTypes(const NetworkComponent::ModelType modelType);
+	/*! Parameters for the element . */
+	IBK::Parameter						m_para[NUM_T];									// XML:E
 
 };
 

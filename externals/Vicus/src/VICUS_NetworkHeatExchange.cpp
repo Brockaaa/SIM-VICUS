@@ -27,35 +27,22 @@
 
 namespace VICUS {
 
-std::vector<VICUS::NetworkHeatExchange::ModelType> VICUS::NetworkHeatExchange::availableHeatExchangeTypes(const NetworkComponent::ModelType modelType)
+AbstractDBElement::ComparisonResult NetworkHeatExchange::equal(const AbstractDBElement * other) const
 {
-	// some models may be adiabatic, hence we also return NUM_T as available heat exchange type
-	switch (modelType) {
-		case NetworkComponent::MT_SimplePipe:
-			return {NUM_T, T_TemperatureConstant, T_TemperatureSpline, T_HeatLossConstant, T_HeatLossSpline, T_TemperatureZone, T_TemperatureConstructionLayer};
-		case NetworkComponent::MT_DynamicPipe:
-			return {NUM_T, T_TemperatureConstant, T_TemperatureSpline, T_TemperatureZone, T_TemperatureConstructionLayer};
-		case NetworkComponent::MT_HeatPumpVariableIdealCarnotSourceSide:
-		case NetworkComponent::MT_HeatPumpVariableSourceSide:
-			return {T_HeatLossSplineCondenser};  // must not be adiabatic
-			//		case NetworkComponent::MT_HeatPumpOnOffSourceSideWithBuffer:
-			//			return {T_HeatingDemandSpaceHeating};  // must not be adiabatic
-		case NetworkComponent::MT_HeatExchanger:
-			return {T_HeatLossConstant, T_HeatLossSpline}; // must not be adiabatic
-		case NetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
-		case NetworkComponent::MT_ConstantPressurePump:
-		case NetworkComponent::MT_ConstantMassFluxPump:
-		case NetworkComponent::MT_VariablePressurePump:
-		case NetworkComponent::MT_ControlledPump:
-		case NetworkComponent::MT_ControlledValve:
-		case NetworkComponent::MT_HeatPumpOnOffSourceSide:
-		case NetworkComponent::MT_IdealHeaterCooler:
-		case NetworkComponent::MT_ConstantPressureLossValve:
-		case NetworkComponent::MT_PressureLossElement:
-			return {NUM_T};
-		case NetworkComponent::NUM_MT: ; // just to make compiler happy
+	const NetworkHeatExchange * otherHeatExc = dynamic_cast<const NetworkHeatExchange*>(other);
+	if (otherHeatExc == nullptr)
+		return Different;
+
+	if (otherHeatExc->m_modelType != m_modelType)
+		return Different;
+
+	//check parameters
+	for (unsigned int i = 0; i < NetworkHeatExchange::NUM_T; ++i){
+		if (m_para[i] != otherHeatExc->m_para[i])
+			return Different;
 	}
-	return {};
+
+	return Equal;
 }
 
 } //namespace VICUS

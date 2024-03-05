@@ -168,14 +168,28 @@ AbstractDBElement::ComparisonResult SubNetwork::equal(const AbstractDBElement *o
 	return Equal;
 }
 
+SubNetwork::heatExchangeComponentStruct SubNetwork::heatExchangeComponent() const
+{
+	int counter = 0;
+	NetworkHeatExchange::ModelType modelTypeToReturn;
+	heatExchangeComponentStruct heatExchangeComponentToReturn;
+	for(const NetworkComponent& component : m_components){
+		if(component.m_heatExchange.m_modelType != NetworkHeatExchange::NUM_T){
+			counter++;
+			if(counter != 1) break;
+			heatExchangeComponentToReturn.component = component;
+		}
+	}
 
-const NetworkComponent * SubNetwork::heatExchangeComponent(const Database<NetworkComponent> &compDB) const {
-	const NetworkElement *elem = VICUS::element(m_elements, m_idHeatExchangeElement);
-	if (elem == nullptr)
-		return nullptr;
+	if(counter == 0){
+		heatExchangeComponentToReturn.status = heatExchangeReturnStatus::RS_None;
+	} else if (counter == 1){
+		heatExchangeComponentToReturn.status = heatExchangeReturnStatus::RS_Unique;
+	} else {
+		heatExchangeComponentToReturn.status = heatExchangeReturnStatus::RS_TooMany;
+	}
 
-	return compDB[elem->m_componentId];
+	return heatExchangeComponentToReturn;
 }
-
 
 } // namespace VICUS

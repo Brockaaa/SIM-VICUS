@@ -66,10 +66,10 @@ void SVPropNetworkHeatExchangeWidget::updateUi() {
 		const VICUS::SubNetwork *sub = db.m_subNetworks[m_pa->m_currentNodes[0]->m_idSubNetwork];
 		if (sub == nullptr)
 			return;
-		const VICUS::NetworkComponent *comp = sub->heatExchangeComponent(db.m_networkComponents);
-		if (comp == nullptr)
+		VICUS::SubNetwork::heatExchangeComponentStruct comp = sub->heatExchangeComponent();
+		if (comp.status != VICUS::SubNetwork::heatExchangeReturnStatus::RS_Unique)
 			return;
-		modelType = comp->m_modelType;
+		modelType = comp.component.m_modelType;
 	}
 	// if we have edge(s)
 	else if (!m_pa->m_currentEdges.empty()){

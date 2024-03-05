@@ -3377,9 +3377,9 @@ void SupplySystemNetworkModelGenerator::generate(const SupplySystem & supplySyst
 
 		// remember all inlet / outlet node ids
 		for (const NetworkElement &elem: subNetwork->m_elements) {
-			if (elem.m_inletNodeId != SubNetwork::INLET_ID)
+			if (elem.m_inletNodeId != ENTRANCE_ID)
 				allNetworkNodeIds.push_back(elem.m_inletNodeId);
-			if (elem.m_inletNodeId != SubNetwork::OUTLET_ID)
+			if (elem.m_inletNodeId != EXIT_ID)
 				allNetworkNodeIds.push_back(elem.m_outletNodeId);
 		}
 
@@ -3395,14 +3395,14 @@ void SupplySystemNetworkModelGenerator::generate(const SupplySystem & supplySyst
 			nandradElement.m_controlElementId = elem.m_controlElementId;
 
 			// replace system inlet/outlet node ids with new node ids, keep other node ids
-			if (elem.m_inletNodeId == SubNetwork::INLET_ID) {
+			if (elem.m_inletNodeId == ENTRANCE_ID) {
 				nandradElement.m_inletNodeId = uniqueIdAdd(allNetworkNodeIds);
 				systemMixerNodeId = nandradElement.m_inletNodeId; // we remember this node id for pipe connection later
 			}
 			else
 				nandradElement.m_inletNodeId = elem.m_inletNodeId;
 
-			if (elem.m_outletNodeId == SubNetwork::OUTLET_ID) {
+			if (elem.m_outletNodeId == EXIT_ID) {
 				nandradElement.m_outletNodeId = uniqueIdAdd(allNetworkNodeIds);
 				systemSplitterNodeId = nandradElement.m_outletNodeId; // we remember this node id for pipe connection later
 			}
@@ -4382,7 +4382,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 		std::map<unsigned int, unsigned int> subNetNodeIdMap;
 		for (const NetworkElement &elem: sub->m_elements){
 
-			if (elem.m_inletNodeId == VICUS::SubNetwork::INLET_ID){
+			if (elem.m_inletNodeId == VICUS::ENTRANCE_ID){
 				subInletFound = true;
 				if (node.m_type == VICUS::NetworkNode::NT_Source)
 					subNetNodeIdMap[elem.m_inletNodeId] = returnNodeIdMap[node.m_id];
@@ -4390,7 +4390,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 					subNetNodeIdMap[elem.m_inletNodeId] = supplyNodeIdMap[node.m_id];
 			}
 
-			if (elem.m_outletNodeId == VICUS::SubNetwork::OUTLET_ID){
+			if (elem.m_outletNodeId == VICUS::EXIT_ID){
 				subOutletFound = true;
 				if (node.m_type == VICUS::NetworkNode::NT_Source)
 					subNetNodeIdMap[elem.m_outletNodeId] = supplyNodeIdMap[node.m_id];

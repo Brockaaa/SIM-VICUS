@@ -354,4 +354,35 @@ NetworkComponent::ComponentCategory NetworkComponent::componentCategoryFromModel
 	}
 }
 
+std::vector<NetworkHeatExchange::ModelType> NetworkComponent::availableHeatExchangeTypes(const NetworkComponent::ModelType modelType)
+{
+	// some models may be adiabatic, hence we also return NUM_T as available heat exchange type
+	switch (modelType) {
+		case NetworkComponent::MT_SimplePipe:
+			return {NetworkHeatExchange::NUM_T, NetworkHeatExchange::T_TemperatureConstant, NetworkHeatExchange::T_TemperatureSpline, NetworkHeatExchange::T_HeatLossConstant, NetworkHeatExchange::T_HeatLossSpline, NetworkHeatExchange::T_TemperatureZone, NetworkHeatExchange::T_TemperatureConstructionLayer};
+		case NetworkComponent::MT_DynamicPipe:
+			return {NetworkHeatExchange::NUM_T, NetworkHeatExchange::T_TemperatureConstant, NetworkHeatExchange::T_TemperatureSpline, NetworkHeatExchange::T_TemperatureZone, NetworkHeatExchange::T_TemperatureConstructionLayer};
+		case NetworkComponent::MT_HeatPumpVariableIdealCarnotSourceSide:
+		case NetworkComponent::MT_HeatPumpVariableSourceSide:
+			return {NetworkHeatExchange::T_HeatLossSplineCondenser};  // must not be adiabatic
+			//		case NetworkComponent::MT_HeatPumpOnOffSourceSideWithBuffer:
+			//			return {T_HeatingDemandSpaceHeating};  // must not be adiabatic
+		case NetworkComponent::MT_HeatExchanger:
+			return {NetworkHeatExchange::T_HeatLossConstant, NetworkHeatExchange::T_HeatLossSpline}; // must not be adiabatic
+		case NetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
+		case NetworkComponent::MT_ConstantPressurePump:
+		case NetworkComponent::MT_ConstantMassFluxPump:
+		case NetworkComponent::MT_VariablePressurePump:
+		case NetworkComponent::MT_ControlledPump:
+		case NetworkComponent::MT_ControlledValve:
+		case NetworkComponent::MT_HeatPumpOnOffSourceSide:
+		case NetworkComponent::MT_IdealHeaterCooler:
+		case NetworkComponent::MT_ConstantPressureLossValve:
+		case NetworkComponent::MT_PressureLossElement:
+			return {NetworkHeatExchange::NUM_T};
+		case NetworkComponent::NUM_MT: ; // just to make compiler happy
+	}
+	return {};
+}
+
 } // namespace VICUS
