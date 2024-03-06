@@ -12,8 +12,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1500</width>
-    <height>700</height>
+    <width>1051</width>
+    <height>222</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -175,8 +175,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>645</width>
-            <height>843</height>
+            <width>352</width>
+            <height>175</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="scrollAreaLayout">
@@ -192,7 +192,7 @@
               <widget class="QtExt::ToolBox" name="tbox" native="true">
                <property name="minimumSize">
                 <size>
-                 <width>66</width>
+                 <width>0</width>
                  <height>0</height>
                 </size>
                </property>
@@ -359,6 +359,12 @@
      </property>
      <item>
       <widget class="QStackedWidget" name="stackedWidget">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>1</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>473</width>
@@ -375,6 +381,12 @@
         <number>1</number>
        </property>
        <widget class="QWidget" name="page1">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>1</verstretch>
+         </sizepolicy>
+        </property>
         <layout class="QVBoxLayout" name="verticalLayoutPage1">
          <property name="spacing">
           <number>0</number>
@@ -391,23 +403,16 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item>
-          <spacer name="verticalSpacer">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
         </layout>
        </widget>
        <widget class="QWidget" name="page2">
-        <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>1</verstretch>
+         </sizepolicy>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -424,12 +429,12 @@
           <number>0</number>
          </property>
          <item>
-          <layout class="QVBoxLayout" name="leftPaddingLayout">
+          <layout class="QVBoxLayout" name="leftPaddingLayout" stretch="0,1">
            <property name="spacing">
             <number>0</number>
            </property>
            <property name="leftMargin">
-            <number>8</number>
+            <number>0</number>
            </property>
            <property name="topMargin">
             <number>0</number>
@@ -441,13 +446,13 @@
             <number>0</number>
            </property>
            <item>
-            <widget class="QGroupBox" name="controllerGroupBox">
+            <widget class="QGroupBox" name="groupBoxName">
              <property name="enabled">
               <bool>false</bool>
              </property>
              <property name="maximumSize">
               <size>
-               <width>476</width>
+               <width>473</width>
                <height>16777215</height>
               </size>
              </property>
@@ -455,67 +460,7 @@
               <string>Block Settings</string>
              </property>
              <layout class="QGridLayout" name="gridLayout">
-              <item row="0" column="0">
-               <widget class="QLabel" name="nameLabel">
-                <property name="text">
-                 <string>Name:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0" colspan="2">
-               <widget class="QLabel" name="controllerLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Controller:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="2">
-               <widget class="QLineEdit" name="controllerLineEdit">
-                <property name="readOnly">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="3">
-               <widget class="QToolButton" name="openControllerWidgetButton">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>24</width>
-                  <height>24</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>24</width>
-                  <height>24</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>...</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="4">
-               <widget class="QToolButton" name="removeControllerButton">
-                <property name="icon">
-                 <iconset resource="../resources/SIM-VICUS.qrc">
-                  <normaloff>:/gfx/actions/24x24/minus.png</normaloff>:/gfx/actions/24x24/minus.png</iconset>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2" colspan="3">
+              <item row="0" column="1" colspan="2">
                <widget class="QLineEdit" name="nameLineEdit">
                 <property name="minimumSize">
                  <size>
@@ -531,26 +476,116 @@
                 </property>
                </widget>
               </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="nameLabel">
+                <property name="text">
+                 <string>Name:</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
            </item>
+           <item>
+            <widget class="QStackedWidget" name="stackedWidgetNetworkComponent">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>1</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="page_5">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>1</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>473</width>
+                <height>100</height>
+               </size>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayoutPage1">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="SVNetworkComponentEditWidget" name="networkComponentEditWidget" native="true">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>0</y>
+                   <width>473</width>
+                   <height>900</height>
+                  </rect>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                   <horstretch>0</horstretch>
+                   <verstretch>1</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>473</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>473</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="page_6">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>1</verstretch>
+               </sizepolicy>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayoutPage1">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+              </layout>
+             </widget>
+            </widget>
+           </item>
           </layout>
-         </item>
-         <item>
-          <widget class="SVNetworkComponentEditWidget" name="networkComponentEditWidget" native="true">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>491</width>
-             <height>16777215</height>
-            </size>
-           </property>
-          </widget>
          </item>
         </layout>
        </widget>
@@ -566,7 +601,7 @@
        </property>
        <property name="minimumSize">
         <size>
-         <width>471</width>
+         <width>473</width>
          <height>0</height>
         </size>
        </property>

@@ -74,7 +74,7 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	m_ui->viewWidget->setResolution(1);
 	m_ui->viewWidget->setStyleSheet("background-color: white;");
 
-	m_ui->controllerLineEdit->setDisabled(true);
+	//m_ui->controllerLineEdit->setDisabled(true);
 
 	m_ui->frameBuiltIn->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(QtExt::Style::ToolBoxPageBackground));
 	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundBright.name()));
@@ -666,12 +666,12 @@ void SVSubNetworkEditDialog::blockSelectedEvent()
 		if(blockToDisplay->m_mode == VICUS::BMBlockType::NetworkComponentBlock){
 			m_ui->stackedWidget->setCurrentIndex(1);
 			//activate ControllerGroupBox
-			m_ui->controllerGroupBox->setEnabled(true);
-			m_ui->controllerLabel->setEnabled(true);
-			m_ui->controllerLineEdit->setEnabled(true);
+			m_ui->groupBoxName->setEnabled(true);
+			//m_ui->controllerLabel->setEnabled(true);
+			//m_ui->controllerLineEdit->setEnabled(true);
 			m_ui->nameLineEdit->setEnabled(true);
 			m_ui->nameLabel->setEnabled(true);
-			m_ui->removeControllerButton->setEnabled(true);
+			//m_ui->removeControllerButton->setEnabled(true);
 			m_ui->removeButton->setEnabled(true);
 			m_ui->copyBlockButton->setEnabled(true);
 			m_ui->addToUserDBButton->setEnabled(true);
@@ -682,22 +682,22 @@ void SVSubNetworkEditDialog::blockSelectedEvent()
 			nandradModelType = VICUS::NetworkComponent::nandradNetworkComponentModelType(m_networkComponents[componentIndex(blockToDisplay->m_componentId)].m_modelType);
 			availableCtrProps = NANDRAD::HydraulicNetworkControlElement::availableControlledProperties(nandradModelType);
 			if(availableCtrProps.size() > 0){
-							m_ui->openControllerWidgetButton->setEnabled(true);
+							//m_ui->openControllerWidgetButton->setEnabled(true);
 			} else {
 							if(blockToDisplay->m_componentId != VICUS::INVALID_ID){
-								m_ui->openControllerWidgetButton->setEnabled(true);
+								//m_ui->openControllerWidgetButton->setEnabled(true);
 							}
-							m_ui->openControllerWidgetButton->setEnabled(false);
+							//m_ui->openControllerWidgetButton->setEnabled(false);
 			}
 
 			if(blockToDisplay->m_controllerID != VICUS::INVALID_ID){
 				const VICUS::NetworkController *ctr = VICUS::element(m_networkControllers, blockToDisplay->m_controllerID);
-				m_ui->controllerLineEdit->setText(QString::fromLatin1(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", ctr->m_controlledProperty)));
-				m_ui->removeControllerButton->setEnabled(true);
+				//m_ui->controllerLineEdit->setText(QString::fromLatin1(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", ctr->m_controlledProperty)));
+				//m_ui->removeControllerButton->setEnabled(true);
 			}
 			else{
-				m_ui->controllerLineEdit->clear();
-				m_ui->removeControllerButton->setEnabled(false);
+				//m_ui->controllerLineEdit->clear();
+				//m_ui->removeControllerButton->setEnabled(false);
 			}
 
 			// Fill NetworkComponent ComboBox
@@ -1423,7 +1423,7 @@ void SVSubNetworkEditDialog::on_openControllerWidgetButton_clicked()
 		} else {
 			m_networkControllers[controllerIndex(selectedBlock->m_controllerID)] = controller;
 		}
-		m_ui->controllerLineEdit->setText(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(controller.m_controlledProperty)));
+		//m_ui->controllerLineEdit->setText(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(controller.m_controlledProperty)));
 		m_sceneManager->setControllerID(selectedBlock, selectedBlock->m_controllerID, VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", controller.m_controlledProperty));
 		m_sceneManager->update();
 	}
@@ -1437,7 +1437,7 @@ void SVSubNetworkEditDialog::on_removeControllerButton_clicked()
 	if (selectedBlock->m_controllerID == VICUS::INVALID_ID)
 		return;
 	m_networkControllers.erase(m_networkControllers.begin() + controllerIndex(selectedBlock->m_controllerID));
-	m_ui->controllerLineEdit->clear();
+	//m_ui->controllerLineEdit->clear();
 	m_sceneManager->setControllerID(selectedBlock, VICUS::INVALID_ID, "");
 	m_sceneManager->update();
 }
