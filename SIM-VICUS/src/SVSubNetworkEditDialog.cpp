@@ -659,62 +659,74 @@ void SVSubNetworkEditDialog::blockSelectedEvent()
 	VICUS::BMBlock  *blockToDisplay = nullptr;
 	// retrieve list of selected Blocks
 	QList<const VICUS::BMBlock*> blocks = m_sceneManager->selectedBlocks();
+
 	// only fill in right widget if exactly one block is selected
-	if (blocks.size() == 1){
-		blockToDisplay = const_cast<VICUS::BMBlock*>(blocks.first());
-		// if Block is a networkComponentBlock, fill data in the right widget
-		if(blockToDisplay->m_mode == VICUS::BMBlockType::NetworkComponentBlock){
-			m_ui->stackedWidget->setCurrentIndex(1);
-			//activate ControllerGroupBox
-			m_ui->groupBoxName->setEnabled(true);
-			//m_ui->controllerLabel->setEnabled(true);
-			//m_ui->controllerLineEdit->setEnabled(true);
-			m_ui->nameLineEdit->setEnabled(true);
-			m_ui->nameLabel->setEnabled(true);
-			//m_ui->removeControllerButton->setEnabled(true);
-			m_ui->removeButton->setEnabled(true);
-			m_ui->copyBlockButton->setEnabled(true);
-			m_ui->addToUserDBButton->setEnabled(true);
-			m_ui->nameLineEdit->setText(blockToDisplay->m_displayName);
-
-			std::vector<NANDRAD::HydraulicNetworkControlElement::ControlledProperty> availableCtrProps;
-			NANDRAD::HydraulicNetworkComponent::ModelType nandradModelType;
-			nandradModelType = VICUS::NetworkComponent::nandradNetworkComponentModelType(m_networkComponents[componentIndex(blockToDisplay->m_componentId)].m_modelType);
-			availableCtrProps = NANDRAD::HydraulicNetworkControlElement::availableControlledProperties(nandradModelType);
-			if(availableCtrProps.size() > 0){
-							//m_ui->openControllerWidgetButton->setEnabled(true);
-			} else {
-							if(blockToDisplay->m_componentId != VICUS::INVALID_ID){
-								//m_ui->openControllerWidgetButton->setEnabled(true);
-							}
-							//m_ui->openControllerWidgetButton->setEnabled(false);
-			}
-
-			if(blockToDisplay->m_controllerID != VICUS::INVALID_ID){
-				const VICUS::NetworkController *ctr = VICUS::element(m_networkControllers, blockToDisplay->m_controllerID);
-				//m_ui->controllerLineEdit->setText(QString::fromLatin1(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", ctr->m_controlledProperty)));
-				//m_ui->removeControllerButton->setEnabled(true);
-			}
-			else{
-				//m_ui->controllerLineEdit->clear();
-				//m_ui->removeControllerButton->setEnabled(false);
-			}
-
-			// Fill NetworkComponent ComboBox
-			VICUS::NetworkComponent* component = &m_networkComponents[componentIndex(blockToDisplay->m_componentId)];
-			m_ui->networkComponentEditWidget->updateInput(component);
-
-		// connector block
-		} else if (blockToDisplay->m_mode == VICUS::BMBlockType::ConnectorBlock){
-			selectionClearedEvent();
-			m_ui->removeButton->setEnabled(true);
-		// global inlet / outlet
-		} else {
-			selectionClearedEvent();
-		}
-	// more than on block selected
-	} else {
+	if (blocks.size() != 1) {
 		selectionClearedEvent();
+		return;
+	}
+	blockToDisplay = const_cast<VICUS::BMBlock*>(blocks.first());
+	// if Block is a networkComponentBlock, fill data in the right widget
+	if(blockToDisplay->m_mode == VICUS::BMBlockType::NetworkComponentBlock){
+		m_ui->stackedWidget->setCurrentIndex(1);
+		//activate ControllerGroupBox
+		m_ui->groupBoxName->setEnabled(true);
+		//m_ui->controllerLabel->setEnabled(true);
+		//m_ui->controllerLineEdit->setEnabled(true);
+		m_ui->nameLineEdit->setEnabled(true);
+		m_ui->nameLabel->setEnabled(true);
+		//m_ui->removeControllerButton->setEnabled(true);
+		m_ui->removeButton->setEnabled(true);
+		m_ui->copyBlockButton->setEnabled(true);
+		m_ui->addToUserDBButton->setEnabled(true);
+		m_ui->nameLineEdit->setText(blockToDisplay->m_displayName);
+
+		std::vector<NANDRAD::HydraulicNetworkControlElement::ControlledProperty> availableCtrProps;
+		NANDRAD::HydraulicNetworkComponent::ModelType nandradModelType;
+		nandradModelType = VICUS::NetworkComponent::nandradNetworkComponentModelType(m_networkComponents[componentIndex(blockToDisplay->m_componentId)].m_modelType);
+		availableCtrProps = NANDRAD::HydraulicNetworkControlElement::availableControlledProperties(nandradModelType);
+		if(availableCtrProps.size() > 0){
+						//m_ui->openControllerWidgetButton->setEnabled(true);
+		} else {
+						if(blockToDisplay->m_componentId != VICUS::INVALID_ID){
+							//m_ui->openControllerWidgetButton->setEnabled(true);
+						}
+						//m_ui->openControllerWidgetButton->setEnabled(false);
+		}
+
+		if(blockToDisplay->m_controllerID != VICUS::INVALID_ID){
+			const VICUS::NetworkController *ctr = VICUS::element(m_networkControllers, blockToDisplay->m_controllerID);
+			//m_ui->controllerLineEdit->setText(QString::fromLatin1(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", ctr->m_controlledProperty)));
+			//m_ui->removeControllerButton->setEnabled(true);
+		}
+		else{
+			//m_ui->controllerLineEdit->clear();
+			//m_ui->removeControllerButton->setEnabled(false);
+		}
+
+		// Fill NetworkComponent ComboBox
+		VICUS::NetworkComponent* component = &m_networkComponents[componentIndex(blockToDisplay->m_componentId)];
+		m_ui->networkComponentEditWidget->updateInput(component);
+		m_ui->stackedWidgetNetworkComponent->setCurrentIndex(0);
+
+	// connector block
+	} else if (blockToDisplay->m_mode == VICUS::BMBlockType::ConnectorBlock){
+		selectionClearedEvent();
+		m_ui->removeButton->setEnabled(true);
+		m_ui->nameLineEdit->setText(tr("Connector Block"));
+		m_ui->stackedWidget->setCurrentIndex(1);
+		m_ui->stackedWidgetNetworkComponent->setCurrentIndex(1);
+	// global inlet / outlet
+	} else if (blockToDisplay->m_mode == VICUS::BMBlockType::GlobalInlet){
+		selectionClearedEvent();
+		m_ui->nameLineEdit->setText(tr("Global Inlet"));
+		m_ui->stackedWidget->setCurrentIndex(1);
+		m_ui->stackedWidgetNetworkComponent->setCurrentIndex(1);
+	} else if (blockToDisplay->m_mode == VICUS::BMBlockType::GlobalOutlet){
+		selectionClearedEvent();
+		m_ui->nameLineEdit->setText(tr("Global Outlet"));
+		m_ui->stackedWidget->setCurrentIndex(1);
+		m_ui->stackedWidgetNetworkComponent->setCurrentIndex(1);
 	}
 }
 
