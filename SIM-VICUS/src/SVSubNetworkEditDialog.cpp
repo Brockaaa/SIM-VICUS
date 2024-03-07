@@ -680,6 +680,7 @@ void SVSubNetworkEditDialog::blockSelectedEvent()
 		m_ui->copyBlockButton->setEnabled(true);
 		m_ui->addToUserDBButton->setEnabled(true);
 		m_ui->nameLineEdit->setText(blockToDisplay->m_displayName);
+		m_ui->nameLineEdit->setReadOnly(false);
 
 		std::vector<NANDRAD::HydraulicNetworkControlElement::ControlledProperty> availableCtrProps;
 		NANDRAD::HydraulicNetworkComponent::ModelType nandradModelType;
@@ -714,17 +715,20 @@ void SVSubNetworkEditDialog::blockSelectedEvent()
 		selectionClearedEvent();
 		m_ui->removeButton->setEnabled(true);
 		m_ui->nameLineEdit->setText(tr("Connector Block"));
+		m_ui->nameLineEdit->setReadOnly(true);
 		m_ui->stackedWidget->setCurrentIndex(1);
 		m_ui->stackedWidgetNetworkComponent->setCurrentIndex(1);
 	// global inlet / outlet
 	} else if (blockToDisplay->m_mode == VICUS::BMBlockType::GlobalInlet){
 		selectionClearedEvent();
 		m_ui->nameLineEdit->setText(tr("Global Inlet"));
+		m_ui->nameLineEdit->setReadOnly(true);
 		m_ui->stackedWidget->setCurrentIndex(1);
 		m_ui->stackedWidgetNetworkComponent->setCurrentIndex(1);
 	} else if (blockToDisplay->m_mode == VICUS::BMBlockType::GlobalOutlet){
 		selectionClearedEvent();
 		m_ui->nameLineEdit->setText(tr("Global Outlet"));
+		m_ui->nameLineEdit->setReadOnly(true);
 		m_ui->stackedWidget->setCurrentIndex(1);
 		m_ui->stackedWidgetNetworkComponent->setCurrentIndex(1);
 	}
