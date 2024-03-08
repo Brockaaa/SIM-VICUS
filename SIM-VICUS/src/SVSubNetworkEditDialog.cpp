@@ -790,6 +790,18 @@ void SVSubNetworkEditDialog::convertSubnetwork() {
 			VICUS::NetworkComponent component = *componentPtr;
 			component.m_id = VICUS::largestUniqueId(m_subNetwork->m_components);
 			element.m_componentId = component.m_id;
+
+			// copies controller out of database and into the component
+			if(element.m_controlElementId != VICUS::INVALID_ID){
+				VICUS::NetworkController *controllerPtr = m_db->m_networkControllers[element.m_controlElementId];
+				if (controllerPtr == nullptr)
+					throw IBK::Exception(tr("Could not find network controller #%1.")
+											 .arg(element.m_controlElementId).toStdString(), FUNC_ID);
+				VICUS::NetworkController controller = *controllerPtr;
+				controller.m_id = VICUS::INVALID_ID;
+				component.m_networkController = controller;
+			}
+
 			m_subNetwork->m_components.push_back(component);
 		} else {
 			throw IBK::Exception(tr("Invalid network component #%1.")
