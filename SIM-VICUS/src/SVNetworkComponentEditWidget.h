@@ -37,6 +37,7 @@ namespace VICUS {
 }
 
 class SVDBNetworkComponentTableModel;
+class SVNetworkControllerEditDialog;
 class SVDatabase;
 class QwtPlot;
 class QwtPlotCurve;
@@ -71,6 +72,8 @@ public:
 	/*! updates the Widget */
 	void update();
 
+signals:
+	void controllerChanged(QString controllerName);
 
 private slots:
 	void on_tableWidgetParameters_cellChanged(int row, int column);
@@ -83,6 +86,10 @@ private slots:
 
 	void on_tableWidgetPolynomCoefficients_cellChanged(int row, int);
 
+	void on_toolButtonControllerSet_clicked();
+
+	void on_toolButtonControllerRemove_clicked();
+
 private:
 	void updateParameterTableWidget() const;
 
@@ -94,6 +101,9 @@ private:
 
 	/*! Cached pointer to database object. */
 	SVDatabase								m_db;
+
+	/*! Dialog to create and edit Controller */
+	SVNetworkControllerEditDialog			*m_controllerEditDialog = nullptr;
 
 	/*! Pointer to currently edited component.
 		The pointer is updated whenever updateInput() is called.

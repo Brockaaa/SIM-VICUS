@@ -33,12 +33,15 @@
 #include "SVConstants.h"
 #include "SVConversions.h"
 #include "SVChartUtils.h"
+#include "SVNetworkControllerEditDialog.h"
 
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_legend.h>
 
 #include <VICUS_NetworkComponent.h>
+#include <VICUS_NetworkController.h>
+#include <VICUS_NetworkHeatExchange.h>
 #include <VICUS_KeywordListQt.h>
 #include <VICUS_utilities.h>
 
@@ -91,21 +94,20 @@ void SVNetworkComponentEditWidget::updateInput(VICUS::NetworkComponent* componen
 
 	// clear input controls
 	m_ui->lineEditSchedule1->clear();
-	m_ui->lineEditSchedule1->setEnabled(false);
+	m_ui->lineEditSchedule1->setVisible(false);
 	m_ui->lineEditSchedule2->clear();
-	m_ui->lineEditSchedule2->setEnabled(false);
+	m_ui->lineEditSchedule2->setVisible(false);
+
+
+	// set invisible everything in the polynom group box
+	m_ui->groupBoxPolynom->setVisible(false);
+
+	// set invisible everything in the controller group box
+	m_ui->groupBoxController->setVisible(false);
 
 	if (component == nullptr) {
 		// disable all controls - note: this does not disable signals of the components below
 		setEnabled(false);
-
-		// construction property info fields
-		m_ui->plotTab1->setEnabled(false);
-		m_ui->widgetPlot1->setVisible(false);
-		m_ui->plotTab2->setEnabled(false);
-		m_ui->widgetPlot2->setVisible(false);
-
-		// Note: color button is disabled, hence color is gray
 		return;
 	}
 	// re-enable all controls
@@ -127,9 +129,9 @@ void SVNetworkComponentEditWidget::update()
 
 	// enable schedules tool buttons (based on required schedules)
 	std::vector<std::string> reqScheduleNames = NANDRAD::HydraulicNetworkComponent::requiredScheduleNames(nandradModelType);
-	m_ui->groupBoxSchedules->setEnabled(!reqScheduleNames.empty());
-	m_ui->toolButtonSchedule1->setEnabled(reqScheduleNames.size()==1 || reqScheduleNames.size()==2);
-	m_ui->toolButtonSchedule2->setEnabled(reqScheduleNames.size()==2);
+	m_ui->groupBoxSchedules->setVisible(!reqScheduleNames.empty());
+	m_ui->toolButtonSchedule1->setVisible(reqScheduleNames.size()==1 || reqScheduleNames.size()==2);
+	m_ui->toolButtonSchedule2->setVisible(reqScheduleNames.size()==2);
 
 	// update schedule labels
 	m_ui->labelSchedule1->clear();
@@ -141,7 +143,7 @@ void SVNetworkComponentEditWidget::update()
 
 	// update Schedule names (based on existing schedules)
 	if (m_current->m_scheduleIds.size()>0){
-		m_ui->lineEditSchedule1->setEnabled(true);
+		m_ui->lineEditSchedule1->setVisible(true);
 		if (m_db.m_schedules[m_current->m_scheduleIds[0]] == nullptr)
 			m_ui->lineEditSchedule1->setText(tr("Invalid Schedule"));
 		else
@@ -149,7 +151,7 @@ void SVNetworkComponentEditWidget::update()
 				m_db.m_schedules[m_current->m_scheduleIds[0]]->m_displayName));
 	}
 	if (m_current->m_scheduleIds.size()>1){
-		m_ui->lineEditSchedule2->setEnabled(true);
+		m_ui->lineEditSchedule2->setVisible(true);
 		if (m_db.m_schedules[m_current->m_scheduleIds[1]] == nullptr)
 			m_ui->lineEditSchedule2->setText(tr("Invalid Schedule"));
 		else
@@ -159,18 +161,33 @@ void SVNetworkComponentEditWidget::update()
 
 	// update pipe properties
 	m_ui->lineEditPipeProperties->clear();
-	m_ui->groupBoxPipeProperties->setEnabled(false);
+	m_ui->groupBoxPipeProperties->setVisible(false);
 	if (VICUS::NetworkComponent::hasPipeProperties(m_current->m_modelType)){
-		m_ui->groupBoxPipeProperties->setEnabled(true);
+		m_ui->groupBoxPipeProperties->setVisible(true);
 		const VICUS::NetworkPipe *pipe = m_db.m_pipes[m_current->m_pipePropertiesId];
 		if(pipe != nullptr)
 			m_ui->lineEditPipeProperties->setText(QtExt::MultiLangString2QString(pipe->m_displayName));
 	}
 
+	// update controller properties
+	std::vector<NANDRAD::HydraulicNetworkControlElement::ControlledProperty> availableCtrProps;
+	availableCtrProps = NANDRAD::HydraulicNetworkControlElement::availableControlledProperties(nandradModelType);
+	if(availableCtrProps.size() > 0){
+		m_ui->groupBoxController->setVisible(true);
+	}
+
+	if(m_current->m_networkController.m_controlledProperty != VICUS::NetworkController::NUM_CP){
+		m_ui->lineEditController->setText(QString::fromLatin1(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", m_current->m_networkController.m_controlledProperty)));
+		m_ui->toolButtonControllerRemove->setEnabled(true);
+	} else {
+		m_ui->lineEditController->clear();
+		m_ui->toolButtonControllerRemove->setEnabled(false);
+	}
+
 	// update table widgets and plot
-	m_ui->plotTab1->setEnabled(true);
+	m_ui->plotTab1->setVisible(true);
 	m_ui->widgetPlot1->setVisible(true);
-	m_ui->plotTab2->setEnabled(true);
+	m_ui->plotTab2->setVisible(true);
 	m_ui->widgetPlot2->setVisible(true);
 
 	updateParameterTableWidget();
@@ -206,9 +223,9 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 	// populate table widget with parameters
 	m_ui->tableWidgetParameters->setRowCount(rowCount);
 	if (paraVec.empty() && paraVecInt.empty() && paraVecOpt.empty())
-		m_ui->groupBoxModelParameters->setEnabled(false);
+		m_ui->groupBoxModelParameters->setVisible(false);
 	else
-		m_ui->groupBoxModelParameters->setEnabled(true);
+		m_ui->groupBoxModelParameters->setVisible(true);
 
 	if(SVSettings::instance().m_theme == SVSettings::TT_Dark)
 		m_ui->tableWidgetParameters->setMaximumHeight(rowCount * m_ui->tableWidgetParameters->rowHeight(0)+6);
@@ -317,7 +334,6 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 
 void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget() const {
 
-	m_ui->groupBoxPolynom->setEnabled(false);
 	m_ui->tableWidgetPolynomCoefficients->blockSignals(true);
 	m_ui->tableWidgetPolynomCoefficients->clearContents();
 	m_ui->tableWidgetPolynomCoefficients->setRowCount(0);
@@ -352,11 +368,14 @@ void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget() const {
 	}
 
 	// set header, row and column count
-	m_ui->groupBoxPolynom->setEnabled(true);
 	m_ui->tableWidgetPolynomCoefficients->verticalHeader()->setVisible(true);
 	rowCount = header.size();
 	m_ui->tableWidgetPolynomCoefficients->setRowCount((int)rowCount);
 	m_ui->tableWidgetPolynomCoefficients->setColumnCount((int)columnCount);
+
+	if (columnCount > 0 || rowCount > 0) {
+		m_ui->groupBoxPolynom->setVisible(true);
+	}
 
 	// better to read reference
 	const std::map<std::string, std::vector<double> > &values = m_current->m_polynomCoefficients.m_values;
@@ -388,8 +407,6 @@ void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget() const {
 	tableWidgetHeight += m_ui->tableWidgetPolynomCoefficients->horizontalScrollBar()->height();
 	m_ui->tableWidgetPolynomCoefficients->setMinimumHeight(tableWidgetHeight);
 	m_ui->tableWidgetPolynomCoefficients->setMaximumHeight(tableWidgetHeight);
-
-
 	m_ui->tableWidgetPolynomCoefficients->blockSignals(false);
 }
 
@@ -829,5 +846,38 @@ void SVNetworkComponentEditWidget::on_tableWidgetPolynomCoefficients_cellChanged
 		m_current->m_polynomCoefficients.m_values.erase(header);
 
 	update();
+}
+
+
+void SVNetworkComponentEditWidget::on_toolButtonControllerSet_clicked()
+{
+	VICUS::NetworkController controller;
+	controller.m_modelType = VICUS::NetworkController::MT_Constant;
+	controller.m_controlledProperty = VICUS::NetworkController::CP_TemperatureDifference;
+	m_current->m_networkController = controller;
+
+	if(m_controllerEditDialog == nullptr){
+		m_controllerEditDialog = new SVNetworkControllerEditDialog(this);
+	}
+
+	VICUS::NetworkController tmpController = m_current->m_networkController;
+	m_controllerEditDialog->setup(tmpController, m_current->m_modelType);
+	m_controllerEditDialog->exec();
+
+	if (m_controllerEditDialog->result() == QDialog::Accepted){
+		m_current->m_networkController = m_controllerEditDialog->controller();
+		QString controllerName = VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(m_current->m_networkController.m_controlledProperty));
+		m_ui->lineEditController->setText(controllerName);
+		emit controllerChanged(controllerName);
+	}
+
+}
+
+
+void SVNetworkComponentEditWidget::on_toolButtonControllerRemove_clicked()
+{
+	m_current->m_networkController = VICUS::NetworkController();
+	m_ui->lineEditController->clear();
+	emit controllerChanged("");
 }
 

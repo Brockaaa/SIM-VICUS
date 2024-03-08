@@ -39,6 +39,7 @@
 #include "VICUS_AbstractDBElement.h"
 #include "VICUS_Database.h"
 #include "VICUS_Schedule.h"
+#include "VICUS_NetworkController.h"
 #include "VICUS_NetworkHeatExchange.h"
 
 #include <NANDRAD_HydraulicNetworkComponent.h>
@@ -193,6 +194,9 @@ public:
 
 	/*! Array parameters of the flow component */
 	NANDRAD::DataTable					m_polynomCoefficients;							// XML:E
+
+	/*! Network Controller of NetworkComponent */
+	VICUS::NetworkController			m_networkController;							// XML:E
 
 	/*! Heat Exchange Component of NetworkComponent */
 	VICUS::NetworkHeatExchange			m_heatExchange;									// XML:E

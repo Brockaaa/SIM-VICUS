@@ -183,7 +183,7 @@ public:
 	void convertConnectionToConnectorBlock(const VICUS::BMBlock * connectedBlock, const VICUS::BMSocket * connectedSocket, const VICUS::BMBlock * newBlock, const VICUS::BMSocket * newSocket, const VICUS::BMConnector * oldCon);
 
 	// sets controllerID of Block and it's BlockItem
-	void setControllerID(const VICUS::BMBlock * block, unsigned int id, QString controllerName);
+	void setController(const VICUS::BMBlock * block, QString controllerName);
 
 
 	/*! Creates new Connector between two Blocks and Sockets */

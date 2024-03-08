@@ -89,11 +89,8 @@ public:
 	/*! Stores id of element with heat exchange parameterization. INVALID_ID means no heat exchange. */
 	unsigned int										m_idHeatExchangeElement = INVALID_ID;	// XML:A
 
-	/* stores all controllers used in this subnetwork */
+	/* stores all components used in this subnetwork */
 	std::vector<NetworkComponent>                       m_components;                           // XML:E
-
-	/*! Stores all controllers used in this subnetwork */
-	std::vector<NetworkController>                      m_controllers;                         // XML:E
 
 	/*! Holds graphical information of the elements, contains BMBlocks and BMConnectors */
 	BMNetwork                                           m_graphicalNetwork;                     // XML:E:tag=GraphicalNetwork

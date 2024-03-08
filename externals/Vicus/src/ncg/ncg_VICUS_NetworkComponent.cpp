@@ -111,6 +111,8 @@ void NetworkComponent::readXML(const TiXmlElement * element) {
 			}
 			else if (cName == "PolynomCoefficients")
 				m_polynomCoefficients.setEncodedString(c->GetText());
+			else if (cName == "NetworkController")
+				m_networkController.readXML(c);
 			else if (cName == "NetworkHeatExchange")
 				m_heatExchange.readXML(c);
 			else {
@@ -163,6 +165,8 @@ TiXmlElement * NetworkComponent::writeXML(TiXmlElement * parent) const {
 	}
 	if (!m_polynomCoefficients.m_values.empty())
 		TiXmlElement::appendSingleAttributeElement(e, "PolynomCoefficients", nullptr, std::string(), m_polynomCoefficients.encodedString());
+
+	m_networkController.writeXML(e);
 
 	m_heatExchange.writeXML(e);
 	return e;

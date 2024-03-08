@@ -502,10 +502,10 @@ void SVBMSceneManager::addConnectorBlock(VICUS::BMBlock & block){
 	m_blockItems.append(item);
 }
 
-void SVBMSceneManager::setControllerID(const VICUS::BMBlock * block, unsigned int id, QString controllerName) {
+void SVBMSceneManager::setController(const VICUS::BMBlock * block, QString controllerName) {
 	for(SVBMBlockItem * item : m_blockItems){
 		if(item->m_block == block){
-			item->setController(id, controllerName);
+			item->m_controllerName = controllerName;
 		}
 	}
 }

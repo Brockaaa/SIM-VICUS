@@ -70,10 +70,6 @@ public:
 	/* needed for hovering support*/
 	QPainterPath shape() const;
 
-	/* Sets name of Controller, will be displayed in the Scene */
-	void setController(unsigned int controllerID, QString controllerName);
-
-
 protected:
 	/*! This function is called from the constructor and creates child socket items.
 		You can overload this function to create your own socket items.

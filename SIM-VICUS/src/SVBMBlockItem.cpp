@@ -401,12 +401,3 @@ QPainterPath SVBMBlockItem::shape() const
 	path.addRect(SVBMBlockItem::boundingRect());
 	return path;
 }
-
-void SVBMBlockItem::setController(unsigned int controllerID, QString controllerName)
-{
-	m_block->m_controllerID = controllerID;
-	m_controllerName = controllerName;
-
-}
-
-

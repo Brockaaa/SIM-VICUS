@@ -34,14 +34,6 @@ bool SubNetwork::isValid(const Database<NetworkComponent> &compDB,
 			return false;
 		if (!compDB[e.m_componentId]->isValid(scheduleDB))
 			return false;
-
-		// if controller id exists, it must also reference a valid controller in DB
-		if (e.m_controlElementId != INVALID_ID){
-			if (ctrlDB[e.m_controlElementId] == nullptr)
-				return false;
-			if (!ctrlDB[e.m_controlElementId]->isValid(scheduleDB))
-				return false;
-		}
 	}
 
 	return true;
@@ -73,7 +65,6 @@ void SubNetwork::init()
 			block.m_mode = BMBlockType::NetworkComponentBlock;
 			block.m_displayName = element.m_displayName;
 			block.m_componentId = element.m_componentId;
-			block.m_controllerID = element.m_controlElementId;
 			block.m_size = QSizeF(BLOCK_WIDTH, BLOCK_HEIGHT);
 			block.m_properties["ShowPixmap"] = true;
 			block.m_properties["Pixmap"] = QPixmap(NetworkComponent::iconFileFromModelType(m_components[elementIndex(m_components, block.m_componentId)].m_modelType)).scaled(256,256);

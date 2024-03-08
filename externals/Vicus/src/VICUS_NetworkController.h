@@ -90,9 +90,12 @@ public:
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
-	VICUS_READWRITE_OVERRIDE
 	VICUS_COMP(NetworkController)
 	VICUS_COMPARE_WITH_ID
+
+	void readXML(const TiXmlElement * element) override;
+
+	TiXmlElement * writeXML(TiXmlElement * parent) const override;
 
 	/*! Checks if all parameters are valid. */
 	bool isValid(const Database<Schedule> &scheduleDB) const;
@@ -109,6 +112,7 @@ public:
 
 	// *** PUBLIC MEMBER VARIABLES added for VICUS ***
 
+	// TODO Maik: remove
 	//:inherited	unsigned int					m_id = INVALID_ID;				// XML:A:required
 	//:inherited	IBK::MultiLanguageString		m_displayName;					// XML:A
 	//:inherited	QColor							m_color;						// XML:A

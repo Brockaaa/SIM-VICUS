@@ -94,19 +94,19 @@
        <item>
         <widget class="QGroupBox" name="groupBoxPolynom">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
            <horstretch>0</horstretch>
-           <verstretch>1</verstretch>
+           <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="title">
           <string>Polynom </string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0">
           <item>
            <widget class="QTableWidget" name="tableWidgetPolynomCoefficients">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -279,7 +279,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEditController"/>
+           <widget class="QLineEdit" name="lineEditController">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QToolButton" name="toolButtonControllerSet">
@@ -304,6 +308,12 @@
        </item>
        <item>
         <widget class="QGroupBox" name="groupBoxSchedules">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Schedules</string>
          </property>
@@ -405,7 +415,7 @@
        </sizepolicy>
       </property>
       <attribute name="title">
-       <string>Heat Exchanger</string>
+       <string>Heat Exchange</string>
       </attribute>
      </widget>
     </widget>

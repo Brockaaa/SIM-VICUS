@@ -180,7 +180,9 @@ public:
 	/*! Map of all hydraulic network components */
 	VICUS::Database<VICUS::NetworkComponent>			m_networkComponents;
 
-	/*! Map of all hydraulic network controllers */
+	/*! Map of all hydraulic network controllers -- deprecated
+	Controllers are stored in the network component since Version 1.2
+	This is only kept for conversion purposes. */
 	VICUS::Database<VICUS::NetworkController>			m_networkControllers;
 
 	/*! Map of all hydraulic sub networks */

@@ -41,12 +41,6 @@ signals:
 private slots:
 	/*! gets called when removeBlockOrConnectorButton is clicked, checks if Block or Connector is selected, then forwards request to SVBMSceneManager */
 	void on_removeButton_clicked();
-	/*! gets called when the ControllerEditWidgetButton is clicked. Creates new Widget when previously not existed. Also creates new Controller
-	 *  when selectedBlock does not previously have one */
-	void on_openControllerWidgetButton_clicked();
-	/*! get called when removeControllerButton is clicked,
-	 *  checks if there is a Controller and afterwards deletes it from the block and vektor */
-	void on_removeControllerButton_clicked();
 	/*! gets called when copyBlockButton is clicked,
 	 * checks if there is a Block selected and calls copyBlock, copied relevant Controller and Component
 	 * and adds the vectors. Calls setController to ensure that name of Controller is visible in the view*/
@@ -70,6 +64,8 @@ private slots:
 	void on_projectSaved();
 	/*! Connected to styleChanged signal of SVPreferencesDialog */
 	void on_styleChanged();
+	/*! Connected to signal controllerUpdated() from SVNetworkComponentEditWidget */
+	void on_controllerChanged(QString controllerName);
 
 private:
 	/*! Connected to slot newBlockSelected() in SVBMSceneManager, updates the widgets displaying informations of selected Block.
@@ -89,7 +85,7 @@ private:
 	 *  and checks if all blocks are reachable by the globalInlet and globalOutlet*/
 	bool checkAcceptedNetwork();
 	/*! gets called when the Dialog is accepted and closed. Deletes all unused components from the vector,
-	 * updates networkElements in the SubNetwork and copies all components and controllers into the SubNetwork */
+	 * updates networkElements in the SubNetwork and copies all components into the SubNetwork */
 	void on_buttonBox_accepted();
 	/*! gets called when the Dialog is rejected and closed. Closes the Dialog. Any changes will be lost */
 	void on_buttonBox_rejected();
@@ -104,10 +100,6 @@ private:
 	unsigned int componentIndex(unsigned int componentID);
 	/*! Generates new unique ComponentID */
 	unsigned int newComponentID();
-	/*! Takes the controllerID of a controller and returns the index in the controller Vector */
-	unsigned int controllerIndex(unsigned int controllerID);
-	/*! Generates new unique ControllerID */
-	unsigned int newControllerID();
 	/*! Convert old Subnetwork (SIM-VICUS version < 1.1) to new Subnetwork by copying components out of Database into Subnetwork */
 	void convertSubnetwork();
 	/*! Opens a dialog to change or assign the name of a component */
@@ -123,16 +115,12 @@ private:
 	Ui::SVSubNetworkEditDialog									*m_ui;
 	/*! SceneManager, handles the objects in the Scene */
 	SVBMSceneManager                                            *m_sceneManager = nullptr;
-	/*! Dialog to create and edit Controller */
-	SVNetworkControllerEditDialog                               *m_controllerEditDialog = nullptr;
 	/*! The database */
 	SVDatabase                                                  *m_db = nullptr;
 	/*! The Subnetwork that is currently edited */
 	VICUS::SubNetwork                                           *m_subNetwork = nullptr;
 	/*! Holds all Components of blocks in the Scene. */
 	std::vector<VICUS::NetworkComponent>                        m_networkComponents;
-	/*! Holds all Controllers of blocks in the Scene */
-	std::vector<VICUS::NetworkController>                       m_networkControllers;
 	/*! Reference to a table in the Toolbox that currently has a component selected */
 	SVSubNetworkEditDialogTable									*m_senderTable = nullptr;
 	/*! Holds all Tables in the Toolbox */
