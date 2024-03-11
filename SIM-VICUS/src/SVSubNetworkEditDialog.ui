@@ -142,7 +142,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_2">
+          <spacer name="horizontalSpacerLegend">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -334,7 +334,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="buttonBoxSpacer">
+          <spacer name="horizontalSpacerButtonBox">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>

@@ -82,6 +82,9 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 
 	// workaround for stubborn layout bug
 	m_ui->tableWidgetParameters->setMaximumHeight(0);
+
+	// checks if VICUS::NetworkHeatExchange was changed. stackedWidgetHeatExchange must be adjusted accordingly
+	Q_ASSERT(VICUS::NetworkHeatExchange::NUM_T == 9);
 }
 
 
@@ -193,6 +196,49 @@ void SVNetworkComponentEditWidget::update()
 	updateParameterTableWidget();
 	updatePolynomCoeffTableWidget();
 	updatePolynomPlot();
+
+
+	// look up all available HeatExchange Modeltypes for this component
+	std::vector<VICUS::NetworkHeatExchange::ModelType> availableHeatExchangeModelTypes = VICUS::NetworkComponent::availableHeatExchangeTypes(m_current->m_modelType);
+
+	// if no HE Modeltype except NUM_T available, disable Heat Exchange tab
+	if(availableHeatExchangeModelTypes.size() == 1 && availableHeatExchangeModelTypes[0] == VICUS::NetworkHeatExchange::NUM_T){
+		m_ui->tabWidget->setTabEnabled(1, false);
+	} else {
+		m_ui->tabWidget->setTabEnabled(1, true);
+	}
+
+	// clear combobox from previous entries
+	m_ui->comboBoxHeatExchange->clear();
+	// insert all available HE modeltypes into the HE combobox, adds "None" last
+	for(VICUS::NetworkHeatExchange::ModelType heatExchangeMT : availableHeatExchangeModelTypes){
+		if(heatExchangeMT == VICUS::NetworkHeatExchange::NUM_T) {
+			continue;
+		}
+		m_ui->comboBoxHeatExchange->addItem(VICUS::KeywordListQt::Keyword("NetworkHeatExchange::ModelType", static_cast<int>(heatExchangeMT)), heatExchangeMT);
+	}
+	m_ui->comboBoxHeatExchange->addItem("None", static_cast<int>(VICUS::NetworkHeatExchange::NUM_T));
+
+	// clear vector that temporarily saves all changes made to a heat exchange
+	m_vectorTempHeatExchange.clear();
+	// fill vector with all available Heat Exchange modeltypes, adds "None"/NUM_T modeltype last
+	for(VICUS::NetworkHeatExchange::ModelType heatExchangeMT: availableHeatExchangeModelTypes){
+		if(heatExchangeMT == VICUS::NetworkHeatExchange::NUM_T) {
+			continue;
+		}
+		VICUS::NetworkHeatExchange newHeatExchange;
+		newHeatExchange.m_modelType = heatExchangeMT;
+		m_vectorTempHeatExchange.push_back(newHeatExchange);
+	}
+	m_vectorTempHeatExchange.push_back(VICUS::NetworkHeatExchange());
+
+	// set the comboBox and stackedWidget to the HE modeltype of the current component
+	for(int index = 0; index < m_ui->comboBoxHeatExchange->count(); index++){
+		if(m_current->m_heatExchange.m_modelType == static_cast<VICUS::NetworkHeatExchange::ModelType>(m_ui->comboBoxHeatExchange->itemData(index).toInt())){
+			m_ui->comboBoxHeatExchange->setCurrentIndex(index);
+			m_ui->stackedWidgetHeatExchange->setCurrentIndex(static_cast<int>(m_current->m_heatExchange.m_modelType));
+		}
+	}
 }
 
 void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
@@ -868,6 +914,7 @@ void SVNetworkComponentEditWidget::on_toolButtonControllerSet_clicked()
 		m_current->m_networkController = m_controllerEditDialog->controller();
 		QString controllerName = VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(m_current->m_networkController.m_controlledProperty));
 		m_ui->lineEditController->setText(controllerName);
+		m_ui->toolButtonControllerRemove->setEnabled(true);
 		emit controllerChanged(controllerName);
 	}
 
@@ -881,3 +928,21 @@ void SVNetworkComponentEditWidget::on_toolButtonControllerRemove_clicked()
 	emit controllerChanged("");
 }
 
+
+void SVNetworkComponentEditWidget::on_comboBoxHeatExchange_activated(int index)
+{
+	VICUS::NetworkHeatExchange::ModelType modelType = static_cast<VICUS::NetworkHeatExchange::ModelType>(m_ui->comboBoxHeatExchange->currentData().toInt());
+
+	//store old heatExchange
+	for(VICUS::NetworkHeatExchange& heatExchange : m_vectorTempHeatExchange){
+		if(heatExchange.m_modelType == m_current->m_heatExchange.m_modelType){
+			heatExchange = m_current->m_heatExchange;
+		}
+	}
+
+	//take newly selected Heat Exchanger from vector
+	m_current->m_heatExchange = m_vectorTempHeatExchange[index];
+
+	// change stackedWidget to the appropriate page
+	m_ui->stackedWidgetHeatExchange->setCurrentIndex(static_cast<int>(modelType));
+}

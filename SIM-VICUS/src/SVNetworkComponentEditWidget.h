@@ -90,6 +90,8 @@ private slots:
 
 	void on_toolButtonControllerRemove_clicked();
 
+	void on_comboBoxHeatExchange_activated(int index);
+
 private:
 	void updateParameterTableWidget() const;
 
@@ -109,16 +111,19 @@ private:
 		The pointer is updated whenever updateInput() is called.
 		A nullptr pointer means that there is no component to edit.
 	*/
-	VICUS::NetworkComponent				*m_current = nullptr;
+	VICUS::NetworkComponent					*m_current = nullptr;
 
 	/*! The curve used to plot the polynoms. */
-	std::vector<QwtPlotCurve*>			m_curves1;
-	std::vector<QwtPlotCurve*>			m_curves2;
+	std::vector<QwtPlotCurve*>				m_curves1;
+	std::vector<QwtPlotCurve*>				m_curves2;
 
 	/*! The data vectors needed for plotting. */
-	std::vector<double>					m_xData;
-	std::vector<std::vector<double>>	m_yData1;
-	std::vector<std::vector<double>>	m_yData2;
+	std::vector<double>						m_xData;
+	std::vector<std::vector<double>>		m_yData1;
+	std::vector<std::vector<double>>		m_yData2;
+
+	/*! Vector to temporarily hold all NetworkHeatExchange that were modified after a Block was selected in the scene */
+	std::vector<VICUS::NetworkHeatExchange>	m_vectorTempHeatExchange;
 };
 
 #endif // SVDBNetworkComponentEditWidgetH
