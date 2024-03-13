@@ -92,6 +92,10 @@ private slots:
 
 	void on_comboBoxHeatExchange_activated(int index);
 
+	void on_radioButtonHeatLossConstantUser_toggled(bool checked);
+
+	void on_radioButtonHeatLossConstantPredef_toggled(bool checked);
+
 private:
 	void updateParameterTableWidget() const;
 

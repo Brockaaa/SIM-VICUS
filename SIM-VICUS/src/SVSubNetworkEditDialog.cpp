@@ -125,7 +125,7 @@ void SVSubNetworkEditDialog::show()
 	ratio << 300 << m_ui->splitter->width()-300;
 	m_ui->splitter->setSizes(ratio);
 
-	m_sceneManager->setSceneRect(QRectF(-1500, -1500, 4000, 4000));
+	m_sceneManager->setSceneRect(QRectF(-1000, -1000, 3500, 3500));
 	m_sceneManager->centerOnScene();
 	selectionClearedEvent();
 	m_sceneManager->update();
@@ -195,7 +195,7 @@ void SVSubNetworkEditDialog::updateNetwork() {
 	if (!keepGraphicalNetwork)
 		createNewScene();
 	else if(m_subNetwork->m_graphicalNetwork.m_blocks.size() == 0){
-		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
+		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork, m_networkComponents);
 
 		VICUS::BMBlock bentry, bexit;
 		bentry.m_name = VICUS::SUBNETWORK_INLET_NAME;
@@ -226,7 +226,7 @@ void SVSubNetworkEditDialog::updateNetwork() {
 		m_sceneManager->addBlock(bentry);
 		m_sceneManager->addBlock(bexit);
 	} else
-		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
+		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork, m_networkComponents);
 
 	// add Controller displayName to BlockItem
 	for (auto& block : m_sceneManager->network().m_blocks){
@@ -1061,7 +1061,7 @@ void SVSubNetworkEditDialog::createNewScene()
 	m_subNetwork->m_graphicalNetwork.m_blocks.clear();
 	m_subNetwork->m_graphicalNetwork.m_connectors.clear();
 
-	m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork);
+	m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork, m_networkComponents);
 
 	//first create GlobalInlet and GlobalOutlet Blocks
 	VICUS::BMBlock bentry, bexit;

@@ -50,11 +50,12 @@
 #include "SVBMSceneManager.h"
 
 
-SVBMSocketItem::SVBMSocketItem(SVBMBlockItem * parent, VICUS::BMSocket * socket) :
+SVBMSocketItem::SVBMSocketItem(SVBMBlockItem * parent, VICUS::BMSocket * socket, VICUS::NetworkComponent::ModelType modelType) :
 	QGraphicsItem (parent),
 	m_block(parent->block()),
 	m_socket(socket),
-	m_hovered(false)
+	m_hovered(false),
+	m_componentModelType(modelType)
 {
 	updateSocketItem();
 	setZValue(12);
@@ -63,20 +64,48 @@ SVBMSocketItem::SVBMSocketItem(SVBMBlockItem * parent, VICUS::BMSocket * socket)
 
 
 void SVBMSocketItem::updateSocketItem() {
-	if (m_socket->m_isInlet) {
-		switch (m_socket->direction()) {
-			case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()-4, 8, 8); break;
-			case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y()-4, 8, 8); break;
-			case VICUS::BMSocket::Top		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, -4, 8, 8); break;
-			case VICUS::BMSocket::Bottom		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y()-4, 8, 8); break;
+	switch(m_componentModelType){
+		case VICUS::NetworkComponent::MT_ControlledValve:
+		case VICUS::NetworkComponent::MT_ConstantPressureLossValve:
+		{
+			if (m_socket->m_isInlet) {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()+8, 8, 8); break;
+					case VICUS::BMSocket::Right		: break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			else {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: break;
+					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()+8, 8, 8); break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			break;
 		}
-	}
-	else {
-		switch (m_socket->direction()) {
-			case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-8, m_socket->m_pos.y()-4, 8, 8); break;
-			case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()-4, 8, 8); break;
-			case VICUS::BMSocket::Top		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, -8, 8, 8); break;
-			case VICUS::BMSocket::Bottom		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y(), 8, 8); break;
+
+		default:
+		{
+			if (m_socket->m_isInlet) {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()-4, 8, 8); break;
+					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y()-4, 8, 8); break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			else {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-8, m_socket->m_pos.y()-4, 8, 8); break;
+					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()-4, 8, 8); break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			break;
 		}
 	}
 }

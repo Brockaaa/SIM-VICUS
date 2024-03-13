@@ -57,9 +57,10 @@
 #include "SVBMSceneManager.h"
 
 
-SVBMBlockItem::SVBMBlockItem(VICUS::BMBlock * b) :
+SVBMBlockItem::SVBMBlockItem(VICUS::BMBlock * b, VICUS::NetworkComponent::ModelType modelType) :
 	QGraphicsRectItem(),
-	m_block(b)
+	m_block(b),
+	m_componentModelType(modelType)
 {
 	setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemSendsGeometryChanges);
 	setZValue(10);
@@ -92,35 +93,6 @@ SVBMSocketItem * SVBMBlockItem::inletSocketAcceptingConnection(const QPointF & s
 }
 
 
-void SVBMBlockItem::resize(int newWidth, int newHeight) {
-	// adjust size of associated block
-	m_block->m_size = QSizeF(newWidth, newHeight);
-	setRect(0, 0, newWidth, newHeight);
-
-	// adjust positions of sockets
-	for (VICUS::BMSocket & s : m_block->m_sockets) {
-		if (s.m_orientation == Qt::Horizontal) {
-			if (s.m_pos.x() != 0.0)
-				s.m_pos.setX(newWidth);
-		}
-		else {
-			if (s.m_pos.y() != 0.0)
-				s.m_pos.setY(newHeight);
-		}
-
-	}
-
-	// tell all sockest to update
-	for (QGraphicsItem * item : childItems()) {
-		SVBMSocketItem * sitem = (SVBMSocketItem*)(item);
-		sitem->updateSocketItem();
-		item->update();
-	}
-	update();
-
-}
-
-
 QRectF SVBMBlockItem::boundingRect() const {
 	QRectF r = QGraphicsRectItem::boundingRect();
 	return r;
@@ -137,10 +109,15 @@ void SVBMBlockItem::createSocketItems() {
 	// parent block item
 	for (VICUS::BMSocket & s : m_block->m_sockets) {
 		// create a socket item
-		SVBMSocketItem * item = new SVBMSocketItem(this, &s);
+		SVBMSocketItem * item = new SVBMSocketItem(this, &s, m_componentModelType);
 		// enable hover-highlight on outlet nodes
 		if (!s.m_isInlet) {
 			item->setZValue(20); // outlet nodes are drawn over lines
+		}
+		if(m_componentModelType == VICUS::NetworkComponent::MT_ControlledValve || m_componentModelType == VICUS::NetworkComponent::MT_ConstantPressureLossValve){
+			QPointF position = s.m_pos;
+			position.setY(position.y() + 12);
+			s.m_pos = position;
 		}
 		m_socketItems.append(item);
 	}
@@ -200,7 +177,6 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 			// fill entire background with white
 			QRectF r = rect();
 			painter->setBrush(Qt::white);
-			painter->fillRect(r, QBrush(Qt::white));
 
 			QPixmap p = m_block->m_properties["Pixmap"].value<QPixmap>();
 			painter->drawPixmap(r, p, p.rect());
@@ -231,7 +207,6 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 			p.setStyle(Qt::DashLine);
 			painter->setPen(p);
 		}
-		painter->drawRect(rect());
 	}
 	else {
 		QPainterPath bigPath;

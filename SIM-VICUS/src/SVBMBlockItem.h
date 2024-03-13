@@ -35,6 +35,7 @@
 #define SVBMBlockItemH
 
 #include <QGraphicsRectItem>
+#include <VICUS_NetworkComponent.h>
 
 namespace VICUS{
 	class BMBlock;
@@ -49,7 +50,7 @@ public:
 	/*! Constructor, takes a pointer to the associated block data structure (which
 		must have a lifetime longer than the graphics item.
 	*/
-	explicit SVBMBlockItem(VICUS::BMBlock * b);
+	explicit SVBMBlockItem(VICUS::BMBlock * b, VICUS::NetworkComponent::ModelType modelType = VICUS::NetworkComponent::NUM_MT);
 
 	const VICUS::BMBlock * block() const { return m_block; }
 
@@ -60,9 +61,6 @@ public:
 		it is not yet connected.
 	*/
 	SVBMSocketItem * inletSocketAcceptingConnection(const QPointF & scenePos);
-
-	/*! Changes size of a block item (and moves socket items accordingly). */
-	void resize(int newWidth, int newHeight);
 
 	/*! Returns bounding rect including bounding rects of sockets. */
 	QRectF boundingRect() const override;
@@ -96,13 +94,16 @@ protected:
 	virtual QVariant itemChange(GraphicsItemChange change, const QVariant & value) override;
 
 	/*! Pointer to associated block. */
-	VICUS::BMBlock				*m_block;
+	VICUS::BMBlock						*m_block;
 
 	/*! Indicates, that the block has been moved. */
-	bool            			m_moved;
+	bool								m_moved;
 
 	/*! Our socket items, childs of this block item. */
-	QList<SVBMSocketItem*>      m_socketItems;
+	QList<SVBMSocketItem*>				m_socketItems;
+
+	/*! Modeltype of the component belonging to the block */
+	VICUS::NetworkComponent::ModelType	m_componentModelType;
 
 	bool m_isHighlighted = false;
 

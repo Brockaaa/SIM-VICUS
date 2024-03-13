@@ -298,7 +298,7 @@
              <string>...</string>
             </property>
             <property name="icon">
-             <iconset resource="../resources/SIM-VICUS.qrc">
+             <iconset>
               <normaloff>:/gfx/actions/24x24/minus.png</normaloff>:/gfx/actions/24x24/minus.png</iconset>
             </property>
            </widget>
@@ -441,7 +441,7 @@
        <item>
         <widget class="QStackedWidget" name="stackedWidgetHeatExchange">
          <property name="currentIndex">
-          <number>0</number>
+          <number>5</number>
          </property>
          <widget class="QWidget" name="pageTemperatureConstant">
           <property name="sizePolicy">
@@ -473,6 +473,19 @@
              </property>
             </widget>
            </item>
+           <item>
+            <spacer name="verticalSpacerTemperatureConstant">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
           </layout>
          </widget>
          <widget class="QWidget" name="pageTemperatureSpline">
@@ -498,12 +511,25 @@
            <property name="bottomMargin">
             <number>0</number>
            </property>
-            <item>
+           <item>
             <widget class="QLabel" name="labelPageTemperatureSpline">
              <property name="text">
               <string>pageTemperatureSpline</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacerTemperatureSpline">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -530,12 +556,25 @@
            <property name="bottomMargin">
             <number>0</number>
            </property>
-            <item>
+           <item>
             <widget class="QLabel" name="labelPageTemperatureSplineEvaporator">
              <property name="text">
               <string>pageTemperatureSplineEvaporator</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacerTemperatureSplineEvaporator">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -569,6 +608,19 @@
              </property>
             </widget>
            </item>
+           <item>
+            <spacer name="verticalSpacerTemperatureZone">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
           </layout>
          </widget>
          <widget class="QWidget" name="pageTemperatureConstructionLayer">
@@ -601,6 +653,19 @@
              </property>
             </widget>
            </item>
+           <item>
+            <spacer name="verticalSpacerTemperatureConstructionLayer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
           </layout>
          </widget>
          <widget class="QWidget" name="pageHeatLossConstant">
@@ -612,7 +677,7 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutPageHeatLossConstant">
            <property name="spacing">
-            <number>0</number>
+            <number>10</number>
            </property>
            <property name="leftMargin">
             <number>0</number>
@@ -633,6 +698,60 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QRadioButton" name="radioButtonHeatLossConstantPredef">
+             <property name="text">
+              <string>use defined maximum heat demand</string>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroupHeatLossConstant</string>
+             </attribute>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioButtonHeatLossConstantUser">
+             <property name="text">
+              <string>user determined</string>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroupHeatLossConstant</string>
+             </attribute>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutPageHeatLossConstantUser">
+             <item>
+              <widget class="QLabel" name="labelHeatLossConstantUser">
+               <property name="text">
+                <string>input</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEdit"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelHeatLossConstantUserUnit">
+               <property name="text">
+                <string>kW</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="verticalSpacerHeatLossConstant">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
           </layout>
          </widget>
          <widget class="QWidget" name="pageHeatLossSpline">
@@ -644,7 +763,7 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutPageHeatLossSpline">
            <property name="spacing">
-            <number>0</number>
+            <number>10</number>
            </property>
            <property name="leftMargin">
             <number>0</number>
@@ -664,6 +783,39 @@
               <string>pageHeatLossSpline</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioButtonHeatLossSplineUser">
+             <property name="text">
+              <string>user defined</string>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroupHeatLossSpline</string>
+             </attribute>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioButtonHeatLossSplineDemandCurve">
+             <property name="text">
+              <string>RadioButton</string>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">buttonGroupHeatLossSpline</string>
+             </attribute>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacerHeatLossSpline">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -697,6 +849,19 @@
              </property>
             </widget>
            </item>
+           <item>
+            <spacer name="verticalSpacerHeatLossSplineCondenser">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
           </layout>
          </widget>
          <widget class="QWidget" name="pageHeatingDemandSpaceHeating">
@@ -728,6 +893,19 @@
               <string>pageHeatingDemandSpaceHeating</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacerHeatingDemandSpaceHeating">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -761,6 +939,19 @@
              </property>
             </widget>
            </item>
+           <item>
+            <spacer name="verticalSpacerNone">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
           </layout>
          </widget>
         </widget>
@@ -792,8 +983,10 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="../resources/SIM-VICUS.qrc"/>
- </resources>
+ <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="buttonGroupHeatLossConstant"/>
+  <buttongroup name="buttonGroupHeatLossSpline"/>
+ </buttongroups>
 </ui>

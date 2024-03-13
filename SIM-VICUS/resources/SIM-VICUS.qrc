@@ -190,6 +190,8 @@
         <file>gfx/actions/sound-wave.png</file>
         <file>gfx/modeltypeicons/defaultSplashscreen.png</file>
         <file>gfx/modeltypeicons/pipe.png</file>
+         <file>gfx/modeltypeicons/pumpdark.png</file>
+        <file>gfx/modeltypeicons/valvedark.png</file>
         <file>gfx/actions/leaf.png</file>
         <file>gfx/actions/shades.png</file>
         <file>gfx/actions/Location_Climate_32x32.svg</file>

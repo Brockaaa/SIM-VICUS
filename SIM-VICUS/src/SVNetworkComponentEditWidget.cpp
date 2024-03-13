@@ -946,3 +946,16 @@ void SVNetworkComponentEditWidget::on_comboBoxHeatExchange_activated(int index)
 	// change stackedWidget to the appropriate page
 	m_ui->stackedWidgetHeatExchange->setCurrentIndex(static_cast<int>(modelType));
 }
+
+
+void SVNetworkComponentEditWidget::on_radioButtonHeatLossConstantUser_toggled(bool checked)
+{
+	qDebug() << "checked: " << checked;
+	m_ui->horizontalLayoutPageHeatLossConstantUser->setEnabled(checked);
+}
+
+void SVNetworkComponentEditWidget::on_radioButtonHeatLossConstantPredef_toggled(bool checked)
+{
+	// set flag here
+}
+

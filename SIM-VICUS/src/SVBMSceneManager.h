@@ -64,7 +64,7 @@ public:
 	/*! Set a new network (a local copy is made of the network object).
 		This will recreate the entire scene.
 	*/
-	void updateNetwork(VICUS::BMNetwork & network);
+	void updateNetwork(VICUS::BMNetwork & network, std::vector<VICUS::NetworkComponent>& networkComponents);
 
 	/*! Provide read-only access to the network data structure.
 		\note This data structure is internally used and modified by user actions.
@@ -165,7 +165,7 @@ public:
 	/*! Adds a new block to the network.
 		The block is copied into the network and shown at the given coordinates.
 	*/
-	void addBlock(const VICUS::BMBlock & block);
+	void addBlock(const VICUS::BMBlock & block, VICUS::NetworkComponent::ModelType modelType = VICUS::NetworkComponent::NUM_MT);
 	/*! creates a new Block based on the given type and adds it to the network.
 		The block is shown at the given coordinates. Used for drag and dropping Blocks from the Toolbox
 	*/
@@ -278,7 +278,7 @@ protected:
 		You can override this method and create your own graphics items, derived from
 		base class BlockItem (which contains all the move/selection logic).
 	*/
-	virtual SVBMBlockItem * createBlockItem(VICUS::BMBlock & b);
+	virtual SVBMBlockItem * createBlockItem(VICUS::BMBlock & b, VICUS::NetworkComponent::ModelType modelType = VICUS::NetworkComponent::NUM_MT);
 
 	/*! Create the graphics item for a single connector line segment.
 		You can override this method and create your own graphics items, derived from

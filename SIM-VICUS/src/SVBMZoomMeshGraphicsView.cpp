@@ -137,41 +137,6 @@ void SVBMZoomMeshGraphicsView::paintEvent(QPaintEvent *i_event){
 					m_majorGrid.append(QLineF(0, y, w, y));
 				}
 			}
-
-
-			// *** minor grid ***
-
-			// compute nominal pixels using resolution, this time for minor grid
-			gridSpacingPix = m_resolution*m_gridStep*0.1;
-
-			// apply scaling
-			scaleFactor = transform().m11();
-			gridSpacingPix *= scaleFactor;
-
-			// clear minor grid lines
-			m_minorGrid.clear();
-
-			// only draw grid if spacing is big enough
-			if (gridSpacingPix >= 5) {
-
-				// calculate offset - we start at 0 pix in scaled scene coordinates
-				int linesXTillView = std::floor(-p1.x()/gridSpacingPix + 1);
-				double offsetX = linesXTillView*gridSpacingPix + p1.x();
-
-				int linesYTillView = std::floor(-p1.y()/gridSpacingPix + 1);
-				double offsetY = linesYTillView*gridSpacingPix + p1.y();
-
-				// create a vector of lines to draw
-				m_minorGrid.clear();
-
-				for (double x = offsetX; x < w; x += gridSpacingPix) {
-					m_minorGrid.append(QLineF(x, 0, x, h));
-				}
-				for (double y = offsetY; y < h; y += gridSpacingPix) {
-					m_minorGrid.append(QLineF(0, y, w, y));
-				}
-
-			}
 		}
 		// we paint in view coordinates
 		p.setPen( QColor(220,220,255) );

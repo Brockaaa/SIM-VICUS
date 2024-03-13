@@ -64,7 +64,7 @@ SVBMSceneManager::~SVBMSceneManager() {
 }
 
 
-void SVBMSceneManager::updateNetwork(VICUS::BMNetwork & network) {
+void SVBMSceneManager::updateNetwork(VICUS::BMNetwork & network, std::vector<VICUS::NetworkComponent>& networkComponents) {
 	// Assuming m_network is a member variable, we set its value.
 	Q_ASSERT(m_network);
 	*m_network = network;
@@ -82,7 +82,16 @@ void SVBMSceneManager::updateNetwork(VICUS::BMNetwork & network) {
 
 	// Create new graphics items for blocks.
 	for (VICUS::BMBlock &b : m_network->m_blocks) {
-		SVBMBlockItem *item = createBlockItem(b);
+
+		SVBMBlockItem *item;
+		if(b.m_mode == VICUS::BMBlockType::NetworkComponentBlock){
+			VICUS::NetworkComponent* component = VICUS::element(networkComponents, b.m_componentId);
+			Q_ASSERT(component != nullptr);
+			item = createBlockItem(b, component->m_modelType);
+		} else {
+			item = createBlockItem(b);
+		}
+
 		if (b.m_mode == VICUS::BMBlockType::ConnectorBlock) {
 			// Set m_connectorSocket to true for all sockets in the block.
 			for (int i = 0; i < b.m_sockets.size(); i++) {
@@ -445,9 +454,9 @@ const VICUS::BMConnector * SVBMSceneManager::selectedConnector() const {
 }
 
 
-void SVBMSceneManager::addBlock(const VICUS::BMBlock & block) {
+void SVBMSceneManager::addBlock(const VICUS::BMBlock & block, VICUS::NetworkComponent::ModelType modelType) {
 	m_network->m_blocks.push_back(block);
-	SVBMBlockItem * item = createBlockItem( m_network->m_blocks.back() );
+	SVBMBlockItem * item = createBlockItem(m_network->m_blocks.back(), modelType);
 	addItem(item);
 	m_blockItems.append(item);
 }
@@ -488,14 +497,14 @@ void SVBMSceneManager::addBlock(VICUS::NetworkComponent::ModelType type, QPoint 
 
 	emit newBlockAdded(&b, componentID);
 
-	addBlock(b);
+	addBlock(b, type);
 }
 
 
 void SVBMSceneManager::addConnectorBlock(VICUS::BMBlock & block){
 	block.m_mode = VICUS::BMBlockType::ConnectorBlock;
 	m_network->m_blocks.push_back(block);
-	SVBMBlockItem * item = new SVBMBlockItem(&(m_network->m_blocks.back()));
+	SVBMBlockItem * item = new SVBMBlockItem(&(m_network->m_blocks.back()), VICUS::NetworkComponent::NUM_MT);
 	item->setRect(0,0,block.m_size.width(), block.m_size.height());
 	item->setPos(block.m_pos);
 	addItem(item);
@@ -1320,8 +1329,8 @@ bool SVBMSceneManager::checkOneConnectionPerSocket(const VICUS::BMBlock *block)
 }
 
 
-SVBMBlockItem * SVBMSceneManager::createBlockItem(VICUS::BMBlock  & b) {
-	SVBMBlockItem * item = new SVBMBlockItem(&b);
+SVBMBlockItem * SVBMSceneManager::createBlockItem(VICUS::BMBlock  & b, VICUS::NetworkComponent::ModelType modelType) {
+	SVBMBlockItem * item = new SVBMBlockItem(&b, modelType);
 	item->setRect(0,0,b.m_size.width(), b.m_size.height());
 	item->setPos(b.m_pos);
 	return item;

@@ -297,13 +297,13 @@ QString NetworkComponent::iconFileFromModelType(NetworkComponent::ModelType mode
 	case VICUS::NetworkComponent::ModelType::MT_DynamicPipe:
 			return ":/gfx/modeltypeicons/pipe.png";
 	case VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump:
-			return "";
+			return ":/gfx/modeltypeicons/pumpdark.png";
 	case VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump:
-			return "";
+			return ":/gfx/modeltypeicons/pumpdark.png";
 	case VICUS::NetworkComponent::ModelType::MT_ControlledPump:
-			return "";
+			return ":/gfx/modeltypeicons/pumpdark.png";
 	case VICUS::NetworkComponent::ModelType::MT_VariablePressurePump:
-			return "";
+			return ":/gfx/modeltypeicons/pumpdark.png";
 	case VICUS::NetworkComponent::ModelType::MT_HeatExchanger:
 			return "";
 	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide:
@@ -315,9 +315,9 @@ QString NetworkComponent::iconFileFromModelType(NetworkComponent::ModelType mode
 	case VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide:
 			return "";
 	case VICUS::NetworkComponent::ModelType::MT_ControlledValve:
-			return "";
+			return ":/gfx/modeltypeicons/valvedark.png";
 	case VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve:
-			return "";
+			return ":/gfx/modeltypeicons/valvedark.png";
 	case VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler:
 			return "";
 	case VICUS::NetworkComponent::ModelType::MT_PressureLossElement:
