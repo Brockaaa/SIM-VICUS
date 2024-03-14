@@ -1877,8 +1877,8 @@ void SVPropEditGeometry::on_pushButtonTrimPolygons_clicked() {
 						// Find vertpair that surrounds hole and insert hole into polygon line
 						std::pair<unsigned int, unsigned int> holeVertsOnTrimLinePair = holeVertsOnTrimLine.front();
 						for (const std::pair<unsigned int, unsigned int> vertPair : polyVertsOnTrimLine) {
-							if (holePoly.pointBetweenPoints(holeVerts.at(holeVertsOnTrimLinePair.first), polyVerts.at(vertPair.first), polyVerts.at(vertPair.second)) &&
-								holePoly.pointBetweenPoints(holeVerts.at(holeVertsOnTrimLinePair.second), polyVerts.at(vertPair.first), polyVerts.at(vertPair.second))) {
+							if (pointBetweenPoints(holeVerts.at(holeVertsOnTrimLinePair.first), polyVerts.at(vertPair.first), polyVerts.at(vertPair.second)) &&
+								pointBetweenPoints(holeVerts.at(holeVertsOnTrimLinePair.second), polyVerts.at(vertPair.first), polyVerts.at(vertPair.second))) {
 								// Find out in which direction the two polygons (hole and trimPoly) turn
 
 								std::pair<IBKMK::Vector3D, IBKMK::Vector3D> polyVertsAB(polyVerts.at(vertPair.first),polyVerts.at(vertPair.second));

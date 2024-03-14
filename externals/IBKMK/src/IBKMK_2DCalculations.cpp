@@ -202,4 +202,12 @@ bool polyIntersect2D(const std::vector<Vector2D> & vertsA, const std::vector<Vec
 	return false;
 }
 
+bool pointBetweenPoints2D(const Vector2D &point, const Vector2D &otherA, const Vector2D &otherB) {
+	return ((point.m_x > std::min(otherA.m_x, otherB.m_x) || IBK::nearly_equal<5>(point.m_x, std::min(otherA.m_x, otherB.m_x)))
+		 && (point.m_x < std::max(otherA.m_x, otherB.m_x) || IBK::nearly_equal<5>(point.m_x, std::max(otherA.m_x, otherB.m_x)))
+		 && (point.m_y > std::min(otherA.m_y, otherB.m_y) || IBK::nearly_equal<5>(point.m_y, std::min(otherA.m_y, otherB.m_y)))
+		 && (point.m_y < std::max(otherA.m_y, otherB.m_y) || IBK::nearly_equal<5>(point.m_y, std::max(otherA.m_y, otherB.m_y))));
+}
+
+
 } // namespace IBKMK

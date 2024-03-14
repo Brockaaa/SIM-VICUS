@@ -151,15 +151,6 @@ public:
 	*/
 	void enlargeBoundingBox(IBKMK::Vector3D & lowerValues, IBKMK::Vector3D & upperValues) const;
 
-	/*! Helper function, that takes a point and two other points in 3d space, and tests if the point is
-	 *  located inbetween or nearly equal to the other points in all 3 dimensions.
-	 *  \param point Vector3D point
-	 *  \param edgeA Vector3D point
-	 *  \param edgeB Vector3D point
-		\returns Returns true if point is contained within two points in all 3 dimensions. Else returns false.
-	*/
-	bool pointBetweenPoints(const Vector3D &point, const Vector3D &otherA, const Vector3D &otherB) const;
-
 	/*! Helper function for polyCyclesAfterTrimming.
 	 *  This function detects disjunct polygons within a shape (that remain after trimming with a plane) and divides it into multiple polygons accordingly.
 	 *  Therefore it checks if any polygon edges along the trimming plane are contained within each other.
@@ -195,6 +186,9 @@ public:
 	 */
 	bool trimByPlane(const IBKMK::Polygon3D &plane, std::vector<Polygon3D> &trimmedPolygons) const;
 
+	/*! ToDo Moritz
+	 */
+	bool mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverlapping = true);
 
 private:
 

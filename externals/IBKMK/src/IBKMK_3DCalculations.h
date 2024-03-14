@@ -152,6 +152,15 @@ int coplanarPointInPolygon3D(const std::vector<Vector3D> poly, const IBK::point3
  */
 bool polyIntersect(const std::vector<IBKMK::Vector3D> & vertsAexact, const std::vector<IBKMK::Vector3D> & vertsBexact);
 
+/*! Takes a point and two other points in 3d space, and tests if the point is
+ *  located inbetween or nearly equal to the other points in all 3 dimensions.
+ *  \param point Vector3D point
+ *  \param edgeA Vector3D point
+ *  \param edgeB Vector3D point
+	\returns Returns true if point is contained within two points in all 3 dimensions. Else returns false.
+*/
+bool pointBetweenPoints(const Vector3D &point, const Vector3D &otherA, const Vector3D &otherB);
+
 } // namespace IBKMK
 
 #endif // IBKMK_3DCalculationsH

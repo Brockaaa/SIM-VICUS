@@ -42,6 +42,7 @@
 #include <IBK_math.h>
 #include <IBK_messages.h>
 
+#include "IBKMK_2DCalculations.h"
 #include "IBKMK_3DCalculations.h"
 
 namespace IBKMK {
@@ -558,16 +559,6 @@ void Polygon3D::update2DPolyline(const std::vector<Vector3D> & verts) {
 }
 
 
-bool Polygon3D::pointBetweenPoints(const Vector3D &point, const Vector3D &otherA, const Vector3D &otherB) const {
-	return ((point.m_x > std::min(otherA.m_x, otherB.m_x) || IBK::nearly_equal<5>(point.m_x, std::min(otherA.m_x, otherB.m_x)))
-		 && (point.m_x < std::max(otherA.m_x, otherB.m_x) || IBK::nearly_equal<5>(point.m_x, std::max(otherA.m_x, otherB.m_x)))
-		 && (point.m_y > std::min(otherA.m_y, otherB.m_y) || IBK::nearly_equal<5>(point.m_y, std::min(otherA.m_y, otherB.m_y)))
-		 && (point.m_y < std::max(otherA.m_y, otherB.m_y) || IBK::nearly_equal<5>(point.m_y, std::max(otherA.m_y, otherB.m_y)))
-		 && (point.m_z > std::min(otherA.m_z, otherB.m_z) || IBK::nearly_equal<5>(point.m_z, std::min(otherA.m_z, otherB.m_z)))
-		 && (point.m_z < std::max(otherA.m_z, otherB.m_z) || IBK::nearly_equal<5>(point.m_z, std::max(otherA.m_z, otherB.m_z))));
-}
-
-
 bool Polygon3D::dividePolyCycles(std::vector<Vector3D> & verts, const IBKMK::Vector3D trimPlaneNormal,
 								 const double offset, std::vector<std::vector<Vector3D>> & outputVerts) const {
 
@@ -856,6 +847,292 @@ bool Polygon3D::trimByPlane(const IBKMK::Polygon3D &plane, std::vector<IBKMK::Po
 			return true;
 		}
 	}
+}
+
+bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverlapping) {
+	const char * const FUNC_ID = "[Polygon3D::mergeWithPolygon]";
+
+	IBK_ASSERT(vertexes().size() > 2);
+	IBK_ASSERT(polyB.vertexes().size() > 2);
+
+	if (!IBK::near_zero(normal().scalarProduct(polyB.vertexes().at(1)-polyB.vertexes().at(0)))) return false;
+	// we can now assume polygons to be (nearly) parallel
+
+	double distPolyBToPlane = normal().scalarProduct(polyB.vertexes().at(0))-normal().scalarProduct(centerPoint());
+	if (!IBK::near_zero(distPolyBToPlane)) return false;
+	// we can now assume polygons to be (nearly) coplanar
+
+	// detect overlap
+	std::vector<Vector2D> polyA2D;
+	polyA2D.reserve(vertexes().size());
+	std::vector<Vector2D> polyB2D;
+	polyB2D.reserve(polyB.vertexes().size());
+	double x,y;
+	for (const Vector3D & vertA : vertexes()) {
+		IBKMK::planeCoordinates(offset(), localX(), localY(), vertA, x, y);
+		polyA2D.push_back(IBKMK::Vector2D(x,y));
+	}
+	for (const Vector3D & vertB : polyB.vertexes()) {
+		IBKMK::planeCoordinates(offset(), localX(), localY(), vertB, x, y);
+		polyB2D.push_back(IBKMK::Vector2D(x,y));
+	}
+
+	bool polyIntersect = polyIntersect2D(polyA2D, polyB2D);
+	if (polyIntersect) {
+		if (!mergeOverlapping) throw IBK::Exception(IBK::FormatString("Overlapping polygons with mergeOverlapping=false."), FUNC_ID);
+
+		// add intersection points to both polygons
+		IBKMK::Vector2D intersectionPoint;
+		unsigned int i = 0;
+		while (i < polyA2D.size()) {
+			const Vector2D & p1 = polyA2D.at(i);
+			const Vector2D & p2 = polyA2D.at((i+1)%polyA2D.size());
+			// This small offset vector is necessary, otherwise we would just find the same intersection again instead of multiple ones
+			Vector2D diffVec = p2-p1;
+			diffVec /= 1e8;
+			if (intersectsLine2D(polyB2D, p1+diffVec, p2-diffVec, intersectionPoint)) {
+				// if neither of the points happens to be the intersection point
+				if (!IBK::near_zero((intersectionPoint - p1).magnitude()) &&
+					!IBK::near_zero((intersectionPoint - p2).magnitude())) {
+					polyA2D.insert(polyA2D.begin() + i + 1, intersectionPoint);
+				} else ++i;
+			} else ++i;
+		}
+
+		i = 0;
+		while (i < polyB2D.size()) {
+			const Vector2D & p1 = polyB2D.at(i);
+			const Vector2D & p2 = polyB2D.at((i+1)%polyB2D.size());
+			Vector2D diffVec = p2-p1;
+			diffVec /= 1e8;
+			if (intersectsLine2D(polyA2D, p1+diffVec, p2-diffVec, intersectionPoint)) {
+				// if neither of the points happens to be the intersection point
+				if (!IBK::near_zero((intersectionPoint - p1).magnitude()) &&
+					!IBK::near_zero((intersectionPoint - p2).magnitude())) {
+					polyB2D.insert(polyB2D.begin() + i + 1, intersectionPoint);
+				} else ++i;
+			} else ++i;
+		}
+
+		// Now both polygons contain their outline as well as every intersection point with the other polygon
+		// create a mapping between shared vertices
+		std::set<unsigned int> commonA, commonB;
+		for (unsigned int j = 0; j<polyA2D.size(); ++j ) {
+			const Vector2D & vertA = polyA2D.at(j);
+			for (unsigned int k = 0; k<polyB2D.size(); ++k ) {
+				const Vector2D & vertB = polyB2D.at(k);
+				if (IBK::near_zero((vertA-vertB).magnitude())) {
+					commonA.insert(j);
+					commonB.insert(k);
+					break;
+				}
+			}
+		}
+
+		// if no intersections, one polygon is contained within the other
+		if (commonA.size() == 0) {
+			if (pointInPolygon(polyB2D, polyA2D.front()) == 1) {
+				setVertexes(polyB.vertexes());
+			}
+			return true;
+		}
+
+		// remove all vertices that are located within the other polygon
+		for (int j = polyA2D.size()-1; j>=0; --j ) {
+			if (commonA.find(j) != commonA.end()) continue;
+			const Vector2D & vertA = polyA2D.at(j);
+			if (pointInPolygon(polyB2D, vertA) == 1) polyA2D.erase(polyA2D.begin() + j);
+		}
+		for (int k = polyB2D.size()-1; k>=0; --k ) {
+			if (commonB.find(k) != commonB.end()) continue;
+			const Vector2D & vertB = polyB2D.at(k);
+			if (pointInPolygon(polyA2D, vertB) == 1) polyB2D.erase(polyB2D.begin() + k);
+		}
+		// we're left with shared vertices and verts that lie outside of the respective other polygon
+
+	} else {
+		unsigned int i;
+		for (i = 0; i<polyA2D.size(); ++i ) {
+			const Vector2D & vertA1 = polyA2D.at(i);
+			const Vector2D & vertA2 = polyA2D.at((i+1)%polyA2D.size());
+			unsigned int j;
+			for (j = 0; j<polyB2D.size(); ++j) {
+				const Vector2D & vertB1 = polyB2D.at(j);
+				const Vector2D & vertB2 = polyB2D.at((j+1)%polyB2D.size());
+
+				// if scalar product of edge B and orthogonal of edge A is near_zero -> vectors are in parallel
+				if (IBK::near_zero((vertB2-vertB1).scalarProduct(Vector2D((vertA2-vertA1).m_y,-(vertA2-vertA1).m_x)))) {
+					// vectors parallel, test if shared verts or inbetween
+					bool a1inB = pointBetweenPoints2D(vertA1, vertB1, vertB2);
+					bool a2inB = pointBetweenPoints2D(vertA2, vertB1, vertB2);
+					bool b1inA = pointBetweenPoints2D(vertB1, vertA1, vertA2);
+					bool b2inA = pointBetweenPoints2D(vertB1, vertA1, vertA2);
+					if (!a1inB && !a2inB && !b1inA && !b2inA) continue; // no overlap
+					// we now have some type of overlap / shared edge
+					if (a1inB && a2inB && b1inA && b2inA) continue; // both verts shared, no need for additional points
+
+					if ((a1inB != a2inB) && (b1inA != b2inA)) { // partial overlap of the two edges
+						// firstly make sure to exclude the case that they share a vert:
+						if (a1inB) {
+							if (b1inA) {
+								if (IBK::near_zero((vertA1-vertB1).magnitude())) continue;
+							} else {
+								if (IBK::near_zero((vertA1-vertB2).magnitude())) continue;
+							}
+						} else {
+							if (b1inA) {
+								if (IBK::near_zero((vertA2-vertB1).magnitude())) continue;
+							} else {
+								if (IBK::near_zero((vertA2-vertB2).magnitude())) continue;
+							}
+						}
+						// the really partially overlap
+						if (a1inB) {
+							polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
+						} else /*a2inB*/ {
+							polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
+						}
+						if (b1inA) {
+							polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
+						} else /*b2inA*/ {
+							polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
+						}
+						++j;
+						++i;
+
+					} else if (a1inB && a2inB && !b1inA && !b2inA) { // a contained in b
+						bool flipVertDir = (vertB1 - vertA2).magnitude() < (vertB1 - vertA1).magnitude();
+						if (flipVertDir) {
+							polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
+							polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
+						} else {
+							polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
+							polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
+						}
+						j += 2;
+
+					} else if (!a1inB && !a2inB && b1inA && b2inA) { // b contained in a
+						bool flipVertDir = (vertA1 - vertB2).magnitude() < (vertA1 - vertB1).magnitude();
+						if (flipVertDir) {
+							polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
+							polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
+						} else {
+							polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
+							polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
+						}
+						i += 2;
+
+					} else if (a1inB != a2inB) { // b contained in a with one shared vertex
+					// "a1inB!=a2inB && b1inA!=b2inA" has been tested prior, and "a1inB!=a2inB && !b1inA&&!b2inA" is geometrically impossible, therefore both bInA true
+						if (a1inB) {
+							if (IBK::near_zero((vertA1 - vertB1).magnitude())) {
+								polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
+							} else {
+								polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
+							}
+						} else /* a2inB */ {
+							if (IBK::near_zero((vertA2 - vertB1).magnitude())) {
+								polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
+							} else {
+								polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
+							}
+						}
+						++i;
+
+					} else if (b1inA != b2inA) { // a contained in b with one shared vertex
+						if (b1inA) {
+							if (IBK::near_zero((vertB1 - vertA1).magnitude())) {
+								polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
+							} else {
+								polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
+							}
+						} else /* b2inA */ {
+							if (IBK::near_zero((vertB2 - vertA1).magnitude())) {
+								polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
+							} else {
+								polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
+							}
+						}
+						++j;
+					}
+				}
+			}
+		}
+		// now all overlapping edges have received all necessary shared verts
+	}
+
+	// We now treat both cases (overlap and shared edges) with the same algorithm, as the "shared edges" case is actually a possible outcome of our overlap treatment
+
+	// Sanity check
+	if (polyB2D.size() < 3) {
+		return true;
+	} else if (polyA2D.size() < 3) {
+		setVertexes(polyB.vertexes());
+		return true;
+	}
+
+	// test if both polygons turn in different directions
+	if (polyB.normal().scalarProduct(normal()) < 0) {
+		std::reverse(polyB2D.begin(), polyB2D.end());
+	}
+
+	// create new common-verts mapping after deletion
+	std::map<unsigned int, unsigned int> commonAToB;
+	std::map<unsigned int, unsigned int> commonBToA;
+	for (unsigned int j = 0; j<polyA2D.size(); ++j ) {
+		const Vector2D & vertA = polyA2D.at(j);
+		for (unsigned int k = 0; k<polyB2D.size(); ++k ) {
+			const Vector2D & vertB = polyB2D.at(k);
+			if (IBK::near_zero((vertA-vertB).magnitude())) {
+				commonAToB[j] = k;
+				commonBToA[k] = j;
+				break;
+			}
+		}
+	}
+
+	// find start position (shared vert so we have start J *and* K)
+	unsigned int startJ;
+	for (unsigned int j = 0; j<polyA2D.size(); ++j ) {
+		if (commonAToB.find(j) == commonAToB.end()) {
+			startJ = j;
+			break;
+		}
+	}
+
+	// jeweils zwischen zwei shared schauen ob im anderen poly welche nicht geshared sind
+	std::vector<Vector2D> newPoly;
+	for (unsigned int m = 0; m<polyA2D.size(); ++m ) {
+		unsigned int workingIdx = (m + startJ) % polyA2D.size();
+
+
+
+		/* TODO */
+
+		newPoly.push_back(polyA2D.at(workingIdx));
+
+
+	}
+
+
+
+
+
+
+/*
+	IBK::IBK_Message("polyverts A POST\n");
+	for (auto node : polyA2D) IBK::IBK_Message(node.toString()+"\n");
+
+	IBK::IBK_Message("poylverts B POST\n");
+	for (auto node : polyB2D) IBK::IBK_Message(node.toString()+"\n");
+*/
+
+
+	///	EDGE CASE PRÜFEN!
+	/// -> Holes detecten damit keine reste bleiben
+	/// -> wenn zwei (oder mehr??) seiten identisch sind, ähnlich wie dividepolycycles
+
+	return true;
 }
 
 

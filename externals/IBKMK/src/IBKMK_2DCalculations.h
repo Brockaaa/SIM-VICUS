@@ -71,6 +71,9 @@ void enlargeBoundingBox(const IBKMK::Vector2D & v, IBKMK::Vector2D & minVec, IBK
 /*! Takes two 2D polygons and checks for intersection */
 bool polyIntersect2D(const std::vector<IBKMK::Vector2D> & vertsA, const std::vector<IBKMK::Vector2D> & vertsB);
 
+/*! Takes a 2D point and determines whether it is located within the square created by 2 other 2d points. */
+bool pointBetweenPoints2D(const Vector2D &point, const Vector2D &otherA, const Vector2D &otherB);
+
 } // namespace IBKMK
 
 #endif // IBKMK_2DCalculationsH

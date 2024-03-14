@@ -641,5 +641,14 @@ bool polyIntersect(const std::vector<Vector3D> & vertsAexact, const std::vector<
 	return false;
 }
 
+bool pointBetweenPoints(const Vector3D &point, const Vector3D &otherA, const Vector3D &otherB) {
+	return ((point.m_x > std::min(otherA.m_x, otherB.m_x) || IBK::nearly_equal<5>(point.m_x, std::min(otherA.m_x, otherB.m_x)))
+		 && (point.m_x < std::max(otherA.m_x, otherB.m_x) || IBK::nearly_equal<5>(point.m_x, std::max(otherA.m_x, otherB.m_x)))
+		 && (point.m_y > std::min(otherA.m_y, otherB.m_y) || IBK::nearly_equal<5>(point.m_y, std::min(otherA.m_y, otherB.m_y)))
+		 && (point.m_y < std::max(otherA.m_y, otherB.m_y) || IBK::nearly_equal<5>(point.m_y, std::max(otherA.m_y, otherB.m_y)))
+		 && (point.m_z > std::min(otherA.m_z, otherB.m_z) || IBK::nearly_equal<5>(point.m_z, std::min(otherA.m_z, otherB.m_z)))
+		 && (point.m_z < std::max(otherA.m_z, otherB.m_z) || IBK::nearly_equal<5>(point.m_z, std::max(otherA.m_z, otherB.m_z))));
+}
+
 } // namespace IBKMK
 
