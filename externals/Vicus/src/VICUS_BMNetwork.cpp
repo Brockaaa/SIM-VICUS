@@ -280,8 +280,6 @@ void BMNetwork::lookupBlockAndSocket(const QString & flatName, const BMBlock *& 
 								[&] (const BMBlock& b) { return b.m_name == blockName; } );
 
 	if (blockIt == m_blocks.end()){
-		block == nullptr;
-		socket == nullptr;
 		return;
 	}
 

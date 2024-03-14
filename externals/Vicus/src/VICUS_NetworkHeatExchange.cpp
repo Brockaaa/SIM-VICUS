@@ -38,8 +38,9 @@ AbstractDBElement::ComparisonResult NetworkHeatExchange::equal(const AbstractDBE
 
 	//check parameters
 	for (unsigned int i = 0; i < NetworkHeatExchange::NUM_T; ++i){
-		if (m_para[i] != otherHeatExc->m_para[i])
-			return Different;
+		// TODO
+		//if (m_para[i] != otherHeatExc->m_para[i])
+		//	return Different;
 	}
 
 	return Equal;

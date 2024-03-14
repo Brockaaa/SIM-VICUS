@@ -37,6 +37,26 @@ void NetworkHeatExchange::readXML(const TiXmlElement * element) {
 	FUNCID(NetworkHeatExchange::readXML);
 
 	try {
+		// search for mandatory attributes
+		// reading attributes
+		const TiXmlAttribute * attrib = element->FirstAttribute();
+		while (attrib) {
+			const std::string & attribName = attrib->NameStr();
+			if (attribName == "individualHeatFlux")
+				m_individualHeatFlux = NANDRAD::readPODAttributeValue<bool>(element, attrib);
+			else if (attribName == "buildingType")
+				try {
+					m_buildingType = (BuildingType)KeywordList::Enumeration("NetworkHeatExchange::BuildingType", attrib->ValueStr());
+				}
+				catch (IBK::Exception & ex) {
+					throw IBK::Exception( ex, IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
+						IBK::FormatString("Invalid or unknown keyword '"+attrib->ValueStr()+"'.") ), FUNC_ID);
+				}
+			else {
+				IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ATTRIBUTE).arg(attribName).arg(element->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+			}
+			attrib = attrib->Next();
+		}
 		// search for mandatory elements
 		// reading elements
 		const TiXmlElement * c = element->FirstChildElement();
@@ -46,9 +66,9 @@ void NetworkHeatExchange::readXML(const TiXmlElement * element) {
 				IBK::Parameter p;
 				NANDRAD::readParameterElement(c, p);
 				bool success = false;
-				ModelType ptype;
+				para ptype;
 				try {
-					ptype = (ModelType)KeywordList::Enumeration("NetworkHeatExchange::ModelType", p.name);
+					ptype = (para)KeywordList::Enumeration("NetworkHeatExchange::para", p.name);
 					m_para[ptype] = p; success = true;
 				}
 				catch (...) { /* intentional fail */  }
@@ -82,11 +102,15 @@ TiXmlElement * NetworkHeatExchange::writeXML(TiXmlElement * parent) const {
 	TiXmlElement * e = new TiXmlElement("NetworkHeatExchange");
 	parent->LinkEndChild(e);
 
+	if (m_individualHeatFlux != NetworkHeatExchange().m_individualHeatFlux)
+		e->SetAttribute("individualHeatFlux", IBK::val2string<bool>(m_individualHeatFlux));
+	if (m_buildingType != NUM_BT)
+		e->SetAttribute("buildingType", KeywordList::Keyword("NetworkHeatExchange::BuildingType",  m_buildingType));
 
 	if (m_modelType != NUM_T)
 		TiXmlElement::appendSingleAttributeElement(e, "ModelType", nullptr, std::string(), KeywordList::Keyword("NetworkHeatExchange::ModelType",  m_modelType));
 
-	for (unsigned int i=0; i<NUM_T; ++i) {
+	for (unsigned int i=0; i<NUM_P; ++i) {
 		if (!m_para[i].name.empty()) {
 			TiXmlElement::appendIBKParameterElement(e, m_para[i].name, m_para[i].IO_unit.name(), m_para[i].get_value(m_para[i].IO_unit));
 		}

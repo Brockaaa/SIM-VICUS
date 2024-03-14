@@ -298,7 +298,7 @@
              <string>...</string>
             </property>
             <property name="icon">
-             <iconset>
+             <iconset resource="../resources/SIM-VICUS.qrc">
               <normaloff>:/gfx/actions/24x24/minus.png</normaloff>:/gfx/actions/24x24/minus.png</iconset>
             </property>
            </widget>
@@ -721,14 +721,8 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayoutPageHeatLossConstantUser">
              <item>
-              <widget class="QLabel" name="labelHeatLossConstantUser">
-               <property name="text">
-                <string>input</string>
-               </property>
+              <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossConstantUser">
               </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="lineEdit"/>
              </item>
              <item>
               <widget class="QLabel" name="labelHeatLossConstantUserUnit">
@@ -982,11 +976,21 @@
    <header>qwt_plot.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>QtExt::ValidatingLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header location="global">QtExt_ValidatingLineEdit.h</header>
+   <slots>
+    <signal>editingFinishedSuccessfully()</signal>
+   </slots>
+  </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../resources/SIM-VICUS.qrc"/>
+ </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroupHeatLossConstant"/>
   <buttongroup name="buttonGroupHeatLossSpline"/>
+  <buttongroup name="buttonGroupHeatLossConstant"/>
  </buttongroups>
 </ui>

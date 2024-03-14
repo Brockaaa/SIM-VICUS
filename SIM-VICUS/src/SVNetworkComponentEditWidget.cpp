@@ -47,6 +47,8 @@
 
 #include <NANDRAD_HydraulicNetworkComponent.h>
 
+#include <IBK_Parameter.h>
+
 #include <QScrollBar>
 
 #include <QtExt_LanguageHandler.h>
@@ -238,6 +240,15 @@ void SVNetworkComponentEditWidget::update()
 			m_ui->comboBoxHeatExchange->setCurrentIndex(index);
 			m_ui->stackedWidgetHeatExchange->setCurrentIndex(static_cast<int>(m_current->m_heatExchange.m_modelType));
 		}
+	}
+
+	// set label and lineEdit in pageHeatLossConstant invisible
+	if(m_current->m_heatExchange.m_individualHeatFlux == true){
+		m_ui->radioButtonHeatLossConstantUser->setChecked(true);
+		on_radioButtonHeatLossConstantUser_clicked();
+	} else {
+		m_ui->radioButtonHeatLossConstantPredef->setChecked(true);
+		on_radioButtonHeatLossConstantPredef_clicked();
 	}
 }
 
@@ -948,14 +959,25 @@ void SVNetworkComponentEditWidget::on_comboBoxHeatExchange_activated(int index)
 }
 
 
-void SVNetworkComponentEditWidget::on_radioButtonHeatLossConstantUser_toggled(bool checked)
+void SVNetworkComponentEditWidget::on_radioButtonHeatLossConstantPredef_clicked()
 {
-	qDebug() << "checked: " << checked;
-	m_ui->horizontalLayoutPageHeatLossConstantUser->setEnabled(checked);
+	m_ui->lineEditHeatLossConstantUser->clear();
+	m_current->m_heatExchange.m_individualHeatFlux = false;
+	m_ui->labelHeatLossConstantUserUnit->setVisible(false);
+	m_ui->lineEditHeatLossConstantUser->setVisible(false);
 }
 
-void SVNetworkComponentEditWidget::on_radioButtonHeatLossConstantPredef_toggled(bool checked)
+
+void SVNetworkComponentEditWidget::on_radioButtonHeatLossConstantUser_clicked()
 {
-	// set flag here
+	m_current->m_heatExchange.m_individualHeatFlux = true;
+	m_ui->labelHeatLossConstantUserUnit->setVisible(true);
+	m_ui->lineEditHeatLossConstantUser->setVisible(true);
+	m_ui->lineEditHeatLossConstantUser->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::PT_HeatLoss].get_value());
 }
 
+
+void SVNetworkComponentEditWidget::on_lineEditHeatLossConstantUser_editingFinished()
+{
+	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para", VICUS::NetworkHeatExchange::PT_HeatLoss, m_ui->lineEditHeatLossConstantUser->value());
+}
