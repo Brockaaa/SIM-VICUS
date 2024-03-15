@@ -292,9 +292,7 @@ void BMNetwork::lookupBlockAndSocket(const QString & flatName, const BMBlock *& 
 								[&] (const BMSocket& s) { return s.m_name == socketName; } );
 
 
-	if (socketIt == b.m_sockets.constEnd())
-		socket == nullptr;
-	else{
+	if (socketIt != b.m_sockets.constEnd()){
 		const BMSocket & s = *socketIt;
 		socket = &s;
 	}

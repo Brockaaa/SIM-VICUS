@@ -441,7 +441,7 @@
        <item>
         <widget class="QStackedWidget" name="stackedWidgetHeatExchange">
          <property name="currentIndex">
-          <number>5</number>
+          <number>6</number>
          </property>
          <widget class="QWidget" name="pageTemperatureConstant">
           <property name="sizePolicy">
@@ -452,7 +452,7 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutPageTemperatureConstant">
            <property name="spacing">
-            <number>0</number>
+            <number>10</number>
            </property>
            <property name="leftMargin">
             <number>0</number>
@@ -472,6 +472,61 @@
               <string>pageTemperatureConstant</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutTemperatureConstantHeatTransferCoefficient">
+             <item>
+              <widget class="QLabel" name="labelTemperatureConstantHeatTransferCoefficient">
+               <property name="text">
+                <string>Heat Transfer Coefficient</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QtExt::ValidatingLineEdit" name="lineEditTemperatureConstantHeatTransferCoefficient"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelTemperatureConstantHeatTransferCoefficientUnit">
+               <property name="text">
+                <string>W/m²K</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutTemperatureConstantTemperature">
+             <item>
+              <widget class="QLabel" name="labelTemperatureConstantTemperature">
+               <property name="text">
+                <string>Temperature</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QtExt::ValidatingLineEdit" name="lineEditTemperatureConstantTemperature">
+               <property name="maximumSize">
+                <size>
+                 <width>217</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelTemperatureConstantTemperatureUnit">
+               <property name="maximumSize">
+                <size>
+                 <width>48</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>°C</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <spacer name="verticalSpacerTemperatureConstant">
@@ -517,6 +572,27 @@
               <string>pageTemperatureSpline</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutTemperatureSpline">
+             <item>
+              <widget class="QLabel" name="labelTemperatureSplineHeatTransferCoefficient">
+               <property name="text">
+                <string>Heat Transfer Coefficient</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QtExt::ValidatingLineEdit" name="lineEditTemperatureSplineHeatTransferCoefficient"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelTemperatureSplineUnit">
+               <property name="text">
+                <string>W/m²K</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <spacer name="verticalSpacerTemperatureSpline">
@@ -701,7 +777,7 @@
            <item>
             <widget class="QRadioButton" name="radioButtonHeatLossConstantPredef">
              <property name="text">
-              <string>use defined maximum heat demand</string>
+              <string>defined maximum heat demand</string>
              </property>
              <attribute name="buttonGroup">
               <string notr="true">buttonGroupHeatLossConstant</string>
@@ -721,8 +797,14 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayoutPageHeatLossConstantUser">
              <item>
-              <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossConstantUser">
+              <widget class="QLabel" name="labelHeatLossConstantUserHeatFlux">
+               <property name="text">
+                <string>Heat Flux</string>
+               </property>
               </widget>
+             </item>
+             <item>
+              <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossConstantUser"/>
              </item>
              <item>
               <widget class="QLabel" name="labelHeatLossConstantUserUnit">
@@ -779,9 +861,9 @@
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="radioButtonHeatLossSplineUser">
+            <widget class="QRadioButton" name="radioButtonHeatLossSplineDemandCurvePredef">
              <property name="text">
-              <string>user defined</string>
+              <string>defined maximum heat demand</string>
              </property>
              <attribute name="buttonGroup">
               <string notr="true">buttonGroupHeatLossSpline</string>
@@ -789,13 +871,47 @@
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="radioButtonHeatLossSplineDemandCurve">
+            <widget class="QRadioButton" name="radioButtonHeatLossSplineDemandCurveUser">
              <property name="text">
-              <string>RadioButton</string>
+              <string>user determined</string>
              </property>
              <attribute name="buttonGroup">
               <string notr="true">buttonGroupHeatLossSpline</string>
              </attribute>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutHeatLossSplineCurveUserComboBox">
+             <item>
+              <widget class="QLabel" name="labelHeatLossSplineUserBuildingType">
+               <property name="maximumSize">
+                <size>
+                 <width>109</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Building Type:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboBoxHeatLossSplineUserBuildingType"/>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues">
+             <property name="text">
+              <string>Area Related Values</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand">
+             <property name="text">
+              <string>With Cooling Demand</string>
+             </property>
             </widget>
            </item>
            <item>
@@ -990,7 +1106,7 @@
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroupHeatLossSpline"/>
   <buttongroup name="buttonGroupHeatLossConstant"/>
+  <buttongroup name="buttonGroupHeatLossSpline"/>
  </buttongroups>
 </ui>

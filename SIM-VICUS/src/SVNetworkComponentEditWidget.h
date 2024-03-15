@@ -96,7 +96,19 @@ private slots:
 
 	void on_radioButtonHeatLossConstantUser_clicked();
 
-	void on_lineEditHeatLossConstantUser_editingFinished();
+	void on_lineEditHeatLossConstantUser_editingFinishedSuccessfully();
+
+	void on_lineEditTemperatureConstantHeatTransferCoefficient_editingFinishedSuccessfully();
+
+	void on_lineEditTemperatureConstantTemperature_editingFinishedSuccessfully();
+
+	void on_radioButtonHeatLossSplineDemandCurvePredef_clicked();
+
+	void on_radioButtonHeatLossSplineDemandCurveUser_clicked();
+
+	void on_comboBoxHeatLossSplineUserBuildingType_activated(int index);
+
+
 
 private:
 	void updateParameterTableWidget() const;

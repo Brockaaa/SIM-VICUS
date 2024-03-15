@@ -44,9 +44,21 @@ void NetworkHeatExchange::readXML(const TiXmlElement * element) {
 			const std::string & attribName = attrib->NameStr();
 			if (attribName == "individualHeatFlux")
 				m_individualHeatFlux = NANDRAD::readPODAttributeValue<bool>(element, attrib);
+			else if (attribName == "areaRelatedValues")
+				m_areaRelatedValues = NANDRAD::readPODAttributeValue<bool>(element, attrib);
+			else if (attribName == "withCoolingDemand")
+				m_withCoolingDemand = NANDRAD::readPODAttributeValue<bool>(element, attrib);
 			else if (attribName == "buildingType")
 				try {
 					m_buildingType = (BuildingType)KeywordList::Enumeration("NetworkHeatExchange::BuildingType", attrib->ValueStr());
+				}
+				catch (IBK::Exception & ex) {
+					throw IBK::Exception( ex, IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
+						IBK::FormatString("Invalid or unknown keyword '"+attrib->ValueStr()+"'.") ), FUNC_ID);
+				}
+			else if (attribName == "ambientTemperatureType")
+				try {
+					m_ambientTemperatureType = (AmbientTemperatureType)KeywordList::Enumeration("NetworkHeatExchange::AmbientTemperatureType", attrib->ValueStr());
 				}
 				catch (IBK::Exception & ex) {
 					throw IBK::Exception( ex, IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
@@ -62,13 +74,29 @@ void NetworkHeatExchange::readXML(const TiXmlElement * element) {
 		const TiXmlElement * c = element->FirstChildElement();
 		while (c) {
 			const std::string & cName = c->ValueStr();
-			if (cName == "IBK:Parameter") {
+			if (cName == "LinearSplineParameter") {
+				NANDRAD::LinearSplineParameter p;
+				p.readXML(c);
+				bool success = false;
+				if (p.m_name == "UserDefinedHeatFlux") {
+					m_userDefinedHeatFlux = p; success = true;
+				}
+				try {
+					splinePara_t ptype;
+					ptype = (splinePara_t)KeywordList::Enumeration("NetworkHeatExchange::splinePara_t", p.m_name);
+					m_splPara[ptype] = p; success = true;
+				}
+				catch (...) { /* intentional fail */  }
+				if (!success)
+					IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_NAME).arg(p.m_name).arg(cName).arg(c->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+			}
+			else if (cName == "IBK:Parameter") {
 				IBK::Parameter p;
 				NANDRAD::readParameterElement(c, p);
 				bool success = false;
-				para ptype;
+				para_t ptype;
 				try {
-					ptype = (para)KeywordList::Enumeration("NetworkHeatExchange::para", p.name);
+					ptype = (para_t)KeywordList::Enumeration("NetworkHeatExchange::para_t", p.name);
 					m_para[ptype] = p; success = true;
 				}
 				catch (...) { /* intentional fail */  }
@@ -104,15 +132,30 @@ TiXmlElement * NetworkHeatExchange::writeXML(TiXmlElement * parent) const {
 
 	if (m_individualHeatFlux != NetworkHeatExchange().m_individualHeatFlux)
 		e->SetAttribute("individualHeatFlux", IBK::val2string<bool>(m_individualHeatFlux));
+	if (m_areaRelatedValues != NetworkHeatExchange().m_areaRelatedValues)
+		e->SetAttribute("areaRelatedValues", IBK::val2string<bool>(m_areaRelatedValues));
+	if (m_withCoolingDemand != NetworkHeatExchange().m_withCoolingDemand)
+		e->SetAttribute("withCoolingDemand", IBK::val2string<bool>(m_withCoolingDemand));
 	if (m_buildingType != NUM_BT)
 		e->SetAttribute("buildingType", KeywordList::Keyword("NetworkHeatExchange::BuildingType",  m_buildingType));
+	if (m_ambientTemperatureType != NUM_AT)
+		e->SetAttribute("ambientTemperatureType", KeywordList::Keyword("NetworkHeatExchange::AmbientTemperatureType",  m_ambientTemperatureType));
 
 	if (m_modelType != NUM_T)
 		TiXmlElement::appendSingleAttributeElement(e, "ModelType", nullptr, std::string(), KeywordList::Keyword("NetworkHeatExchange::ModelType",  m_modelType));
+	if (!m_userDefinedHeatFlux.m_name.empty()) {
+		IBK_ASSERT("UserDefinedHeatFlux" == m_userDefinedHeatFlux.m_name);
+		m_userDefinedHeatFlux.writeXML(e);
+	}
 
 	for (unsigned int i=0; i<NUM_P; ++i) {
 		if (!m_para[i].name.empty()) {
 			TiXmlElement::appendIBKParameterElement(e, m_para[i].name, m_para[i].IO_unit.name(), m_para[i].get_value(m_para[i].IO_unit));
+		}
+	}
+	for (int i=0; i<NUM_SPL; ++i) {
+		if (!m_splPara[i].m_name.empty()) {
+			m_splPara[i].writeXML(e);
 		}
 	}
 	return e;

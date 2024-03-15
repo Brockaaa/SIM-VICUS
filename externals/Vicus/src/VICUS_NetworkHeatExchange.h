@@ -50,21 +50,10 @@ public:
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
 	VICUS_READWRITE_OVERRIDE
-	VICUS_COMP(NetworkHeatExchange)
-	VICUS_COMPARE_WITH_ID
+		VICUS_COMP(NetworkHeatExchange)
+		VICUS_COMPARE_WITH_ID
 
-	ComparisonResult equal(const AbstractDBElement * other) const;
-
-	struct HeatFluxSplineAttributesNotUserDefinedBuilding {
-		IBK::Parameter		floorArea;
-		IBK::Parameter		maximumHeatingLoad;
-		IBK::Parameter		heatingEnergyDemand;
-		IBK::Parameter		heatingAreaDemandAreaSpecific;
-		IBK::Parameter		maximumCoolingLoad;
-		IBK::Parameter		coolingEnergyDemand;
-		IBK::Parameter		coolingEnergyDemandAreaSpecific;
-		IBK::Parameter		domesticHotWaterDemand;
-	};
+		ComparisonResult equal(const AbstractDBElement * other) const;
 
 	/*! Defines the type of heat exchange */
 	enum ModelType {
@@ -83,31 +72,43 @@ public:
 	};
 
 	/*! Parameters for the element . */
-	enum para{
-		PT_Temperature,							// Keyword: Temperature							[C]			'Temperature for heat exchange'
-		PT_HeatLoss,							// Keyword: HeatLoss							[W]			'Constant heat flux out of the element (heat loss)'
-		PT_ExternalHeatTransferCoefficient,		// Keyword: ExternalHeatTransferCoefficient		[W/m2K]		'External heat transfer coeffient for the outside boundary'
-		SPL_Temperature,						// Keyword: Temperature							[C]			'Temperature for heat exchange'
-		SPL_HeatLoss,							// Keyword: HeatLoss							[W]			'Constant heat flux out of the element (heat loss)'
-		HFC_HeatFlux,							// Keyword: HeatFlux							[W]			'TODO'
-		HFS_FloorArea,							// Keyword: FloorArea							[m2]		'FloorArea'
-		HFS_MaximumHeatingLoad,					// Keyword: MaximumHeatingLoad					[kW]		'MaximumHeatingLoad'
-		HFS_HeatingEnergyDemand,				// Keyword: HeatingEnergyDemand					[kWh]		'HeatingEnergyDemand'
-		HFS_HeatingEnergyDemandAreaSpecific,	// Keyword: HeatingEnergyDemandAreaSpecific		[kWh/m2]	'HeatingEnergyDemandAreaSpecific'
-		HFS_MaximumCoolingLoad,					// Keyword: MaximumCoolingLoad					[kW]		'MaximumCoolingLoad'
-		HFS_CoolingEnergyDemand,				// Keyword: CoolingEnergyDemand					[kWh]		'CoolingEnergyDemand'
-		HFS_CoolingEnergyDemandAreaSpecific,	// Keyword: CoolingEnergyDemandAreaSpecific		[kWh/m2]	'CoolingEnergyDemandAreaSpecific'
-		HFS_DomesticHotWaterDemand,				// Keyword: DomesticHotWaterDemand				[kWh]		'DomesticHotWaterDemand'
-		HFS_DomesticHotWaterDemandAreaSpecific,	// Keyword: DomesticHotWaterDemandAreaRelated	[kWh]		'DomesticHotWaterDemandAreaRelated'
+	enum para_t {
+		P_Temperature,							// Keyword: Temperature							[C]		'Temperature for heat exchange'
+		P_HeatLoss,								// Keyword: HeatLoss							[W]		'Constant heat flux out of the element (heat loss)'
+		P_ExternalHeatTransferCoefficient,		// Keyword: ExternalHeatTransferCoefficient		[W/m2K]	'External heat transfer coeffient for the outside boundary'
+		P_HeatFlux,								// Keyword: HeatFlux							[W]			'TODO'
+		P_FloorArea,							// Keyword: FloorArea							[m2]		'FloorArea'
+		P_MaximumHeatingLoad,					// Keyword: MaximumHeatingLoad					[kW]		'MaximumHeatingLoad'
+		P_HeatingEnergyDemand,					// Keyword: HeatingEnergyDemand					[kWh]		'HeatingEnergyDemand'
+		P_HeatingEnergyDemandAreaSpecific,		// Keyword: HeatingEnergyDemandAreaSpecific		[kWh/m2]	'HeatingEnergyDemandAreaSpecific'
+		P_MaximumCoolingLoad,					// Keyword: MaximumCoolingLoad					[kW]		'MaximumCoolingLoad'
+		P_CoolingEnergyDemand,					// Keyword: CoolingEnergyDemand					[kWh]		'CoolingEnergyDemand'
+		P_CoolingEnergyDemandAreaSpecific,		// Keyword: CoolingEnergyDemandAreaSpecific		[kWh/m2]	'CoolingEnergyDemandAreaSpecific'
+		P_DomesticHotWaterDemand,				// Keyword: DomesticHotWaterDemand				[kWh]		'DomesticHotWaterDemand'
+		P_DomesticHotWaterDemandAreaSpecific,	// Keyword: DomesticHotWaterDemandAreaRelated	[kWh]		'DomesticHotWaterDemandAreaRelated'
 		NUM_P
 	};
 
+
+	/*! Spline parameter as functions of time. Defined similarly as time series for location object (i.e. with start time shift). */
+	enum splinePara_t {
+		SPL_Temperature,						// Keyword: Temperature							[C]		'Temperature for heat exchange'
+		/*! Heat loss spline is used for models T_HeatLossSpline and T_HeatLossSplineCondenser. */
+		SPL_HeatLoss,							// Keyword: HeatLoss							[W]		'Constant heat flux out of the element (heat loss)'
+		NUM_SPL
+	};
+
 	enum BuildingType {
-		BT_SingleFamilyHouse,
-		BT_MultiHouseFamily,
-		BT_OfficeBuilding,
-		BT_UserDefineBuilding,
+		BT_SingleFamilyHouse,					// Keyword: SingleFamilyHouse
+		BT_MultiHouseFamily,					// Keyword: MultiHouseFamily
+		BT_OfficeBuilding,						// Keyword: OfficeBuilding
+		BT_UserDefineBuilding,					// Keyword: UserDefineBuilding
 		NUM_BT
+	};
+
+	enum AmbientTemperatureType {
+		AT_GroundTemperature,
+		NUM_AT
 	};
 
 	// *** Public Member variables ***
@@ -117,12 +118,22 @@ public:
 
 	bool								m_individualHeatFlux = false;				// XML:A
 
+	bool								m_areaRelatedValues = false;				// XML:A
+
+	bool								m_withCoolingDemand = false;				// XML:A
+
 	BuildingType						m_buildingType = NUM_BT;					// XML:A
 
-	NANDRAD::LinearSplineParameter		m_userDefinedHeatFlux;
+	AmbientTemperatureType				m_ambientTemperatureType = NUM_AT;			// XML:A
+
+	NANDRAD::LinearSplineParameter		m_userDefinedHeatFlux;						// XML:E
 
 	/*! Parameters for the element . */
 	IBK::Parameter						m_para[NUM_P];								// XML:E
+
+	/*! Time-series of heat flux or temperature (can be spline or tsv-file). */
+	NANDRAD::LinearSplineParameter		m_splPara[NUM_SPL];							// XML:E
+
 };
 
 } // namespace VICUS

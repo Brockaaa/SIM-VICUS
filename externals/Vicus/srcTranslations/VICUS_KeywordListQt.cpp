@@ -315,8 +315,6 @@ KeywordListQt::KeywordListQt() {
 	tr("Temperature for heat exchange");
 	tr("Constant heat flux out of the element (heat loss)");
 	tr("External heat transfer coeffient for the outside boundary");
-	tr("Temperature for heat exchange");
-	tr("Constant heat flux out of the element (heat loss)");
 	tr("TODO");
 	tr("FloorArea");
 	tr("MaximumHeatingLoad");
@@ -327,6 +325,12 @@ KeywordListQt::KeywordListQt() {
 	tr("CoolingEnergyDemandAreaSpecific");
 	tr("DomesticHotWaterDemand");
 	tr("DomesticHotWaterDemandAreaRelated");
+	tr("Temperature for heat exchange");
+	tr("Constant heat flux out of the element (heat loss)");
+	tr("SingleFamilyHouse");
+	tr("MultiHouseFamily");
+	tr("OfficeBuilding");
+	tr("UserDefineBuilding");
 	tr("SubStation");
 	tr("Mixer");
 	tr("Source");

@@ -87,6 +87,15 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 
 	// checks if VICUS::NetworkHeatExchange was changed. stackedWidgetHeatExchange must be adjusted accordingly
 	Q_ASSERT(VICUS::NetworkHeatExchange::NUM_T == 9);
+
+	//sets up validating line edit appropriately
+	m_ui->lineEditTemperatureConstantHeatTransferCoefficient->setMinimum(0, false);
+	m_ui->lineEditTemperatureSplineHeatTransferCoefficient->setMinimum(0, false);
+
+	// set comboBox in pageHeatLossSpline
+	for(int i = 0; i < VICUS::NetworkHeatExchange::NUM_BT; i++){
+		m_ui->comboBoxHeatLossSplineUserBuildingType->addItem(VICUS::KeywordListQt::Keyword("NetworkHeatExchange::BuildingType", i));
+	}
 }
 
 
@@ -244,12 +253,21 @@ void SVNetworkComponentEditWidget::update()
 
 	// set label and lineEdit in pageHeatLossConstant invisible
 	if(m_current->m_heatExchange.m_individualHeatFlux == true){
+
 		m_ui->radioButtonHeatLossConstantUser->setChecked(true);
 		on_radioButtonHeatLossConstantUser_clicked();
+
+		m_ui->radioButtonHeatLossSplineDemandCurveUser->setChecked(true);
+		on_radioButtonHeatLossSplineDemandCurveUser_clicked();
+
 	} else {
 		m_ui->radioButtonHeatLossConstantPredef->setChecked(true);
 		on_radioButtonHeatLossConstantPredef_clicked();
+
+		m_ui->radioButtonHeatLossSplineDemandCurvePredef->setChecked(true);
+		on_radioButtonHeatLossSplineDemandCurvePredef_clicked();
 	}
+
 }
 
 void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
@@ -963,6 +981,7 @@ void SVNetworkComponentEditWidget::on_radioButtonHeatLossConstantPredef_clicked(
 {
 	m_ui->lineEditHeatLossConstantUser->clear();
 	m_current->m_heatExchange.m_individualHeatFlux = false;
+	m_ui->labelHeatLossConstantUserHeatFlux->setVisible(false);
 	m_ui->labelHeatLossConstantUserUnit->setVisible(false);
 	m_ui->lineEditHeatLossConstantUser->setVisible(false);
 }
@@ -971,13 +990,63 @@ void SVNetworkComponentEditWidget::on_radioButtonHeatLossConstantPredef_clicked(
 void SVNetworkComponentEditWidget::on_radioButtonHeatLossConstantUser_clicked()
 {
 	m_current->m_heatExchange.m_individualHeatFlux = true;
+	m_ui->labelHeatLossConstantUserHeatFlux->setVisible(true);
 	m_ui->labelHeatLossConstantUserUnit->setVisible(true);
 	m_ui->lineEditHeatLossConstantUser->setVisible(true);
-	m_ui->lineEditHeatLossConstantUser->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::PT_HeatLoss].get_value());
+	m_ui->lineEditHeatLossConstantUser->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatLoss].get_value());
 }
 
 
-void SVNetworkComponentEditWidget::on_lineEditHeatLossConstantUser_editingFinished()
+void SVNetworkComponentEditWidget::on_lineEditHeatLossConstantUser_editingFinishedSuccessfully()
 {
-	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para", VICUS::NetworkHeatExchange::PT_HeatLoss, m_ui->lineEditHeatLossConstantUser->value());
+	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatLoss, m_ui->lineEditHeatLossConstantUser->value());
 }
+
+
+void SVNetworkComponentEditWidget::on_lineEditTemperatureConstantHeatTransferCoefficient_editingFinishedSuccessfully()
+{
+	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_ExternalHeatTransferCoefficient, m_ui->lineEditTemperatureConstantHeatTransferCoefficient->value());
+}
+
+
+void SVNetworkComponentEditWidget::on_lineEditTemperatureConstantTemperature_editingFinishedSuccessfully()
+{
+	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_Temperature, m_ui->lineEditTemperatureConstantTemperature->value());
+}
+
+
+void SVNetworkComponentEditWidget::on_radioButtonHeatLossSplineDemandCurvePredef_clicked()
+{
+	m_ui->comboBoxHeatLossSplineUserBuildingType->setVisible(false);
+	m_ui->labelHeatLossSplineUserBuildingType->setVisible(false);
+}
+
+
+void SVNetworkComponentEditWidget::on_radioButtonHeatLossSplineDemandCurveUser_clicked()
+{
+	if(m_current->m_heatExchange.m_buildingType != VICUS::NetworkHeatExchange::NUM_BT){
+		m_ui->comboBoxHeatLossSplineUserBuildingType->setCurrentIndex(static_cast<int>(m_current->m_heatExchange.m_buildingType));
+	}
+	m_ui->comboBoxHeatLossSplineUserBuildingType->setVisible(true);
+	m_ui->labelHeatLossSplineUserBuildingType->setVisible(true);
+}
+
+
+void SVNetworkComponentEditWidget::on_comboBoxHeatLossSplineUserBuildingType_activated(int index)
+{
+	m_ui->comboBoxHeatLossSplineUserBuildingType->setCurrentIndex(index);
+	m_current->m_heatExchange.m_buildingType = static_cast<VICUS::NetworkHeatExchange::BuildingType>(index);
+	qDebug() << "building Type set: " << VICUS::KeywordListQt::Keyword("NetworkHeatExchange::BuildingType", index);
+}
+
+void SVNetworkComponentEditWidget::on_checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues_stateChanged(int arg1)
+{
+
+}
+
+
+void SVNetworkComponentEditWidget::on_checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand_stateChanged(int arg1)
+{
+
+}
+
