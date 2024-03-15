@@ -110,6 +110,10 @@ private slots:
 
 
 
+	void on_checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues_stateChanged(int arg1);
+
+	void on_checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand_stateChanged(int arg1);
+
 private:
 	void updateParameterTableWidget() const;
 
