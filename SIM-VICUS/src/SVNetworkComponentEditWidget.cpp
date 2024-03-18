@@ -223,7 +223,7 @@ void SVNetworkComponentEditWidget::update()
 	m_ui->comboBoxHeatExchange->clear();
 	// insert all available HE modeltypes into the HE combobox, adds "None" last
 	for(VICUS::NetworkHeatExchange::ModelType heatExchangeMT : availableHeatExchangeModelTypes){
-		if(heatExchangeMT == VICUS::NetworkHeatExchange::NUM_T) {
+		if(heatExchangeMT == VICUS::NetworkHeatExchange::NUM_T || heatExchangeMT == VICUS::NetworkHeatExchange::T_TemperatureZone || heatExchangeMT == VICUS::NetworkHeatExchange::T_TemperatureConstructionLayer) {
 			continue;
 		}
 		m_ui->comboBoxHeatExchange->addItem(VICUS::KeywordListQt::Keyword("NetworkHeatExchange::ModelType", static_cast<int>(heatExchangeMT)), heatExchangeMT);
@@ -257,16 +257,14 @@ void SVNetworkComponentEditWidget::update()
 		m_ui->radioButtonHeatLossConstantUser->setChecked(true);
 		on_radioButtonHeatLossConstantUser_clicked();
 
-		m_ui->radioButtonHeatLossSplineDemandCurveUser->setChecked(true);
-		on_radioButtonHeatLossSplineDemandCurveUser_clicked();
-
 	} else {
 		m_ui->radioButtonHeatLossConstantPredef->setChecked(true);
 		on_radioButtonHeatLossConstantPredef_clicked();
-
-		m_ui->radioButtonHeatLossSplineDemandCurvePredef->setChecked(true);
-		on_radioButtonHeatLossSplineDemandCurvePredef_clicked();
 	}
+
+	// set widgets in pageHeatLossSpline to appropriate values
+	m_ui->checkBoxHeatLossSplineDemandCurveDefinition->setChecked(m_current->m_heatExchange.m_individualHeatFlux);
+	on_checkBoxHeatLossSplineDemandCurveDefinition_clicked(m_current->m_heatExchange.m_individualHeatFlux);
 
 }
 
@@ -1015,20 +1013,24 @@ void SVNetworkComponentEditWidget::on_lineEditTemperatureConstantTemperature_edi
 }
 
 
-void SVNetworkComponentEditWidget::on_radioButtonHeatLossSplineDemandCurvePredef_clicked()
+void SVNetworkComponentEditWidget::on_checkBoxHeatLossSplineDemandCurveDefinition_clicked(bool checked)
 {
-	m_ui->comboBoxHeatLossSplineUserBuildingType->setVisible(false);
-	m_ui->labelHeatLossSplineUserBuildingType->setVisible(false);
-}
-
-
-void SVNetworkComponentEditWidget::on_radioButtonHeatLossSplineDemandCurveUser_clicked()
-{
-	if(m_current->m_heatExchange.m_buildingType != VICUS::NetworkHeatExchange::NUM_BT){
-		m_ui->comboBoxHeatLossSplineUserBuildingType->setCurrentIndex(static_cast<int>(m_current->m_heatExchange.m_buildingType));
+	m_current->m_heatExchange.m_individualHeatFlux = checked;
+	if(m_current->m_heatExchange.m_individualHeatFlux){
+		m_ui->comboBoxHeatLossSplineUserBuildingType->setEnabled(false);
+		m_ui->checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues->setEnabled(false);
+		m_ui->checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand->setEnabled(false);
+		m_ui->labelHeatLossSplineFloorArea->setEnabled(false);
+		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(false);
+		m_ui->labelHeatLossSplineFloorAreaUnit->setEnabled(false);
+		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(false);
+		m_ui->lineEditHeatLossSplineFloorArea->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value());
+	} else {
+		m_ui->comboBoxHeatLossSplineUserBuildingType->setEnabled(true);
+		on_comboBoxHeatLossSplineUserBuildingType_activated(static_cast<int>(m_current->m_heatExchange.m_buildingType));
 	}
-	m_ui->comboBoxHeatLossSplineUserBuildingType->setVisible(true);
-	m_ui->labelHeatLossSplineUserBuildingType->setVisible(true);
+
+
 }
 
 
@@ -1037,16 +1039,42 @@ void SVNetworkComponentEditWidget::on_comboBoxHeatLossSplineUserBuildingType_act
 	m_ui->comboBoxHeatLossSplineUserBuildingType->setCurrentIndex(index);
 	m_current->m_heatExchange.m_buildingType = static_cast<VICUS::NetworkHeatExchange::BuildingType>(index);
 	qDebug() << "building Type set: " << VICUS::KeywordListQt::Keyword("NetworkHeatExchange::BuildingType", index);
+	if(m_current->m_heatExchange.m_buildingType != VICUS::NetworkHeatExchange::BT_UserDefineBuilding){
+		m_ui->checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues->setEnabled(true);
+		m_ui->checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand->setEnabled(true);
+		m_ui->labelHeatLossSplineFloorArea->setEnabled(true);
+		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(true);
+		m_ui->labelHeatLossSplineFloorAreaUnit->setEnabled(true);
+		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(true);
+		on_checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues_stateChanged(static_cast<int>(m_current->m_heatExchange.m_areaRelatedValues));
+		on_checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand_stateChanged(static_cast<int>(m_current->m_heatExchange.m_withCoolingDemand));
+		m_ui->lineEditHeatLossSplineFloorArea->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value());
+		m_ui->lineEditHeatLossSplineDomesticHotWaterDemand->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_DomesticHotWaterDemand].get_value());
+	} else {
+		m_ui->checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues->setEnabled(false);
+		m_ui->checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand->setEnabled(false);
+		m_ui->labelHeatLossSplineFloorArea->setEnabled(false);
+		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(false);
+		m_ui->labelHeatLossSplineFloorAreaUnit->setEnabled(false);
+		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(false);
+		m_ui->lineEditHeatLossSplineFloorArea->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value());
+		m_ui->lineEditHeatLossSplineDomesticHotWaterDemand->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_DomesticHotWaterDemand].get_value());
+	}
 }
 
 void SVNetworkComponentEditWidget::on_checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues_stateChanged(int arg1)
 {
-
+	m_current->m_heatExchange.m_areaRelatedValues = static_cast<bool>(arg1);
 }
 
 
 void SVNetworkComponentEditWidget::on_checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand_stateChanged(int arg1)
 {
-
+	m_current->m_heatExchange.m_withCoolingDemand = static_cast<bool>(arg1);
 }
 
+
+void SVNetworkComponentEditWidget::on_lineEditHeatLossSplineFloorArea_editingFinishedSuccessfully()
+{
+	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_FloorArea, m_ui->lineEditHeatLossSplineFloorArea->value());
+}

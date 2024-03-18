@@ -41,7 +41,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabComponent">
       <property name="sizePolicy">
@@ -861,23 +861,10 @@
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="radioButtonHeatLossSplineDemandCurvePredef">
+            <widget class="QCheckBox" name="checkBoxHeatLossSplineDemandCurveDefinition">
              <property name="text">
-              <string>defined maximum heat demand</string>
+              <string>individually defined in node</string>
              </property>
-             <attribute name="buttonGroup">
-              <string notr="true">buttonGroupHeatLossSpline</string>
-             </attribute>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="radioButtonHeatLossSplineDemandCurveUser">
-             <property name="text">
-              <string>user determined</string>
-             </property>
-             <attribute name="buttonGroup">
-              <string notr="true">buttonGroupHeatLossSpline</string>
-             </attribute>
             </widget>
            </item>
            <item>
@@ -913,6 +900,48 @@
               <string>With Cooling Demand</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutHeatLossSplineFloorArea">
+             <item>
+              <widget class="QLabel" name="labelHeatLossSplineFloorArea">
+               <property name="text">
+                <string>Floor Area</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineFloorArea"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelHeatLossSplineFloorAreaUnit">
+               <property name="text">
+                <string>m²</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutHeatLossSplineDomesticHotWaterDemand">
+             <item>
+              <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemand">
+               <property name="text">
+                <string>Domestic Water Demand</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineDomesticHotWaterDemand"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemandUnit">
+               <property name="text">
+                <string>kWh</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <spacer name="verticalSpacerHeatLossSpline">
@@ -1107,6 +1136,5 @@
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroupHeatLossConstant"/>
-  <buttongroup name="buttonGroupHeatLossSpline"/>
  </buttongroups>
 </ui>

@@ -11,6 +11,7 @@
 #include <QPalette>
 #include <QMimeData>
 #include <QDrag>
+#include <QSvgRenderer>
 
 #include <QtExt_Style.h>
 
@@ -127,8 +128,14 @@ void SVSubNetworkEditDialogTable::startDrag(Qt::DropActions supportedActions){
 
 	VICUS::NetworkComponent::ModelType type = m_elementList[index].m_modelType;
 
-	QPixmap pixmap = QPixmap(VICUS::NetworkComponent::iconFileFromModelType(type));
-	drag->setPixmap(pixmap.scaled(m_defaultRowHeight * scaleX, m_defaultRowHeight * scaleY));
+	QSvgRenderer renderer(VICUS::NetworkComponent::iconFileFromModelType(type));
+	QPixmap pixmap = QPixmap(m_defaultRowHeight * scaleX, m_defaultRowHeight * scaleX);
+	pixmap.fill(Qt::transparent);
+	QPainter painter(&pixmap);
+	renderer.render(&painter);
+	painter.end();
+
+	drag->setPixmap(pixmap);
 	drag->setHotSpot(QPoint(m_defaultRowHeight * scaleX / 2, m_defaultRowHeight * scaleY / 2));
 	drag->setMimeData(mimeData);
 	drag->exec(supportedActions, Qt::CopyAction);

@@ -102,17 +102,15 @@ private slots:
 
 	void on_lineEditTemperatureConstantTemperature_editingFinishedSuccessfully();
 
-	void on_radioButtonHeatLossSplineDemandCurvePredef_clicked();
-
-	void on_radioButtonHeatLossSplineDemandCurveUser_clicked();
+	void on_checkBoxHeatLossSplineDemandCurveDefinition_clicked(bool checked);
 
 	void on_comboBoxHeatLossSplineUserBuildingType_activated(int index);
-
-
 
 	void on_checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues_stateChanged(int arg1);
 
 	void on_checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand_stateChanged(int arg1);
+
+	void on_lineEditHeatLossSplineFloorArea_editingFinishedSuccessfully();
 
 private:
 	void updateParameterTableWidget() const;

@@ -40,6 +40,7 @@
 #include <QApplication>
 #include <QGraphicsSceneMouseEvent>
 #include <QTimer>
+#include <QSvgRenderer>
 
 #include "SVBMConnectorSegmentItem.h"
 #include "SVBMBlockItem.h"
@@ -85,7 +86,22 @@ void SVBMSceneManager::updateNetwork(VICUS::BMNetwork & network, std::vector<VIC
 
 		SVBMBlockItem *item;
 		if(b.m_mode == VICUS::BMBlockType::NetworkComponentBlock){
+
 			VICUS::NetworkComponent* component = VICUS::element(networkComponents, b.m_componentId);
+
+			//create and set QPixmap
+			QSvgRenderer renderer(VICUS::NetworkComponent::iconFileFromModelType(component->m_modelType));
+			QPixmap pixmap(VICUS::BLOCK_WIDTH * 2, VICUS::BLOCK_HEIGHT * 2);
+			pixmap.fill(Qt::transparent);
+
+			QPainter painter(&pixmap);
+			renderer.render(&painter);
+			painter.end();
+
+			b.m_properties["ShowPixmap"] = true;
+			b.m_properties["Pixmap"] = pixmap;
+
+
 			Q_ASSERT(component != nullptr);
 			item = createBlockItem(b, component->m_modelType);
 		} else {
@@ -485,8 +501,18 @@ void SVBMSceneManager::addBlock(VICUS::NetworkComponent::ModelType type, QPoint 
 	b.m_mode = VICUS::BMBlockType::NetworkComponentBlock;
 	b.m_sockets.append(s1);
 	b.m_sockets.append(s2);
+
+	//create and set QPixmap
+	QSvgRenderer renderer(VICUS::NetworkComponent::iconFileFromModelType(type));
+	QPixmap pixmap(VICUS::BLOCK_WIDTH * 2, VICUS::BLOCK_HEIGHT * 2);
+	pixmap.fill(Qt::transparent);
+
+	QPainter painter(&pixmap);
+	renderer.render(&painter);
+	painter.end();
+
 	b.m_properties["ShowPixmap"] = true;
-	b.m_properties["Pixmap"] = QPixmap(VICUS::NetworkComponent::iconFileFromModelType(type)).scaled(256,256);
+	b.m_properties["Pixmap"] = pixmap;
 	b.m_displayName = VICUS::KeywordListQt::Keyword("NetworkComponent::ModelType", type);
 
 	// do we have a component from db?

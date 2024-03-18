@@ -18,6 +18,7 @@
 #include <QScreen>
 #include <QKeyEvent>
 #include <QDir>
+#include <QSvgRenderer>
 
 #include <NANDRAD_HydraulicNetworkControlElement.h>
 #include <NANDRAD_HydraulicNetworkComponent.h>
@@ -1120,8 +1121,18 @@ void SVSubNetworkEditDialog::createNewScene()
 		block.m_displayName = element.m_displayName;
 		block.m_mode = VICUS::BMBlockType::NetworkComponentBlock;
 		block.m_size = QSizeF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT);
+
+		//create and set QPixmap
+		QSvgRenderer renderer(VICUS::NetworkComponent::iconFileFromModelType(type));
+		QPixmap pixmap(VICUS::BLOCK_WIDTH * 2, VICUS::BLOCK_HEIGHT * 2);
+		pixmap.fill(Qt::transparent);
+
+		QPainter painter(&pixmap);
+		renderer.render(&painter);
+		painter.end();
+
 		block.m_properties["ShowPixmap"] = true;
-		block.m_properties["Pixmap"] = QPixmap(VICUS::NetworkComponent::iconFileFromModelType(type)).scaled(256,256);
+		block.m_properties["Pixmap"] = pixmap;
 
 		inlet.m_name = VICUS::INLET_NAME;
 		inlet.m_isInlet = true;

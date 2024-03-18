@@ -66,8 +66,6 @@ void SubNetwork::init()
 			block.m_displayName = element.m_displayName;
 			block.m_componentId = element.m_componentId;
 			block.m_size = QSizeF(BLOCK_WIDTH, BLOCK_HEIGHT);
-			block.m_properties["ShowPixmap"] = true;
-			block.m_properties["Pixmap"] = QPixmap(NetworkComponent::iconFileFromModelType(m_components[elementIndex(m_components, block.m_componentId)].m_modelType)).scaled(256,256);
 
 			BMSocket inlet, outlet;
 

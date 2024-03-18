@@ -189,9 +189,13 @@
         <file>gfx/actions/search.png</file>
         <file>gfx/actions/sound-wave.png</file>
         <file>gfx/modeltypeicons/defaultSplashscreen.png</file>
-        <file>gfx/modeltypeicons/pipe.png</file>
-         <file>gfx/modeltypeicons/pumpdark.png</file>
-        <file>gfx/modeltypeicons/valvedark.png</file>
+        <file>gfx/modeltypeicons/dynamicpipedark.svg</file>
+        <file>gfx/modeltypeicons/heatpumpalternativedark.svg</file>
+        <file>gfx/modeltypeicons/heatpumpdark.svg</file>
+        <file>gfx/modeltypeicons/idealheaterdark.svg</file>
+        <file>gfx/modeltypeicons/pumpdark.svg</file>
+        <file>gfx/modeltypeicons/simplepipedark.svg</file>
+        <file>gfx/modeltypeicons/valvedark.svg</file>
         <file>gfx/actions/leaf.png</file>
         <file>gfx/actions/shades.png</file>
         <file>gfx/actions/Location_Climate_32x32.svg</file>

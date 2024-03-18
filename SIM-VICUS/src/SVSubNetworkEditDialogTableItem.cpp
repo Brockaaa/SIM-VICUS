@@ -5,6 +5,8 @@
 #include "SVStyle.h"
 
 #include <QPixmap>
+#include <QPainter>
+#include <QSvgRenderer>
 #include <QLabel>
 #include <QHBoxLayout>
 
@@ -20,8 +22,15 @@ SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filenam
 		QLabel *textLabel = new QLabel(text, this);
 		QHBoxLayout *layout = new QHBoxLayout(this);
 
-		QPixmap pixmap(filename);
-		iconLabel->setPixmap(pixmap.scaled(height, height));
+		QSvgRenderer renderer(filename);
+		QPixmap pixmap(height, height);
+		pixmap.fill(Qt::transparent);
+
+		QPainter painter(&pixmap);
+		renderer.render(&painter);
+		painter.end();
+
+		iconLabel->setPixmap(pixmap);
 		iconLabel->setMinimumSize(height, height);
 		iconLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 		textLabel->setMinimumSize(0, 0);
