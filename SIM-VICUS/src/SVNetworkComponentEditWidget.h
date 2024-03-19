@@ -41,6 +41,7 @@ class SVNetworkControllerEditDialog;
 class SVDatabase;
 class QwtPlot;
 class QwtPlotCurve;
+class QwtPlotZoomer;
 
 /*! Edit widget for network components.
 
@@ -150,7 +151,8 @@ private:
 	std::vector<VICUS::NetworkHeatExchange>	m_vectorTempHeatExchange;
 
 	/*! Curve visible in HeatLossSpline plot */
-	QwtPlotCurve*							m_heatLossSplineCurve;
+	QwtPlotCurve							*m_heatLossSplineCurve;
+	QwtPlotZoomer							*m_heatLossSplineZoomer;
 
 	/*! Data vectors to store the original values of the tsv file */
 	std::vector<double>						m_heatLossSplineXData;

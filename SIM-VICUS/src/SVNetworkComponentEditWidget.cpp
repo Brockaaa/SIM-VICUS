@@ -40,6 +40,7 @@
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_legend.h>
+#include <qwt_plot_zoomer.h>
 
 #include <VICUS_NetworkComponent.h>
 #include <VICUS_NetworkController.h>
@@ -747,7 +748,10 @@ void SVNetworkComponentEditWidget::handleTsv()
 	m_heatLossSplineCurve = new QwtPlotCurve("Data");
 	m_heatLossSplineCurve->setSamples(m_heatLossSplineXPlotData.data(), m_heatLossSplineYPlotData.data(), m_heatLossSplineXPlotData.size());
 	m_heatLossSplineCurve->attach(m_ui->widgetPlotHeatLossSpline);
-	m_heatLossSplineCurve->plot()->replot();
+	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, m_heatLossSplineXPlotData.size());
+
+	m_heatLossSplineZoomer = new QwtPlotZoomer(m_ui->widgetPlotHeatLossSpline->canvas() );
+	m_heatLossSplineZoomer->setZoomBase();
 }
 
 
