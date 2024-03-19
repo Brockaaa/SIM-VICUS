@@ -26,6 +26,8 @@
 #include "SVNetworkComponentEditWidget.h"
 #include "ui_SVNetworkComponentEditWidget.h"
 
+#include <algorithm>
+
 #include "SVSettings.h"
 #include "SVDatabaseEditDialog.h"
 #include "SVMainWindow.h"
@@ -48,6 +50,8 @@
 #include <NANDRAD_HydraulicNetworkComponent.h>
 
 #include <IBK_Parameter.h>
+#include <IBK_FileUtils.h>
+#include <IBK_CSVReader.h>
 
 #include <QScrollBar>
 
@@ -81,6 +85,7 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 	// create chart and curve
 	configureChart(m_ui->widgetPlot1);
 	configureChart(m_ui->widgetPlot2);
+	configureChart(m_ui->widgetPlotHeatLossSpline);
 
 	// workaround for stubborn layout bug
 	m_ui->tableWidgetParameters->setMaximumHeight(0);
@@ -265,6 +270,8 @@ void SVNetworkComponentEditWidget::update()
 	// set widgets in pageHeatLossSpline to appropriate values
 	m_ui->checkBoxHeatLossSplineDemandCurveDefinition->setChecked(m_current->m_heatExchange.m_individualHeatFlux);
 	on_checkBoxHeatLossSplineDemandCurveDefinition_clicked(m_current->m_heatExchange.m_individualHeatFlux);
+
+	handleTsv();
 
 }
 
@@ -700,6 +707,49 @@ void SVNetworkComponentEditWidget::updatePolynomPlot() {
 
 }
 
+void SVNetworkComponentEditWidget::handleTsv()
+{
+	qDebug() << "Loading TSV";
+	QString directory = "/home/sandisk/SHK/Subnetwork/MFH4.0.tsv";
+	//QFile file(directory);
+	//if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+	//	qDebug() << "Could not load TSV successfully";
+	//	return;
+	//}
+	//qDebug() << "TSV succesfully loaded";
+	//file.close();
+
+	IBK::Path ibkDirectory(directory.toStdString());
+	IBK::CSVReader reader;
+	try {
+		reader.read(ibkDirectory);
+	}
+	catch (...) {
+		qDebug() << "Could not load TSV successfully";
+	}
+
+	qDebug() << "TSV succesfully loaded";
+	for(auto column : reader.m_captions){
+		qDebug() << "Column: " << QString::fromStdString(column);
+	}
+	qDebug() << "values: " << reader.m_values[4][1];
+	m_heatLossSplineXData = reader.colData(0);
+	m_heatLossSplineYData = reader.colData(1);
+	m_heatLossSplineXPlotData = m_heatLossSplineXData;
+	m_heatLossSplineYPlotData = m_heatLossSplineYData;
+
+	m_heatLossSplineMaxYValue = *(std::max_element(m_heatLossSplineYData.begin(), m_heatLossSplineYData.end()));
+
+	qDebug() << "Maximum Y value: " << m_heatLossSplineMaxYValue;
+
+	m_ui->widgetPlotHeatLossSpline->setAxisTitle(QwtPlot::xBottom, "reader.m_captions[0]");
+	m_ui->widgetPlotHeatLossSpline->setAxisTitle(QwtPlot::yLeft, "reader.m_captions[1]");
+	m_heatLossSplineCurve = new QwtPlotCurve("Data");
+	m_heatLossSplineCurve->setSamples(m_heatLossSplineXPlotData.data(), m_heatLossSplineYPlotData.data(), m_heatLossSplineXPlotData.size());
+	m_heatLossSplineCurve->attach(m_ui->widgetPlotHeatLossSpline);
+	m_heatLossSplineCurve->plot()->replot();
+}
+
 
 void SVNetworkComponentEditWidget::on_toolButtonSchedule1_clicked()
 {
@@ -1024,13 +1074,16 @@ void SVNetworkComponentEditWidget::on_checkBoxHeatLossSplineDemandCurveDefinitio
 		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(false);
 		m_ui->labelHeatLossSplineFloorAreaUnit->setEnabled(false);
 		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(false);
+		m_ui->labelHeatLossSplineDomesticHotWaterDemand->setEnabled(false);
+		m_ui->lineEditHeatLossSplineDomesticHotWaterDemand->setEnabled(false);
+		m_ui->labelHeatLossSplineDomesticHotWaterDemandUnit->setEnabled(false);
+		m_ui->widgetPlotHeatLossSpline->setEnabled(false);
 		m_ui->lineEditHeatLossSplineFloorArea->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value());
+		m_ui->lineEditHeatLossSplineDomesticHotWaterDemand->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_DomesticHotWaterDemand].get_value());
 	} else {
 		m_ui->comboBoxHeatLossSplineUserBuildingType->setEnabled(true);
-		on_comboBoxHeatLossSplineUserBuildingType_activated(static_cast<int>(m_current->m_heatExchange.m_buildingType));
+		on_comboBoxHeatLossSplineUserBuildingType_activated(m_ui->comboBoxHeatLossSplineUserBuildingType->currentIndex());
 	}
-
-
 }
 
 
@@ -1039,15 +1092,17 @@ void SVNetworkComponentEditWidget::on_comboBoxHeatLossSplineUserBuildingType_act
 	m_ui->comboBoxHeatLossSplineUserBuildingType->setCurrentIndex(index);
 	m_current->m_heatExchange.m_buildingType = static_cast<VICUS::NetworkHeatExchange::BuildingType>(index);
 	qDebug() << "building Type set: " << VICUS::KeywordListQt::Keyword("NetworkHeatExchange::BuildingType", index);
-	if(m_current->m_heatExchange.m_buildingType != VICUS::NetworkHeatExchange::BT_UserDefineBuilding){
+	if(m_current->m_heatExchange.m_buildingType != VICUS::NetworkHeatExchange::BT_UserDefineBuilding && m_current->m_heatExchange.m_buildingType != VICUS::NetworkHeatExchange::NUM_BT){
 		m_ui->checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues->setEnabled(true);
 		m_ui->checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand->setEnabled(true);
 		m_ui->labelHeatLossSplineFloorArea->setEnabled(true);
 		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(true);
 		m_ui->labelHeatLossSplineFloorAreaUnit->setEnabled(true);
 		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(true);
-		on_checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues_stateChanged(static_cast<int>(m_current->m_heatExchange.m_areaRelatedValues));
-		on_checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand_stateChanged(static_cast<int>(m_current->m_heatExchange.m_withCoolingDemand));
+		m_ui->labelHeatLossSplineDomesticHotWaterDemand->setEnabled(true);
+		m_ui->lineEditHeatLossSplineDomesticHotWaterDemand->setEnabled(true);
+		m_ui->labelHeatLossSplineDomesticHotWaterDemandUnit->setEnabled(true);
+		m_ui->widgetPlotHeatLossSpline->setEnabled(true);
 		m_ui->lineEditHeatLossSplineFloorArea->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value());
 		m_ui->lineEditHeatLossSplineDomesticHotWaterDemand->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_DomesticHotWaterDemand].get_value());
 	} else {
@@ -1057,6 +1112,10 @@ void SVNetworkComponentEditWidget::on_comboBoxHeatLossSplineUserBuildingType_act
 		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(false);
 		m_ui->labelHeatLossSplineFloorAreaUnit->setEnabled(false);
 		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(false);
+		m_ui->labelHeatLossSplineDomesticHotWaterDemand->setEnabled(false);
+		m_ui->lineEditHeatLossSplineDomesticHotWaterDemand->setEnabled(false);
+		m_ui->labelHeatLossSplineDomesticHotWaterDemandUnit->setEnabled(false);
+		m_ui->widgetPlotHeatLossSpline->setEnabled(false);
 		m_ui->lineEditHeatLossSplineFloorArea->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value());
 		m_ui->lineEditHeatLossSplineDomesticHotWaterDemand->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_DomesticHotWaterDemand].get_value());
 	}
@@ -1078,3 +1137,26 @@ void SVNetworkComponentEditWidget::on_lineEditHeatLossSplineFloorArea_editingFin
 {
 	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_FloorArea, m_ui->lineEditHeatLossSplineFloorArea->value());
 }
+
+void SVNetworkComponentEditWidget::on_horizontalSliderHeatLossSplinePlot_sliderMoved(int position)
+{
+	double k = position < 100 ? (position / 100.0d) : std::pow(position / 100.0d, 4);
+	double maxValue = m_heatLossSplineMaxYValue;
+	// (std::exp(-((maxValue-y)) / maxValue))
+
+	auto scaling = [k,maxValue](double y){
+		double relativeValue = y / maxValue;
+		double adjustedRelativeValue = std::pow(relativeValue,k);
+		double adjustedAbsoluteValue = maxValue * adjustedRelativeValue;
+		//qDebug() << "rangeOfValue: " << QString::number(rangeOfValue);
+		//qDebug() << "logisticValue: " << QString::number(logisticValue);
+		//qDebug() << "Original Value: " << QString::number(y) << " adjusted Value: " << QString::number(adjustedValue);
+		return adjustedAbsoluteValue;
+	};
+
+	std::transform(m_heatLossSplineYData.begin(), m_heatLossSplineYData.end(), m_heatLossSplineYPlotData.begin(), scaling );
+	m_heatLossSplineCurve->setSamples(m_heatLossSplineXPlotData.data(), m_heatLossSplineYPlotData.data(), m_heatLossSplineXPlotData.size());
+	m_heatLossSplineCurve->plot()->replot();
+	qDebug() << "Max Value after adjustment" << *(std::max_element(m_heatLossSplineYPlotData.begin(), m_heatLossSplineYPlotData.end()));
+}
+

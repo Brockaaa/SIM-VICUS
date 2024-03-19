@@ -112,12 +112,16 @@ private slots:
 
 	void on_lineEditHeatLossSplineFloorArea_editingFinishedSuccessfully();
 
+	void on_horizontalSliderHeatLossSplinePlot_sliderMoved(int position);
+
 private:
 	void updateParameterTableWidget() const;
 
 	void updatePolynomCoeffTableWidget() const;
 
 	void updatePolynomPlot();
+
+	void handleTsv();
 
 	Ui::SVNetworkComponentEditWidget		*m_ui;
 
@@ -144,6 +148,19 @@ private:
 
 	/*! Vector to temporarily hold all NetworkHeatExchange that were modified after a Block was selected in the scene */
 	std::vector<VICUS::NetworkHeatExchange>	m_vectorTempHeatExchange;
+
+	/*! Curve visible in HeatLossSpline plot */
+	QwtPlotCurve*							m_heatLossSplineCurve;
+
+	/*! Data vectors to store the original values of the tsv file */
+	std::vector<double>						m_heatLossSplineXData;
+	std::vector<double>						m_heatLossSplineYData;
+	double									m_heatLossSplineMaxYValue;
+
+	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
+	std::vector<double>						m_heatLossSplineXPlotData;
+	std::vector<double>						m_heatLossSplineYPlotData;
+
 };
 
 #endif // SVDBNetworkComponentEditWidgetH
