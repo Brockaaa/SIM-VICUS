@@ -137,5 +137,13 @@
         <file>icons/dark/png/checkbox_unchecked.png</file>
         <file>icons/dark/png/edit.png</file>
         <file>icons/light/png/edit.png</file>
+        <file>icons/light/svg/network_icons/dynamicpipe.svg</file>
+        <file>icons/light/svg/network_icons/heatercooler.svg</file>
+        <file>icons/light/svg/network_icons/heatexchanger.svg</file>
+        <file>icons/light/svg/network_icons/heatpump.svg</file>
+        <file>icons/light/svg/network_icons/pump.svg</file>
+        <file>icons/light/svg/network_icons/simplepipe.svg</file>
+        <file>icons/light/svg/network_icons/simplevalve.svg</file>
+        <file>icons/light/svg/network_icons/valve.svg</file>
     </qresource>
 </RCC>
