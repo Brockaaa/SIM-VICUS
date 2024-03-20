@@ -41,7 +41,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabComponent">
       <property name="sizePolicy">
@@ -952,7 +952,7 @@
                       </widget>
                      </item>
                      <item row="1" column="1">
-                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatingEnergyDemand"/>
+                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineHeatingEnergyDemand"/>
                      </item>
                      <item row="0" column="2">
                       <widget class="QLabel" name="label_2">
@@ -962,7 +962,7 @@
                       </widget>
                      </item>
                      <item row="0" column="1">
-                      <widget class="QtExt::ValidatingLineEdit" name="lineEditMaxHeatingLoad"/>
+                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineMaximumHeatingLoad"/>
                      </item>
                      <item row="0" column="0">
                       <widget class="QLabel" name="label">

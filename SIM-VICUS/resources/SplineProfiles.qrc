@@ -1,2 +1,6 @@
-<!DOCTYPE RCC>
-<RCC version="1.0"/>
+<RCC>
+    <qresource prefix="/">
+    	<file>demandProfiles/EFH1.tsv</file>
+    	<file>demandProfiles/MFH4.0.tsv</file>
+    </qresource>
+</RCC>

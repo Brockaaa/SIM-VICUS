@@ -115,6 +115,8 @@ private slots:
 
 	void on_horizontalSliderHeatLossSplinePlot_sliderMoved(int position);
 
+	void on_lineEditHeatLossSplineMaximumHeatingLoad_editingFinishedSuccessfully();
+
 private:
 	void updateParameterTableWidget() const;
 
@@ -123,6 +125,10 @@ private:
 	void updatePolynomPlot();
 
 	void handleTsv();
+
+	double calculateHeatingEnergyDemand();
+
+	void calculateNewHeatLossSplineYData(double k, std::vector<double>& vectorToSaveNewValues);
 
 	Ui::SVNetworkComponentEditWidget		*m_ui;
 
@@ -158,6 +164,9 @@ private:
 	std::vector<double>						m_heatLossSplineXData;
 	std::vector<double>						m_heatLossSplineYData;
 	double									m_heatLossSplineMaxYValue;
+
+	/*! Parameter to adjust curve to reach desired heatingEnergydemand */
+	double									m_k = 1;
 
 	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
 	std::vector<double>						m_heatLossSplineXPlotData;
