@@ -68,11 +68,18 @@ void eliminateCollinearPoints(std::vector<IBKMK::Vector2D> & polygon, double eps
 /*! Takes the vector v and enlarges the current bounding box defined through 'minVec' and 'maxVec'. */
 void enlargeBoundingBox(const IBKMK::Vector2D & v, IBKMK::Vector2D & minVec, IBKMK::Vector2D & maxVec);
 
-/*! Takes two 2D polygons and checks for intersection */
-bool polyIntersect2D(const std::vector<IBKMK::Vector2D> & vertsA, const std::vector<IBKMK::Vector2D> & vertsB);
+/*! Takes two 2D polygons and checks for intersection.
+ *  Parameter roundNear = true will prevent returning true for cases that only have a small overlap
+*/
+bool polyIntersect2D(const std::vector<IBKMK::Vector2D> & vertsA, const std::vector<IBKMK::Vector2D> & vertsB, bool roundNear = false);
 
 /*! Takes a 2D point and determines whether it is located within the square created by 2 other 2d points. */
 bool pointBetweenPoints2D(const Vector2D &point, const Vector2D &otherA, const Vector2D &otherB);
+
+/*! Returns distance of a point from a line defined by 2 points
+	https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+*/
+double lineToPointDistance2D(const Vector2D &point, const Vector2D &otherA, const Vector2D &otherB);
 
 } // namespace IBKMK
 

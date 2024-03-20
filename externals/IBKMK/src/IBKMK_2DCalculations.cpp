@@ -177,28 +177,101 @@ void enlargeBoundingBox(const Vector2D & v, Vector2D & minVec, Vector2D & maxVec
 	maxVec.m_y = std::max(maxVec.m_y, v.m_y);
 }
 
-bool polyIntersect2D(const std::vector<Vector2D> & vertsA, const std::vector<Vector2D> & vertsB) {
+bool polyIntersect2D(const std::vector<Vector2D> & vertsA, const std::vector<Vector2D> & vertsB, bool roundNear) {
 	IBKMK::Vector2D intersectP;
 	for (unsigned int i = 0, count = vertsA.size(); i<count; ++i ) {
+		Vector2D p1 = vertsA.at(i);
+		Vector2D p2 = vertsA.at((i+1)%vertsA.size());
+
 		// check if any of the edge centerpoints are contained within the other polygon
 		// this is a catch-all solution for all cases of partial overlapping intersections that
 		// would go undetected by testing for edge intersections, as well as edge-intersection-free containment
-		if (IBKMK::pointInPolygon(vertsB, (vertsA[(i+1)%vertsA.size()]+vertsA[i])*0.5) == 1) {
-			return true;
+
+		if (IBKMK::pointInPolygon(vertsB, (p1+p2)*0.5) == 1) {
+			if (roundNear) {
+				Vector2D centerPoint = (p1+p2)*0.5;
+				bool nearLine = false;
+
+				for (unsigned int j = 0, count = vertsB.size(); j<count; ++j ) {
+					Vector2D other1 = vertsB.at(j);
+					Vector2D other2 = vertsB.at((j+1)%vertsB.size());
+					if (IBK::near_zero(lineToPointDistance2D(centerPoint, other1, other2)) && pointBetweenPoints2D(centerPoint, other1, other2)) {
+						nearLine = true;
+						break;
+					}
+				}
+				if (!nearLine) return true;
+
+			} else return true;
 		}
+
 		// check for 2D polygon line intersections
-		if (IBKMK::intersectsLine2D(vertsB, vertsA[(i+1)%vertsA.size()], vertsA[i], intersectP)) {
-			return true;
+		for (unsigned int j = 0, count = vertsB.size(); j<count; ++j ) {
+			Vector2D other1 = vertsB.at(j);
+			Vector2D other2 = vertsB.at((j+1)%vertsB.size());
+
+			IBK::Line line(p1, p2);
+			IBK::Line otherLine(other1, other2);
+
+			IBK::point2D<double> ip, ip2;
+			if (line.intersects(otherLine, ip, ip2) > 0) {
+				if (roundNear) {
+					// if scalar product of edge B and orthogonal of edge A is near_zero -> vectors are in parallel
+					// if vectors are not in parallel (and intersect) and intersectionPoint is not equal to one of the edge verts -> return true
+					Vector2D iv(ip);
+					if (!IBK::near_zero((other2-other1).scalarProduct(Vector2D((p2-p1).m_y,-(p2-p1).m_x))) &&
+							!(IBK::near_zero((iv-p1).magnitude()) || IBK::near_zero((iv-p2).magnitude()) ||
+							  IBK::near_zero((iv-other1).magnitude()) || IBK::near_zero((iv-other2).magnitude()) ))
+						return true;
+				} else return true;
+			}
 		}
 	}
+
 	for (unsigned int i = 0, count = vertsB.size(); i<count; ++i ) {
-		if (IBKMK::pointInPolygon(vertsA, (vertsB[(i+1)%vertsB.size()]+vertsB[i])*0.5) == 1) {
-			return true;
+
+		Vector2D p1 = vertsB.at(i);
+		Vector2D p2 = vertsB.at((i+1)%vertsB.size());
+
+		if (IBKMK::pointInPolygon(vertsA, (p1+p2)*0.5) == 1) {
+			if (roundNear) {
+				Vector2D centerPoint = (p1+p2)*0.5;
+				bool nearLine = false;
+
+				for (unsigned int j = 0, count = vertsA.size(); j<count; ++j ) {
+					Vector2D other1 = vertsA.at(j);
+					Vector2D other2 = vertsA.at((j+1)%vertsA.size());
+					if (IBK::near_zero(lineToPointDistance2D(centerPoint, other1, other2)) && pointBetweenPoints2D(centerPoint, other1, other2)) {
+						nearLine = true;
+						break;
+					}
+				}
+				if (!nearLine) return true;
+
+			} else return true;
 		}
-		if (IBKMK::intersectsLine2D(vertsA, vertsB[(i+1)%vertsB.size()], vertsB[i], intersectP)) {
-			return true;
+
+		// check for 2D polygon line intersections
+		for (unsigned int j = 0, count = vertsA.size(); j<count; ++j ) {
+			Vector2D other1 = vertsA.at(j);
+			Vector2D other2 = vertsA.at((j+1)%vertsA.size());
+
+			IBK::Line line(p1, p2);
+			IBK::Line otherLine(other1, other2);
+
+			IBK::point2D<double> ip, ip2;
+			if (line.intersects(otherLine, ip, ip2) > 0) {
+				if (roundNear) {
+					Vector2D iv(ip);
+					if (!IBK::near_zero((other2-other1).scalarProduct(Vector2D((p2-p1).m_y,-(p2-p1).m_x))) &&
+							!(IBK::near_zero((iv-p1).magnitude()) || IBK::near_zero((iv-p2).magnitude()) ||
+							  IBK::near_zero((iv-other1).magnitude()) || IBK::near_zero((iv-other2).magnitude()) ))
+						return true;
+				} else return true;
+			}
 		}
 	}
+
 	return false;
 }
 
@@ -207,6 +280,12 @@ bool pointBetweenPoints2D(const Vector2D &point, const Vector2D &otherA, const V
 		 && (point.m_x < std::max(otherA.m_x, otherB.m_x) || IBK::nearly_equal<5>(point.m_x, std::max(otherA.m_x, otherB.m_x)))
 		 && (point.m_y > std::min(otherA.m_y, otherB.m_y) || IBK::nearly_equal<5>(point.m_y, std::min(otherA.m_y, otherB.m_y)))
 		 && (point.m_y < std::max(otherA.m_y, otherB.m_y) || IBK::nearly_equal<5>(point.m_y, std::max(otherA.m_y, otherB.m_y))));
+}
+
+double lineToPointDistance2D(const Vector2D &point, const Vector2D &otherA, const Vector2D &otherB) {
+	double length = std::sqrt(std::pow((otherB.m_x-otherA.m_x),2)+std::pow(otherB.m_y-otherA.m_y,2));
+	if (length == 0) return std::sqrt(std::pow((otherA.m_x-point.m_x),2)+std::pow(otherA.m_y-point.m_y,2));
+	return std::abs(((otherB.m_x-otherA.m_x)*(otherA.m_y-point.m_y))-((otherA.m_x-point.m_x)*(otherB.m_y-otherA.m_y))) / length;
 }
 
 
