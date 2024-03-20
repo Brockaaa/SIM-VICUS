@@ -13,7 +13,7 @@
     <x>0</x>
     <y>0</y>
     <width>1051</width>
-    <height>222</height>
+    <height>593</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -175,8 +175,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>352</width>
-            <height>175</height>
+            <width>332</width>
+            <height>546</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="scrollAreaLayout">
