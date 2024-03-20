@@ -751,13 +751,16 @@ void SVNetworkComponentEditWidget::handleTsv()
 
 	m_ui->widgetPlotHeatLossSpline->setAxisTitle(QwtPlot::xBottom, "Time [h]");
 	m_ui->widgetPlotHeatLossSpline->setAxisTitle(QwtPlot::yLeft, "Heating Demand [W]");
+	if(m_heatLossSplineCurve != nullptr) delete m_heatLossSplineCurve;
 	m_heatLossSplineCurve = new QwtPlotCurve("Data");
 	m_heatLossSplineCurve->setSamples(m_heatLossSplineXPlotData.data(), m_heatLossSplineYPlotData.data(), m_heatLossSplineXPlotData.size());
 	m_heatLossSplineCurve->attach(m_ui->widgetPlotHeatLossSpline);
 	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, m_heatLossSplineXPlotData.size());
 
+	if(m_heatLossSplineZoomer != nullptr) delete m_heatLossSplineZoomer;
 	m_heatLossSplineZoomer = new QwtPlotZoomer(m_ui->widgetPlotHeatLossSpline->canvas() );
 	m_heatLossSplineZoomer->setZoomBase();
+	m_heatLossSplineCurve->plot()->replot();
 }
 
 double SVNetworkComponentEditWidget::calculateHeatingEnergyDemand()

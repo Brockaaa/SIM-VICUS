@@ -157,8 +157,8 @@ private:
 	std::vector<VICUS::NetworkHeatExchange>	m_vectorTempHeatExchange;
 
 	/*! Curve visible in HeatLossSpline plot */
-	QwtPlotCurve							*m_heatLossSplineCurve;
-	QwtPlotZoomer							*m_heatLossSplineZoomer;
+	QwtPlotCurve							*m_heatLossSplineCurve = nullptr;
+	QwtPlotZoomer							*m_heatLossSplineZoomer = nullptr;
 
 	/*! Data vectors to store the original values of the tsv file */
 	std::vector<double>						m_heatLossSplineXData;
