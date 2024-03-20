@@ -269,11 +269,11 @@ void SVNetworkComponentEditWidget::update()
 		on_radioButtonHeatLossConstantPredef_clicked();
 	}
 
+	handleTsv();
+
 	// set widgets in pageHeatLossSpline to appropriate values
 	m_ui->checkBoxHeatLossSplineDemandCurveDefinition->setChecked(m_current->m_heatExchange.m_individualHeatFlux);
 	on_checkBoxHeatLossSplineDemandCurveDefinition_clicked(m_current->m_heatExchange.m_individualHeatFlux);
-
-	handleTsv();
 
 }
 
@@ -766,7 +766,7 @@ void SVNetworkComponentEditWidget::handleTsv()
 double SVNetworkComponentEditWidget::calculateHeatingEnergyDemand()
 {
 	double heatingEnergyDemand = 0;
-	for(int i = 0; i < m_heatLossSplineYPlotData.size(); i++){
+	for(unsigned int i = 0; i < m_heatLossSplineYPlotData.size(); i++){
 		heatingEnergyDemand += m_heatLossSplineYPlotData[i];
 	}
 	return heatingEnergyDemand;
@@ -787,7 +787,7 @@ void SVNetworkComponentEditWidget::calculateNewHeatLossSplineYData(double k, std
 		return adjustedAbsoluteValue;
 	};
 
-	vectorToSaveNewValues.reserve(m_heatLossSplineXData.size());
+	vectorToSaveNewValues.resize(m_heatLossSplineXData.size());
 	std::transform(m_heatLossSplineYData.begin(), m_heatLossSplineYData.end(), vectorToSaveNewValues.begin(), scaling );
 }
 
@@ -1120,6 +1120,13 @@ void SVNetworkComponentEditWidget::on_checkBoxHeatLossSplineDemandCurveDefinitio
 	} else {
 		m_ui->comboBoxHeatLossSplineUserBuildingType->setEnabled(true);
 		on_comboBoxHeatLossSplineUserBuildingType_activated(m_ui->comboBoxHeatLossSplineUserBuildingType->currentIndex());
+		if(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value == 0.0) {
+			m_ui->lineEditHeatLossSplineMaximumHeatingLoad->setValue(m_heatLossSplineMaxYValue / 1000.0d);
+		}
+		else {
+			m_ui->lineEditHeatLossSplineMaximumHeatingLoad->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value / 1000);
+		}
+		m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(calculateHeatingEnergyDemand() / 1000);
 	}
 }
 
@@ -1174,6 +1181,7 @@ void SVNetworkComponentEditWidget::on_horizontalSliderHeatLossSplinePlot_sliderM
 	calculateNewHeatLossSplineYData(k, m_heatLossSplineYPlotData);
 	m_heatLossSplineCurve->setSamples(m_heatLossSplineXPlotData.data(), m_heatLossSplineYPlotData.data(), m_heatLossSplineXPlotData.size());
 	m_heatLossSplineCurve->plot()->replot();
+	m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(calculateHeatingEnergyDemand() / 1000);
 }
 
 
@@ -1183,5 +1191,6 @@ void SVNetworkComponentEditWidget::on_lineEditHeatLossSplineMaximumHeatingLoad_e
 	calculateNewHeatLossSplineYData(m_k, m_heatLossSplineYPlotData);
 	m_heatLossSplineCurve->setSamples(m_heatLossSplineXPlotData.data(), m_heatLossSplineYPlotData.data(), m_heatLossSplineXPlotData.size());
 	m_heatLossSplineCurve->plot()->replot();
+	m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(calculateHeatingEnergyDemand() / 1000);
 }
 
