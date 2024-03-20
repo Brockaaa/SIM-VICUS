@@ -103,6 +103,8 @@ void NetworkHeatExchange::readXML(const TiXmlElement * element) {
 				if (!success)
 					IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_NAME).arg(p.name).arg(cName).arg(c->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 			}
+			else if (cName == "UserDefinedTsvFile")
+				m_userDefinedTsvFile = IBK::Path(c->GetText());
 			else if (cName == "ModelType") {
 				try {
 					m_modelType = (ModelType)KeywordList::Enumeration("NetworkHeatExchange::ModelType", c->GetText());
@@ -158,6 +160,8 @@ TiXmlElement * NetworkHeatExchange::writeXML(TiXmlElement * parent) const {
 			m_splPara[i].writeXML(e);
 		}
 	}
+	if (m_userDefinedTsvFile.isValid())
+		TiXmlElement::appendSingleAttributeElement(e, "UserDefinedTsvFile", nullptr, std::string(), m_userDefinedTsvFile.str());
 	return e;
 }
 

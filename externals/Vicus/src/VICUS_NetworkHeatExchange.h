@@ -47,14 +47,6 @@ class NetworkHeatExchange : AbstractDBElement
 public:
 	NetworkHeatExchange() = default;
 
-	// *** PUBLIC MEMBER FUNCTIONS ***
-
-	VICUS_READWRITE_OVERRIDE
-		VICUS_COMP(NetworkHeatExchange)
-		VICUS_COMPARE_WITH_ID
-
-		ComparisonResult equal(const AbstractDBElement * other) const;
-
 	/*! Defines the type of heat exchange */
 	enum ModelType {
 		T_TemperatureConstant,				// Keyword: TemperatureConstant			'Constant temperature'
@@ -99,8 +91,7 @@ public:
 	};
 
 	enum BuildingType {
-		BT_SingleFamilyHouse,					// Keyword: SingleFamilyHouse
-		BT_MultiHouseFamily,					// Keyword: MultiHouseFamily
+		BT_ResidentialBuilding,					// Keyword: ResidentialBuilding
 		BT_OfficeBuilding,						// Keyword: OfficeBuilding
 		BT_UserDefineBuilding,					// Keyword: UserDefineBuilding
 		NUM_BT
@@ -110,6 +101,16 @@ public:
 		AT_GroundTemperature,
 		NUM_AT
 	};
+
+	// *** PUBLIC MEMBER FUNCTIONS ***
+
+	VICUS_READWRITE_OVERRIDE
+	VICUS_COMP(NetworkHeatExchange)
+	VICUS_COMPARE_WITH_ID
+
+	ComparisonResult equal(const AbstractDBElement * other) const;
+
+	void setDefaultValues(ModelType modelType);
 
 	// *** Public Member variables ***
 
@@ -133,6 +134,9 @@ public:
 
 	/*! Time-series of heat flux or temperature (can be spline or tsv-file). */
 	NANDRAD::LinearSplineParameter		m_splPara[NUM_SPL];							// XML:E
+
+	/*! IBK::Path to user defined tsv-file to be displayed in the plot */
+	IBK::Path							m_userDefinedTsvFile;						// XML:E
 
 };
 

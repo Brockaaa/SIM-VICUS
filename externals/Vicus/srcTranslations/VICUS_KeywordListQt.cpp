@@ -327,8 +327,7 @@ KeywordListQt::KeywordListQt() {
 	tr("DomesticHotWaterDemandAreaRelated");
 	tr("Temperature for heat exchange");
 	tr("Constant heat flux out of the element (heat loss)");
-	tr("SingleFamilyHouse");
-	tr("MultiHouseFamily");
+	tr("ResidentialBuilding");
 	tr("OfficeBuilding");
 	tr("UserDefineBuilding");
 	tr("SubStation");

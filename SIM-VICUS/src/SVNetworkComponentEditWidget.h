@@ -103,7 +103,7 @@ private slots:
 
 	void on_lineEditTemperatureConstantTemperature_editingFinishedSuccessfully();
 
-	void on_checkBoxHeatLossSplineDemandCurveDefinition_clicked(bool checked);
+	void on_checkBoxHeatLossSplineIndividual_clicked(bool checked);
 
 	void on_comboBoxHeatLossSplineUserBuildingType_activated(int index);
 
@@ -162,7 +162,7 @@ private:
 
 	/*! Data vectors to store the original values of the tsv file */
 	std::vector<double>						m_heatLossSplineXData;
-	std::vector<double>						m_heatLossSplineYData;
+	std::vector<double>						m_heatLossSplineYData; // TODO: daraus map machen key maxValue, value std::vector
 	double									m_heatLossSplineMaxYValue;
 
 	/*! Parameter to adjust curve to reach desired heatingEnergydemand */

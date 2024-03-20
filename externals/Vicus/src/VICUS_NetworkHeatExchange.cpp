@@ -25,6 +25,8 @@
 
 #include "VICUS_NetworkHeatExchange.h"
 
+#include "VICUS_KeywordList.h"
+
 namespace VICUS {
 
 AbstractDBElement::ComparisonResult NetworkHeatExchange::equal(const AbstractDBElement * other) const
@@ -44,6 +46,17 @@ AbstractDBElement::ComparisonResult NetworkHeatExchange::equal(const AbstractDBE
 	}
 
 	return Equal;
+}
+
+void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelType)
+{
+	m_modelType = modelType;
+	switch(modelType){
+		case T_HeatLossSpline:
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 10000);
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 5000);
+			m_buildingType = BT_ResidentialBuilding;
+	}
 }
 
 } //namespace VICUS
