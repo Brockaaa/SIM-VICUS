@@ -1,6 +1,8 @@
 <RCC>
     <qresource prefix="/">
-    	<file>demandProfiles/EFH1.tsv</file>
-    	<file>demandProfiles/MFH4.0.tsv</file>
+    	<file>demandProfiles/Office_CoolingLoad.tsv</file>
+    	<file>demandProfiles/Office_HeatingLoad.tsv</file>
+    	<file>demandProfiles/Residential_CoolingLoad.tsv</file>
+    	<file>demandProfiles/Residential_HeatingLoad.tsv</file>
     </qresource>
 </RCC>

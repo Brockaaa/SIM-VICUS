@@ -56,6 +56,7 @@
 
 #include <QScrollBar>
 #include <QTemporaryFile>
+#include <QPushButton>
 
 #include <QtExt_LanguageHandler.h>
 #include <QtExt_Locale.h>
@@ -254,11 +255,14 @@ void SVNetworkComponentEditWidget::update()
 	// set the comboBox and stackedWidget to the HE modeltype of the current component
 	for(int index = 0; index < m_ui->comboBoxHeatExchange->count(); index++){
 		if(m_current->m_heatExchange.m_modelType == static_cast<VICUS::NetworkHeatExchange::ModelType>(m_ui->comboBoxHeatExchange->itemData(index).toInt())){
-			m_ui->comboBoxHeatExchange->setCurrentIndex(index);
+			on_comboBoxHeatExchange_activated(index);
 			m_ui->stackedWidgetHeatExchange->setCurrentIndex(static_cast<int>(m_current->m_heatExchange.m_modelType));
 		}
 	}
+}
 
+void SVNetworkComponentEditWidget::updatePageHeatLossConstant()
+{
 	// set label and lineEdit in pageHeatLossConstant invisible
 	if(m_current->m_heatExchange.m_individualHeatFlux == true){
 		m_ui->radioButtonHeatLossConstantUser->setChecked(true);
@@ -267,7 +271,10 @@ void SVNetworkComponentEditWidget::update()
 		m_ui->radioButtonHeatLossConstantPredef->setChecked(true);
 		on_radioButtonHeatLossConstantPredef_clicked();
 	}
+}
 
+void SVNetworkComponentEditWidget::updatePageHeatLossSpline()
+{
 	handleTsv();
 
 	// set widgets in pageHeatLossSpline to appropriate values
@@ -710,7 +717,7 @@ void SVNetworkComponentEditWidget::updatePolynomPlot() {
 void SVNetworkComponentEditWidget::handleTsv()
 {
 	qDebug() << "Loading TSV";
-	QString directory = ":/demandProfiles/MFH4.0.tsv";
+	QString directory = ":/demandProfiles/Residential_HeatingLoad.tsv";
 	QTemporaryFile tempFile;
 	if (tempFile.open()) {
 		// Copy the resource to the temporary file
@@ -741,11 +748,16 @@ void SVNetworkComponentEditWidget::handleTsv()
 	}
 	qDebug() << "values: " << reader.m_values[4][1];
 	m_heatLossSplineXData = reader.colData(0);
-	m_heatLossSplineYData = reader.colData(1);
+
+	for(int i = 1; i < reader.m_nColumns; i++){
+		const std::vector<double>& colData = reader.colData(i);
+		double maxValue = *(std::max_element(colData.begin(), colData.end()));
+		m_heatLossSplineMaxYValues.push_back(maxValue);
+		m_mapHeatLossSplineYData[maxValue] = reader.colData(i);
+	}
+
 	m_heatLossSplineXPlotData = m_heatLossSplineXData;
 	calculateNewHeatLossSplineYData(1, m_heatLossSplineYPlotData);
-
-	m_heatLossSplineMaxYValue = *(std::max_element(m_heatLossSplineYData.begin(), m_heatLossSplineYData.end()));
 
 	m_ui->widgetPlotHeatLossSpline->setAxisTitle(QwtPlot::xBottom, "Time [h]");
 	m_ui->widgetPlotHeatLossSpline->setAxisTitle(QwtPlot::yLeft, "Heating Demand [W]");
@@ -772,9 +784,9 @@ double SVNetworkComponentEditWidget::calculateHeatingEnergyDemand()
 
 void SVNetworkComponentEditWidget::calculateNewHeatLossSplineYData(double k, std::vector<double> & vectorToSaveNewValues)
 {
-	double maxValue = m_heatLossSplineMaxYValue;
 	double maxValueUser = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value;
-	if(maxValueUser == 0.0) maxValueUser = maxValue;
+	double maxValue = maxYValueForMap();
+	if (maxValueUser == 0.0) maxValueUser = maxValue;
 	double ratio =  maxValueUser / maxValue;
 
 	auto scaling = [k, maxValueUser, ratio](double y){
@@ -786,7 +798,8 @@ void SVNetworkComponentEditWidget::calculateNewHeatLossSplineYData(double k, std
 	};
 
 	vectorToSaveNewValues.resize(m_heatLossSplineXData.size());
-	std::transform(m_heatLossSplineYData.begin(), m_heatLossSplineYData.end(), vectorToSaveNewValues.begin(), scaling );
+	std::vector<double>& valuesToBeTransformed = m_mapHeatLossSplineYData[maxValue];
+	std::transform(valuesToBeTransformed.begin(), valuesToBeTransformed.end(), vectorToSaveNewValues.begin(), scaling );
 }
 
 
@@ -1059,6 +1072,20 @@ void SVNetworkComponentEditWidget::on_comboBoxHeatExchange_activated(int index)
 	//take newly selected Heat Exchanger from vector
 	m_current->m_heatExchange = m_vectorTempHeatExchange[index];
 
+	switch(m_current->m_heatExchange.m_modelType){
+		case VICUS::NetworkHeatExchange::T_HeatingDemandSpaceHeating:
+			updatePageHeatingDemandSpaceHeating();
+			break;
+		case VICUS::NetworkHeatExchange::T_HeatLossConstant:
+			updatePageHeatLossConstant();
+			break;
+		case VICUS::NetworkHeatExchange::T_HeatLossSplineCondenser:
+		case VICUS::NetworkHeatExchange::T_HeatLossSpline:
+			updatePageHeatLossSpline();
+			break;
+		default: break;
+	}
+
 	// change stackedWidget to the appropriate page
 	m_ui->stackedWidgetHeatExchange->setCurrentIndex(static_cast<int>(modelType));
 }
@@ -1109,15 +1136,14 @@ void SVNetworkComponentEditWidget::on_checkBoxHeatLossSplineIndividual_clicked(b
 		m_ui->widgetDefineHeatExchangeSpline->setEnabled(false);
 	} else {
 		m_ui->widgetDefineHeatExchangeSpline->setEnabled(true);
-		//m_ui->comboBoxHeatLossSplineUserBuildingType->setEnabled(true);
 		on_comboBoxHeatLossSplineUserBuildingType_activated(static_cast<int>(m_current->m_heatExchange.m_buildingType));
 		if(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value == 0.0) {
-			m_ui->lineEditHeatLossSplineMaximumHeatingLoad->setValue(m_heatLossSplineMaxYValue / 1000.0d);
+			m_ui->lineEditHeatLossSplineMaximumHeatingLoad->setValue(10);
 		}
 		else {
-			m_ui->lineEditHeatLossSplineMaximumHeatingLoad->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value / 1000);
+			m_ui->lineEditHeatLossSplineMaximumHeatingLoad->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].get_value());
 		}
-		m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(calculateHeatingEnergyDemand() / 1000);
+		m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].get_value());
 		m_ui->lineEditHeatLossSplineFloorArea->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value());
 	}
 }
@@ -1171,6 +1197,66 @@ void SVNetworkComponentEditWidget::on_lineEditHeatLossSplineMaximumHeatingLoad_e
 	calculateNewHeatLossSplineYData(m_k, m_heatLossSplineYPlotData);
 	m_heatLossSplineCurve->setSamples(m_heatLossSplineXPlotData.data(), m_heatLossSplineYPlotData.data(), m_heatLossSplineXPlotData.size());
 	m_heatLossSplineCurve->plot()->replot();
-	m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(calculateHeatingEnergyDemand() / 1000);
+	double newHeatingEnergyDemand = calculateHeatingEnergyDemand() / 1000;
+	m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(newHeatingEnergyDemand);
+	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemand, newHeatingEnergyDemand);
+	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_MaximumHeatingLoad, m_ui->lineEditHeatLossSplineMaximumHeatingLoad->value());
+
+}
+
+double SVNetworkComponentEditWidget::maxYValueForMap()
+{
+	double currentMaxValue = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value;
+	for(int i = 0; i < m_heatLossSplineMaxYValues.size(); i++){
+		if(currentMaxValue < m_heatLossSplineMaxYValues[i]) return m_heatLossSplineMaxYValues[i];
+	}
+	return m_heatLossSplineMaxYValues.back();
+}
+
+
+void SVNetworkComponentEditWidget::on_lineEditHeatLossSplineHeatingEnergyDemand_editingFinishedSuccessfully()
+{
+	if(m_isHeatingEnergyDemandDialogAlreadyOpen) return;
+	m_isHeatingEnergyDemandDialogAlreadyOpen = true;
+	QDialog dialog(this);
+	dialog.setWindowTitle("Choose how to adjust the graph");
+
+	QVBoxLayout layout(&dialog);
+
+	// Buttons
+	QPushButton button1("Adjust Maximum Heating Load", &dialog);
+	QPushButton button2("Adjust Graph", &dialog);
+	QPushButton button3("Cancel", &dialog);
+
+	layout.addWidget(&button1);
+	layout.addWidget(&button2);
+	layout.addWidget(&button3);
+
+	// Setting unique result values for buttons
+	QObject::connect(&button1, &QPushButton::clicked, [&]() { dialog.done(1); });
+	QObject::connect(&button2, &QPushButton::clicked, [&]() { dialog.done(2); });
+	QObject::connect(&button3, &QPushButton::clicked, [&]() { dialog.done(3); });
+
+	int result = dialog.exec();
+
+	double newHeatingEnergyDemand = m_ui->lineEditHeatLossSplineHeatingEnergyDemand->value();
+	m_isHeatingEnergyDemandDialogAlreadyOpen = false;
+
+	if(result == 3) return;
+	if(result == 1) {
+		double previousHeatingDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].get_value();
+		double ratio = newHeatingEnergyDemand / previousHeatingDemand;
+		double previousMaximumHeatingLoad = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].get_value();
+		double newMaximumHeatingLoad = previousMaximumHeatingLoad * ratio;
+		m_ui->lineEditHeatLossSplineMaximumHeatingLoad->setValue(newMaximumHeatingLoad);
+		m_ui->lineEditHeatLossSplineHeatingEnergyDemand->clearFocus();
+
+		VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemand, newHeatingEnergyDemand);
+
+		VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_MaximumHeatingLoad, newMaximumHeatingLoad);
+		calculateNewHeatLossSplineYData(m_k, m_heatLossSplineYPlotData);
+		m_heatLossSplineCurve->setSamples(m_heatLossSplineXPlotData.data(), m_heatLossSplineYPlotData.data(), m_heatLossSplineXPlotData.size());
+		m_heatLossSplineCurve->plot()->replot();
+	}
 }
 

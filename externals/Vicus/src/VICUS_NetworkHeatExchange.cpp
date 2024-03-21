@@ -53,8 +53,9 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 	m_modelType = modelType;
 	switch(modelType){
 		case T_HeatLossSpline:
-			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 10000);
-			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 5000);
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 10);
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 15807.6668);
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 5);
 			m_buildingType = BT_ResidentialBuilding;
 	}
 }

@@ -73,6 +73,14 @@ public:
 	/*! updates the Widget */
 	void update();
 
+	/*! updates pages */
+	void updatePageHeatLossConstant();
+	void updatePageHeatLossSpline();
+	void updatePageTemperatureConstant(){}
+	void updatePageTemperatureSpline(){}
+	void updatePageTemperatureSplineEvaporator(){}
+	void updatePageHeatingDemandSpaceHeating(){}
+
 signals:
 	void controllerChanged(QString controllerName);
 
@@ -117,6 +125,10 @@ private slots:
 
 	void on_lineEditHeatLossSplineMaximumHeatingLoad_editingFinishedSuccessfully();
 
+	double maxYValueForMap();
+
+	void on_lineEditHeatLossSplineHeatingEnergyDemand_editingFinishedSuccessfully();
+
 private:
 	void updateParameterTableWidget() const;
 
@@ -137,6 +149,9 @@ private:
 
 	/*! Dialog to create and edit Controller */
 	SVNetworkControllerEditDialog			*m_controllerEditDialog = nullptr;
+
+	/*! Flag to ensure only one dialog is spawned to request how to enforce HeatingEnergyDemand set by user */
+	bool									m_isHeatingEnergyDemandDialogAlreadyOpen = false;
 
 	/*! Pointer to currently edited component.
 		The pointer is updated whenever updateInput() is called.
@@ -162,8 +177,8 @@ private:
 
 	/*! Data vectors to store the original values of the tsv file */
 	std::vector<double>						m_heatLossSplineXData;
-	std::vector<double>						m_heatLossSplineYData; // TODO: daraus map machen key maxValue, value std::vector
-	double									m_heatLossSplineMaxYValue;
+	std::map<double, std::vector<double>>	m_mapHeatLossSplineYData;
+	std::vector<double>						m_heatLossSplineMaxYValues;
 
 	/*! Parameter to adjust curve to reach desired heatingEnergydemand */
 	double									m_k = 1;
