@@ -944,13 +944,13 @@
                    </layout>
                   </item>
                   <item>
-                   <widget class="QGroupBox" name="groupBoxHeating">
+                   <widget class="QGroupBox" name="groupBoxHeatLossSplineHeating">
                     <property name="title">
                      <string>Heating / DHW</string>
                     </property>
                     <layout class="QGridLayout" name="gridLayout">
                      <item row="1" column="0">
-                      <widget class="QLabel" name="label_3">
+                      <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemand">
                        <property name="text">
                         <string>Heating Energy Demand:</string>
                        </property>
@@ -967,7 +967,7 @@
                       <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineHeatingEnergyDemand"/>
                      </item>
                      <item row="0" column="2">
-                      <widget class="QLabel" name="label_2">
+                      <widget class="QLabel" name="labelHeatLossSplineMaximumHeatingLoadUnit">
                        <property name="text">
                         <string>kW</string>
                        </property>
@@ -977,7 +977,7 @@
                       <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineMaximumHeatingLoad"/>
                      </item>
                      <item row="0" column="0">
-                      <widget class="QLabel" name="label">
+                      <widget class="QLabel" name="labelHeatLossSplineMaximumHeatingLoad">
                        <property name="text">
                         <string>Maximum Heating Load:</string>
                        </property>
@@ -987,14 +987,14 @@
                       <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineDomesticHotWaterDemand"/>
                      </item>
                      <item row="2" column="2">
-                      <widget class="QLabel" name="label_9">
+                      <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemandUnit">
                        <property name="text">
                         <string>kWh</string>
                        </property>
                       </widget>
                      </item>
                      <item row="1" column="2">
-                      <widget class="QLabel" name="label_4">
+                      <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemandUnit">
                        <property name="text">
                         <string>kWh</string>
                        </property>
@@ -1004,7 +1004,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QGroupBox" name="groupBoxCooling">
+                   <widget class="QGroupBox" name="groupBoxHeatLossSplineCooling">
                     <property name="title">
                      <string>Cooling</string>
                     </property>
@@ -1013,34 +1013,34 @@
                     </property>
                     <layout class="QGridLayout" name="gridLayout_3">
                      <item row="0" column="1">
-                      <widget class="QtExt::ValidatingLineEdit" name="lineEditMaxHeatingLoad_2"/>
+                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineMaximumCoolingLoad"/>
                      </item>
                      <item row="0" column="0">
-                      <widget class="QLabel" name="label_5">
+                      <widget class="QLabel" name="labelHeatLossSplineMaximumCoolingLoad">
                        <property name="text">
                         <string>Maximum Cooling Load:</string>
                        </property>
                       </widget>
                      </item>
                      <item row="0" column="2">
-                      <widget class="QLabel" name="label_6">
+                      <widget class="QLabel" name="labelHeatLossSplineMaximumCoolingLoadUnit">
                        <property name="text">
                         <string>kW</string>
                        </property>
                       </widget>
                      </item>
                      <item row="1" column="0">
-                      <widget class="QLabel" name="label_7">
+                      <widget class="QLabel" name="labelHeatLossSplineCoolingEnergyDemand">
                        <property name="text">
                         <string>Cooling Energy Demand:</string>
                        </property>
                       </widget>
                      </item>
                      <item row="1" column="1">
-                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatingEnergyDemand_2"/>
+                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineCoolingEnergyDemand"/>
                      </item>
                      <item row="1" column="2">
-                      <widget class="QLabel" name="label_8">
+                      <widget class="QLabel" name="labelHeatLossSplineCoolingEnergyDemandUnit">
                        <property name="text">
                         <string>kWh</string>
                        </property>
@@ -1060,21 +1060,21 @@
                    <number>0</number>
                   </property>
                   <item>
-                   <layout class="QHBoxLayout" name="horizontalLayout_3">
+                   <layout class="QHBoxLayout" name="horizontalLayoutFilePath">
                     <item>
-                     <widget class="QLabel" name="label_10">
+                     <widget class="QLabel" name="labelFilePath">
                       <property name="text">
                        <string>Filepath</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="lineEdit"/>
+                     <widget class="QLineEdit" name="lineEditFilePath"/>
                     </item>
                    </layout>
                   </item>
                   <item>
-                   <spacer name="verticalSpacer">
+                   <spacer name="verticalSpacerFilePath">
                     <property name="orientation">
                      <enum>Qt::Vertical</enum>
                     </property>

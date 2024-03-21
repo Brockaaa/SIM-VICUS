@@ -255,10 +255,13 @@ void SVNetworkComponentEditWidget::update()
 	// set the comboBox and stackedWidget to the HE modeltype of the current component
 	for(int index = 0; index < m_ui->comboBoxHeatExchange->count(); index++){
 		if(m_current->m_heatExchange.m_modelType == static_cast<VICUS::NetworkHeatExchange::ModelType>(m_ui->comboBoxHeatExchange->itemData(index).toInt())){
+			m_ui->comboBoxHeatExchange->setCurrentIndex(index);
 			on_comboBoxHeatExchange_activated(index);
-			m_ui->stackedWidgetHeatExchange->setCurrentIndex(static_cast<int>(m_current->m_heatExchange.m_modelType));
+			return;
 		}
 	}
+	m_ui->comboBoxHeatExchange->setCurrentIndex(m_ui->comboBoxHeatExchange->count()-1);
+	on_comboBoxHeatExchange_activated(m_ui->comboBoxHeatExchange->count()-1);
 }
 
 void SVNetworkComponentEditWidget::updatePageHeatLossConstant()
@@ -1060,8 +1063,6 @@ void SVNetworkComponentEditWidget::on_toolButtonControllerRemove_clicked()
 
 void SVNetworkComponentEditWidget::on_comboBoxHeatExchange_activated(int index)
 {
-	VICUS::NetworkHeatExchange::ModelType modelType = static_cast<VICUS::NetworkHeatExchange::ModelType>(m_ui->comboBoxHeatExchange->currentData().toInt());
-
 	//store old heatExchange
 	for(VICUS::NetworkHeatExchange& heatExchange : m_vectorTempHeatExchange){
 		if(heatExchange.m_modelType == m_current->m_heatExchange.m_modelType){
@@ -1071,6 +1072,9 @@ void SVNetworkComponentEditWidget::on_comboBoxHeatExchange_activated(int index)
 
 	//take newly selected Heat Exchanger from vector
 	m_current->m_heatExchange = m_vectorTempHeatExchange[index];
+
+	// change stackedWidget to the appropriate page
+	m_ui->stackedWidgetHeatExchange->setCurrentIndex(static_cast<int>(m_current->m_heatExchange.m_modelType));
 
 	switch(m_current->m_heatExchange.m_modelType){
 		case VICUS::NetworkHeatExchange::T_HeatingDemandSpaceHeating:
@@ -1086,8 +1090,6 @@ void SVNetworkComponentEditWidget::on_comboBoxHeatExchange_activated(int index)
 		default: break;
 	}
 
-	// change stackedWidget to the appropriate page
-	m_ui->stackedWidgetHeatExchange->setCurrentIndex(static_cast<int>(modelType));
 }
 
 
@@ -1217,6 +1219,7 @@ double SVNetworkComponentEditWidget::maxYValueForMap()
 void SVNetworkComponentEditWidget::on_lineEditHeatLossSplineHeatingEnergyDemand_editingFinishedSuccessfully()
 {
 	if(m_isHeatingEnergyDemandDialogAlreadyOpen) return;
+	if(m_ui->lineEditHeatLossSplineHeatingEnergyDemand->value() == m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].get_value()) return;
 	m_isHeatingEnergyDemandDialogAlreadyOpen = true;
 	QDialog dialog(this);
 	dialog.setWindowTitle("Choose how to adjust the graph");
