@@ -129,6 +129,8 @@ private slots:
 
 	void on_lineEditHeatLossSplineHeatingEnergyDemand_editingFinishedSuccessfully();
 
+	void on_checkBoxHeatLossSplineAreaRelatedValues_stateChanged(int arg1);
+
 private:
 	void updateParameterTableWidget() const;
 
