@@ -188,7 +188,7 @@ public:
 
 	/*! ToDo Moritz
 	 */
-	bool mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverlapping = true);
+	bool mergeWithPolygon(const IBKMK::Polygon3D & polyB, std::vector<std::vector<Vector2D>> & holes, bool mergeOverlapping = true);
 
 private:
 

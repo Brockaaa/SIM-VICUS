@@ -849,7 +849,7 @@ bool Polygon3D::trimByPlane(const IBKMK::Polygon3D &plane, std::vector<IBKMK::Po
 	}
 }
 
-bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverlapping) {
+bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, std::vector<std::vector<Vector2D>> & holes, bool mergeOverlapping) {
 	const char * const FUNC_ID = "[Polygon3D::mergeWithPolygon]";
 
 	IBK_ASSERT(vertexes().size() > 2);
@@ -1180,36 +1180,42 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverl
 	}
 
 	// Transform merge result polygons back to 3D
-	std::vector<std::vector<Vector3D>> newShapes3D;
-	for (Polygon2D poly2D : newShapes) {
+	std::vector<Vector2D> polyline2D = newShapes.front();
+	if (newShapes.size() > 1) {
+		// sort holes and polyline
+		for (unsigned int pl = 1; pl<newShapes.size(); ++pl ) {
+			std::vector<Vector2D> & poly2DB = newShapes.at(pl);
 
-		IBK::IBK_Message("result poly\n"); for (auto node : poly2D.vertexes()) IBK::IBK_Message(node.toString()+"\n");
+			bool aOutsideB = false;
+			bool bOutsideA = false;
 
-		std::vector<IBKMK::Vector3D> verts3D(poly2D.vertexes().size());
-		for (unsigned int i = 0; i < poly2D.vertexes().size(); ++i) {
-			verts3D[i] = offset() + localX() * poly2D.vertexes()[i].m_x + localY() * poly2D.vertexes()[i].m_y;
+			for (Vector2D vert : polyline2D) {
+				if (pointInPolygon(poly2DB, vert) == -1) {
+					aOutsideB = true;
+					break;
+				}
+			}
+			for (Vector2D vert : poly2DB) {
+				if (pointInPolygon(polyline2D, vert) == -1) {
+					bOutsideA = true;
+					break;
+				}
+			}
+
+			if (aOutsideB) {
+				holes.push_back(poly2DB);
+			} else if (bOutsideA) {
+				holes.push_back(polyline2D);
+				polyline2D = newShapes.at(pl);
+			}
 		}
-		newShapes3D.push_back(verts3D);
 	}
 
-	/// TODO: Detect which polygons are holes, which one is the polygon (if applicable)
-	/// Right now we're assuming there is only 1 polygon, which is not always correct.
-
-	setVertexes(newShapes3D.front());
-
-
-	/*
-	IBK::IBK_Message("polyverts A\n");
-	for (auto node : polyA2D) IBK::IBK_Message(node.toString()+"\n");
-
-	IBK::IBK_Message("poylverts B\n");
-	for (auto node : polyB2D) IBK::IBK_Message(node.toString()+"\n");
-	*/
-
-
-	///	EDGE CASE PRÜFEN!
-	/// -> Holes detecten damit keine reste bleiben
-	/// -> wenn zwei (oder mehr??) seiten identisch sind, ähnlich wie dividepolycycles
+	std::vector<IBKMK::Vector3D> verts3D(polyline2D.size());
+	for (unsigned int i = 0; i < polyline2D.size(); ++i) {
+		verts3D[i] = offset() + localX() * polyline2D[i].m_x + localY() * polyline2D[i].m_y;
+	}
+	setVertexes(verts3D);
 
 	return true;
 }
