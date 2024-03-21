@@ -1093,41 +1093,108 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverl
 		}
 	}
 
-	// find start position (shared vert so we have start J *and* K)
-	unsigned int startJ;
-	for (unsigned int j = 0; j<polyA2D.size(); ++j ) {
-		if (commonAToB.find(j) == commonAToB.end()) {
-			startJ = j;
-			break;
+	std::vector<std::vector<Vector2D>> newShapes;
+	std::set<Vector2D> discovered;
+	bool foundNew = true;
+
+	unsigned int startIndex;
+	unsigned int currentIndex;
+
+	bool startInA = true;
+	bool currentlyInA = true;
+
+	while (foundNew) {
+		foundNew = false;
+
+		// Try to discover a new polygon within the shape -> find a vert that is not shared and not previously discovered
+		for (unsigned int i = 0; i<polyA2D.size(); ++i ) {
+			if (commonAToB.find(i) == commonAToB.end()
+					&& discovered.find(polyA2D.at(i)) == discovered.end()) {
+				foundNew = true;
+				startIndex = i;
+				break;
+			}
+		}
+		if (foundNew) {
+			startInA = true;
+		} else {
+			// search in polyB for an isolated node
+			for (unsigned int j = 0; j<polyB2D.size(); ++j ) {
+				if (commonBToA.find(j) == commonBToA.end()
+						&& discovered.find(polyB2D.at(j)) == discovered.end()) {
+					foundNew = true;
+					startIndex = j;
+					break;
+				}
+			}
+			if (foundNew) {
+				startInA = false;
+			}
+		}
+
+		if (foundNew) {
+			// run shape explore algorithm
+			std::vector<Vector2D> newPoly;
+
+			currentIndex = startIndex;
+			currentlyInA = startInA;
+
+			unsigned int stepsLimit = polyA2D.size() + polyB2D.size(); // to prevent infinite loops on errors
+
+			for (unsigned int k = 0; k<stepsLimit; ++k) {
+				if (currentlyInA) {
+					newPoly.push_back(polyA2D.at(currentIndex));
+					discovered.insert(polyA2D.at(currentIndex));
+
+					if (commonAToB.find(currentIndex) != commonAToB.end() && commonAToB.find((currentIndex+1)%polyA2D.size()) != commonAToB.end()) {
+						currentlyInA = false;
+						currentIndex = commonAToB[currentIndex];
+					} else
+						currentIndex = (currentIndex + 1) % polyA2D.size();
+				} else {
+					newPoly.push_back(polyB2D.at(currentIndex));
+					discovered.insert(polyB2D.at(currentIndex));
+
+					if (commonBToA.find(currentIndex) != commonBToA.end() && commonBToA.find((currentIndex+1)%polyB2D.size()) != commonBToA.end()) {
+						currentlyInA = true;
+						currentIndex = commonBToA[currentIndex];
+					} else
+						currentIndex = (currentIndex + 1) % polyB2D.size();
+				}
+
+				if (currentIndex == startIndex && currentlyInA == startInA) break;
+			}
+			newShapes.push_back(newPoly);
+
 		}
 	}
 
-	// jeweils zwischen zwei shared schauen ob im anderen poly welche nicht geshared sind
-	std::vector<Vector2D> newPoly;
-	for (unsigned int m = 0; m<polyA2D.size(); ++m ) {
-		unsigned int workingIdx = (m + startJ) % polyA2D.size();
+	// Transform merge result polygons back to 3D
+	std::vector<std::vector<Vector3D>> newShapes3D;
+	for (Polygon2D poly2D : newShapes) {
 
+		IBK::IBK_Message("result poly\n"); for (auto node : poly2D.vertexes()) IBK::IBK_Message(node.toString()+"\n");
 
-
-		/* TODO */
-
-		newPoly.push_back(polyA2D.at(workingIdx));
-
-
+		std::vector<IBKMK::Vector3D> verts3D(poly2D.vertexes().size());
+		for (unsigned int i = 0; i < poly2D.vertexes().size(); ++i) {
+			verts3D[i] = offset() + localX() * poly2D.vertexes()[i].m_x + localY() * poly2D.vertexes()[i].m_y;
+		}
+		newShapes3D.push_back(verts3D);
 	}
 
+	/// TODO: Detect which polygons are holes, which one is the polygon (if applicable)
+	/// Right now we're assuming there is only 1 polygon, which is not always correct.
+
+	setVertexes(newShapes3D.front());
 
 
-
-
-
-/*
-	IBK::IBK_Message("polyverts A POST\n");
+	/*
+	IBK::IBK_Message("polyverts A\n");
 	for (auto node : polyA2D) IBK::IBK_Message(node.toString()+"\n");
 
-	IBK::IBK_Message("poylverts B POST\n");
+	IBK::IBK_Message("poylverts B\n");
 	for (auto node : polyB2D) IBK::IBK_Message(node.toString()+"\n");
-*/
+	*/
 
 
 	///	EDGE CASE PRÜFEN!
