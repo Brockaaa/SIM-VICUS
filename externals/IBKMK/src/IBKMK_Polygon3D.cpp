@@ -877,7 +877,7 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverl
 		polyB2D.push_back(IBKMK::Vector2D(x,y));
 	}
 
-	bool polyIntersect = polyIntersect2D(polyA2D, polyB2D);
+	bool polyIntersect = polyIntersect2D(polyA2D, polyB2D, true);
 	if (polyIntersect) {
 		if (!mergeOverlapping) throw IBK::Exception(IBK::FormatString("Overlapping polygons with mergeOverlapping=false."), FUNC_ID);
 
@@ -890,13 +890,15 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverl
 			// This small offset vector is necessary, otherwise we would just find the same intersection again instead of multiple ones
 			Vector2D diffVec = p2-p1;
 			diffVec /= 1e8;
-			if (intersectsLine2D(polyB2D, p1+diffVec, p2-diffVec, intersectionPoint)) {
-				// if neither of the points happens to be the intersection point
-				if (!IBK::near_zero((intersectionPoint - p1).magnitude()) &&
-					!IBK::near_zero((intersectionPoint - p2).magnitude())) {
-					polyA2D.insert(polyA2D.begin() + i + 1, intersectionPoint);
-				} else ++i;
-			} else ++i;
+			// if intersects and if neither of the points happens to be the intersection point
+			if (intersectsLine2D(polyB2D, p1+diffVec, p2-diffVec, intersectionPoint) &&
+				!IBK::near_zero((intersectionPoint - p1).magnitude()) &&
+				!IBK::near_zero((intersectionPoint - p2).magnitude()) &&
+				std::find(polyA2D.begin(), polyA2D.end(), intersectionPoint) == polyA2D.end()) {
+
+				polyA2D.insert(polyA2D.begin() + i + 1, intersectionPoint);
+			} else
+				++i;
 		}
 
 		i = 0;
@@ -905,13 +907,14 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverl
 			const Vector2D & p2 = polyB2D.at((i+1)%polyB2D.size());
 			Vector2D diffVec = p2-p1;
 			diffVec /= 1e8;
-			if (intersectsLine2D(polyA2D, p1+diffVec, p2-diffVec, intersectionPoint)) {
-				// if neither of the points happens to be the intersection point
-				if (!IBK::near_zero((intersectionPoint - p1).magnitude()) &&
-					!IBK::near_zero((intersectionPoint - p2).magnitude())) {
-					polyB2D.insert(polyB2D.begin() + i + 1, intersectionPoint);
-				} else ++i;
-			} else ++i;
+			if (intersectsLine2D(polyA2D, p1+diffVec, p2-diffVec, intersectionPoint) &&
+				!IBK::near_zero((intersectionPoint - p1).magnitude()) &&
+				!IBK::near_zero((intersectionPoint - p2).magnitude()) &&
+				std::find(polyB2D.begin(), polyB2D.end(), intersectionPoint) == polyB2D.end()) {
+
+				polyB2D.insert(polyB2D.begin() + i + 1, intersectionPoint);
+			} else
+				++i;
 		}
 
 		// Now both polygons contain their outline as well as every intersection point with the other polygon
@@ -1063,7 +1066,6 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverl
 
 	// We now treat both cases (overlap and shared edges) with the same algorithm, as the "shared edges" case is actually a possible outcome of our overlap treatment
 
-	// Sanity check
 	if (polyB2D.size() < 3) {
 		return true;
 	} else if (polyA2D.size() < 3) {
