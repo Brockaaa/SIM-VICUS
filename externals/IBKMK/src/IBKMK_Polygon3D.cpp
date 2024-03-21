@@ -956,12 +956,12 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverl
 	} else {
 		unsigned int i;
 		for (i = 0; i<polyA2D.size(); ++i ) {
-			const Vector2D & vertA1 = polyA2D.at(i);
-			const Vector2D & vertA2 = polyA2D.at((i+1)%polyA2D.size());
+			const Vector2D vertA1 = polyA2D.at(i);
+			const Vector2D vertA2 = polyA2D.at((i+1)%polyA2D.size());
 			unsigned int j;
 			for (j = 0; j<polyB2D.size(); ++j) {
-				const Vector2D & vertB1 = polyB2D.at(j);
-				const Vector2D & vertB2 = polyB2D.at((j+1)%polyB2D.size());
+				const Vector2D vertB1 = polyB2D.at(j);
+				const Vector2D vertB2 = polyB2D.at((j+1)%polyB2D.size());
 
 				// if scalar product of edge B and orthogonal of edge A is near_zero -> vectors are in parallel
 				if (IBK::near_zero((vertB2-vertB1).scalarProduct(Vector2D((vertA2-vertA1).m_y,-(vertA2-vertA1).m_x)))) {
