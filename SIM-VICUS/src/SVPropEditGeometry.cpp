@@ -1680,10 +1680,9 @@ void SVPropEditGeometry::on_pushButtonTrimGridLocalXZ_clicked() {
 			newSurf.m_color = surfA->m_displayColor;
 			newSurf.m_displayColor = surfA->m_displayColor;
 			newSurf.setPolygon3D(polyA);
-			std::vector<VICUS::Hole> vicusHoles;
+			std::vector<VICUS::Hole> vicusHoles = surfA->holes();
+			vicusHoles.insert( vicusHoles.end(), surfB->holes().begin(), surfB->holes().end() );
 			for (std::vector<IBKMK::Vector2D> hole : holes) {
-
-				for (auto node : hole) qDebug() << "hole node " << QString::fromStdString(node.toString());
 				vicusHoles.push_back(VICUS::Hole(hole));
 			}
 			qDebug() << vicusHoles.size() << " holes found";

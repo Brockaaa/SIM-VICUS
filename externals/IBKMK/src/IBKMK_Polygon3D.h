@@ -186,7 +186,11 @@ public:
 	 */
 	bool trimByPlane(const IBKMK::Polygon3D &plane, std::vector<Polygon3D> &trimmedPolygons) const;
 
-	/*! ToDo Moritz
+	/*! This function merges a polygon with another that either overlap or touch.
+		\param polyB Other polygon to be merged with
+		\param holes vector of 2d shapes that will contain holes that result from merging
+		\param mergeOverlapping if false an error is thrown when the polygons overlap. If true they are merged
+		\return Returns true if merged, false if the polygons don't touch
 	 */
 	bool mergeWithPolygon(const IBKMK::Polygon3D & polyB, std::vector<std::vector<Vector2D>> & holes, bool mergeOverlapping = true);
 
