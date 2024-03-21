@@ -965,98 +965,105 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverl
 
 				// if scalar product of edge B and orthogonal of edge A is near_zero -> vectors are in parallel
 				if (IBK::near_zero((vertB2-vertB1).scalarProduct(Vector2D((vertA2-vertA1).m_y,-(vertA2-vertA1).m_x)))) {
-					// vectors parallel, test if shared verts or inbetween
-					bool a1inB = pointBetweenPoints2D(vertA1, vertB1, vertB2);
-					bool a2inB = pointBetweenPoints2D(vertA2, vertB1, vertB2);
-					bool b1inA = pointBetweenPoints2D(vertB1, vertA1, vertA2);
-					bool b2inA = pointBetweenPoints2D(vertB1, vertA1, vertA2);
-					if (!a1inB && !a2inB && !b1inA && !b2inA) continue; // no overlap
-					// we now have some type of overlap / shared edge
-					if (a1inB && a2inB && b1inA && b2inA) continue; // both verts shared, no need for additional points
+					// vectors parallel, test if vectors in near_zero distance from each other
+					if (IBK::near_zero(lineToPointDistance2D(vertA1, vertB1, vertB2)) &&
+							IBK::near_zero(lineToPointDistance2D(vertA2, vertB1, vertB2)) &&
+							IBK::near_zero(lineToPointDistance2D(vertB1, vertA1, vertA2)) &&
+							IBK::near_zero(lineToPointDistance2D(vertB2, vertA1, vertA2))) {
 
-					if ((a1inB != a2inB) && (b1inA != b2inA)) { // partial overlap of the two edges
-						// firstly make sure to exclude the case that they share a vert:
-						if (a1inB) {
+						// test if shared verts or inbetween
+						bool a1inB = pointBetweenPoints2D(vertA1, vertB1, vertB2);
+						bool a2inB = pointBetweenPoints2D(vertA2, vertB1, vertB2);
+						bool b1inA = pointBetweenPoints2D(vertB1, vertA1, vertA2);
+						bool b2inA = pointBetweenPoints2D(vertB2, vertA1, vertA2);
+						if (!a1inB && !a2inB && !b1inA && !b2inA) continue; // no overlap
+						// we now have some type of overlap / shared edge
+						if (a1inB && a2inB && b1inA && b2inA) continue; // both verts shared, no need for additional points
+
+						if ((a1inB != a2inB) && (b1inA != b2inA)) { // partial overlap of the two edges
+							// firstly make sure to exclude the case that they share a vert:
+							if (a1inB) {
+								if (b1inA) {
+									if (IBK::near_zero((vertA1-vertB1).magnitude())) continue;
+								} else {
+									if (IBK::near_zero((vertA1-vertB2).magnitude())) continue;
+								}
+							} else {
+								if (b1inA) {
+									if (IBK::near_zero((vertA2-vertB1).magnitude())) continue;
+								} else {
+									if (IBK::near_zero((vertA2-vertB2).magnitude())) continue;
+								}
+							}
+							// the really partially overlap
+							if (a1inB) {
+								polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
+							} else /*a2inB*/ {
+								polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
+							}
 							if (b1inA) {
-								if (IBK::near_zero((vertA1-vertB1).magnitude())) continue;
-							} else {
-								if (IBK::near_zero((vertA1-vertB2).magnitude())) continue;
-							}
-						} else {
-							if (b1inA) {
-								if (IBK::near_zero((vertA2-vertB1).magnitude())) continue;
-							} else {
-								if (IBK::near_zero((vertA2-vertB2).magnitude())) continue;
-							}
-						}
-						// the really partially overlap
-						if (a1inB) {
-							polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
-						} else /*a2inB*/ {
-							polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
-						}
-						if (b1inA) {
-							polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
-						} else /*b2inA*/ {
-							polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
-						}
-						++j;
-						++i;
-
-					} else if (a1inB && a2inB && !b1inA && !b2inA) { // a contained in b
-						bool flipVertDir = (vertB1 - vertA2).magnitude() < (vertB1 - vertA1).magnitude();
-						if (flipVertDir) {
-							polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
-							polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
-						} else {
-							polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
-							polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
-						}
-						j += 2;
-
-					} else if (!a1inB && !a2inB && b1inA && b2inA) { // b contained in a
-						bool flipVertDir = (vertA1 - vertB2).magnitude() < (vertA1 - vertB1).magnitude();
-						if (flipVertDir) {
-							polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
-							polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
-						} else {
-							polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
-							polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
-						}
-						i += 2;
-
-					} else if (a1inB != a2inB) { // b contained in a with one shared vertex
-					// "a1inB!=a2inB && b1inA!=b2inA" has been tested prior, and "a1inB!=a2inB && !b1inA&&!b2inA" is geometrically impossible, therefore both bInA true
-						if (a1inB) {
-							if (IBK::near_zero((vertA1 - vertB1).magnitude())) {
-								polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
-							} else {
 								polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
-							}
-						} else /* a2inB */ {
-							if (IBK::near_zero((vertA2 - vertB1).magnitude())) {
+							} else /*b2inA*/ {
 								polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
-							} else {
-								polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
 							}
-						}
-						++i;
+							++j;
+							++i;
 
-					} else if (b1inA != b2inA) { // a contained in b with one shared vertex
-						if (b1inA) {
-							if (IBK::near_zero((vertB1 - vertA1).magnitude())) {
+						} else if (a1inB && a2inB && !b1inA && !b2inA) { // a contained in b
+							bool flipVertDir = (vertB1 - vertA2).magnitude() < (vertB1 - vertA1).magnitude();
+							if (flipVertDir) {
+								polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
 								polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
 							} else {
-								polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
-							}
-						} else /* b2inA */ {
-							if (IBK::near_zero((vertB2 - vertA1).magnitude())) {
 								polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
-							} else {
 								polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
 							}
+							j += 2;
+
+						} else if (!a1inB && !a2inB && b1inA && b2inA) { // b contained in a
+							bool flipVertDir = (vertA1 - vertB2).magnitude() < (vertA1 - vertB1).magnitude();
+							if (flipVertDir) {
+								polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
+								polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
+							} else {
+								polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
+								polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
+							}
+							i += 2;
+
+						} else if (a1inB != a2inB) { // b contained in a with one shared vertex
+						// "a1inB!=a2inB && b1inA!=b2inA" has been tested prior, and "a1inB!=a2inB && !b1inA&&!b2inA" is geometrically impossible, therefore both bInA true
+							if (a1inB) {
+								if (IBK::near_zero((vertA1 - vertB1).magnitude())) {
+									polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
+								} else {
+									polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
+								}
+							} else /* a2inB */ {
+								if (IBK::near_zero((vertA2 - vertB1).magnitude())) {
+									polyA2D.insert(polyA2D.begin() + i + 1, vertB2);
+								} else {
+									polyA2D.insert(polyA2D.begin() + i + 1, vertB1);
+								}
+							}
+							++i;
+
+						} else if (b1inA != b2inA) { // a contained in b with one shared vertex
+							if (b1inA) {
+								if (IBK::near_zero((vertB1 - vertA1).magnitude())) {
+									polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
+								} else {
+									polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
+								}
+							} else /* b2inA */ {
+								if (IBK::near_zero((vertB2 - vertA1).magnitude())) {
+									polyB2D.insert(polyB2D.begin() + j + 1, vertA2);
+								} else {
+									polyB2D.insert(polyB2D.begin() + j + 1, vertA1);
+								}
+							}
+							++j;
 						}
-						++j;
 					}
 				}
 			}
