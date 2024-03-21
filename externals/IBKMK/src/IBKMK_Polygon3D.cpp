@@ -1100,6 +1100,9 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, bool mergeOverl
 		}
 	}
 
+	// If non-overlapping we didn't check if polygons do even touch, therefore return false if no common verts detected
+	if (commonAToB.size() < 2) return false;
+
 	std::vector<std::vector<Vector2D>> newShapes;
 	std::set<Vector2D> discovered;
 	bool foundNew = true;
