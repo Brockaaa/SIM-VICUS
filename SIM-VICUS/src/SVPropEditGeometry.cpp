@@ -1655,6 +1655,48 @@ void SVPropEditGeometry::on_pushButtonTrimGridLocalYZ_clicked() {
 
 
 void SVPropEditGeometry::on_pushButtonTrimGridLocalXZ_clicked() {
+
+	/// --- Temporary UI embedding of polygon merge --- /// TODO Stephan remove
+
+		std::set<const VICUS::Object *> sel;
+		SVProjectHandler::instance().project().selectObjects(sel, VICUS::Project::SelectionGroups(VICUS::Project::SG_Building | VICUS::Project::SG_Obstacle), true, true);
+		std::vector<const VICUS::Surface*> surfs;
+		for (const VICUS::Object* o : sel) {
+			const VICUS::Surface * surf = dynamic_cast<const VICUS::Surface*>(o);
+			if (surf == nullptr) continue; // skip all other objects
+			surfs.push_back(surf);
+		}
+		if (surfs.size() != 2) return;
+		const VICUS::Surface * surfA = surfs.at(0);
+		const VICUS::Surface * surfB = surfs.at(1);
+		IBKMK::Polygon3D polyA = surfA->polygon3D();
+		const IBKMK::Polygon3D polyB = surfB->polygon3D();
+		std::vector<std::vector<IBKMK::Vector2D>> holes;
+		bool merged = polyA.mergeWithPolygon(polyB, holes);
+		if (merged) {
+			VICUS::Surface newSurf;
+			newSurf.m_id = project().nextUnusedID();
+			newSurf.m_displayName = surfA->m_displayName;
+			newSurf.m_color = surfA->m_displayColor;
+			newSurf.m_displayColor = surfA->m_displayColor;
+			newSurf.setPolygon3D(polyA);
+			std::vector<VICUS::Hole> vicusHoles;
+			for (std::vector<IBKMK::Vector2D> hole : holes) {
+
+				for (auto node : hole) qDebug() << "hole node " << QString::fromStdString(node.toString());
+				vicusHoles.push_back(VICUS::Hole(hole));
+			}
+			qDebug() << vicusHoles.size() << " holes found";
+			newSurf.setHoles(vicusHoles);
+			SVUndoAddSurface * undo = new SVUndoAddSurface("Merged.", newSurf, 0);
+			undo->push();
+		}
+		return;
+
+	/// ------------------------------------------------------------------ ///
+
+
+
 	m_ui->lineEditRotateXTrimming->setValue(0);
 	m_ui->lineEditRotateYTrimming->setValue(0);
 	m_ui->lineEditRotateZTrimming->setValue(0);
