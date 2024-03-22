@@ -56,6 +56,8 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 10);
 			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 15807.6668);
 			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 5);
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1);
 			m_buildingType = BT_ResidentialBuilding;
 	}
 }

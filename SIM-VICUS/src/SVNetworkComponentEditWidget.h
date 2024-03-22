@@ -146,7 +146,11 @@ private:
 
 	double calculateHeatingEnergyDemand();
 
+	double calculateHeatingEnergyDemand(const std::vector<double>& vectorWithValues);
+
 	void calculateNewHeatLossSplineYData(double k, std::vector<double>& vectorToSaveNewValues);
+
+	bool calculateNewK(double valueToReach);
 
 	Ui::SVNetworkComponentEditWidget		*m_ui;
 
@@ -176,6 +180,8 @@ private:
 
 	/*! Vector to temporarily hold all NetworkHeatExchange that were modified after a Block was selected in the scene */
 	std::vector<VICUS::NetworkHeatExchange>	m_vectorTempHeatExchange;
+	/*! Vector to temporarily store a NetworkHeatExchange to be saved when the building type was changed */
+	std::vector<VICUS::NetworkHeatExchange> m_vectorTempHeatExchangeBuildingType;
 
 	/*! Curve visible in HeatLossSpline plot */
 	QwtPlotCurve							*m_heatLossSplineCurve = nullptr;
