@@ -1158,7 +1158,7 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, std::vector<std
 
 					if (commonAToB.find(currentIndex) != commonAToB.end() && commonAToB.find((currentIndex+1)%polyA2D.size()) != commonAToB.end()) {
 						currentlyInA = false;
-						currentIndex = commonAToB[currentIndex];
+						currentIndex = (commonAToB[currentIndex]+ 1) % polyB2D.size();
 					} else
 						currentIndex = (currentIndex + 1) % polyA2D.size();
 				} else {
@@ -1167,7 +1167,7 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, std::vector<std
 
 					if (commonBToA.find(currentIndex) != commonBToA.end() && commonBToA.find((currentIndex+1)%polyB2D.size()) != commonBToA.end()) {
 						currentlyInA = true;
-						currentIndex = commonBToA[currentIndex];
+						currentIndex = (commonBToA[currentIndex] + 1) % polyA2D.size();
 					} else
 						currentIndex = (currentIndex + 1) % polyB2D.size();
 				}
