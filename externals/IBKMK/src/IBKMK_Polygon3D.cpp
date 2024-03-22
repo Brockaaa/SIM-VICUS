@@ -1180,6 +1180,7 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, std::vector<std
 	}
 
 	// Transform merge result polygons back to 3D
+	std::vector<std::vector<Vector2D>> oldHoles2D;
 	std::vector<Vector2D> polyline2D = newShapes.front();
 	if (newShapes.size() > 1) {
 		// sort holes and polyline
@@ -1203,9 +1204,9 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, std::vector<std
 			}
 
 			if (aOutsideB) {
-				holes.push_back(poly2DB);
+				oldHoles2D.push_back(poly2DB);
 			} else if (bOutsideA) {
-				holes.push_back(polyline2D);
+				oldHoles2D.push_back(polyline2D);
 				polyline2D = newShapes.at(pl);
 			}
 		}
@@ -1215,7 +1216,29 @@ bool Polygon3D::mergeWithPolygon(const IBKMK::Polygon3D & polyB, std::vector<std
 	for (unsigned int i = 0; i < polyline2D.size(); ++i) {
 		verts3D[i] = offset() + localX() * polyline2D[i].m_x + localY() * polyline2D[i].m_y;
 	}
+
+	// transform holes to 3D, update polygon, then transform back to 2d relative to new coordinates
+	std::vector<std::vector<Vector3D>> oldHoles3D;
+	for (const std::vector<Vector2D> & oldHole2D : oldHoles2D) {
+		std::vector<IBKMK::Vector3D> verts3D(oldHole2D.size());
+		for (unsigned int i = 0; i < oldHole2D.size(); ++i) {
+			verts3D[i] = offset() + localX() * oldHole2D[i].m_x + localY() * oldHole2D[i].m_y;
+		}
+		oldHoles3D.push_back(verts3D);
+	}
+
+	// update polyline
 	setVertexes(verts3D);
+
+	// Transform old 3d holes to 2d relative to new polygon geometry
+	for (const std::vector<Vector3D> & oldHole3D : oldHoles3D) {
+		std::vector<Vector2D> newHole2D;
+		for (const Vector3D & vert : oldHole3D) {
+			IBKMK::planeCoordinates(offset(), localX(), localY(), vert, x, y);
+			newHole2D.push_back(IBKMK::Vector2D(x,y));
+		}
+		holes.push_back(newHole2D);
+	}
 
 	return true;
 }

@@ -1685,8 +1685,8 @@ void SVPropEditGeometry::on_pushButtonTrimGridLocalXZ_clicked() {
 			for (std::vector<IBKMK::Vector2D> hole : holes) {
 				vicusHoles.push_back(VICUS::Hole(hole));
 			}
-			qDebug() << vicusHoles.size() << " holes found";
 			newSurf.setHoles(vicusHoles);
+			newSurf.updateGeometryHoles();
 			SVUndoAddSurface * undo = new SVUndoAddSurface("Merged.", newSurf, 0);
 			undo->push();
 		}
