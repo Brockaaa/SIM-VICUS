@@ -115,21 +115,23 @@ private slots:
 
 	void on_comboBoxHeatLossSplineUserBuildingType_activated(int index);
 
-	void on_checkBoxHeatLossSplineDemandCurveUserAreaRelatedValues_stateChanged(int arg1);
-
-	void on_checkBoxHeatLossSplineDemandCurveUserWithCoolingDemand_stateChanged(int arg1);
-
 	void on_lineEditHeatLossSplineFloorArea_editingFinishedSuccessfully();
 
 	void on_horizontalSliderHeatLossSplinePlot_sliderMoved(int position);
 
 	void on_lineEditHeatLossSplineMaximumHeatingLoad_editingFinishedSuccessfully();
 
-	double maxYValueForMap();
-
 	void on_lineEditHeatLossSplineHeatingEnergyDemand_editingFinishedSuccessfully();
 
 	void on_checkBoxHeatLossSplineAreaRelatedValues_stateChanged(int arg1);
+
+	void on_lineEditHeatLossSplineDomesticHotWaterDemand_editingFinishedSuccessfully();
+
+	void on_lineEditHeatLossSplineCoolingEnergyDemand_editingFinishedSuccessfully();
+
+	void on_groupBoxHeatLossSplineCooling_clicked(bool checked);
+
+	void on_lineEditHeatLossSplineMaximumCoolingLoad_editingFinishedSuccessfully();
 
 private:
 	void updateParameterTableWidget() const;
@@ -139,6 +141,8 @@ private:
 	void updatePolynomPlot();
 
 	void handleTsv();
+
+	double maxYValueForMap();
 
 	double calculateHeatingEnergyDemand();
 
