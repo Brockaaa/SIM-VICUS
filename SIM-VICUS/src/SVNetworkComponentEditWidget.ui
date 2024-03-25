@@ -959,7 +959,7 @@
                      <item row="2" column="0">
                       <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemand">
                        <property name="text">
-                        <string>Domestic Water Demand:</string>
+                        <string>Domestic Hot Water Demand:</string>
                        </property>
                       </widget>
                      </item>

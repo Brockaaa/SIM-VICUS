@@ -142,13 +142,13 @@ private:
 
 	void handleTsv();
 
-	double maxYValueForMap();
+	double indexValueForMapYData(VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
 
 	double calculateHeatingEnergyDemand();
 
 	double calculateHeatingEnergyDemand(const std::vector<double>& vectorWithValues);
 
-	void calculateNewHeatLossSplineYData(double k, std::vector<double>& vectorToSaveNewValues);
+	void calculateNewHeatLossSplineYData(double k, std::vector<double>& vectorToSaveNewValues, VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
 
 	bool calculateNewK(double valueToReach);
 
@@ -184,20 +184,30 @@ private:
 	std::vector<VICUS::NetworkHeatExchange> m_vectorTempHeatExchangeBuildingType;
 
 	/*! Curve visible in HeatLossSpline plot */
-	QwtPlotCurve							*m_heatLossSplineCurve = nullptr;
+	QwtPlotCurve							*m_heatLossSplineHeatingCurve = nullptr;
+	QwtPlotCurve							*m_heatLossSplineCoolingCurve = nullptr;
 	QwtPlotZoomer							*m_heatLossSplineZoomer = nullptr;
 
 	/*! Data vectors to store the original values of the tsv file */
-	std::vector<double>						m_heatLossSplineXData;
-	std::map<double, std::vector<double>>	m_mapHeatLossSplineYData;
-	std::vector<double>						m_heatLossSplineMaxYValues;
+	std::vector<double>						m_heatLossSplineHeatingXData;
+	std::map<double, std::vector<double>>	m_mapHeatLossSplineHeatingYData;
+	std::vector<double>						m_heatLossSplineHeatingMaxYValues;
+
+	/*! Data vectors to store the original values of the tsv file */
+	std::vector<double>						m_heatLossSplineCoolingXData;
+	std::map<double, std::vector<double>>	m_mapHeatLossSplineCoolingYData;
+	std::vector<double>						m_heatLossSplineCoolingMaxYValues;
 
 	/*! Parameter to adjust curve to reach desired heatingEnergydemand */
 	double									m_k = 1;
 
 	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
-	std::vector<double>						m_heatLossSplineXPlotData;
-	std::vector<double>						m_heatLossSplineYPlotData;
+	std::vector<double>						m_heatLossSplineHeatingXPlotData;
+	std::vector<double>						m_heatLossSplineHeatingYPlotData;
+
+	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
+	std::vector<double>						m_heatLossSplineCoolingXPlotData;
+	std::vector<double>						m_heatLossSplineCoolingYPlotData;
 
 };
 
