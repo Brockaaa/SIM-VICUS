@@ -53,12 +53,31 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 	m_modelType = modelType;
 	switch(modelType){
 		case T_HeatLossSpline:
-			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 10);
-			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 15807.6668);
-			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 5);
-			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
-			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1);
-			m_buildingType = BT_ResidentialBuilding;
+			if(m_buildingType == NUM_BT){
+				m_buildingType = BT_ResidentialBuilding;
+			}
+			if(m_buildingType == BT_ResidentialBuilding) {
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 10);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 7500);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemandAreaSpecific, 50);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 5);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 1200);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemandAreaSpecific, 8);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 150);
+			} else if (m_buildingType == BT_OfficeBuilding) {
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 100);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 50000);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemandAreaSpecific, 50);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 25);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 25000);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemandAreaSpecific, 8);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1000);
+			}
+//floor area residential 150 m2, office 1000 m2
+//floor residential heatingenergydemandareaspecific = 50, office 50
+
 	}
 }
 

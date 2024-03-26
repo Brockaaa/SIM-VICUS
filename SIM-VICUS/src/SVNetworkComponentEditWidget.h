@@ -28,6 +28,8 @@
 
 #include "SVAbstractDatabaseEditWidget.h"
 
+#include <QDialog>
+
 namespace Ui {
 	class SVNetworkComponentEditWidget;
 }
@@ -62,6 +64,11 @@ public:
 		DT_DoubleAdditional,
 		DT_DoubleOptional,
 		NUM_DT
+	};
+
+	class HeatLossSplineEnergyDemandDialog : public QDialog {
+	public:
+		HeatLossSplineEnergyDemandDialog(QWidget *parent = nullptr);
 	};
 
 	explicit SVNetworkComponentEditWidget(QWidget *parent = nullptr);
@@ -142,15 +149,17 @@ private:
 
 	void handleTsv();
 
+	void initializeHeatLossSplineAreaRelatedValues();
+
 	double indexValueForMapYData(VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
 
-	double calculateHeatingEnergyDemand();
+	double calculateEnergyDemand(VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_HeatingEnergyDemand);
 
-	double calculateHeatingEnergyDemand(const std::vector<double>& vectorWithValues);
+	double calculateEnergyDemand(const std::vector<double>& vectorWithValues);
 
 	void calculateNewHeatLossSplineYData(double k, std::vector<double>& vectorToSaveNewValues, VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
 
-	bool calculateNewK(double valueToReach);
+	bool calculateNewK(double valueToReach, VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
 
 	Ui::SVNetworkComponentEditWidget		*m_ui;
 
@@ -161,7 +170,7 @@ private:
 	SVNetworkControllerEditDialog			*m_controllerEditDialog = nullptr;
 
 	/*! Flag to ensure only one dialog is spawned to request how to enforce HeatingEnergyDemand set by user */
-	bool									m_isHeatingEnergyDemandDialogAlreadyOpen = false;
+	bool									m_isEnergyDemandDialogAlreadyOpen = false;
 
 	/*! Pointer to currently edited component.
 		The pointer is updated whenever updateInput() is called.
@@ -198,8 +207,9 @@ private:
 	std::map<double, std::vector<double>>	m_mapHeatLossSplineCoolingYData;
 	std::vector<double>						m_heatLossSplineCoolingMaxYValues;
 
-	/*! Parameter to adjust curve to reach desired heatingEnergydemand */
-	double									m_k = 1;
+	/*! Parameter to adjust curves to reach desired Energydemand */
+	double									m_kHeating = 1;
+	double									m_kCooling = 1;
 
 	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
 	std::vector<double>						m_heatLossSplineHeatingXPlotData;
