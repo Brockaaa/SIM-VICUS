@@ -124,8 +124,6 @@ private slots:
 
 	void on_lineEditHeatLossSplineFloorArea_editingFinishedSuccessfully();
 
-	void on_horizontalSliderHeatLossSplinePlot_sliderMoved(int position);
-
 	void on_lineEditHeatLossSplineMaximumHeatingLoad_editingFinishedSuccessfully();
 
 	void on_lineEditHeatLossSplineHeatingEnergyDemand_editingFinishedSuccessfully();
@@ -160,6 +158,8 @@ private:
 	void calculateNewHeatLossSplineYData(double k, std::vector<double>& vectorToSaveNewValues, VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
 
 	bool calculateNewK(double valueToReach, VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
+
+	void setCoolingCurve(bool set);
 
 	Ui::SVNetworkComponentEditWidget		*m_ui;
 
@@ -198,25 +198,18 @@ private:
 	QwtPlotZoomer							*m_heatLossSplineZoomer = nullptr;
 
 	/*! Data vectors to store the original values of the tsv file */
-	std::vector<double>						m_heatLossSplineHeatingXData;
 	std::map<double, std::vector<double>>	m_mapHeatLossSplineHeatingYData;
 	std::vector<double>						m_heatLossSplineHeatingMaxYValues;
-
-	/*! Data vectors to store the original values of the tsv file */
-	std::vector<double>						m_heatLossSplineCoolingXData;
 	std::map<double, std::vector<double>>	m_mapHeatLossSplineCoolingYData;
 	std::vector<double>						m_heatLossSplineCoolingMaxYValues;
+	std::vector<double>						m_heatLossSplineXData;
 
 	/*! Parameter to adjust curves to reach desired Energydemand */
 	double									m_kHeating = 1;
 	double									m_kCooling = 1;
 
 	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
-	std::vector<double>						m_heatLossSplineHeatingXPlotData;
 	std::vector<double>						m_heatLossSplineHeatingYPlotData;
-
-	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
-	std::vector<double>						m_heatLossSplineCoolingXPlotData;
 	std::vector<double>						m_heatLossSplineCoolingYPlotData;
 
 };

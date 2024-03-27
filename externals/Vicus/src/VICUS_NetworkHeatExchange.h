@@ -121,7 +121,7 @@ public:
 
 	bool								m_areaRelatedValues = false;				// XML:A
 
-	bool								m_withCoolingDemand = false;				// XML:A
+	bool								m_withCoolingDemand = true;					// XML:A
 
 	BuildingType						m_buildingType = NUM_BT;					// XML:A
 
