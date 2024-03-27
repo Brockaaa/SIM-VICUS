@@ -289,7 +289,8 @@ void SVNetworkComponentEditWidget::updatePageHeatLossSpline()
 		m_vectorTempHeatExchangeBuildingType.push_back(newHeatExchange);
 	}
 
-	handleTsv();
+	if(m_heatLossSplineXData.size() == 0) handleTsv();
+	updatePlotData();
 
 	// set widgets in pageHeatLossSpline to appropriate values
 	m_ui->checkBoxHeatLossSplineIndividual->setChecked(m_current->m_heatExchange.m_individualHeatFlux);
@@ -728,26 +729,22 @@ void SVNetworkComponentEditWidget::updatePolynomPlot() {
 
 }
 
+
 void SVNetworkComponentEditWidget::handleTsv()
 {
 	qDebug() << "Loading TSV";
 	std::vector<QString> directories;
-	switch(m_current->m_heatExchange.m_buildingType){
-		case VICUS::NetworkHeatExchange::BT_ResidentialBuilding:
-			directories.push_back(QString(":/demandProfiles/Residential_HeatingLoad.tsv"));
-			directories.push_back(QString(":/demandProfiles/Residential_CoolingLoad.tsv"));
-			break;
-		case VICUS::NetworkHeatExchange::BT_OfficeBuilding:
-			directories.push_back(QString(":/demandProfiles/Office_HeatingLoad.tsv"));
-			directories.push_back(QString(":/demandProfiles/Office_CoolingLoad.tsv"));
-			break;
-		default: // compiler happy
-			break;
-	}
+	directories.push_back(QString(":/demandProfiles/Residential_HeatingLoad.tsv"));
+	directories.push_back(QString(":/demandProfiles/Residential_CoolingLoad.tsv"));
+	directories.push_back(QString(":/demandProfiles/Office_HeatingLoad.tsv"));
+	directories.push_back(QString(":/demandProfiles/Office_CoolingLoad.tsv"));
 
-	std::vector<IBK::CSVReader> readers;
-	readers.resize(directories.size());
+	m_vectorHeatLossSplineHeatingYData.resize(directories.size() / 2);
+	m_vectorHeatLossSplineCoolingYData.resize(directories.size() / 2);
+
 	for(unsigned int i = 0; i < directories.size(); i++){
+		bool heating = directories[i].contains("Heating");
+		IBK::CSVReader reader;
 		QTemporaryFile tempFile;
 		if (tempFile.open()) {
 			// Copy the resource to the temporary file
@@ -763,46 +760,63 @@ void SVNetworkComponentEditWidget::handleTsv()
 			}
 		}
 
-
 		IBK::Path ibkDirectory(directories[i].toStdString());
-
 		try {
-			readers[i].read(ibkDirectory);
+			qDebug() << "Reading " << directories[i];
+			reader.read(ibkDirectory);
 		}
 		catch (...) {
 			qDebug() << "Could not load TSV successfully";
 		}
 
-		qDebug() << "TSV succesfully loaded";
-		for(auto column : readers[i].m_captions){
-			qDebug() << "Column: " << QString::fromStdString(column);
+		if(i == 0){
+			m_heatLossSplineXData = reader.colData(0);
+		}
+		for(unsigned int j = 1; j < reader.m_nColumns; j++){
+			if(heating){
+				m_vectorHeatLossSplineHeatingYData[i / 2].push_back(reader.colData(j));
+			}
+			else{
+				m_vectorHeatLossSplineCoolingYData[i / 2].push_back(reader.colData(j));
+			}
 		}
 	}
+}
 
-
-	qDebug() << "valuesHeating: " << readers[0].m_values[4][1];
-	qDebug() << "valuesCooling: " << readers[1].m_values[4859][1];
+void SVNetworkComponentEditWidget::updatePlotData()
+{
 
 	// preparing Heating Data
-	m_heatLossSplineXData = readers[0].colData(0);
 	m_heatLossSplineHeatingMaxYValues.clear();
 	m_mapHeatLossSplineHeatingYData.clear();
-	for(unsigned int i = 1; i < readers[0].m_nColumns; i++){
-		const std::vector<double>& colData = readers[0].colData(i);
-		double maxValue = *(std::max_element(colData.begin(), colData.end()));
+	int indexForVectorYData;
+	switch (m_current->m_heatExchange.m_buildingType) {
+		case VICUS::NetworkHeatExchange::BT_ResidentialBuilding:
+			indexForVectorYData = 0;
+			break;
+		case VICUS::NetworkHeatExchange::BT_OfficeBuilding:
+			indexForVectorYData = 1;
+			break;
+		default:
+			indexForVectorYData = 0;
+	}
+
+	for(auto& vectorHeating : m_vectorHeatLossSplineHeatingYData[indexForVectorYData]){
+		double maxValue = *(std::max_element(vectorHeating.begin(), vectorHeating.end()));
 		m_heatLossSplineHeatingMaxYValues.push_back(maxValue);
-		m_mapHeatLossSplineHeatingYData[maxValue] = readers[0].colData(i);
+		m_mapHeatLossSplineHeatingYData[maxValue] = vectorHeating;
 	}
 
 	for(auto maxValue : m_heatLossSplineHeatingMaxYValues){
 		qDebug() << "Max Heating values: " << maxValue;
 	}
+
 	VICUS::NetworkHeatExchange::para_t parameterHeating, parameterCooling;
 	double floorArea = 1;
 	parameterHeating = m_current->m_heatExchange.m_areaRelatedValues ? VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific
-																										: VICUS::NetworkHeatExchange::P_HeatingEnergyDemand;
+																	 : VICUS::NetworkHeatExchange::P_HeatingEnergyDemand;
 	parameterCooling = m_current->m_heatExchange.m_areaRelatedValues ? VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific
-																										: VICUS::NetworkHeatExchange::P_CoolingEnergyDemand;
+																	 : VICUS::NetworkHeatExchange::P_CoolingEnergyDemand;
 
 	if(m_current->m_heatExchange.m_areaRelatedValues){
 		parameterHeating = VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific;
@@ -826,11 +840,10 @@ void SVNetworkComponentEditWidget::handleTsv()
 	//prepating Cooling Data
 	m_heatLossSplineCoolingMaxYValues.clear();
 	m_mapHeatLossSplineCoolingYData.clear();
-	for(unsigned int i = 1; i < readers[1].m_nColumns; i++){
-		const std::vector<double>& colData = readers[1].colData(i);
-		double maxValue = *(std::max_element(colData.begin(), colData.end()));
+	for(unsigned int i = 0; i < m_vectorHeatLossSplineCoolingYData[indexForVectorYData].size(); i++){
+		double maxValue = *(std::max_element(m_vectorHeatLossSplineCoolingYData[indexForVectorYData][i].begin(), m_vectorHeatLossSplineCoolingYData[indexForVectorYData][i].end()));
 		m_heatLossSplineCoolingMaxYValues.push_back(maxValue);
-		m_mapHeatLossSplineCoolingYData[maxValue] = readers[1].colData(i);
+		m_mapHeatLossSplineCoolingYData[maxValue] = m_vectorHeatLossSplineCoolingYData[indexForVectorYData][i];
 	}
 
 	for(auto maxValue : m_heatLossSplineCoolingMaxYValues){
@@ -862,6 +875,7 @@ void SVNetworkComponentEditWidget::handleTsv()
 	if(m_heatLossSplineZoomer != nullptr) delete m_heatLossSplineZoomer;
 	m_heatLossSplineZoomer = new QwtPlotZoomer(m_ui->widgetPlotHeatLossSpline->canvas() );
 	m_heatLossSplineZoomer->setZoomBase();
+
 }
 
 void SVNetworkComponentEditWidget::initializeHeatLossSplineAreaRelatedValues()
@@ -1409,7 +1423,7 @@ void SVNetworkComponentEditWidget::on_comboBoxHeatLossSplineUserBuildingType_act
 			calculateNewK(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemand].get_value());
 		}
 
-		handleTsv();
+		updatePlotData();
 	} else {
 		m_ui->stackedWidgetHeatLossSpline->setCurrentIndex(1);
 	}

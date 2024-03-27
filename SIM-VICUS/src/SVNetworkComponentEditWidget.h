@@ -147,6 +147,8 @@ private:
 
 	void handleTsv();
 
+	void updatePlotData();
+
 	void initializeHeatLossSplineAreaRelatedValues();
 
 	double indexValueForMapYData(VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
@@ -198,11 +200,15 @@ private:
 	QwtPlotZoomer							*m_heatLossSplineZoomer = nullptr;
 
 	/*! Data vectors to store the original values of the tsv file */
+	std::vector<std::vector<std::vector<double>>>	m_vectorHeatLossSplineHeatingYData; // 1. buildingType, 2. Different columns in Tsv
+	std::vector<std::vector<std::vector<double>>>	m_vectorHeatLossSplineCoolingYData; // 1. buildingType, 2. Different columns in Tsv
+	std::vector<double>								m_heatLossSplineXData;
+
+	/*! Current data for the active buildingType */
 	std::map<double, std::vector<double>>	m_mapHeatLossSplineHeatingYData;
 	std::vector<double>						m_heatLossSplineHeatingMaxYValues;
 	std::map<double, std::vector<double>>	m_mapHeatLossSplineCoolingYData;
 	std::vector<double>						m_heatLossSplineCoolingMaxYValues;
-	std::vector<double>						m_heatLossSplineXData;
 
 	/*! Parameter to adjust curves to reach desired Energydemand */
 	double									m_kHeating = 1;
