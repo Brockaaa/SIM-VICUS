@@ -441,7 +441,7 @@
        <item>
         <widget class="QStackedWidget" name="stackedWidgetHeatExchange">
          <property name="currentIndex">
-          <number>6</number>
+          <number>5</number>
          </property>
          <widget class="QWidget" name="pageTemperatureConstant">
           <property name="sizePolicy">
@@ -775,23 +775,10 @@
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="radioButtonHeatLossConstantPredef">
+            <widget class="QCheckBox" name="checkBoxHeatLossConstantIndividual">
              <property name="text">
-              <string>defined maximum heat demand</string>
+              <string>individually defined in network node</string>
              </property>
-             <attribute name="buttonGroup">
-              <string notr="true">buttonGroupHeatLossConstant</string>
-             </attribute>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="radioButtonHeatLossConstantUser">
-             <property name="text">
-              <string>user determined</string>
-             </property>
-             <attribute name="buttonGroup">
-              <string notr="true">buttonGroupHeatLossConstant</string>
-             </attribute>
             </widget>
            </item>
            <item>

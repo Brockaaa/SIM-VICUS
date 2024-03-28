@@ -77,7 +77,9 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 			}
 //floor area residential 150 m2, office 1000 m2
 //floor residential heatingenergydemandareaspecific = 50, office 50
-
+		case T_HeatLossConstant: {
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatLoss, 2000);
+		}
 	}
 }
 

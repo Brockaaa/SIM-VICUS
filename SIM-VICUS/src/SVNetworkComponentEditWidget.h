@@ -108,9 +108,7 @@ private slots:
 
 	void on_comboBoxHeatExchange_activated(int index);
 
-	void on_radioButtonHeatLossConstantPredef_clicked();
-
-	void on_radioButtonHeatLossConstantUser_clicked();
+	void on_checkBoxHeatLossConstantIndividual_stateChanged(int arg1);
 
 	void on_lineEditHeatLossConstantUser_editingFinishedSuccessfully();
 
