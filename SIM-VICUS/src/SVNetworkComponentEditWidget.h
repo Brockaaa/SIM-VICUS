@@ -83,7 +83,7 @@ public:
 	/*! updates pages */
 	void updatePageHeatLossConstant();
 	void updatePageHeatLossSpline();
-	void updatePageTemperatureConstant(){}
+	void updatePageTemperatureConstant();
 	void updatePageTemperatureSpline(){}
 	void updatePageTemperatureSplineEvaporator(){}
 	void updatePageHeatingDemandSpaceHeating(){}
@@ -135,6 +135,8 @@ private slots:
 	void on_groupBoxHeatLossSplineCooling_clicked(bool checked);
 
 	void on_lineEditHeatLossSplineMaximumCoolingLoad_editingFinishedSuccessfully();
+
+	void on_lineEditTemperatureSplineHeatTransferCoefficient_editingFinishedSuccessfully();
 
 private:
 	void updateParameterTableWidget() const;

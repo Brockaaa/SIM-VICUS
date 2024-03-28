@@ -299,6 +299,12 @@ void SVNetworkComponentEditWidget::updatePageHeatLossSpline()
 	on_checkBoxHeatLossSplineIndividual_clicked(m_current->m_heatExchange.m_individualHeatFlux);
 }
 
+void SVNetworkComponentEditWidget::updatePageTemperatureConstant()
+{
+	m_ui->lineEditTemperatureConstantHeatTransferCoefficient->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_ExternalHeatTransferCoefficient].get_value());
+	m_ui->lineEditTemperatureConstantTemperature->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_Temperature].get_value());
+}
+
 void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 	FUNCID(SVNetworkComponentEditWidget::updateParameterTableWidget);
 
@@ -1312,6 +1318,9 @@ void SVNetworkComponentEditWidget::on_comboBoxHeatExchange_activated(int index)
 	m_ui->stackedWidgetHeatExchange->setCurrentIndex(static_cast<int>(m_current->m_heatExchange.m_modelType));
 
 	switch(m_current->m_heatExchange.m_modelType){
+		case VICUS::NetworkHeatExchange::T_TemperatureConstant:
+			updatePageTemperatureConstant();
+			break;
 		case VICUS::NetworkHeatExchange::T_HeatingDemandSpaceHeating:
 			updatePageHeatingDemandSpaceHeating();
 			break;
@@ -1687,7 +1696,6 @@ void SVNetworkComponentEditWidget::on_lineEditHeatLossSplineCoolingEnergyDemand_
 		m_ui->lineEditHeatLossSplineCoolingEnergyDemand->clearFocus();
 		m_heatLossSplineCoolingCurve->setSamples(m_heatLossSplineXData.data(), m_heatLossSplineCoolingYPlotData.data(), m_heatLossSplineXData.size());
 		m_heatLossSplineCoolingCurve->plot()->replot();
-		m_isEnergyDemandDialogAlreadyOpen = false;
 	}
 
 	m_isEnergyDemandDialogAlreadyOpen = false;
@@ -1762,3 +1770,9 @@ SVNetworkComponentEditWidget::HeatLossSplineEnergyDemandDialog::HeatLossSplineEn
 		connect(button2, &QPushButton::clicked, this, [this]() { this->done(2); });
 		connect(button3, &QPushButton::clicked, this, [this]() { this->done(3); });
 }
+
+void SVNetworkComponentEditWidget::on_lineEditTemperatureSplineHeatTransferCoefficient_editingFinishedSuccessfully()
+{
+
+}
+

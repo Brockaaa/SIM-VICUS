@@ -441,7 +441,7 @@
        <item>
         <widget class="QStackedWidget" name="stackedWidgetHeatExchange">
          <property name="currentIndex">
-          <number>5</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="pageTemperatureConstant">
           <property name="sizePolicy">
@@ -578,7 +578,7 @@
              <item>
               <widget class="QLabel" name="labelTemperatureSplineHeatTransferCoefficient">
                <property name="text">
-                <string>Heat Transfer Coefficient</string>
+                <string>Heat Transfer Coefficient </string>
                </property>
               </widget>
              </item>
@@ -1280,7 +1280,4 @@
   <include location="../resources/SIM-VICUS.qrc"/>
  </resources>
  <connections/>
- <buttongroups>
-  <buttongroup name="buttonGroupHeatLossConstant"/>
- </buttongroups>
 </ui>

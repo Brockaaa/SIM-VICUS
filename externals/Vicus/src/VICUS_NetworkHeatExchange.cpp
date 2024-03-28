@@ -52,7 +52,7 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 {
 	m_modelType = modelType;
 	switch(modelType){
-		case T_HeatLossSpline:
+		case T_HeatLossSpline:{
 			if(m_buildingType == NUM_BT){
 				m_buildingType = BT_ResidentialBuilding;
 			}
@@ -75,10 +75,17 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemandAreaSpecific, 8);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1000);
 			}
-//floor area residential 150 m2, office 1000 m2
-//floor residential heatingenergydemandareaspecific = 50, office 50
+			break;
+		}
 		case T_HeatLossConstant: {
-			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatLoss, 2000);
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatLoss, 5);
+			break;
+		}
+		case T_TemperatureSpline:
+		case T_TemperatureConstant: {
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_ExternalHeatTransferCoefficient, 5);
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_Temperature, 20);
+			break;
 		}
 	}
 }

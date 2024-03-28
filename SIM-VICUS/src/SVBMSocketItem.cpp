@@ -65,6 +65,7 @@ SVBMSocketItem::SVBMSocketItem(SVBMBlockItem * parent, VICUS::BMSocket * socket,
 
 void SVBMSocketItem::updateSocketItem() {
 	switch(m_componentModelType){
+		case VICUS::NetworkComponent::MT_PressureLossElement:
 		case VICUS::NetworkComponent::MT_ControlledValve:
 		case VICUS::NetworkComponent::MT_ConstantPressureLossValve:
 		{
@@ -86,7 +87,51 @@ void SVBMSocketItem::updateSocketItem() {
 			}
 			break;
 		}
+		case VICUS::NetworkComponent::MT_HeatPumpOnOffSourceSide:
+		case VICUS::NetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
+		case VICUS::NetworkComponent::MT_HeatPumpVariableSourceSide:
+		case VICUS::NetworkComponent::MT_HeatPumpVariableIdealCarnotSourceSide:
+		{
+			if (m_socket->m_isInlet) {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()+16, 8, 8); break;
+					case VICUS::BMSocket::Right		: break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			else {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: break;
+					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()+16, 8, 8); break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			break;
+		}
 
+		case VICUS::NetworkComponent::ModelType::MT_HeatExchanger:
+		case VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler:
+		{
+			if (m_socket->m_isInlet) {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()+7, 8, 8); break;
+					case VICUS::BMSocket::Right		: break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			else {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: break;
+					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()+7, 8, 8); break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			break;
+		}
 		default:
 		{
 			if (m_socket->m_isInlet) {

@@ -114,11 +114,11 @@ void SVBMBlockItem::createSocketItems() {
 		if (!s.m_isInlet) {
 			item->setZValue(20); // outlet nodes are drawn over lines
 		}
-		if(m_componentModelType == VICUS::NetworkComponent::MT_ControlledValve || m_componentModelType == VICUS::NetworkComponent::MT_ConstantPressureLossValve){
-			QPointF position = s.m_pos;
-			position.setY(position.y() + 12);
-			s.m_pos = position;
-		}
+
+		QPointF position = s.m_pos;
+		position.setY(item->boundingRect().y()+4);
+		s.m_pos = position;
+
 		m_socketItems.append(item);
 	}
 }
