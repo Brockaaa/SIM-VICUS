@@ -77,7 +77,7 @@ public:
 		P_CoolingEnergyDemand,					// Keyword: CoolingEnergyDemand					[kWh]		'CoolingEnergyDemand'
 		P_CoolingEnergyDemandAreaSpecific,		// Keyword: CoolingEnergyDemandAreaSpecific		[kWh/m2]	'CoolingEnergyDemandAreaSpecific'
 		P_DomesticHotWaterDemand,				// Keyword: DomesticHotWaterDemand				[kWh]		'DomesticHotWaterDemand'
-		P_DomesticHotWaterDemandAreaSpecific,	// Keyword: DomesticHotWaterDemandAreaRelated	[kWh]		'DomesticHotWaterDemandAreaRelated'
+		P_DomesticHotWaterDemandAreaSpecific,	// Keyword: DomesticHotWaterDemandAreaRelated	[kWh/m2]	'DomesticHotWaterDemandAreaRelated'
 		NUM_P
 	};
 
