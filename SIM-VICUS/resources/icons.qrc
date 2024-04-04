@@ -137,13 +137,20 @@
         <file>icons/dark/png/checkbox_unchecked.png</file>
         <file>icons/dark/png/edit.png</file>
         <file>icons/light/png/edit.png</file>
-        <file>icons/light/svg/network_icons/dynamicpipe.svg</file>
-        <file>icons/light/svg/network_icons/heatercooler.svg</file>
-        <file>icons/light/svg/network_icons/heatexchanger.svg</file>
-        <file>icons/light/svg/network_icons/heatpump.svg</file>
-        <file>icons/light/svg/network_icons/pump.svg</file>
-        <file>icons/light/svg/network_icons/simplepipe.svg</file>
-        <file>icons/light/svg/network_icons/simplevalve.svg</file>
-        <file>icons/light/svg/network_icons/valve.svg</file>
+        <file>icons/light/svg/network_icons/SimplePipe.svg</file>
+        <file>icons/light/svg/network_icons/DynamicPipe.svg</file>
+        <file>icons/light/svg/network_icons/ConstantMassFluxPump.svg</file>
+        <file>icons/light/svg/network_icons/ConstantPressureLossValve.svg</file>
+        <file>icons/light/svg/network_icons/ConstantPressurePump.svg</file>
+        <file>icons/light/svg/network_icons/ControlledPump.svg</file>
+        <file>icons/light/svg/network_icons/ControlledValve.svg</file>
+	<file>icons/light/svg/network_icons/HeatExchanger.svg</file>
+        <file>icons/light/svg/network_icons/HeatPumpOnOffSourceSide.svg</file>
+        <file>icons/light/svg/network_icons/HeatPumpVariableIdealCarnotSourceSide.svg</file>
+        <file>icons/light/svg/network_icons/HeatPumpVariableIdealCarnotSupplySide.svg</file>
+        <file>icons/light/svg/network_icons/HeatPumpVariableSourceSide.svg</file>
+        <file>icons/light/svg/network_icons/IdealHeaterCooler.svg</file>
+        <file>icons/light/svg/network_icons/PressureLossElement.svg</file>
+        <file>icons/light/svg/network_icons/VariablePressurePump.svg</file>
     </qresource>
 </RCC>

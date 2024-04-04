@@ -65,13 +65,12 @@ SVBMSocketItem::SVBMSocketItem(SVBMBlockItem * parent, VICUS::BMSocket * socket,
 
 void SVBMSocketItem::updateSocketItem() {
 	switch(m_componentModelType){
-		case VICUS::NetworkComponent::MT_PressureLossElement:
-		case VICUS::NetworkComponent::MT_ControlledValve:
 		case VICUS::NetworkComponent::MT_ConstantPressureLossValve:
+		case VICUS::NetworkComponent::MT_PressureLossElement:
 		{
 			if (m_socket->m_isInlet) {
 				switch (m_socket->direction()) {
-					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()+8, 8, 8); break;
+					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()+11, 8, 8); break;
 					case VICUS::BMSocket::Right		: break;
 					case VICUS::BMSocket::Top		: break;
 					case VICUS::BMSocket::Bottom	: break;
@@ -80,17 +79,35 @@ void SVBMSocketItem::updateSocketItem() {
 			else {
 				switch (m_socket->direction()) {
 					case VICUS::BMSocket::Left		: break;
-					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()+8, 8, 8); break;
+					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()+11, 8, 8); break;
 					case VICUS::BMSocket::Top		: break;
 					case VICUS::BMSocket::Bottom	: break;
 				}
 			}
 			break;
 		}
-		case VICUS::NetworkComponent::MT_HeatPumpOnOffSourceSide:
+		case VICUS::NetworkComponent::MT_ControlledValve:
+		{
+			if (m_socket->m_isInlet) {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()+12, 8, 8); break;
+					case VICUS::BMSocket::Right		: break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			else {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: break;
+					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()+12, 8, 8); break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			break;
+		}
+
 		case VICUS::NetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
-		case VICUS::NetworkComponent::MT_HeatPumpVariableSourceSide:
-		case VICUS::NetworkComponent::MT_HeatPumpVariableIdealCarnotSourceSide:
 		{
 			if (m_socket->m_isInlet) {
 				switch (m_socket->direction()) {
@@ -112,7 +129,6 @@ void SVBMSocketItem::updateSocketItem() {
 		}
 
 		case VICUS::NetworkComponent::ModelType::MT_HeatExchanger:
-		case VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler:
 		{
 			if (m_socket->m_isInlet) {
 				switch (m_socket->direction()) {
@@ -132,19 +148,70 @@ void SVBMSocketItem::updateSocketItem() {
 			}
 			break;
 		}
-		default:
+
+		case VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump:
+		case VICUS::NetworkComponent::ModelType::MT_VariablePressurePump:
 		{
 			if (m_socket->m_isInlet) {
 				switch (m_socket->direction()) {
-					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()-4, 8, 8); break;
-					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x()-4, m_socket->m_pos.y()-4, 8, 8); break;
+					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()+1, 8, 8); break;
+					case VICUS::BMSocket::Right		: break;
 					case VICUS::BMSocket::Top		: break;
 					case VICUS::BMSocket::Bottom	: break;
 				}
 			}
 			else {
 				switch (m_socket->direction()) {
-					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-8, m_socket->m_pos.y()-4, 8, 8); break;
+					case VICUS::BMSocket::Left		: break;
+					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()+1, 8, 8); break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			break;
+		}
+
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide:
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide:
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide:
+		{
+			if (m_socket->m_isInlet) {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()-24, 8, 8); break;
+					case VICUS::BMSocket::Right		: break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			else {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: break;
+					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()-24, 8, 8); break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			break;
+		}
+
+		case VICUS::NetworkComponent::ModelType::MT_SimplePipe:
+		case VICUS::NetworkComponent::ModelType::MT_DynamicPipe:
+		case VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump:
+		case VICUS::NetworkComponent::ModelType::MT_ControlledPump:
+		case VICUS::NetworkComponent::MT_IdealHeaterCooler:
+		default:
+		{
+			if (m_socket->m_isInlet) {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: m_symbolRect = QRectF(-4, m_socket->m_pos.y()-4, 8, 8); break;
+					case VICUS::BMSocket::Right		: break;
+					case VICUS::BMSocket::Top		: break;
+					case VICUS::BMSocket::Bottom	: break;
+				}
+			}
+			else {
+				switch (m_socket->direction()) {
+					case VICUS::BMSocket::Left		: break;
 					case VICUS::BMSocket::Right		: m_symbolRect = QRectF(m_socket->m_pos.x(), m_socket->m_pos.y()-4, 8, 8); break;
 					case VICUS::BMSocket::Top		: break;
 					case VICUS::BMSocket::Bottom	: break;

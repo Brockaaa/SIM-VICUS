@@ -293,35 +293,35 @@ bool NetworkComponent::hasPipeProperties(const NetworkComponent::ModelType model
 QString NetworkComponent::iconFileFromModelType(NetworkComponent::ModelType modelType) {
 	switch (modelType) {
 	case VICUS::NetworkComponent::ModelType::MT_SimplePipe:
-		return ":/icons/light/svg/network_icons/simplepipe.svg";
+		return ":/icons/light/svg/network_icons/SimplePipe.svg";
 	case VICUS::NetworkComponent::ModelType::MT_DynamicPipe:
-		return ":/icons/light/svg/network_icons/simplepipe.svg";
+		return ":/icons/light/svg/network_icons/DynamicPipe.svg";
 	case VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump:
-		return ":/icons/light/svg/network_icons/pump.svg";
+		return ":/icons/light/svg/network_icons/ConstantPressurePump.svg";
 	case VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump:
-		return ":/icons/light/svg/network_icons/pump.svg";
+		return ":/icons/light/svg/network_icons/ConstantMassFluxPump.svg";
 	case VICUS::NetworkComponent::ModelType::MT_ControlledPump:
-		return ":/icons/light/svg/network_icons/pump.svg";
+		return ":/icons/light/svg/network_icons/ControlledPump.svg";
 	case VICUS::NetworkComponent::ModelType::MT_VariablePressurePump:
-		return ":/icons/light/svg/network_icons/pump.svg";
+		return ":/icons/light/svg/network_icons/VariablePressurePump.svg";
 	case VICUS::NetworkComponent::ModelType::MT_HeatExchanger:
-		return ":/icons/light/svg/network_icons/heatexchanger.svg";
+		return ":/icons/light/svg/network_icons/HeatExchanger.svg";
 	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide:
-		return ":/icons/light/svg/network_icons/heatpump.svg";
+		return ":/icons/light/svg/network_icons/HeatPumpVariableIdealCarnotSourceSide.svg";
 	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide:
-		return ":/icons/light/svg/network_icons/heatpump.svg";
+		return ":/icons/light/svg/network_icons/HeatPumpVariableIdealCarnotSupplySide.svg";
 	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide:
-		return ":/icons/light/svg/network_icons/heatpump.svg";
+		return ":/icons/light/svg/network_icons/HeatPumpVariableSourceSide.svg";
 	case VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide:
-		return ":/icons/light/svg/network_icons/heatpump.svg";
+		return ":/icons/light/svg/network_icons/HeatPumpOnOffSourceSide.svg";
 	case VICUS::NetworkComponent::ModelType::MT_ControlledValve:
-		return ":/icons/light/svg/network_icons/valve.svg";
+		return ":/icons/light/svg/network_icons/ControlledValve.svg";
 	case VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve:
-		return ":/icons/light/svg/network_icons/valve.svg";
+		return ":/icons/light/svg/network_icons/ConstantPressureLossValve.svg";
 	case VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler:
-		return ":/icons/light/svg/network_icons/heatercooler.svg";
+		return ":/icons/light/svg/network_icons/IdealHeaterCooler.svg";
 	case VICUS::NetworkComponent::ModelType::MT_PressureLossElement:
-		return ":/icons/light/svg/network_icons/valve.svg";
+		return ":/icons/light/svg/network_icons/PressureLossElement.svg";
 	default:
 			throw std::invalid_argument("Unknown modelType");
 	}
