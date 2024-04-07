@@ -34,6 +34,7 @@
 class QTextBrowser;
 class QwtPlot;
 class QwtPlotCurve;
+class QwtPlotZoomer;
 
 /*! This widget takes data from a TSV-time-series and displays a preview diagram.
 */
@@ -54,6 +55,8 @@ private:
 	QwtPlot								*m_chart;
 	/*! The curve used to plot the preview data. */
 	QwtPlotCurve						*m_curve = nullptr;
+	/*! Class to enable zoom */
+	QwtPlotZoomer						*m_zoom = nullptr;
 	/*! Shows error messages when reading of CCD files fails. */
 	QTextBrowser						*m_errorTextBrowser;
 	/*! Temporary copy of the data to be visualized. */

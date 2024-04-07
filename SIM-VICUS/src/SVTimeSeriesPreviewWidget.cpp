@@ -30,6 +30,7 @@
 
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
+#include <qwt_plot_zoomer.h>
 
 #include "SVSettings.h"
 #include "SVChartUtils.h"
@@ -94,6 +95,8 @@ void SVTimeSeriesPreviewWidget::setData(const NANDRAD::LinearSplineParameter & d
 	yl.setFont(ft);
 	m_chart->setAxisTitle(QwtPlot::yLeft, yl);
 
+	if(m_zoom == nullptr)	m_zoom = new QwtPlotZoomer( m_chart->canvas() );
+	m_zoom->setZoomBase();
 	m_chart->replot();
 }
 
