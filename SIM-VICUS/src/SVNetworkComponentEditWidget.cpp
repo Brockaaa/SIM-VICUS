@@ -63,6 +63,7 @@
 
 #include <QtExt_LanguageHandler.h>
 #include <QtExt_Locale.h>
+#include <QtExt_Directories.h>
 
 
 
@@ -809,10 +810,10 @@ void SVNetworkComponentEditWidget::handleTsv()
 {
 	qDebug() << "Loading TSV";
 	std::vector<QString> directories;
-	directories.push_back(QString(":/demandProfiles/Residential_HeatingLoad.tsv"));
-	directories.push_back(QString(":/demandProfiles/Residential_CoolingLoad.tsv"));
-	directories.push_back(QString(":/demandProfiles/Office_HeatingLoad.tsv"));
-	directories.push_back(QString(":/demandProfiles/Office_CoolingLoad.tsv"));
+	directories.push_back(QString("/demandProfiles/Residential_HeatingLoad.tsv"));
+	directories.push_back(QString("/demandProfiles/Residential_CoolingLoad.tsv"));
+	directories.push_back(QString("/demandProfiles/Office_HeatingLoad.tsv"));
+	directories.push_back(QString("/demandProfiles/Office_CoolingLoad.tsv"));
 
 	m_vectorHeatLossSplineHeatingYData.resize(directories.size() / 2);
 	m_vectorHeatLossSplineCoolingYData.resize(directories.size() / 2);
@@ -820,20 +821,8 @@ void SVNetworkComponentEditWidget::handleTsv()
 	for(unsigned int i = 0; i < directories.size(); i++){
 		bool heating = directories[i].contains("Heating");
 		IBK::CSVReader reader;
-		QTemporaryFile tempFile;
-		if (tempFile.open()) {
-			// Copy the resource to the temporary file
-			QFile resourceFile(directories[i]);
-			if (resourceFile.open(QIODevice::ReadOnly)) {
-				tempFile.write(resourceFile.readAll());
 
-				// Important: Flush the data to ensure all data is written to disk
-				tempFile.flush();
-
-				// Use tempFile.fileName() as the absolute path to the temporary file
-				directories[i] = tempFile.fileName();
-			}
-		}
+		directories[i] = QtExt::Directories::resourcesRootDir().append(directories[i]);
 
 		IBK::Path ibkDirectory(directories[i].toStdString());
 		try {
