@@ -59,6 +59,7 @@
 #include <QTemporaryFile>
 #include <QPushButton>
 #include <QToolTip>
+#include <QListWidgetItem>
 
 #include <QtExt_LanguageHandler.h>
 #include <QtExt_Locale.h>
@@ -113,6 +114,9 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 	for(int i = 0; i < VICUS::NetworkHeatExchange::NUM_BT; i++){
 		m_ui->comboBoxHeatLossSplineUserBuildingType->addItem(VICUS::KeywordListQt::Keyword("NetworkHeatExchange::BuildingType", i));
 	}
+
+	m_ui->filepathDataFile->setup("", true, true, tr("Time-series data files (*.tsv *.csv);;All files (*.*)"),
+								  SVSettings::instance().m_dontUseNativeDialogs);
 }
 
 
@@ -282,6 +286,7 @@ void SVNetworkComponentEditWidget::updatePageHeatLossConstant()
 void SVNetworkComponentEditWidget::updatePageHeatLossSpline()
 {
 	m_vectorTempHeatExchangeBuildingType.clear();
+	m_ui->filepathDataFile->setFilename("");
 
 	for(int i = 0; i < VICUS::NetworkHeatExchange::NUM_BT; i++){
 		VICUS::NetworkHeatExchange::BuildingType buildingType = static_cast<VICUS::NetworkHeatExchange::BuildingType>(i);
@@ -292,7 +297,7 @@ void SVNetworkComponentEditWidget::updatePageHeatLossSpline()
 	}
 
 	if(m_heatLossSplineXData.size() == 0) handleTsv();
-	updatePlotData();
+	updatePlotDataPredef();
 
 	// set widgets in pageHeatLossSpline to appropriate values
 	m_ui->checkBoxHeatLossSplineIndividual->setChecked(m_current->m_heatExchange.m_individualHeatFlux);
@@ -737,6 +742,68 @@ void SVNetworkComponentEditWidget::updatePolynomPlot() {
 
 }
 
+void SVNetworkComponentEditWidget::updateHeatLossSplineSelectColumnList()
+{
+	// clear list widget
+	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(true);
+	m_ui->listWidgetHeatLossSplineSelectColumn->clear();
+	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(false);
+
+	QString dataFilePath = m_ui->filepathDataFile->filename();
+	// parse tsv-file and if several data columns are in file, show the column selection list widget
+	IBK::Path filePath(dataFilePath.toStdString()); // this is always an absolute path
+	// check if we have a  csv/tsv file
+	IBK::Path adjustedFileName;
+	int selectedColumn = 1;
+	IBK::extract_number_suffix(filePath, adjustedFileName, selectedColumn);
+	std::string extension = IBK::tolower_string(adjustedFileName.extension());
+	// read first line of file
+	IBK::CSVReader reader;
+	try {
+		// read only header
+		reader.read(adjustedFileName, true, true);
+	}
+	catch (...) {
+		//m_ui->widgetTimeSeriesPreview->setErrorMessage(tr("Error reading data file.")); //TODO
+		return;
+	}
+
+	m_ui->widgetHeatLossSplineSelectColumn->setEnabled(true);
+	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(true);
+
+	// process all columns past the first
+	for (unsigned int i=1; i<reader.m_captions.size(); ++i) {
+
+		// try to extract unit
+		QListWidgetItem * item = nullptr;
+		std::string ustr = reader.m_units[i];
+		if (ustr.empty())
+			ustr = "-";
+		item = new QListWidgetItem(QString("%1 [%2]").arg(QString::fromStdString(reader.m_captions[i]),
+														  QString::fromStdString(ustr)) );
+		try {
+			IBK::Unit u(ustr); // will throw in case of unknown unit
+
+			item->setData(Qt::UserRole, i);
+			item->setData(Qt::UserRole+1, QString::fromStdString(ustr));
+			item->setData(Qt::UserRole+2, QString::fromStdString(reader.m_captions[i]));
+			item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+		}
+		catch (...) {
+			item->setData(Qt::UserRole, -2); // unrecognized unit
+			item->setForeground(Qt::gray);
+		}
+		m_ui->listWidgetHeatLossSplineSelectColumn->addItem(item);
+	}
+	selectedColumn = qMin(selectedColumn, (int)reader.m_captions.size());
+
+	m_ui->listWidgetHeatLossSplineSelectColumn->setCurrentRow(selectedColumn-1);
+	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(false);
+
+	// we now have a column selected, trigger update of diagram
+	on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(m_ui->listWidgetHeatLossSplineSelectColumn->currentItem(), nullptr);
+}
+
 
 void SVNetworkComponentEditWidget::handleTsv()
 {
@@ -791,7 +858,7 @@ void SVNetworkComponentEditWidget::handleTsv()
 	}
 }
 
-void SVNetworkComponentEditWidget::updatePlotData()
+void SVNetworkComponentEditWidget::updatePlotDataPredef()
 {
 
 	// preparing Heating Data
@@ -884,6 +951,64 @@ void SVNetworkComponentEditWidget::updatePlotData()
 	m_heatLossSplineZoomer = new QwtPlotZoomer(m_ui->widgetPlotHeatLossSpline->canvas() );
 	m_heatLossSplineZoomer->setZoomBase();
 
+}
+
+void SVNetworkComponentEditWidget::updatePlotDataUser()
+{
+	if(m_heatLossSplineCoolingCurve == nullptr){
+		m_heatLossSplineCoolingCurve = new QwtPlotCurve("Cooling");
+		m_heatLossSplineCoolingCurve->setPen(Qt::blue);
+	}
+
+	IBK::Path fname(m_ui->filepathDataFile->filename().toStdString());
+	NANDRAD::LinearSplineParameter spl;
+	spl.m_tsvFile = fname;
+
+	try {
+		spl.readTsv();
+	}
+	catch (IBK::Exception & ex) {
+		ex.writeMsgStackToError();
+		return;
+	}
+
+	m_vectorHeatLossSplineUserXData = spl.m_values.x();
+	m_vectorHeatLossSplineUserYData = spl.m_values.y();
+
+	bool containsNegativeValues = false;
+	for(double value : m_vectorHeatLossSplineUserYData){
+		if(value < 0){
+			containsNegativeValues = true;
+			break;
+		}
+	}
+
+	std::vector<double> vectorContainingCoolingValues;
+	if(containsNegativeValues) {
+		for(int i = 0; i < m_vectorHeatLossSplineUserXData.size(); i++){
+			if(m_vectorHeatLossSplineUserYData[i] < 0){
+				vectorContainingCoolingValues.push_back(-m_vectorHeatLossSplineUserYData[i]);
+				m_vectorHeatLossSplineUserYData[i] = 0;
+			} else {
+				vectorContainingCoolingValues.push_back(0);
+			}
+		}
+
+		if(m_heatLossSplineCoolingCurve == nullptr){
+			delete m_heatLossSplineCoolingCurve;
+		}
+		m_heatLossSplineCoolingCurve = new QwtPlotCurve("Cooling");
+		m_heatLossSplineCoolingCurve->setPen(Qt::blue);
+		m_heatLossSplineCoolingCurve->setSamples(m_vectorHeatLossSplineUserXData.data(), vectorContainingCoolingValues.data(), m_vectorHeatLossSplineUserXData.size());
+		m_heatLossSplineCoolingCurve->attach(m_ui->widgetPlotHeatLossSpline);
+	} else {
+		if (m_heatLossSplineCoolingCurve != nullptr)
+			m_heatLossSplineCoolingCurve->detach();
+	}
+
+	m_heatLossSplineHeatingCurve->setSamples(m_vectorHeatLossSplineUserXData.data(), m_vectorHeatLossSplineUserYData.data(), m_heatLossSplineXData.size());
+	m_heatLossSplineHeatingCurve->attach(m_ui->widgetPlotHeatLossSpline);
+	m_ui->widgetPlotHeatLossSpline->replot();
 }
 
 void SVNetworkComponentEditWidget::initializeHeatLossSplineAreaRelatedValues()
@@ -1039,7 +1164,6 @@ void SVNetworkComponentEditWidget::setCoolingCurve(bool set)
 	if(set){
 		m_heatLossSplineCoolingCurve->setSamples(m_heatLossSplineXData.data(), m_heatLossSplineCoolingYPlotData.data(), m_heatLossSplineXData.size());
 		m_heatLossSplineCoolingCurve->attach(m_ui->widgetPlotHeatLossSpline);
-		m_heatLossSplineHeatingCurve->plot()->replot();
 	} else {
 		m_heatLossSplineCoolingCurve->detach();
 	}
@@ -1437,7 +1561,7 @@ void SVNetworkComponentEditWidget::on_comboBoxHeatLossSplineUserBuildingType_act
 			Q_ASSERT(calculateNewK(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemand].get_value()));
 		}
 
-		updatePlotData();
+		updatePlotDataPredef();
 	} else {
 		m_ui->stackedWidgetHeatLossSpline->setCurrentIndex(1);
 	}
@@ -1774,5 +1898,56 @@ SVNetworkComponentEditWidget::HeatLossSplineEnergyDemandDialog::HeatLossSplineEn
 void SVNetworkComponentEditWidget::on_lineEditTemperatureSplineHeatTransferCoefficient_editingFinishedSuccessfully()
 {
 
+}
+
+
+void SVNetworkComponentEditWidget::on_filepathDataFile_editingFinished()
+{
+
+	// clear embedded spline data
+	m_vectorHeatLossSplineUserYData.clear();
+	m_vectorHeatLossSplineUserXData.clear();
+
+	QString dataFilePath = m_ui->filepathDataFile->filename();
+	if (dataFilePath.trimmed().isEmpty()) {
+		m_current->m_heatExchange.m_userDefinedTsvFile.clear();
+		return;
+	}
+
+	IBK::CSVReader reader;
+	IBK::Path path(dataFilePath.toStdString());
+	reader.read(path);
+	qDebug() << "Columns: " << reader.m_nColumns;
+
+	// initially disable column selection widget
+	m_ui->widgetHeatLossSplineSelectColumn->setEnabled(false);
+
+	updateHeatLossSplineSelectColumnList(); // if there are columns to be selected, the widget will be re-enabled here
+}
+
+void SVNetworkComponentEditWidget::on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
+{
+	if (current == nullptr)
+		return; // do nothing
+
+	// get column index
+	int currentListItem = current->data(Qt::UserRole).toInt();
+	if (currentListItem < 0) {
+		// invalid unit in data column, cannot use this column
+		return;
+	}
+	QString unitName = current->data(Qt::UserRole+1).toString();
+
+	// add suffix to file name
+	IBK::Path fname(IBK::Path(m_ui->filepathDataFile->filename().toStdString()));
+	IBK::Path adjustedFileName;
+	int number;
+	IBK::extract_number_suffix(fname, adjustedFileName, number);
+	QString extendedFilename = QString("%1?%2")
+								   .arg(QString::fromStdString(adjustedFileName.str()))
+								   .arg(currentListItem);
+	m_ui->filepathDataFile->setFilename( extendedFilename );
+
+	updatePlotDataUser();
 }
 

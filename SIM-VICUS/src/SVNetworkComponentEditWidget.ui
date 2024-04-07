@@ -1039,7 +1039,7 @@
                  </layout>
                 </widget>
                 <widget class="QWidget" name="page_2">
-                 <layout class="QVBoxLayout" name="verticalLayout_9">
+                 <layout class="QVBoxLayout" name="verticalLayout_9" stretch="0,1">
                   <property name="leftMargin">
                    <number>0</number>
                   </property>
@@ -1050,28 +1050,67 @@
                    <layout class="QHBoxLayout" name="horizontalLayoutFilePath">
                     <item>
                      <widget class="QLabel" name="labelFilePath">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>24</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>Filepath</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="lineEditFilePath"/>
+                     <widget class="QtExt::BrowseFilenameWidget" name="filepathDataFile" native="true">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>24</height>
+                       </size>
+                      </property>
+                     </widget>
                     </item>
                    </layout>
                   </item>
                   <item>
-                   <spacer name="verticalSpacerFilePath">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>231</height>
-                     </size>
-                    </property>
-                   </spacer>
+                   <widget class="QWidget" name="widgetHeatLossSplineSelectColumn" native="true">
+                    <widget class="QLabel" name="labelHeatLossSplineSelectColumn">
+                     <property name="geometry">
+                      <rect>
+                       <x>0</x>
+                       <y>0</y>
+                       <width>701</width>
+                       <height>21</height>
+                      </rect>
+                     </property>
+                     <property name="text">
+                      <string>Select Column In Data file</string>
+                     </property>
+                    </widget>
+                    <widget class="QListWidget" name="listWidgetHeatLossSplineSelectColumn">
+                     <property name="geometry">
+                      <rect>
+                       <x>0</x>
+                       <y>20</y>
+                       <width>701</width>
+                       <height>221</height>
+                      </rect>
+                     </property>
+                    </widget>
+                   </widget>
                   </item>
                  </layout>
                 </widget>
@@ -1262,10 +1301,13 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QwtPlot</class>
-   <extends>QFrame</extends>
-   <header>qwt_plot.h</header>
+   <class>QtExt::BrowseFilenameWidget</class>
+   <extends>QWidget</extends>
+   <header>QtExt_BrowseFilenameWidget.h</header>
    <container>1</container>
+   <slots>
+    <signal>editingFinished()</signal>
+   </slots>
   </customwidget>
   <customwidget>
    <class>QtExt::ValidatingLineEdit</class>
@@ -1274,6 +1316,12 @@
    <slots>
     <signal>editingFinishedSuccessfully()</signal>
    </slots>
+  </customwidget>
+  <customwidget>
+   <class>QwtPlot</class>
+   <extends>QFrame</extends>
+   <header>qwt_plot.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

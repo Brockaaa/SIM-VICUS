@@ -30,6 +30,8 @@
 
 #include <QDialog>
 
+class QListWidgetItem;
+
 namespace Ui {
 	class SVNetworkComponentEditWidget;
 }
@@ -138,6 +140,10 @@ private slots:
 
 	void on_lineEditTemperatureSplineHeatTransferCoefficient_editingFinishedSuccessfully();
 
+	void on_filepathDataFile_editingFinished();
+
+	void on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+
 private:
 	void updateParameterTableWidget() const;
 
@@ -145,9 +151,13 @@ private:
 
 	void updatePolynomPlot();
 
+	void updateHeatLossSplineSelectColumnList();
+
 	void handleTsv();
 
-	void updatePlotData();
+	void updatePlotDataPredef();
+
+	void updatePlotDataUser();
 
 	void initializeHeatLossSplineAreaRelatedValues();
 
@@ -203,6 +213,10 @@ private:
 	std::vector<std::vector<std::vector<double>>>	m_vectorHeatLossSplineHeatingYData; // 1. buildingType, 2. Different columns in Tsv
 	std::vector<std::vector<std::vector<double>>>	m_vectorHeatLossSplineCoolingYData; // 1. buildingType, 2. Different columns in Tsv
 	std::vector<double>								m_heatLossSplineXData;
+
+	/*! Data vectors to store data values from tsv specified by user */
+	std::vector<double>						m_vectorHeatLossSplineUserYData;
+	std::vector<double>						m_vectorHeatLossSplineUserXData;
 
 	/*! Current data for the active buildingType */
 	std::map<double, std::vector<double>>	m_mapHeatLossSplineHeatingYData;
