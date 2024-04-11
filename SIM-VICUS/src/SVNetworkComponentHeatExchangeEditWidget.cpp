@@ -297,7 +297,12 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineMaximumH
 {
 	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_MaximumHeatingLoad, m_ui->lineEditHeatLossSplineMaximumHeatingLoad->value());
 	calculateNewHeatLossSplineYData(m_kHeating, m_heatLossSplineHeatingYPlotData);
+	double maximumHeatingLoad, maximumCoolingLoad;
+	maximumHeatingLoad = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value;
+	maximumCoolingLoad = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].value;
 	m_heatLossSplineHeatingCurve->setSamples(m_heatLossSplineXData.data(), m_heatLossSplineHeatingYPlotData.data(), m_heatLossSplineXData.size());
+	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, m_heatLossSplineXData.size());
+	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::yLeft, 0, maximumHeatingLoad > maximumCoolingLoad ? maximumHeatingLoad : maximumCoolingLoad);
 	m_heatLossSplineHeatingCurve->plot()->replot();
 	double newHeatingEnergyDemand = calculateEnergyDemand() / 1000;
 	if(m_current->m_heatExchange.m_areaRelatedValues) {
@@ -380,7 +385,12 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineHeatingE
 
 		VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_MaximumHeatingLoad, newMaximumHeatingLoad);
 		calculateNewHeatLossSplineYData(m_kHeating, m_heatLossSplineHeatingYPlotData);
+		double maximumHeatingLoad, maximumCoolingLoad;
+		maximumHeatingLoad = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value;
+		maximumCoolingLoad = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].value;
 		m_heatLossSplineHeatingCurve->setSamples(m_heatLossSplineXData.data(), m_heatLossSplineHeatingYPlotData.data(), m_heatLossSplineXData.size());
+		m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, m_heatLossSplineXData.size());
+		m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::yLeft, 0, maximumHeatingLoad > maximumCoolingLoad ? maximumHeatingLoad : maximumCoolingLoad);
 		m_heatLossSplineHeatingCurve->plot()->replot();
 	}
 	if(result == 2){
@@ -517,10 +527,16 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineCoolingE
 		}
 
 		VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_MaximumCoolingLoad, newMaximumCoolingLoad);
-		calculateNewHeatLossSplineYData(m_kCooling, m_heatLossSplineCoolingYPlotData, VICUS::NetworkHeatExchange::P_CoolingEnergyDemand);
+		calculateNewHeatLossSplineYData(m_kCooling, m_heatLossSplineCoolingYPlotData, VICUS::NetworkHeatExchange::P_MaximumCoolingLoad);
+		double maximumHeatingLoad, maximumCoolingLoad;
+		maximumHeatingLoad = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value;
+		maximumCoolingLoad = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].value;
 		m_heatLossSplineCoolingCurve->setSamples(m_heatLossSplineXData.data(), m_heatLossSplineCoolingYPlotData.data(), m_heatLossSplineXData.size());
+		m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, m_heatLossSplineXData.size());
+		m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::yLeft, 0, maximumHeatingLoad > maximumCoolingLoad ? maximumHeatingLoad : maximumCoolingLoad);
 		m_heatLossSplineCoolingCurve->plot()->replot();
-	}if(result == 2){
+
+	} if(result == 2){
 		if(calculateNewK(newCoolingEnergyDemand, VICUS::NetworkHeatExchange::P_MaximumCoolingLoad)){
 			if(areaRelatedValues){
 				VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific, newCoolingEnergyDemand / floorArea);
@@ -580,8 +596,14 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineMaximumC
 {
 	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_MaximumCoolingLoad, m_ui->lineEditHeatLossSplineMaximumCoolingLoad->value());
 	calculateNewHeatLossSplineYData(m_kCooling, m_heatLossSplineCoolingYPlotData, VICUS::NetworkHeatExchange::P_MaximumCoolingLoad);
+	double maximumHeatingLoad, maximumCoolingLoad;
+	maximumHeatingLoad = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value;
+	maximumCoolingLoad = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].value;
 	m_heatLossSplineCoolingCurve->setSamples(m_heatLossSplineXData.data(), m_heatLossSplineCoolingYPlotData.data(), m_heatLossSplineXData.size());
+	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, m_heatLossSplineXData.size());
+	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::yLeft, 0, maximumHeatingLoad > maximumCoolingLoad ? maximumHeatingLoad : maximumCoolingLoad);
 	m_heatLossSplineCoolingCurve->plot()->replot();
+
 	double newCoolingEnergyDemand = calculateEnergyDemand(VICUS::NetworkHeatExchange::P_CoolingEnergyDemand) / 1000;
 	if(m_current->m_heatExchange.m_areaRelatedValues) {
 		double floorArea = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value();
@@ -851,8 +873,13 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePlotDataPredef()
 		calculateNewHeatLossSplineYData(m_kCooling, m_heatLossSplineCoolingYPlotData, VICUS::NetworkHeatExchange::P_MaximumCoolingLoad);
 	}
 
+	double maximumHeatingLoad, maximumCoolingLoad;
+	maximumHeatingLoad = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value;
+	maximumCoolingLoad = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].value;
 	m_ui->widgetPlotHeatLossSpline->setAxisTitle(QwtPlot::xBottom, "Time [h]");
 	m_ui->widgetPlotHeatLossSpline->setAxisTitle(QwtPlot::yLeft, "[W]");
+	//m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, m_heatLossSplineXData.size());
+	//m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::yLeft, 0, maximumHeatingLoad > maximumCoolingLoad ? maximumHeatingLoad : maximumCoolingLoad);
 
 	//creating curve for heating
 	if(m_heatLossSplineHeatingCurve != nullptr) delete m_heatLossSplineHeatingCurve;
@@ -864,7 +891,6 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePlotDataPredef()
 	//creating curve for cooling
 	setCoolingCurve(m_current->m_heatExchange.m_withCoolingDemand);
 
-	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, m_heatLossSplineXData.size());
 	if(m_heatLossSplineZoomer != nullptr) delete m_heatLossSplineZoomer;
 	m_heatLossSplineZoomer = new QwtPlotZoomer(m_ui->widgetPlotHeatLossSpline->canvas() );
 	m_heatLossSplineZoomer->setZoomBase();
