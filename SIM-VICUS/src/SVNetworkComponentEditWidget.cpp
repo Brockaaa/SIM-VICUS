@@ -1936,6 +1936,7 @@ void SVNetworkComponentEditWidget::on_listWidgetHeatLossSplineSelectColumn_curre
 								   .arg(QString::fromStdString(adjustedFileName.str()))
 								   .arg(currentListItem);
 	m_ui->filepathDataFile->setFilename( extendedFilename );
+	m_current->m_heatExchange.m_userDefinedTsvFile = IBK::Path(extendedFilename.toStdString());
 
 	updatePlotDataUser();
 }
