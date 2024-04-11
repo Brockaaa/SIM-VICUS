@@ -402,8 +402,8 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineHeatingE
 		m_ui->lineEditHeatLossSplineHeatingEnergyDemand->clearFocus();
 		m_heatLossSplineHeatingCurve->setSamples(m_heatLossSplineXData.data(), m_heatLossSplineHeatingYPlotData.data(), m_heatLossSplineXData.size());
 		m_heatLossSplineHeatingCurve->plot()->replot();
-		m_isEnergyDemandDialogAlreadyOpen = false;
 	}
+	m_isEnergyDemandDialogAlreadyOpen = false;
 }
 
 void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossSplineAreaRelatedValues_stateChanged(int arg1)
