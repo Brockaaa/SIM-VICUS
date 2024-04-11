@@ -286,6 +286,7 @@ SOURCES += \
 	../../src/SVNavigationTreeWidget.cpp \
 	../../src/SVNetworkComponentEditWidget.cpp \
 	../../src/SVNetworkControllerEditDialog.cpp \
+	../../src/SVNetworkComponentHeatExchangeEditWidget.cpp \
 	../../src/SVNetworkDialogSelectPipes.cpp \
 	../../src/SVNetworkImportDialog.cpp \
 	../../src/SVPostProcBindings.cpp \
@@ -542,6 +543,7 @@ HEADERS  += \
 	../../src/SVNavigationTreeWidget.h \
 	../../src/SVNetworkComponentEditWidget.h \
 	../../src/SVNetworkControllerEditDialog.h \
+	../../src/SVNetworkComponentHeatExchangeEditWidget.h \
 	../../src/SVNetworkDialogSelectPipes.h \
 	../../src/SVNetworkImportDialog.h \
 	../../src/SVPostProcBindings.h \
@@ -633,6 +635,7 @@ FORMS    += \
 	../../src/SVMeasurementWidget.ui \
 	../../src/SVNavigationTreeWidget.ui \
 	../../src/SVNetworkComponentEditWidget.ui \
+	../../src/SVNetworkComponentHeatExchangeEditWidget.ui \
 	../../src/SVNetworkControllerEditDialog.ui \
 	../../src/SVNetworkDialogSelectPipes.ui \
 	../../src/SVNetworkExportDialog.ui \

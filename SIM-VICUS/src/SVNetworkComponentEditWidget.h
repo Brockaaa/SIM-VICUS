@@ -30,8 +30,6 @@
 
 #include <QDialog>
 
-class QListWidgetItem;
-
 namespace Ui {
 	class SVNetworkComponentEditWidget;
 }
@@ -40,8 +38,10 @@ namespace VICUS {
 	class NetworkComponent;
 }
 
+class SVNetworkComponentHeatExchangeEditWidget;
 class SVDBNetworkComponentTableModel;
 class SVNetworkControllerEditDialog;
+class SVNetworkComponentHeatExchangeEditWidget;
 class SVDatabase;
 class QwtPlot;
 class QwtPlotCurve;
@@ -82,14 +82,6 @@ public:
 	/*! updates the Widget */
 	void update();
 
-	/*! updates pages */
-	void updatePageHeatLossConstant();
-	void updatePageHeatLossSpline();
-	void updatePageTemperatureConstant();
-	void updatePageTemperatureSpline(){}
-	void updatePageTemperatureSplineEvaporator(){}
-	void updatePageHeatingDemandSpaceHeating(){}
-
 signals:
 	void controllerChanged(QString controllerName);
 
@@ -108,41 +100,7 @@ private slots:
 
 	void on_toolButtonControllerRemove_clicked();
 
-	void on_comboBoxHeatExchange_activated(int index);
-
-	void on_checkBoxHeatLossConstantIndividual_stateChanged(int arg1);
-
-	void on_lineEditHeatLossConstantUser_editingFinishedSuccessfully();
-
-	void on_lineEditTemperatureConstantHeatTransferCoefficient_editingFinishedSuccessfully();
-
-	void on_lineEditTemperatureConstantTemperature_editingFinishedSuccessfully();
-
-	void on_checkBoxHeatLossSplineIndividual_clicked(bool checked);
-
-	void on_comboBoxHeatLossSplineUserBuildingType_activated(int index);
-
-	void on_lineEditHeatLossSplineFloorArea_editingFinishedSuccessfully();
-
-	void on_lineEditHeatLossSplineMaximumHeatingLoad_editingFinishedSuccessfully();
-
-	void on_lineEditHeatLossSplineHeatingEnergyDemand_editingFinishedSuccessfully();
-
-	void on_checkBoxHeatLossSplineAreaRelatedValues_stateChanged(int arg1);
-
-	void on_lineEditHeatLossSplineDomesticHotWaterDemand_editingFinishedSuccessfully();
-
-	void on_lineEditHeatLossSplineCoolingEnergyDemand_editingFinishedSuccessfully();
-
-	void on_groupBoxHeatLossSplineCooling_clicked(bool checked);
-
-	void on_lineEditHeatLossSplineMaximumCoolingLoad_editingFinishedSuccessfully();
-
-	void on_lineEditTemperatureSplineHeatTransferCoefficient_editingFinishedSuccessfully();
-
-	void on_filepathDataFile_editingFinished();
-
-	void on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+	void on_tabWidget_currentChanged(int index);
 
 private:
 	void updateParameterTableWidget() const;
@@ -151,28 +109,6 @@ private:
 
 	void updatePolynomPlot();
 
-	void updateHeatLossSplineSelectColumnList();
-
-	void handleTsv();
-
-	void updatePlotDataPredef();
-
-	void updatePlotDataUser();
-
-	void initializeHeatLossSplineAreaRelatedValues();
-
-	double indexValueForMapYData(VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
-
-	double calculateEnergyDemand(VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_HeatingEnergyDemand);
-
-	double calculateEnergyDemand(const std::vector<double>& vectorWithValues);
-
-	void calculateNewHeatLossSplineYData(double k, std::vector<double>& vectorToSaveNewValues, VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
-
-	bool calculateNewK(double valueToReach, VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
-
-	void setCoolingCurve(bool set);
-
 	Ui::SVNetworkComponentEditWidget		*m_ui;
 
 	/*! Cached pointer to database object. */
@@ -180,9 +116,6 @@ private:
 
 	/*! Dialog to create and edit Controller */
 	SVNetworkControllerEditDialog			*m_controllerEditDialog = nullptr;
-
-	/*! Flag to ensure only one dialog is spawned to request how to enforce HeatingEnergyDemand set by user */
-	bool									m_isEnergyDemandDialogAlreadyOpen = false;
 
 	/*! Pointer to currently edited component.
 		The pointer is updated whenever updateInput() is called.
@@ -198,39 +131,6 @@ private:
 	std::vector<double>						m_xData;
 	std::vector<std::vector<double>>		m_yData1;
 	std::vector<std::vector<double>>		m_yData2;
-
-	/*! Vector to temporarily hold all NetworkHeatExchange that were modified after a Block was selected in the scene */
-	std::vector<VICUS::NetworkHeatExchange>	m_vectorTempHeatExchange;
-	/*! Vector to temporarily store a NetworkHeatExchange to be saved when the building type was changed */
-	std::vector<VICUS::NetworkHeatExchange> m_vectorTempHeatExchangeBuildingType;
-
-	/*! Curve visible in HeatLossSpline plot */
-	QwtPlotCurve							*m_heatLossSplineHeatingCurve = nullptr;
-	QwtPlotCurve							*m_heatLossSplineCoolingCurve = nullptr;
-	QwtPlotZoomer							*m_heatLossSplineZoomer = nullptr;
-
-	/*! Data vectors to store the original values of the tsv file */
-	std::vector<std::vector<std::vector<double>>>	m_vectorHeatLossSplineHeatingYData; // 1. buildingType, 2. Different columns in Tsv
-	std::vector<std::vector<std::vector<double>>>	m_vectorHeatLossSplineCoolingYData; // 1. buildingType, 2. Different columns in Tsv
-	std::vector<double>								m_heatLossSplineXData;
-
-	/*! Data vectors to store data values from tsv specified by user */
-	std::vector<double>						m_vectorHeatLossSplineUserYData;
-	std::vector<double>						m_vectorHeatLossSplineUserXData;
-
-	/*! Current data for the active buildingType */
-	std::map<double, std::vector<double>>	m_mapHeatLossSplineHeatingYData;
-	std::vector<double>						m_heatLossSplineHeatingMaxYValues;
-	std::map<double, std::vector<double>>	m_mapHeatLossSplineCoolingYData;
-	std::vector<double>						m_heatLossSplineCoolingMaxYValues;
-
-	/*! Parameter to adjust curves to reach desired Energydemand */
-	double									m_kHeating = 1;
-	double									m_kCooling = 1;
-
-	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
-	std::vector<double>						m_heatLossSplineHeatingYPlotData;
-	std::vector<double>						m_heatLossSplineCoolingYPlotData;
 
 };
 
