@@ -214,11 +214,20 @@ void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossSplineIndividu
 	m_current->m_heatExchange.m_individualHeatFlux = checked;
 	// if checked, disable everything
 	if(m_current->m_heatExchange.m_individualHeatFlux){
+		if(m_heatLossSplineCoolingCurve != nullptr){
+			m_heatLossSplineCoolingCurve->detach();
+		}
+		if(m_heatLossSplineHeatingCurve != nullptr){
+			m_heatLossSplineHeatingCurve->detach();
+		}
+		m_ui->widgetPlotHeatLossSpline->setEnabled(false);
+		m_ui->widgetPlotHeatLossSpline->replot();
 		m_ui->widgetDefineHeatExchangeSpline->setEnabled(false);
 	}
 	/* if unchecked, enable everything and set all line edits that do not depend on other checkboxes to the appropriate value
 	 * afterwards trigger all checkboxes to fill in all lineEdits that depend on those checkboxes */
 	else {
+		m_ui->widgetPlotHeatLossSpline->setEnabled(true);
 		// set comboBox to the building type
 		m_ui->widgetDefineHeatExchangeSpline->setEnabled(true);
 		on_comboBoxHeatLossSplineUserBuildingType_activated(static_cast<int>(m_current->m_heatExchange.m_buildingType));
