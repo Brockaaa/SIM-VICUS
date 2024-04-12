@@ -283,6 +283,8 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatLossSplineUserBuil
 		updatePlotDataPredef();
 	} else {
 		m_ui->stackedWidgetHeatLossSpline->setCurrentIndex(1);
+		m_ui->filepathDataFile->setFilename(QString::fromStdString(m_current->m_heatExchange.m_userDefinedTsvFile.str()));
+		on_filepathDataFile_editingFinished();
 	}
 }
 
@@ -655,18 +657,18 @@ void SVNetworkComponentHeatExchangeEditWidget::on_filepathDataFile_editingFinish
 	QString dataFilePath = m_ui->filepathDataFile->filename();
 	if (dataFilePath.trimmed().isEmpty()) {
 		m_current->m_heatExchange.m_userDefinedTsvFile.clear();
+		if(m_heatLossSplineHeatingCurve != nullptr) {
+			m_heatLossSplineHeatingCurve->detach();
+		}
+		if(m_heatLossSplineCoolingCurve != nullptr) {
+			m_heatLossSplineCoolingCurve->detach();
+		}
+		m_ui->widgetPlotHeatLossSpline->replot();
 		return;
 	}
 
-	IBK::CSVReader reader;
-	IBK::Path path(dataFilePath.toStdString());
-	reader.read(path);
-	qDebug() << "Columns: " << reader.m_nColumns;
-
-	// initially disable column selection widget
-	m_ui->widgetHeatLossSplineSelectColumn->setEnabled(false);
-
 	updateHeatLossSplineSelectColumnList(); // if there are columns to be selected, the widget will be re-enabled here
+
 }
 
 void SVNetworkComponentHeatExchangeEditWidget::on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
@@ -705,6 +707,7 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplineSelectColumnL
 	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(false);
 
 	QString dataFilePath = m_ui->filepathDataFile->filename();
+	if(dataFilePath == QString("")) return;
 	// parse tsv-file and if several data columns are in file, show the column selection list widget
 	IBK::Path filePath(dataFilePath.toStdString()); // this is always an absolute path
 	// check if we have a  csv/tsv file
@@ -722,6 +725,13 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplineSelectColumnL
 		//m_ui->widgetTimeSeriesPreview->setErrorMessage(tr("Error reading data file.")); //TODO
 		return;
 	}
+
+	if(selectedColumn != -1){
+		QModelIndex currentIndex = m_ui->listWidgetHeatLossSplineSelectColumn->currentIndex();
+		auto item = m_ui->listWidgetHeatLossSplineSelectColumn->item(selectedColumn);
+		m_ui->listWidgetHeatLossSplineSelectColumn->setCurrentItem(item);
+	}
+
 
 	m_ui->widgetHeatLossSplineSelectColumn->setEnabled(true);
 	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(true);
@@ -944,9 +954,7 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePlotDataUser()
 			}
 		}
 
-		if(m_heatLossSplineCoolingCurve == nullptr){
-			delete m_heatLossSplineCoolingCurve;
-		}
+		if(m_heatLossSplineCoolingCurve != nullptr) delete m_heatLossSplineCoolingCurve;
 		m_heatLossSplineCoolingCurve = new QwtPlotCurve("Cooling");
 		m_heatLossSplineCoolingCurve->setPen(Qt::blue);
 		m_heatLossSplineCoolingCurve->setSamples(m_vectorHeatLossSplineUserXData.data(), vectorContainingCoolingValues.data(), m_vectorHeatLossSplineUserXData.size());
