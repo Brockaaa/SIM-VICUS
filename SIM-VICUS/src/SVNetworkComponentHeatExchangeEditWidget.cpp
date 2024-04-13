@@ -41,6 +41,7 @@ SVNetworkComponentHeatExchangeEditWidget::SVNetworkComponentHeatExchangeEditWidg
 	m_ui->lineEditHeatLossSplineCoolingEnergyDemand->setFormat('f', 0);
 	m_ui->lineEditHeatLossSplineDomesticHotWaterDemand->setFormat('f', 0);
 	m_ui->lineEditHeatLossSplineFloorArea->setFormat('f', 0);
+	m_ui->lineEditHeatLossSplineFloorArea->setMinimum(0, false);
 	m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setFormat('f', 0);
 	m_ui->lineEditHeatLossSplineMaximumCoolingLoad->setFormat('f', 0);
 	m_ui->lineEditHeatLossSplineMaximumHeatingLoad->setFormat('f', 0);
@@ -294,25 +295,57 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatLossSplineUserBuil
 
 void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineFloorArea_editingFinishedSuccessfully()
 {
+	// get newly set FloorArea and calculate what energyDemand results from that
 	double newFloorArea = m_ui->lineEditHeatLossSplineFloorArea->value();
 	double oldFloorArea = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value();
 	double ratio = newFloorArea / oldFloorArea;
 	double energyDemandHeating, energyDemandCooling;
 	double oldEnergyDemandHeating, oldEnergyDemandCooling;
 	oldEnergyDemandHeating = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific].get_value();
+
+
+	// check if new FloorArea is reachable
+	bool successfulNewHeatingK = calculateNewK(oldEnergyDemandHeating * newFloorArea );
+	bool successfulNewCoolingK = true;
 	if(m_current->m_heatExchange.m_withCoolingDemand) {
 		oldEnergyDemandCooling = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific].get_value();;
+		successfulNewCoolingK = calculateNewK(oldEnergyDemandHeating * newFloorArea );
 	}
 
-	bool successfulNewHeatingK = calculateNewK(oldEnergyDemandHeating * newFloorArea );
-
-	//IBK::NearEqual<double> nearEqual(0.01);
-	if(!successfulNewHeatingK){
+	// if the desired floorArea is not reachable, calculate the closest possible value to the desired floorArea
+	double newFloorAreaHeating, newFloorAreaCooling;
+	if(!(successfulNewHeatingK)){
 		double newEnergyDemandHeating = m_ui->lineEditHeatLossSplineHeatingEnergyDemand->value();
-		newFloorArea = newEnergyDemandHeating / oldEnergyDemandHeating;
-		m_ui->lineEditHeatLossSplineFloorArea->setValue((int)(newFloorArea + 0.5));
-		m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(oldEnergyDemandHeating);
+		newFloorAreaHeating = newEnergyDemandHeating / oldEnergyDemandHeating;
+		newFloorArea = (int)(newFloorAreaHeating + 0.5);
 	}
+	if(!(successfulNewCoolingK)){
+		double newEnergyDemandCooling = m_ui->lineEditHeatLossSplineCoolingEnergyDemand->value();
+		newFloorAreaCooling = newEnergyDemandCooling / oldEnergyDemandCooling;
+		newFloorArea = (int)(newFloorAreaCooling + 0.5);
+	}
+	if((!successfulNewHeatingK) && (!successfulNewCoolingK)){
+		// if newFloorArea too small
+		if((newFloorAreaHeating >= newFloorArea) && (newFloorAreaCooling >= newFloorArea)){
+			newFloorArea = newFloorAreaHeating > newFloorAreaCooling ? newFloorAreaHeating : newFloorAreaCooling;
+		}
+		// if newFloorArea too big
+		else if ((newFloorAreaHeating <= newFloorArea) && (newFloorAreaCooling <= newFloorArea)){
+			newFloorArea = newFloorAreaHeating > newFloorAreaCooling ? newFloorAreaCooling : newFloorAreaHeating;
+		} else {
+			Q_ASSERT(false); // no new floorArea can be found
+		}
+		newFloorArea = (int)(newFloorArea + 0.5);
+	}
+
+	// set new values, reset the lineEdits to the original value and plot everything
+	if(m_current->m_heatExchange.m_withCoolingDemand) {
+		m_ui->lineEditHeatLossSplineCoolingEnergyDemand->setValue(oldEnergyDemandCooling);
+		m_heatLossSplineCoolingCurve->setSamples(m_heatLossSplineXData.data(), m_heatLossSplineCoolingYPlotData.data(), m_heatLossSplineXData.size());
+	}
+
+	m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(oldEnergyDemandHeating);
+	m_ui->lineEditHeatLossSplineFloorArea->setValue(newFloorArea);
 	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_FloorArea, newFloorArea);
 	m_heatLossSplineHeatingCurve->setSamples(m_heatLossSplineXData.data(), m_heatLossSplineHeatingYPlotData.data(), m_heatLossSplineXData.size());
 	m_heatLossSplineHeatingCurve->plot()->replot();
