@@ -54,9 +54,9 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 	switch(modelType){
 		case T_HeatLossSpline:{
 			if(m_buildingType == NUM_BT){
-				m_buildingType = BT_ResidentialBuilding;
+				m_buildingType = BT_ResidentialBuildingSingleFamily;
 			}
-			if(m_buildingType == BT_ResidentialBuilding) {
+			if(m_buildingType == BT_ResidentialBuildingSingleFamily) {
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 10);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 7500);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemandAreaSpecific, 50);
@@ -65,6 +65,24 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 1200);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemandAreaSpecific, 8);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 150);
+			} else if (m_buildingType == BT_ResidentialBuildingMultiFamily) {
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 100);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 50000);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemandAreaSpecific, 50);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 25);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 25000);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemandAreaSpecific, 8);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1000);
+			} else if (m_buildingType == BT_ResidentialBuildingLarge) {
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 100);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 50000);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemandAreaSpecific, 50);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 25);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 25000);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemandAreaSpecific, 8);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1000);
 			} else if (m_buildingType == BT_OfficeBuilding) {
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 100);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 50000);

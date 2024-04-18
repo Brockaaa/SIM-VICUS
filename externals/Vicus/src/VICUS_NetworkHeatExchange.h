@@ -91,9 +91,11 @@ public:
 	};
 
 	enum BuildingType {
-		BT_ResidentialBuilding,					// Keyword: ResidentialBuilding
-		BT_OfficeBuilding,						// Keyword: OfficeBuilding
-		BT_UserDefineBuilding,					// Keyword: UserDefineBuilding
+		BT_ResidentialBuildingSingleFamily,		// Keyword: ResidentialBuildingSingleFamily		'Single Family House 100 m²'
+		BT_ResidentialBuildingMultiFamily,		// Keyword: ResidentialBuildingMultiFamily		'Multi Family House 1000 m²'
+		BT_ResidentialBuildingLarge,			// Keyword: ResidentialBuildingLarge			'Large Residential Building 3000 m²'
+		BT_OfficeBuilding,						// Keyword: OfficeBuilding						'Office Building'
+		BT_UserDefineBuilding,					// Keyword: UserDefineBuilding					'User Defined Building'
 		NUM_BT
 	};
 

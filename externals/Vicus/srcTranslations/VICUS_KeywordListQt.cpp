@@ -327,9 +327,11 @@ KeywordListQt::KeywordListQt() {
 	tr("DomesticHotWaterDemandAreaRelated");
 	tr("Temperature for heat exchange");
 	tr("Constant heat flux out of the element (heat loss)");
-	tr("ResidentialBuilding");
-	tr("OfficeBuilding");
-	tr("UserDefineBuilding");
+	tr("Single Family House 100 m²");
+	tr("Multi Family House 1000 m²");
+	tr("Large Residential Building 3000 m²");
+	tr("Office Building");
+	tr("User Defined Building");
 	tr("SubStation");
 	tr("Mixer");
 	tr("Source");

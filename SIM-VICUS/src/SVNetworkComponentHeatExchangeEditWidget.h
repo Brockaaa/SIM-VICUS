@@ -54,7 +54,7 @@ public:
 
 	class HeatLossSplineEnergyDemandDialog : public QDialog {
 	public:
-		HeatLossSplineEnergyDemandDialog(QWidget *parent = nullptr);
+		HeatLossSplineEnergyDemandDialog(QWidget *parent, double previousEnergyDemand, double calculatedEnergyDemand, bool requestTooBig, bool heatingDemand);
 	};
 
 	explicit SVNetworkComponentHeatExchangeEditWidget(QWidget *parent = nullptr);
@@ -121,8 +121,6 @@ private:
 
 	void initializeHeatLossSplineAreaRelatedValues();
 
-	double indexValueForMapYData(VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
-
 	double calculateEnergyDemand(VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_HeatingEnergyDemand);
 
 	double calculateEnergyDemand(const std::vector<double>& vectorWithValues);
@@ -134,9 +132,6 @@ private:
 	void setCoolingCurve(bool set);
 
 	Ui::SVNetworkComponentHeatExchangeEditWidget *m_ui;
-
-	/*! Flag to ensure only one dialog is spawned to request how to enforce HeatingEnergyDemand set by user */
-	bool									m_isEnergyDemandDialogAlreadyOpen = false;
 
 	/*! Pointer to currently edited component.
 		The pointer is updated whenever updateInput() is called.
@@ -164,19 +159,19 @@ private:
 	QwtPlotZoomer							*m_heatLossSplineZoomer = nullptr;
 
 	/*! Data vectors to store the original values of the tsv file */
-	std::vector<std::vector<std::vector<double>>>	m_vectorHeatLossSplineHeatingYData; // 1. buildingType, 2. Different columns in Tsv
-	std::vector<std::vector<std::vector<double>>>	m_vectorHeatLossSplineCoolingYData; // 1. buildingType, 2. Different columns in Tsv
-	std::vector<double>								m_heatLossSplineXData;
+	std::vector<std::vector<double>>		m_vectorHeatLossSplineHeatingYData;
+	std::vector<std::vector<double>>		m_vectorHeatLossSplineCoolingYData;
+	std::vector<double>						m_vectorHeatLossSplineHeatingMaxValues;
+	std::vector<double>						m_vectorHeatLossSplineCoolingMaxValues;
+	std::vector<double>						m_heatLossSplineXData;
 
 	/*! Data vectors to store data values from tsv specified by user */
 	std::vector<double>						m_vectorHeatLossSplineUserYData;
 	std::vector<double>						m_vectorHeatLossSplineUserXData;
 
 	/*! Current data for the active buildingType */
-	std::map<double, std::vector<double>>	m_mapHeatLossSplineHeatingYData;
-	std::vector<double>						m_heatLossSplineHeatingMaxYValues;
-	std::map<double, std::vector<double>>	m_mapHeatLossSplineCoolingYData;
-	std::vector<double>						m_heatLossSplineCoolingMaxYValues;
+	std::vector<double>						m_mapHeatLossSplineHeatingYData;
+	std::vector<double>						m_mapHeatLossSplineCoolingYData;
 
 	/*! Parameter to adjust curves to reach desired Energydemand */
 	double									m_kHeating = 1;

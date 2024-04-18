@@ -674,9 +674,11 @@ namespace VICUS {
 			// NetworkHeatExchange::BuildingType
 			case 58 :
 			switch (t) {
-				case 0 : return "ResidentialBuilding";
-				case 1 : return "OfficeBuilding";
-				case 2 : return "UserDefineBuilding";
+				case 0 : return "ResidentialBuildingSingleFamily";
+				case 1 : return "ResidentialBuildingMultiFamily";
+				case 2 : return "ResidentialBuildingLarge";
+				case 3 : return "OfficeBuilding";
+				case 4 : return "UserDefineBuilding";
 			} break;
 			// NetworkNode::NodeType
 			case 59 :
@@ -1414,9 +1416,11 @@ namespace VICUS {
 			// NetworkHeatExchange::BuildingType
 			case 58 :
 			switch (t) {
-				case 0 : return "ResidentialBuilding";
-				case 1 : return "OfficeBuilding";
-				case 2 : return "UserDefineBuilding";
+				case 0 : return "ResidentialBuildingSingleFamily";
+				case 1 : return "ResidentialBuildingMultiFamily";
+				case 2 : return "ResidentialBuildingLarge";
+				case 3 : return "OfficeBuilding";
+				case 4 : return "UserDefineBuilding";
 			} break;
 			// NetworkNode::NodeType
 			case 59 :
@@ -2155,9 +2159,11 @@ namespace VICUS {
 			// NetworkHeatExchange::BuildingType
 			case 58 :
 			switch (t) {
-				case 0 : if (no_description != nullptr) *no_description = true; return "ResidentialBuilding";
-				case 1 : if (no_description != nullptr) *no_description = true; return "OfficeBuilding";
-				case 2 : if (no_description != nullptr) *no_description = true; return "UserDefineBuilding";
+				case 0 : return "Single Family House 100 m²";
+				case 1 : return "Multi Family House 1000 m²";
+				case 2 : return "Large Residential Building 3000 m²";
+				case 3 : return "Office Building";
+				case 4 : return "User Defined Building";
 			} break;
 			// NetworkNode::NodeType
 			case 59 :
@@ -2884,7 +2890,7 @@ namespace VICUS {
 				case 9 : return "kWh";
 				case 10 : return "kWh/m2";
 				case 11 : return "kWh";
-				case 12 : return "kWh";
+				case 12 : return "kWh/m2";
 			} break;
 			// NetworkHeatExchange::splinePara_t
 			case 57 :
@@ -2898,6 +2904,8 @@ namespace VICUS {
 				case 0 : return "";
 				case 1 : return "";
 				case 2 : return "";
+				case 3 : return "";
+				case 4 : return "";
 			} break;
 			// NetworkNode::NodeType
 			case 59 :
@@ -3638,6 +3646,8 @@ namespace VICUS {
 				case 0 : return "#FFFFFF";
 				case 1 : return "#FFFFFF";
 				case 2 : return "#FFFFFF";
+				case 3 : return "#FFFFFF";
+				case 4 : return "#FFFFFF";
 			} break;
 			// NetworkNode::NodeType
 			case 59 :
@@ -4378,6 +4388,8 @@ namespace VICUS {
 				case 0 : return std::numeric_limits<double>::quiet_NaN();
 				case 1 : return std::numeric_limits<double>::quiet_NaN();
 				case 2 : return std::numeric_limits<double>::quiet_NaN();
+				case 3 : return std::numeric_limits<double>::quiet_NaN();
+				case 4 : return std::numeric_limits<double>::quiet_NaN();
 			} break;
 			// NetworkNode::NodeType
 			case 59 :
@@ -4695,7 +4707,7 @@ namespace VICUS {
 			// NetworkHeatExchange::splinePara_t
 			case 57 : return 2;
 			// NetworkHeatExchange::BuildingType
-			case 58 : return 3;
+			case 58 : return 5;
 			// NetworkNode::NodeType
 			case 59 : return 3;
 			// NetworkPipe::para_t
@@ -4875,7 +4887,7 @@ namespace VICUS {
 			// NetworkHeatExchange::splinePara_t
 			case 57 : return 1;
 			// NetworkHeatExchange::BuildingType
-			case 58 : return 2;
+			case 58 : return 4;
 			// NetworkNode::NodeType
 			case 59 : return 2;
 			// NetworkPipe::para_t
