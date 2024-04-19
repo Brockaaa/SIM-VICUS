@@ -351,8 +351,6 @@ HEADERS  += \
 	../../src/SVDBDuplicatesDialog.h \
 	../../src/SVDBEpdEditWidget.h \
 	../../src/SVDBEpdTableModel.h \
-	../../src/SVDBNetworkControllerEditWidget.h \
-	../../src/SVDBNetworkControllerTableModel.h \
 	../../src/SVDBSubNetworkEditWidget.h \
 	../../src/SVDBSubNetworkTableModel.h \
 	../../src/SVDBSupplySystemEditWidget.h \
