@@ -378,12 +378,16 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineMaximumH
 void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineHeatingEnergyDemand_editingFinishedSuccessfully()
 {
 	bool areaRelatedValues = m_current->m_heatExchange.m_areaRelatedValues;
+
+	IBK::NearEqual<double> nearEqual(1);
+	// check if requested EnergyDemand is equal to already set energyDemand, if yes, just return
 	if(areaRelatedValues){
-		if(m_ui->lineEditHeatLossSplineHeatingEnergyDemand->value() == m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific].get_value()) return;
+		if(nearEqual(m_ui->lineEditHeatLossSplineHeatingEnergyDemand->value(), m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific].get_value())) return;
 	} else {
-		if(m_ui->lineEditHeatLossSplineHeatingEnergyDemand->value() == m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].get_value()) return;
+		if(nearEqual(m_ui->lineEditHeatLossSplineHeatingEnergyDemand->value(), m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].get_value())) return;
 	}
 
+	// get previously set EnergyDemand
 	double previousHeatingDemand;
 	if(areaRelatedValues){
 		previousHeatingDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific].get_value();
@@ -391,14 +395,14 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineHeatingE
 		previousHeatingDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].get_value();
 	}
 
+	// set floorArea only to a value != 1, if areaRelatedValues are set
 	double floorArea = 1;
 	if(areaRelatedValues) {
 		floorArea = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value();
 	}
 
 	double newHeatingEnergyDemand = m_ui->lineEditHeatLossSplineHeatingEnergyDemand->value() * floorArea;
-
-	if(calculateNewK(newHeatingEnergyDemand)){
+	if(calculateNewK(newHeatingEnergyDemand) || nearEqual(m_ui->lineEditHeatLossSplineHeatingEnergyDemand->value() / floorArea, previousHeatingDemand / floorArea)){
 		if(areaRelatedValues){
 			VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific, newHeatingEnergyDemand / floorArea);
 			m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(newHeatingEnergyDemand / floorArea);
@@ -406,18 +410,38 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineHeatingE
 			VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemand, newHeatingEnergyDemand);
 		}
 	} else {
-		// calculate if the requested energyDemand is too big or too small, then present the calculated energyDemand to the user and ask him if he accepts the new value
 		double newIntegralCalculated = m_ui->lineEditHeatLossSplineHeatingEnergyDemand->value() / floorArea;
+		QString requested = QString::number(newHeatingEnergyDemand,'f',  0);
+		QString closest = QString::number(newIntegralCalculated, 'f', 0);
+		QString previous = QString::number(previousHeatingDemand, 'f', 0);
 
+		QMessageBox msgBox(this);
+		msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+		msgBox.setWindowTitle(QString("Requested HeatingEnergyDemand not reachable"));
+		msgBox.setText(QString("The requested HeatingEnergyDemand of %1 kWh is not reachable. The closest reachable value is %2. Take the closest value or revert to the previous value %3 kWh?")
+						   .arg(requested, closest, previous));
+		msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
 
-		HeatLossSplineEnergyDemandDialog heatLossSplineEnergyDemandDialog(this, previousHeatingDemand, newIntegralCalculated, true, true);
+		msgBox.setButtonText(QMessageBox::Yes, QString("Take closest reachable Value %1").arg(closest));
+		msgBox.setButtonText(QMessageBox::No, QString("Revert to previous Value %1").arg(previous));
 
-		//heatLossSplineEnergyDemandDialog.exec();
-		m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(newIntegralCalculated);
-		if(areaRelatedValues){
-			VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific, newIntegralCalculated);
+		int result = msgBox.exec();
+
+		if(result == QMessageBox::Yes){
+			m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(newIntegralCalculated);
+			if(areaRelatedValues){
+				VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific, newIntegralCalculated / floorArea);
+			} else {
+				VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemand, newIntegralCalculated);
+			}
 		} else {
-			VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemand, newIntegralCalculated);
+			Q_ASSERT(calculateNewK(previousHeatingDemand * floorArea));
+			m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(previousHeatingDemand);
+			if(areaRelatedValues){
+				VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific, previousHeatingDemand);
+			} else {
+				VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemand, previousHeatingDemand);
+			}
 		}
 	}
 	m_ui->lineEditHeatLossSplineHeatingEnergyDemand->clearFocus();
@@ -497,12 +521,16 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineDomestic
 void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineCoolingEnergyDemand_editingFinishedSuccessfully()
 {
 	bool areaRelatedValues = m_current->m_heatExchange.m_areaRelatedValues;
+
+	IBK::NearEqual<double> nearEqual(1);
+	// check if requested EnergyDemand is equal to already set energyDemand, if yes, just return
 	if(areaRelatedValues){
 		if(m_ui->lineEditHeatLossSplineCoolingEnergyDemand->value() == m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific].get_value()) return;
 	} else {
 		if(m_ui->lineEditHeatLossSplineCoolingEnergyDemand->value() == m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemand].get_value()) return;
 	}
 
+	// get previously set EnergyDemand
 	double previousCoolingDemand;
 	if(areaRelatedValues){
 		previousCoolingDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific].get_value();
@@ -510,14 +538,14 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineCoolingE
 		previousCoolingDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemand].get_value();
 	}
 
+	// set floorArea only to a value != 1, if areaRelatedValues are set
 	double floorArea = 1;
 	if(areaRelatedValues) {
 		floorArea = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value();
 	}
 
 	double newCoolingEnergyDemand = m_ui->lineEditHeatLossSplineCoolingEnergyDemand->value() * floorArea;
-
-	if(calculateNewK(newCoolingEnergyDemand, VICUS::NetworkHeatExchange::P_MaximumCoolingLoad)){
+	if(calculateNewK(newCoolingEnergyDemand, VICUS::NetworkHeatExchange::P_MaximumCoolingLoad) || nearEqual(m_ui->lineEditHeatLossSplineCoolingEnergyDemand->value() / floorArea, previousCoolingDemand / floorArea)){
 		if(areaRelatedValues){
 			VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific, newCoolingEnergyDemand / floorArea);
 			m_ui->lineEditHeatLossSplineCoolingEnergyDemand->setValue(newCoolingEnergyDemand / floorArea);
@@ -526,11 +554,38 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineCoolingE
 		}
 	} else {
 		double newIntegralCalculated = m_ui->lineEditHeatLossSplineCoolingEnergyDemand->value() / floorArea;
-		m_ui->lineEditHeatLossSplineCoolingEnergyDemand->setValue(newIntegralCalculated);
-		if(areaRelatedValues){
-			VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific, newIntegralCalculated);
+		QString requested = QString::number(newCoolingEnergyDemand,'f',  0);
+		QString closest = QString::number(newIntegralCalculated, 'f', 0);
+		QString previous = QString::number(previousCoolingDemand, 'f', 0);
+
+
+		QMessageBox msgBox(this);
+		msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+		msgBox.setWindowTitle(QString("Requested CoolingEnergyDemand not reachable"));
+		msgBox.setText(QString("The requested CoolingEnergyDemand of %1 kWh is not reachable. The closest reachable value is %2. Take the closest value or revert to the previous value %3 kWh?")
+						   .arg(requested, closest, previous));
+		msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+
+		msgBox.setButtonText(QMessageBox::Yes, QString("Take closest reachable Value %1").arg(closest));
+		msgBox.setButtonText(QMessageBox::No, QString("Revert to previous Value %1").arg(previous));
+
+		int result = msgBox.exec();
+
+		if(result == QMessageBox::Yes){
+			m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(newIntegralCalculated);
+			if(areaRelatedValues){
+				VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific, newIntegralCalculated / floorArea);
+			} else {
+				VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemand, newIntegralCalculated);
+			}
 		} else {
-			VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemand, newIntegralCalculated);
+			Q_ASSERT(calculateNewK(previousCoolingDemand * floorArea));
+			m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(previousCoolingDemand);
+			if(areaRelatedValues){
+				VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific, previousCoolingDemand);
+			} else {
+				VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemand, previousCoolingDemand);
+			}
 		}
 	}
 	m_ui->lineEditHeatLossSplineCoolingEnergyDemand->clearFocus();
@@ -596,48 +651,6 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineMaximumC
 }
 
 
-SVNetworkComponentHeatExchangeEditWidget::HeatLossSplineEnergyDemandDialog::HeatLossSplineEnergyDemandDialog(QWidget * parent, double previousEnergyDemand, double calculatedEnergyDemand, bool requestTooBig, bool heatingDemand) : QDialog(parent)
-{
-	setWindowTitle("Choose how to adjust the graph");
-
-	QString typeOfEnergyDemand;
-	if(heatingDemand)
-		typeOfEnergyDemand = QString("HeatingEnergyDemand");
-	else
-		typeOfEnergyDemand = QString("CoolingEnergyDemand");
-
-	QString reqTooBig;
-	QString maximum;
-	if(requestTooBig){
-		reqTooBig = QString("big");
-		maximum = QString("maximum");
-	}
-	else {
-		reqTooBig = QString("small");
-		maximum = QString("minimum");
-	}
-
-	QString errorMessage = QString("The requested %1 is too %2. The previous %1 is %4, the %5 reachable %1 is %7")
-							   .arg(typeOfEnergyDemand).arg(reqTooBig).arg(previousEnergyDemand).arg(maximum).arg(calculatedEnergyDemand);
-//qmessagebox question
-	QVBoxLayout *layout1 = new QVBoxLayout(this);
-	QWidget widgetToHoldHLayout(this);
-	QHBoxLayout *layout2 = new QHBoxLayout(&widgetToHoldHLayout);
-	QLabel *label = new QLabel(errorMessage);
-
-	QPushButton *button1 = new QPushButton("Take New Value", this);
-	QPushButton *button2 = new QPushButton("Leave previous Value", this);
-
-	layout2->addWidget(button1);
-	layout2->addWidget(button2);
-
-	layout1->addWidget(label);
-	layout1->addWidget(&widgetToHoldHLayout);
-
-	connect(button1, &QPushButton::clicked, this, [this]() { this->done(1); });
-	connect(button2, &QPushButton::clicked, this, [this]() { this->done(2); });
-}
-
 void SVNetworkComponentHeatExchangeEditWidget::on_lineEditTemperatureSplineHeatTransferCoefficient_editingFinishedSuccessfully()
 {
 
@@ -679,7 +692,6 @@ void SVNetworkComponentHeatExchangeEditWidget::on_listWidgetHeatLossSplineSelect
 		// invalid unit in data column, cannot use this column
 		return;
 	}
-	QString unitName = current->data(Qt::UserRole+1).toString();
 
 	// add suffix to file name
 	IBK::Path fname(IBK::Path(m_ui->filepathDataFile->filename().toStdString()));
@@ -724,7 +736,6 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplineSelectColumnL
 	}
 
 	if(selectedColumn != -1){
-		QModelIndex currentIndex = m_ui->listWidgetHeatLossSplineSelectColumn->currentIndex();
 		auto item = m_ui->listWidgetHeatLossSplineSelectColumn->item(selectedColumn);
 		m_ui->listWidgetHeatLossSplineSelectColumn->setCurrentItem(item);
 	}
@@ -807,23 +818,19 @@ void SVNetworkComponentHeatExchangeEditWidget::handleTsv()
 
 void SVNetworkComponentHeatExchangeEditWidget::updatePlotDataPredef()
 {
-	for(int i = 0; i < m_vectorHeatLossSplineHeatingYData.size(); i++){
+	for(unsigned int i = 0; i < m_vectorHeatLossSplineHeatingYData.size(); i++){
 		double maxValue = *(std::max_element(m_vectorHeatLossSplineHeatingYData[i].begin(), m_vectorHeatLossSplineHeatingYData[i].end()));
 		m_vectorHeatLossSplineHeatingMaxValues.push_back(maxValue);
 	}
 
-	for(int i = 0; i < m_vectorHeatLossSplineCoolingYData.size(); i++){
+	for(unsigned int i = 0; i < m_vectorHeatLossSplineCoolingYData.size(); i++){
 		double maxValue = *(std::max_element(m_vectorHeatLossSplineCoolingYData[i].begin(), m_vectorHeatLossSplineCoolingYData[i].end()));
-		m_vectorHeatLossSplineHeatingMaxValues.push_back(maxValue);
+		m_vectorHeatLossSplineCoolingMaxValues.push_back(maxValue);
 	}
 
 
 	VICUS::NetworkHeatExchange::para_t parameterHeating, parameterCooling;
 	double floorArea = 1;
-	parameterHeating = m_current->m_heatExchange.m_areaRelatedValues ? VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific
-																	 : VICUS::NetworkHeatExchange::P_HeatingEnergyDemand;
-	parameterCooling = m_current->m_heatExchange.m_areaRelatedValues ? VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific
-																	 : VICUS::NetworkHeatExchange::P_CoolingEnergyDemand;
 
 	if(m_current->m_heatExchange.m_areaRelatedValues){
 		parameterHeating = VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific;
@@ -910,7 +917,7 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePlotDataUser()
 
 	std::vector<double> vectorContainingCoolingValues;
 	if(containsNegativeValues) {
-		for(int i = 0; i < m_vectorHeatLossSplineUserXData.size(); i++){
+		for(unsigned int i = 0; i < m_vectorHeatLossSplineUserXData.size(); i++){
 			if(m_vectorHeatLossSplineUserYData[i] < 0){
 				vectorContainingCoolingValues.push_back(-m_vectorHeatLossSplineUserYData[i]);
 				m_vectorHeatLossSplineUserYData[i] = 0;
@@ -1042,7 +1049,6 @@ void SVNetworkComponentHeatExchangeEditWidget::calculateNewHeatLossSplineYData(d
 
 bool SVNetworkComponentHeatExchangeEditWidget::calculateNewK(double energyDemandToReach, VICUS::NetworkHeatExchange::para_t parameter)
 {
-
 	/* check if demanded energyDemandToReach is 2500* bigger than maximumEnergyLoad. If yes,
 	 * set energyDemandToReach to maximum allowed energy demand, calculate new k and return false */
 	double maximumEnergyLoad = parameter == VICUS::NetworkHeatExchange::P_MaximumHeatingLoad ? m_current->m_heatExchange.m_para[parameter].get_value()

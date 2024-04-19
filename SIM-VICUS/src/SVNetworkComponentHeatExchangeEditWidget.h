@@ -52,11 +52,6 @@ class SVNetworkComponentHeatExchangeEditWidget : public QWidget
 
 public:
 
-	class HeatLossSplineEnergyDemandDialog : public QDialog {
-	public:
-		HeatLossSplineEnergyDemandDialog(QWidget *parent, double previousEnergyDemand, double calculatedEnergyDemand, bool requestTooBig, bool heatingDemand);
-	};
-
 	explicit SVNetworkComponentHeatExchangeEditWidget(QWidget *parent = nullptr);
 	~SVNetworkComponentHeatExchangeEditWidget();
 
