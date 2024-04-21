@@ -208,6 +208,16 @@ void SVNetworkComponentEditWidget::update()
 	updatePolynomCoeffTableWidget();
 	updatePolynomPlot();
 
+	qDebug() << "Number of available Modeltypes: " << VICUS::NetworkComponent::availableHeatExchangeTypes(m_current->m_modelType).size();
+	bool enableHeatExchangeWidget = true;
+
+	// deactive heatExchangeTab if no HeatExchangeModelTypes available
+	if(VICUS::NetworkComponent::availableHeatExchangeTypes(m_current->m_modelType).size() == 1 &&
+		VICUS::NetworkComponent::availableHeatExchangeTypes(m_current->m_modelType).back() == VICUS::NetworkHeatExchange::NUM_T)
+			enableHeatExchangeWidget = false;
+
+	m_ui->tabWidget->setTabEnabled(1, enableHeatExchangeWidget);
+
 	if(m_ui->tabWidget->currentIndex() == 1)
 		m_ui->widgetNetworkComponentHeatExchangeEditWidget->updateInput(m_current);
 }
