@@ -39,10 +39,12 @@ SVNetworkComponentHeatExchangeEditWidget::SVNetworkComponentHeatExchangeEditWidg
 	m_ui->lineEditTemperatureSplineHeatTransferCoefficient->setMinimum(0, false);
 
 	m_ui->lineEditHeatLossSplineCoolingEnergyDemand->setFormat('f', 0);
+	m_ui->lineEditHeatLossSplineCoolingEnergyDemand->setMinimum(0, false);
 	m_ui->lineEditHeatLossSplineDomesticHotWaterDemand->setFormat('f', 0);
 	m_ui->lineEditHeatLossSplineFloorArea->setFormat('f', 0);
 	m_ui->lineEditHeatLossSplineFloorArea->setMinimum(0, false);
 	m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setFormat('f', 0);
+	m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setMinimum(0, false);
 	m_ui->lineEditHeatLossSplineMaximumCoolingLoad->setFormat('f', 0);
 	m_ui->lineEditHeatLossSplineMaximumHeatingLoad->setFormat('f', 0);
 
@@ -379,7 +381,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineHeatingE
 {
 	bool areaRelatedValues = m_current->m_heatExchange.m_areaRelatedValues;
 
-	IBK::NearEqual<double> nearEqual(1);
+	IBK::NearEqual<double> nearEqual(0.5);
 	// check if requested EnergyDemand is equal to already set energyDemand, if yes, just return
 	if(areaRelatedValues){
 		if(nearEqual(m_ui->lineEditHeatLossSplineHeatingEnergyDemand->value(), m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific].get_value())) return;
@@ -457,9 +459,13 @@ void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossSplineAreaRela
 
 	floorArea = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value();
 	if(areaRelated){
-		heatingEnergyDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].get_value() / floorArea;
-		coolingEnergyDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemand].get_value() / floorArea;
-		domesticHotWaterDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_DomesticHotWaterDemand].get_value() / floorArea;
+		heatingEnergyDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].get_value();
+		if(heatingEnergyDemand == 0) heatingEnergyDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific].get_value();
+		else heatingEnergyDemand /= floorArea;
+		coolingEnergyDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemand].get_value();
+		if(coolingEnergyDemand == 0)m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific].get_value();
+		else coolingEnergyDemand /= floorArea;
+		domesticHotWaterDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_DomesticHotWaterDemand].get_value();
 		VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific, heatingEnergyDemand);
 		VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific, coolingEnergyDemand);
 		VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_DomesticHotWaterDemandAreaSpecific, domesticHotWaterDemand);
@@ -471,7 +477,9 @@ void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossSplineAreaRela
 		m_ui->lineEditHeatLossSplineFloorArea->setEnabled(true);
 	} else {
 		heatingEnergyDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific].get_value() * floorArea;
+		if(heatingEnergyDemand == 0) heatingEnergyDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].get_value();
 		coolingEnergyDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific].get_value() * floorArea;
+		if(coolingEnergyDemand == 0) coolingEnergyDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific].get_value();
 		domesticHotWaterDemand = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_DomesticHotWaterDemandAreaSpecific].get_value() * floorArea;
 		VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemand, heatingEnergyDemand);
 		VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemand, coolingEnergyDemand);
@@ -572,7 +580,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineCoolingE
 		int result = msgBox.exec();
 
 		if(result == QMessageBox::Yes){
-			m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(newIntegralCalculated);
+			m_ui->lineEditHeatLossSplineCoolingEnergyDemand->setValue(newIntegralCalculated);
 			if(areaRelatedValues){
 				VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific, newIntegralCalculated / floorArea);
 			} else {
@@ -580,7 +588,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineCoolingE
 			}
 		} else {
 			Q_ASSERT(calculateNewK(previousCoolingDemand * floorArea));
-			m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(previousCoolingDemand);
+			m_ui->lineEditHeatLossSplineCoolingEnergyDemand->setValue(previousCoolingDemand);
 			if(areaRelatedValues){
 				VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific, previousCoolingDemand);
 			} else {
@@ -1065,7 +1073,7 @@ bool SVNetworkComponentHeatExchangeEditWidget::calculateNewK(double energyDemand
 	double currentK = 1;
 	int maximumLoopDepth = 50;
 
-	IBK::NearEqual<double> nearEqual(1);
+	IBK::NearEqual<double> nearEqual(0.5);
 
 	qDebug() << "calculateNewK Goal: " << energyDemandToReach;
 	std::vector<double> newlyCalculatedYPlotValues;
