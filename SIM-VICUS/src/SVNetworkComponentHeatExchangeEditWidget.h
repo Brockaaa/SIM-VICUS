@@ -62,7 +62,7 @@ public:
 	void updatePageHeatLossConstant();
 	void updatePageHeatLossSpline();
 	void updatePageTemperatureConstant();
-	void updatePageTemperatureSpline(){}
+	void updatePageTemperatureSpline();
 	void updatePageTemperatureSplineEvaporator(){}
 	void updatePageHeatingDemandSpaceHeating(){}
 
@@ -73,8 +73,6 @@ private slots:
 	void on_checkBoxHeatLossConstantIndividual_stateChanged(int arg1);
 
 	void on_lineEditHeatLossConstantUser_editingFinishedSuccessfully();
-
-	void on_lineEditTemperatureConstantHeatTransferCoefficient_editingFinishedSuccessfully();
 
 	void on_lineEditTemperatureConstantTemperature_editingFinishedSuccessfully();
 
@@ -98,21 +96,29 @@ private slots:
 
 	void on_lineEditHeatLossSplineMaximumCoolingLoad_editingFinishedSuccessfully();
 
-	void on_lineEditTemperatureSplineHeatTransferCoefficient_editingFinishedSuccessfully();
-
 	void on_filepathDataFile_editingFinished();
 
+	void on_widgetTemperatureSplineFilePathDataFile_editingFinished();
+
 	void on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+
+	void on_listWidgetTemperatureSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
 private:
 
 	void updateHeatLossSplineSelectColumnList();
 
-	void handleTsv();
+	void updateTemperatureSplineSelectColumnList();
 
-	void updatePlotDataPredef();
+	void readTsvHeatLossSpline();
 
-	void updatePlotDataUser();
+	void readTsvTemperatureSpline();
+
+	void updateHeatLossSplinePlotDataPredef();
+
+	void updateHeatLossSplinePlotDataUser();
+
+	void updateTemperatureSplinePlotDataUser();
 
 	void initializeHeatLossSplineAreaRelatedValues();
 
@@ -138,7 +144,7 @@ private:
 	std::vector<QwtPlotCurve*>				m_curves1;
 	std::vector<QwtPlotCurve*>				m_curves2;
 
-	/*! The data vectors needed for plotting. */
+	/*! The data vectors needed for plotting HeatLossSpline. */
 	std::vector<double>						m_xData;
 	std::vector<std::vector<double>>		m_yData1;
 	std::vector<std::vector<double>>		m_yData2;
@@ -152,6 +158,18 @@ private:
 	QwtPlotCurve							*m_heatLossSplineHeatingCurve = nullptr;
 	QwtPlotCurve							*m_heatLossSplineCoolingCurve = nullptr;
 	QwtPlotZoomer							*m_heatLossSplineZoomer = nullptr;
+
+	/* data vectors for TemperatureSpline Predef Tsv*/
+	std::vector<std::vector<double>>		m_TemperatureSplineyData;
+	std::vector<std::vector<double>>		m_TemperatureSplinexData;
+
+	/* data vector to be displayed in TemperatureSplinePlot */
+	std::vector<double>						m_TemperatureSplineYData;
+	std::vector<double>						m_TemperatureSplineXData;
+
+	/*! Curve visible in TemperatureSpline plot */
+	QwtPlotCurve							*m_temperatureSplineCurve = nullptr;
+	QwtPlotZoomer							*m_temperatureSplineZoomer = nullptr;
 
 	/*! Data vectors to store the original values of the tsv file */
 	std::vector<std::vector<double>>		m_vectorHeatLossSplineHeatingYData;
