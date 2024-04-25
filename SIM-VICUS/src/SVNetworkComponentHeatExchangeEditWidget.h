@@ -104,6 +104,8 @@ private slots:
 
 	void on_listWidgetTemperatureSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
+	void on_comboBoxTemperatureSpline_activated(int index);
+
 private:
 
 	void updateHeatLossSplineSelectColumnList();

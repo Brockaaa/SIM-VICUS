@@ -148,7 +148,7 @@
           <verstretch>1</verstretch>
          </sizepolicy>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayoutPageTemperatureSpline" stretch="0,1,1">
+        <layout class="QVBoxLayout" name="verticalLayoutPageTemperatureSpline" stretch="0,0,1,1">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -164,6 +164,20 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayoutPageTemperatureSplineCombobox">
+           <item>
+            <widget class="QLabel" name="labelTemperatureSplineComboBox">
+             <property name="text">
+              <string>Temperature</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="comboBoxTemperatureSpline"/>
+           </item>
+          </layout>
+         </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayoutTemperatureSpline">
            <item>

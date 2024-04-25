@@ -52,6 +52,11 @@ SVNetworkComponentHeatExchangeEditWidget::SVNetworkComponentHeatExchangeEditWidg
 		m_ui->comboBoxHeatLossSplineUserBuildingType->addItem(VICUS::KeywordListQt::Description("NetworkHeatExchange::BuildingType", i));
 	}
 
+	// set comboBox in pageTemperatureSpline
+	for(int i = 0; i < VICUS::NetworkHeatExchange::NUM_TT; i++){
+		m_ui->comboBoxTemperatureSpline->addItem(VICUS::KeywordListQt::Description("NetworkHeatExchange::TemperatureType", i));
+	}
+
 	m_ui->filepathDataFile->setup("", true, true, tr("Time-series data files (*.tsv *.csv);;All files (*.*)"),
 								  SVSettings::instance().m_dontUseNativeDialogs);
 }
@@ -148,7 +153,8 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePageTemperatureConstant()
 
 void SVNetworkComponentHeatExchangeEditWidget::updatePageTemperatureSpline()
 {
-
+	m_ui->widgetTemperatureSplineFilePathDataFile->setFilename("");
+	on_comboBoxTemperatureSpline_activated((int)m_current->m_heatExchange.m_temperatureType);
 }
 
 void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated(int index)
@@ -180,9 +186,11 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated
 		case VICUS::NetworkHeatExchange::T_HeatLossSpline:
 			updatePageHeatLossSpline();
 			break;
+		case VICUS::NetworkHeatExchange::T_TemperatureSpline:
+			updatePageTemperatureSpline();
+			break;
 		default: break;
 	}
-
 }
 
 
@@ -1284,4 +1292,15 @@ void SVNetworkComponentHeatExchangeEditWidget::setCoolingCurve(bool set)
 		m_heatLossSplineCoolingCurve->detach();
 	}
 	m_ui->widgetPlotHeatLossSpline->replot();
+}
+
+void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxTemperatureSpline_activated(int index)
+{
+	m_current->m_heatExchange.m_temperatureType = static_cast<VICUS::NetworkHeatExchange::TemperatureType>(index);
+	bool isUserDefined = m_current->m_heatExchange.m_temperatureType == VICUS::NetworkHeatExchange::TT_UserDefined;
+	m_ui->listWidgetTemperatureSplineSelectColumn->setVisible(isUserDefined);
+	m_ui->labelTemperatureSplineHeatFilePath->setVisible(isUserDefined);
+	m_ui->labelTemperatureSplineSelectColumn->setVisible(isUserDefined);
+	m_ui->listWidgetTemperatureSplineSelectColumn->setVisible(isUserDefined);
+	m_ui->widgetTemperatureSplineFilePathDataFile->setVisible(isUserDefined);
 }

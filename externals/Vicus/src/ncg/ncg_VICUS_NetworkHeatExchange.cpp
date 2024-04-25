@@ -56,6 +56,14 @@ void NetworkHeatExchange::readXML(const TiXmlElement * element) {
 					throw IBK::Exception( ex, IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
 						IBK::FormatString("Invalid or unknown keyword '"+attrib->ValueStr()+"'.") ), FUNC_ID);
 				}
+			else if (attribName == "temperatureType")
+				try {
+					m_temperatureType = (TemperatureType)KeywordList::Enumeration("NetworkHeatExchange::TemperatureType", attrib->ValueStr());
+				}
+				catch (IBK::Exception & ex) {
+					throw IBK::Exception( ex, IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
+						IBK::FormatString("Invalid or unknown keyword '"+attrib->ValueStr()+"'.") ), FUNC_ID);
+				}
 			else if (attribName == "ambientTemperatureType")
 				try {
 					m_ambientTemperatureType = (AmbientTemperatureType)KeywordList::Enumeration("NetworkHeatExchange::AmbientTemperatureType", attrib->ValueStr());
@@ -140,6 +148,8 @@ TiXmlElement * NetworkHeatExchange::writeXML(TiXmlElement * parent) const {
 		e->SetAttribute("withCoolingDemand", IBK::val2string<bool>(m_withCoolingDemand));
 	if (m_buildingType != NUM_BT)
 		e->SetAttribute("buildingType", KeywordList::Keyword("NetworkHeatExchange::BuildingType",  m_buildingType));
+	if (m_temperatureType != NUM_TT)
+		e->SetAttribute("temperatureType", KeywordList::Keyword("NetworkHeatExchange::TemperatureType",  m_temperatureType));
 	if (m_ambientTemperatureType != NUM_AT)
 		e->SetAttribute("ambientTemperatureType", KeywordList::Keyword("NetworkHeatExchange::AmbientTemperatureType",  m_ambientTemperatureType));
 

@@ -332,6 +332,9 @@ KeywordListQt::KeywordListQt() {
 	tr("Large Residential Building 3000 m²");
 	tr("Office Building");
 	tr("User Defined Building");
+	tr("Undisturbed Soil Temperature");
+	tr("Borehole Heat Exchanger");
+	tr("User Defined");
 	tr("SubStation");
 	tr("Mixer");
 	tr("Source");

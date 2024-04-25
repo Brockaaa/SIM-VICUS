@@ -99,6 +99,13 @@ public:
 		NUM_BT
 	};
 
+	enum TemperatureType {
+		TT_UndisturbedSoilTemperature,			// Keyword: UndisturbedSoilTemperature			'Undisturbed Soil Temperature'
+		TT_BoreholeHeatExchangerTemperature,	// Keyword: BoreholeHeatExchanger				'Borehole Heat Exchanger'
+		TT_UserDefined,							// Keyword: UserDefined							'User Defined'
+		NUM_TT
+	};
+
 	enum AmbientTemperatureType {
 		AT_GroundTemperature,
 		NUM_AT
@@ -126,6 +133,8 @@ public:
 	bool								m_withCoolingDemand = true;					// XML:A
 
 	BuildingType						m_buildingType = NUM_BT;					// XML:A
+
+	TemperatureType						m_temperatureType = NUM_TT;					// XML:A
 
 	AmbientTemperatureType				m_ambientTemperatureType = NUM_AT;			// XML:A
 
