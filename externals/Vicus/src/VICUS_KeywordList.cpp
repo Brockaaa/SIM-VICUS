@@ -94,7 +94,7 @@ namespace VICUS {
 		"NetworkHeatExchange::para_t",
 		"NetworkHeatExchange::splinePara_t",
 		"NetworkHeatExchange::BuildingType",
-		"NetworkHeatExchange::TemperatureType",
+		"NetworkHeatExchange::AmbientTemperatureType",
 		"NetworkNode::NodeType",
 		"NetworkPipe::para_t",
 		"OutputDefinition::timeType_t",
@@ -681,7 +681,7 @@ namespace VICUS {
 				case 3 : return "OfficeBuilding";
 				case 4 : return "UserDefineBuilding";
 			} break;
-			// NetworkHeatExchange::TemperatureType
+			// NetworkHeatExchange::AmbientTemperatureType
 			case 59 :
 			switch (t) {
 				case 0 : return "UndisturbedSoilTemperature";
@@ -1430,7 +1430,7 @@ namespace VICUS {
 				case 3 : return "OfficeBuilding";
 				case 4 : return "UserDefineBuilding";
 			} break;
-			// NetworkHeatExchange::TemperatureType
+			// NetworkHeatExchange::AmbientTemperatureType
 			case 59 :
 			switch (t) {
 				case 0 : return "UndisturbedSoilTemperature";
@@ -2180,7 +2180,7 @@ namespace VICUS {
 				case 3 : return "Office Building";
 				case 4 : return "User Defined Building";
 			} break;
-			// NetworkHeatExchange::TemperatureType
+			// NetworkHeatExchange::AmbientTemperatureType
 			case 59 :
 			switch (t) {
 				case 0 : return "Undisturbed Soil Temperature";
@@ -2929,7 +2929,7 @@ namespace VICUS {
 				case 3 : return "";
 				case 4 : return "";
 			} break;
-			// NetworkHeatExchange::TemperatureType
+			// NetworkHeatExchange::AmbientTemperatureType
 			case 59 :
 			switch (t) {
 				case 0 : return "";
@@ -3678,7 +3678,7 @@ namespace VICUS {
 				case 3 : return "#FFFFFF";
 				case 4 : return "#FFFFFF";
 			} break;
-			// NetworkHeatExchange::TemperatureType
+			// NetworkHeatExchange::AmbientTemperatureType
 			case 59 :
 			switch (t) {
 				case 0 : return "#FFFFFF";
@@ -4427,7 +4427,7 @@ namespace VICUS {
 				case 3 : return std::numeric_limits<double>::quiet_NaN();
 				case 4 : return std::numeric_limits<double>::quiet_NaN();
 			} break;
-			// NetworkHeatExchange::TemperatureType
+			// NetworkHeatExchange::AmbientTemperatureType
 			case 59 :
 			switch (t) {
 				case 0 : return std::numeric_limits<double>::quiet_NaN();
@@ -4751,7 +4751,7 @@ namespace VICUS {
 			case 57 : return 2;
 			// NetworkHeatExchange::BuildingType
 			case 58 : return 5;
-			// NetworkHeatExchange::TemperatureType
+			// NetworkHeatExchange::AmbientTemperatureType
 			case 59 : return 3;
 			// NetworkNode::NodeType
 			case 60 : return 3;
@@ -4933,7 +4933,7 @@ namespace VICUS {
 			case 57 : return 1;
 			// NetworkHeatExchange::BuildingType
 			case 58 : return 4;
-			// NetworkHeatExchange::TemperatureType
+			// NetworkHeatExchange::AmbientTemperatureType
 			case 59 : return 2;
 			// NetworkNode::NodeType
 			case 60 : return 2;

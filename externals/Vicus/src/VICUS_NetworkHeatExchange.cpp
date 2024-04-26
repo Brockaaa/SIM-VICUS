@@ -100,6 +100,10 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 			break;
 		}
 		case T_TemperatureSpline:
+		{
+			m_ambientTemperatureType = VICUS::NetworkHeatExchange::AT_UndisturbedSoilTemperature;
+			break;
+		}
 		case T_TemperatureConstant: {
 			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_ExternalHeatTransferCoefficient, 5);
 			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_Temperature, 20);

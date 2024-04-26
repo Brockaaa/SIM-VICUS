@@ -4,5 +4,7 @@
     	<file>demandProfiles/Office_HeatingLoad.tsv</file>
     	<file>demandProfiles/Residential_CoolingLoad.tsv</file>
     	<file>demandProfiles/Residential_HeatingLoad.tsv</file>
+    	<file>demandProfiles/BoreholeHeatExchange.tsv</file>
+    	<file>demandProfiles/SoilTemperature.tsv</file>
     </qresource>
 </RCC>

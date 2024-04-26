@@ -53,8 +53,8 @@ SVNetworkComponentHeatExchangeEditWidget::SVNetworkComponentHeatExchangeEditWidg
 	}
 
 	// set comboBox in pageTemperatureSpline
-	for(int i = 0; i < VICUS::NetworkHeatExchange::NUM_TT; i++){
-		m_ui->comboBoxTemperatureSpline->addItem(VICUS::KeywordListQt::Description("NetworkHeatExchange::TemperatureType", i));
+	for(int i = 0; i < VICUS::NetworkHeatExchange::NUM_AT; i++){
+		m_ui->comboBoxTemperatureSpline->addItem(VICUS::KeywordListQt::Description("NetworkHeatExchange::AmbientTemperatureType", i));
 	}
 
 	m_ui->filepathDataFile->setup("", true, true, tr("Time-series data files (*.tsv *.csv);;All files (*.*)"),
@@ -154,7 +154,8 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePageTemperatureConstant()
 void SVNetworkComponentHeatExchangeEditWidget::updatePageTemperatureSpline()
 {
 	m_ui->widgetTemperatureSplineFilePathDataFile->setFilename("");
-	on_comboBoxTemperatureSpline_activated((int)m_current->m_heatExchange.m_temperatureType);
+	m_ui->comboBoxTemperatureSpline->setCurrentIndex((int)m_current->m_heatExchange.m_ambientTemperatureType);
+	on_comboBoxTemperatureSpline_activated((int)m_current->m_heatExchange.m_ambientTemperatureType);
 }
 
 void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated(int index)
@@ -687,23 +688,9 @@ void SVNetworkComponentHeatExchangeEditWidget::on_filepathDataFile_editingFinish
 	}
 
 	updateHeatLossSplineSelectColumnList(); // if there are columns to be selected, the widget will be re-enabled here
-
 }
 
 void SVNetworkComponentHeatExchangeEditWidget::on_widgetTemperatureSplineFilePathDataFile_editingFinished(){
-	QString dataFilePath = m_ui->widgetTemperatureSplineFilePathDataFile->filename();
-	if (dataFilePath.trimmed().isEmpty()) {
-		m_current->m_heatExchange.m_userDefinedTsvFile.clear();
-		//if(m_heatLossSplineHeatingCurve != nullptr) {
-		//	m_heatLossSplineHeatingCurve->detach();
-		//}
-		//if(m_heatLossSplineCoolingCurve != nullptr) {
-		//	m_heatLossSplineCoolingCurve->detach();
-		//}
-		//m_ui->widgetPlotHeatLossSpline->replot();
-		return;
-	}
-
 	updateTemperatureSplineSelectColumnList();
 }
 
@@ -758,7 +745,21 @@ void SVNetworkComponentHeatExchangeEditWidget::on_listWidgetTemperatureSplineSel
 	m_ui->widgetTemperatureSplineFilePathDataFile->setFilename( extendedFilename );
 	m_current->m_heatExchange.m_userDefinedTsvFile = IBK::Path(extendedFilename.toStdString());
 
-	updateTemperatureSplinePlotDataUser();
+	NANDRAD::LinearSplineParameter spl;
+	spl.m_tsvFile = IBK::Path(extendedFilename.toStdString());
+
+	try {
+		spl.readTsv();
+	}
+	catch (IBK::Exception & ex) {
+		ex.writeMsgStackToError();
+		return;
+	}
+
+	m_temperatureSplineXPlotData = spl.m_values.x();
+	m_temperatureSplineYPlotData = spl.m_values.y();
+
+	updateTemperatureSplinePlotData();
 }
 
 
@@ -835,12 +836,14 @@ void SVNetworkComponentHeatExchangeEditWidget::updateTemperatureSplineSelectColu
 {
 	qDebug() << "updateTemperatureSplineSelectColumnList";
 	// clear list widget
-	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(true);
-	m_ui->listWidgetHeatLossSplineSelectColumn->clear();
-	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(false);
+	m_ui->listWidgetTemperatureSplineSelectColumn->selectionModel()->blockSignals(true);
+	m_ui->listWidgetTemperatureSplineSelectColumn->clear();
+	m_ui->listWidgetTemperatureSplineSelectColumn->selectionModel()->blockSignals(false);
 
 	QString dataFilePath = m_ui->widgetTemperatureSplineFilePathDataFile->filename();
-	if(dataFilePath == QString("")) return;
+	if(dataFilePath == QString("")) {
+		return;
+	}
 	// parse tsv-file and if several data columns are in file, show the column selection list widget
 	IBK::Path filePath(dataFilePath.toStdString()); // this is always an absolute path
 	// check if we have a  csv/tsv file
@@ -858,7 +861,6 @@ void SVNetworkComponentHeatExchangeEditWidget::updateTemperatureSplineSelectColu
 		//m_ui->widgetTimeSeriesPreview->setErrorMessage(tr("Error reading data file.")); //TODO
 		return;
 	}
-
 
 	if(selectedColumn != -1){
 		auto item = m_ui->listWidgetTemperatureSplineSelectColumn->item(selectedColumn);
@@ -1083,6 +1085,33 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePlotDataUser(
 
 }
 
+void SVNetworkComponentHeatExchangeEditWidget::updateTemperatureSplinePlotData()
+{
+	m_ui->widgetPlotTemperatureSpline->setEnabled(true);
+	double minYValue, maxYValue;
+
+	minYValue = *(std::min_element(m_temperatureSplineYPlotData.begin(), m_temperatureSplineYPlotData.end()));
+	maxYValue = *(std::max_element(m_temperatureSplineYPlotData.begin(), m_temperatureSplineYPlotData.end()));
+	double scaleYMin = minYValue < 0 ? minYValue * 1.1 : minYValue * 0.9;
+	double scaleYMax = maxYValue < 0 ? maxYValue * 0.9 : maxYValue * 1.1;
+
+	m_ui->widgetPlotTemperatureSpline->setAxisTitle(QwtPlot::xBottom, "Time [d]");
+	m_ui->widgetPlotTemperatureSpline->setAxisTitle(QwtPlot::yLeft, "SupplyTemperatureSchedule [C]");
+	m_ui->widgetPlotTemperatureSpline->setAxisScale(QwtPlot::xBottom, 0, m_temperatureSplineYPlotData.size());
+	m_ui->widgetPlotTemperatureSpline->setAxisScale(QwtPlot::yLeft, scaleYMin, scaleYMax);
+
+	if(m_temperatureSplineCurve == nullptr) {
+		m_temperatureSplineCurve = new QwtPlotCurve("Temperature");
+		m_temperatureSplineCurve->setPen(Qt::red);
+	}
+	m_temperatureSplineCurve->setSamples(m_temperatureSplineXPlotData.data(), m_temperatureSplineYPlotData.data(), m_temperatureSplineYPlotData.size());
+	m_temperatureSplineCurve->attach(m_ui->widgetPlotTemperatureSpline);
+	m_ui->widgetPlotTemperatureSpline->replot();
+
+	if(m_temperatureSplineZoomer == nullptr) m_temperatureSplineZoomer = new QwtPlotZoomer(m_ui->widgetPlotTemperatureSpline->canvas() );
+	m_temperatureSplineZoomer->setZoomBase();
+}
+
 void SVNetworkComponentHeatExchangeEditWidget::updateTemperatureSplinePlotDataUser()
 {
 	//if(m_heatLossSplineCoolingCurve == nullptr){
@@ -1296,11 +1325,52 @@ void SVNetworkComponentHeatExchangeEditWidget::setCoolingCurve(bool set)
 
 void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxTemperatureSpline_activated(int index)
 {
-	m_current->m_heatExchange.m_temperatureType = static_cast<VICUS::NetworkHeatExchange::TemperatureType>(index);
-	bool isUserDefined = m_current->m_heatExchange.m_temperatureType == VICUS::NetworkHeatExchange::TT_UserDefined;
+	m_current->m_heatExchange.m_ambientTemperatureType = static_cast<VICUS::NetworkHeatExchange::AmbientTemperatureType>(index);
+	bool isUserDefined = m_current->m_heatExchange.m_ambientTemperatureType == VICUS::NetworkHeatExchange::AT_UserDefined;
 	m_ui->listWidgetTemperatureSplineSelectColumn->setVisible(isUserDefined);
 	m_ui->labelTemperatureSplineHeatFilePath->setVisible(isUserDefined);
 	m_ui->labelTemperatureSplineSelectColumn->setVisible(isUserDefined);
 	m_ui->listWidgetTemperatureSplineSelectColumn->setVisible(isUserDefined);
 	m_ui->widgetTemperatureSplineFilePathDataFile->setVisible(isUserDefined);
+
+	if(!isUserDefined){
+		m_current->m_heatExchange.m_userDefinedTsvFile.clear();
+		QString directory;
+		switch(m_current->m_heatExchange.m_ambientTemperatureType){
+			case VICUS::NetworkHeatExchange::AT_BoreholeHeatExchangerTemperature:
+				directory = QString("/demandProfiles/BoreholeHeatExchange.tsv");
+				break;
+			case VICUS::NetworkHeatExchange::AT_UndisturbedSoilTemperature:
+				directory  = QString("/demandProfiles/SoilTemperature.tsv");
+				break;
+			default:
+				directory = QString("/demandProfiles/BoreholeHeatExchange.tsv"); // compiler happy
+		}
+		directory = QtExt::Directories::resourcesRootDir().append(directory);
+		IBK::Path ibkDirectory(directory.toStdString());
+		IBK::CSVReader reader;
+
+		qDebug() << "TemperatureTSV directory" << directory;
+
+		try {
+			reader.read(ibkDirectory);
+		}
+		catch (...) {
+			qDebug() << "Could not load TemperatureSplineTSV successfully";
+		}
+
+		m_temperatureSplineXPlotData = reader.colData(0);
+		m_temperatureSplineYPlotData = reader.colData(1);
+		updateTemperatureSplinePlotData();
+	} else {
+		if(!m_current->m_heatExchange.m_userDefinedTsvFile.isValid()){
+			m_ui->widgetTemperatureSplineFilePathDataFile->setFilename("");
+			m_temperatureSplineCurve->detach();
+			m_ui->widgetPlotTemperatureSpline->setEnabled(false);
+		} else {
+			m_ui->widgetTemperatureSplineFilePathDataFile->setFilename(QString::fromStdString(m_current->m_heatExchange.m_userDefinedTsvFile.str()));
+		}
+
+		updateTemperatureSplineSelectColumnList();
+	}
 }

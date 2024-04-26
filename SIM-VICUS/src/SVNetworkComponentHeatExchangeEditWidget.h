@@ -120,6 +120,8 @@ private:
 
 	void updateHeatLossSplinePlotDataUser();
 
+	void updateTemperatureSplinePlotData();
+
 	void updateTemperatureSplinePlotDataUser();
 
 	void initializeHeatLossSplineAreaRelatedValues();
@@ -161,13 +163,9 @@ private:
 	QwtPlotCurve							*m_heatLossSplineCoolingCurve = nullptr;
 	QwtPlotZoomer							*m_heatLossSplineZoomer = nullptr;
 
-	/* data vectors for TemperatureSpline Predef Tsv*/
-	std::vector<std::vector<double>>		m_TemperatureSplineyData;
-	std::vector<std::vector<double>>		m_TemperatureSplinexData;
-
 	/* data vector to be displayed in TemperatureSplinePlot */
-	std::vector<double>						m_TemperatureSplineYData;
-	std::vector<double>						m_TemperatureSplineXData;
+	std::vector<double>						m_temperatureSplineYPlotData;
+	std::vector<double>						m_temperatureSplineXPlotData;
 
 	/*! Curve visible in TemperatureSpline plot */
 	QwtPlotCurve							*m_temperatureSplineCurve = nullptr;
