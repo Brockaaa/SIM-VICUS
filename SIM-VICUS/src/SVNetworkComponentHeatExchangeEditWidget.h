@@ -106,6 +106,8 @@ private slots:
 
 	void on_comboBoxTemperatureSpline_activated(int index);
 
+	void on_toolButtonSetDefaultValues_clicked();
+
 private:
 
 	void updateHeatLossSplineSelectColumnList();

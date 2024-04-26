@@ -202,6 +202,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossConstantIndivi
 	m_ui->labelHeatLossConstantUserHeatFlux->setEnabled(checked);
 	m_ui->labelHeatLossConstantUserUnit->setEnabled(checked);
 	m_ui->lineEditHeatLossConstantUser->setEnabled(checked);
+	m_ui->toolButtonSetDefaultValues->setEnabled(checked);
 	m_ui->lineEditHeatLossConstantUser->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatLoss].get_value());
 }
 
@@ -1372,5 +1373,17 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxTemperatureSpline_acti
 		}
 
 		updateTemperatureSplineSelectColumnList();
+	}
+}
+
+void SVNetworkComponentHeatExchangeEditWidget::on_toolButtonSetDefaultValues_clicked()
+{
+	bool userDefinedValues = m_current->m_heatExchange.m_modelType == VICUS::NetworkHeatExchange::BT_UserDefineBuilding;
+	if(!userDefinedValues){
+		m_current->m_heatExchange.setDefaultValues(m_current->m_heatExchange.m_modelType);
+		m_current->m_heatExchange.m_withCoolingDemand = true;
+		m_current->m_heatExchange.m_areaRelatedValues = false;
+		m_ui->lineEditHeatLossSplineFloorArea->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value());
+		on_comboBoxHeatLossSplineUserBuildingType_activated((int)m_current->m_heatExchange.m_buildingType);
 	}
 }

@@ -39,7 +39,7 @@
      <item>
       <widget class="QStackedWidget" name="stackedWidgetHeatExchange">
        <property name="currentIndex">
-        <number>1</number>
+        <number>6</number>
        </property>
        <widget class="QWidget" name="pageTemperatureConstant">
         <property name="sizePolicy">
@@ -565,12 +565,19 @@
               <item>
                <widget class="QComboBox" name="comboBoxHeatLossSplineUserBuildingType"/>
               </item>
+              <item>
+               <widget class="QToolButton" name="toolButtonSetDefaultValues">
+                <property name="text">
+                 <string>Reset Values</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </item>
             <item>
              <widget class="QStackedWidget" name="stackedWidgetHeatLossSpline">
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="page">
                <layout class="QVBoxLayout" name="verticalLayout_6">
