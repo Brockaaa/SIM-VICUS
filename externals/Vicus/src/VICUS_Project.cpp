@@ -515,26 +515,6 @@ void Project::writeDrawingXML(const IBK::Path & filename) const {
 }
 
 
-void Project::writeDrawingXML(const IBK::Path & filename) const {
-
-	TiXmlDocument docDraw;
-	TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "UTF-8", "" );
-	docDraw.LinkEndChild( decl );
-
-	TiXmlElement * root = new TiXmlElement( "VicusDrawings" );
-	docDraw.LinkEndChild(root);
-
-	TiXmlElement * e = new TiXmlElement( "Drawings" );
-	root->LinkEndChild(e);
-
-	for (std::vector<Drawing>::const_iterator it = m_drawings.begin(); it != m_drawings.end(); ++it) {
-		it->writeXML(e);
-	}
-
-	docDraw.SaveFile( filename.c_str() );
-}
-
-
 void Project::readDirectoryPlaceholdersXML(const TiXmlElement * element) {
 
 	// loop over all elements in this XML element
