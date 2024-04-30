@@ -918,7 +918,6 @@ private:
 
 
 
-
 // **** Ideal Heater / Cooler Model ***
 
 class TNIdealHeaterCooler : public ThermalNetworkAbstractFlowElement { // NO KEYWORDS
@@ -945,12 +944,56 @@ public:
 
 private:
 	unsigned int	m_id = NANDRAD::INVALID_ID;
+
+	/*! Reference to supply temperature schedule. */
 	const double	*m_supplyTemperatureScheduleRef = nullptr;
 
-	/*! Heat loss needed to provide the given supply temperature (If we add heat this is negative).
-		Is not part of the base class since we use ThermalNetworkAbstractFlowElement. */
-	double			m_heatLoss = 888;
+	/*! Heating power needed to provide heat, positive if heat is added to fluid. */
+	double			m_heatingPower = 888;
+};
 
+
+
+// **** Ideal Heater / Cooler with limited capacity ***
+
+class TNIdealHeaterCoolerLimited : public ThermalNetworkAbstractFlowElementWithHeatLoss { // NO KEYWORDS
+public:
+	/*! C'tor, takes and caches parameters needed for function evaluation. */
+	TNIdealHeaterCoolerLimited(const NANDRAD::HydraulicFluid & fluid, const NANDRAD::HydraulicNetworkElement &e);
+
+	/*! Publishes individual model quantities via descriptions. */
+	void modelQuantities(std::vector<QuantityDescription> &quantities) const override;
+
+	/*! Publishes individual model quantity value references: same size as quantity descriptions. */
+	void modelQuantityValueRefs(std::vector<const double*> &valRefs) const override;
+
+	/*! Function for retrieving heat fluxes out of the flow element.*/
+	void internalDerivatives(double *ydot) override;
+
+	/*! Adds flow-element-specific input references (schedules etc.) to the list of input references.*/
+	void inputReferences(std::vector<NANDRAD_MODEL::InputReference> & inputRefs) const override;
+
+	/*! Provides the element with its own requested model inputs. */
+	void setInputValueRefs(std::vector<const double *>::const_iterator & resultValueRefs) override;
+
+	/*! Function for registering dependencies between derivaites, internal states and modelinputs.*/
+	void dependencies(const double *ydot, const double *y,
+					  const double *mdot, const double* TInflowLeft, const double*TInflowRight,
+					  std::vector<std::pair<const double *, const double *> > &resultInputDependencies ) const override;
+
+protected:
+
+	unsigned int	m_id = NANDRAD::INVALID_ID;
+
+	/*! Reference to supply temperature schedule. */
+	const double	*m_supplyTemperatureScheduleRef = nullptr;
+
+	/*! Heating power of element in W, can be positive (when heating) or negative (when cooling). */
+	double			m_heatingPower = 888;
+	/*! Maximum heating power in W, applied only if > 0. Limits actual heating power. */
+	double			m_maxHeatingPower = 0;
+	/*! Maximum cooling power in W, applied only if > 0. Limits actual cooling power. */
+	double			m_maxCoolingPower = 0;
 };
 
 

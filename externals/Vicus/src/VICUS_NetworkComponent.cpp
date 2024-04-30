@@ -231,6 +231,8 @@ std::vector<unsigned int> NetworkComponent::optionalParameter(const NetworkCompo
 			return {P_MaximumPressureHead, P_PumpMaximumElectricalPower, P_FractionOfMotorInefficienciesToFluidStream};
 		case MT_HeatExchanger:
 			return {P_MinimumOutletTemperature};
+		case MT_IdealHeaterCooler:
+			return {P_Volume, P_MaximumHeatingPower, P_MaximumCoolingPower};
 		default:;
 	}
 	return {};
@@ -243,6 +245,9 @@ std::vector<unsigned int> NetworkComponent::requiredIntParameter(const NetworkCo
 		case MT_DynamicPipe:
 			return {IP_NumberParallelPipes};
 		case MT_PressureLossElement:
+		case MT_ConstantPressurePump:
+		case MT_ControlledPump:
+		case MT_VariablePressurePump:
 			return {IP_NumberParallelElements};
 		default: break;
 	}

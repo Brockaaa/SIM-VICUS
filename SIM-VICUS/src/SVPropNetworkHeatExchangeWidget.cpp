@@ -50,8 +50,9 @@ void SVPropNetworkHeatExchangeWidget::updateUi() {
 	// in case we have a mixed selection of nodes and edges
 	// or no object selected at all: don't proceed
 	m_ui->groupBoxHeatExchange->setEnabled(false);
-	if ((!m_pa->m_currentEdges.empty() && !m_pa->m_currentNodes.empty()) ||
-		(m_pa->m_currentEdges.empty() && m_pa->m_currentNodes.empty()) ){
+	if (   (!m_pa->m_currentEdges.empty() && !m_pa->m_currentNodes.empty())
+		 || (m_pa->m_currentEdges.empty() && m_pa->m_currentNodes.empty())
+		 || !m_pa->m_activeNetworkSelected) {
 		return;
 	}
 
@@ -361,7 +362,7 @@ void SVPropNetworkHeatExchangeWidget::on_widgetHeatExchangeSplineFile_editingFin
 
 
 void SVPropNetworkHeatExchangeWidget::on_toolButtonHeatExchangeSpline_clicked() {
-	Q_ASSERT(m_pa->m_currentNetwork!=nullptr);
+	Q_ASSERT(!m_pa->m_currentEdges.empty() || !m_pa->m_currentNodes.empty());
 
 	// get type of spline (temperature or heat flux)
 	NANDRAD::HydraulicNetworkHeatExchange::ModelType modelType =
@@ -391,6 +392,10 @@ void SVPropNetworkHeatExchangeWidget::on_toolButtonHeatExchangeSpline_clicked() 
 	NANDRAD::LinearSplineParameter &spl = hx.m_splPara[splType];
 	SVTimeSeriesPreviewDialog *diag = new SVTimeSeriesPreviewDialog(this);
 	diag->select(spl);
+
+	// if canceled, there might be no file
+	if (!spl.m_tsvFile.isValid())
+		return;
 
 	// naming needs to be always like this
 	if (splType == NANDRAD::HydraulicNetworkHeatExchange::SPL_Temperature)

@@ -135,6 +135,10 @@ void SVNetworkImportDialog::updateUi() {
 	}
 	m_ui->comboBoxNetworkSelectionBox->blockSignals(false);
 
+	// set active network id
+	if (p.m_activeNetworkId != VICUS::INVALID_ID)
+		m_ui->comboBoxNetworkSelectionBox->setCurrentIndex(m_ui->comboBoxNetworkSelectionBox->findData(p.m_activeNetworkId));
+
 	on_comboBoxNetworkSelectionBox_currentIndexChanged(m_ui->comboBoxNetworkSelectionBox->count()-1);
 }
 
@@ -201,7 +205,7 @@ void SVNetworkImportDialog::importPipeline() {
 			qInfo() << QString(tr("Local origin at: ") + "%L1, %L2").arg(m_network.m_origin.m_x).arg(m_network.m_origin.m_y);
 
 			m_network.updateExtends();
-			SVUndoModifyNetwork * undo = new SVUndoModifyNetwork(tr("Network visualization properties updated"), m_network);
+			SVUndoModifyNetwork * undo = new SVUndoModifyNetwork(tr("Network visualization properties updated"), m_network, true);
 			undo->push(); // modifies project and updates views
 		}
 
@@ -265,7 +269,7 @@ void SVNetworkImportDialog::importSubStations() {
 			qInfo() << QString(tr("Local origin at: ") + "%L1, %L2").arg(m_network.m_origin.m_x).arg(m_network.m_origin.m_y);
 
 			m_network.updateExtends();
-			SVUndoModifyNetwork * undo = new SVUndoModifyNetwork(tr("Network visualization properties updated"), m_network);
+			SVUndoModifyNetwork * undo = new SVUndoModifyNetwork(tr("Network visualization properties updated"), m_network, true);
 			undo->push(); // modifies project and updates views
 		}
 

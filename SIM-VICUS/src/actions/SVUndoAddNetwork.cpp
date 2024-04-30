@@ -30,17 +30,24 @@
 SVUndoAddNetwork::SVUndoAddNetwork(const QString & label, const VICUS::Network & addedNetwork, bool networkGeometryModified, bool modifyFarDist) :
 	m_addedNetwork(addedNetwork),
 	m_networkGeometryModified(networkGeometryModified),
-	m_modifyFarDist(modifyFarDist)
+	m_modifyGridDist(modifyFarDist)
 {
 	setText( label );
-	m_gridWidth = 1.2 * std::max(addedNetwork.m_extends.width(), addedNetwork.m_extends.height());
+
+	std::vector<const VICUS::Network*> networks;
+	for (const VICUS::Network &net: theProject().m_geometricNetworks)
+		networks.push_back(&net);
+	networks.push_back(&addedNetwork);
+	double x = 500;
+	double y = 500;
+	VICUS::Project::networkExtends(networks, x, y);
+
+	m_gridWidth = 1.1 * std::max(x, y);
 	if (m_gridWidth > 9999)
 		m_gridSpacing = 1000;
-	else if (m_gridWidth > 999)
-		m_gridSpacing = 100;
 	else
-		m_gridSpacing = 10;
-	m_farDistance = std::max(1000.0, 2*m_gridWidth);
+		m_gridSpacing = 100;
+	m_farDistance = std::max(2000.0, 4*m_gridWidth);
 }
 
 
@@ -55,8 +62,9 @@ void SVUndoAddNetwork::undo() {
 		const SVDatabase & db = SVSettings::instance().m_db;
 		theProject().m_geometricNetworks.back().updateVisualizationRadius(db.m_pipes);
 	}
+	theProject().m_activeNetworkId = m_previouslyActiveNetworkId;
 
-	if (m_modifyFarDist) {
+	if (m_modifyGridDist) {
 		std::swap(theProject().m_viewSettings.m_farDistance, m_farDistance);
 		if (theProject().m_viewSettings.m_gridPlanes.size() > 0) {
 			std::swap(theProject().m_viewSettings.m_gridPlanes[0].m_width, m_gridWidth);
@@ -79,8 +87,11 @@ void SVUndoAddNetwork::redo() {
 
 	theProject().m_geometricNetworks.push_back(m_addedNetwork);
 	theProject().updatePointers();
+	// set the added network as active
+	m_previouslyActiveNetworkId = theProject().m_activeNetworkId;
+	theProject().m_activeNetworkId = theProject().m_geometricNetworks.back().m_id;
 
-	if (m_modifyFarDist) {
+	if (m_modifyGridDist) {
 		std::swap(theProject().m_viewSettings.m_farDistance, m_farDistance);
 		if (theProject().m_viewSettings.m_gridPlanes.size() > 0) {
 			std::swap(theProject().m_viewSettings.m_gridPlanes[0].m_width, m_gridWidth);

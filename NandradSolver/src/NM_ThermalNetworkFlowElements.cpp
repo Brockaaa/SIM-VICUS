@@ -1122,6 +1122,9 @@ void TNHeatPumpVariable::setInflowTemperature(double Tinflow) {
 			IBK_ASSERT(m_heatExchangeCondensorHeatLossRef != nullptr);
 			m_condenserHeatFlux = *m_heatExchangeCondensorHeatLossRef;
 
+			// only for output
+			m_temperatureDifference = m_inflowTemperature - m_meanTemperature;
+
 			// Passive cooling mode:
 			// in case of a negative condenser heat flux, we interpet this as passive cooling, so the heat pump is off
 			// and just acts as a usual heat exchanger by adding the condenser heat flux directly to the fluid
@@ -1145,7 +1148,6 @@ void TNHeatPumpVariable::setInflowTemperature(double Tinflow) {
 					m_evaporatorHeatFlux = m_condenserHeatFlux * (m_COP - 1) / m_COP;
 					m_heatLoss = m_evaporatorHeatFlux; // energy taken out of fluid medium
 					m_electricalPower  = m_condenserHeatFlux - m_evaporatorHeatFlux; // same as "m_condenserHeatFlux/m_COP", electrical power of heat pump
-					m_temperatureDifference = m_inflowTemperature - m_meanTemperature;
 				}
 			}
 		} break; // HP_SourceSide
@@ -1312,7 +1314,6 @@ void TNHeatPumpVariable::calculateCOP() {
 
 
 
-
 // *** TNIdealHeaterCooler ***
 
 TNIdealHeaterCooler::TNIdealHeaterCooler(unsigned int flowElementId, const NANDRAD::HydraulicFluid & fluid) :
@@ -1329,7 +1330,7 @@ void TNIdealHeaterCooler::setInflowTemperature(double Tinflow) {
 	double absMassFlux = std::fabs(m_massFlux);
 
 	// heat needed to provide the given temperature (If we are heating up the fluid, this is positive)
-	m_heatLoss = absMassFlux * m_fluidHeatCapacity * (Tinflow - m_meanTemperature);
+	m_heatingPower = absMassFlux * m_fluidHeatCapacity * (m_meanTemperature - Tinflow);
 }
 
 
@@ -1349,12 +1350,91 @@ void TNIdealHeaterCooler::setInputValueRefs(std::vector<const double *>::const_i
 
 
 void TNIdealHeaterCooler::modelQuantities(std::vector<QuantityDescription> & quantities) const{
-	quantities.push_back(QuantityDescription("FlowElementHeatLoss", "W", "Heat flux from flow element into environment", false));
+	quantities.push_back(QuantityDescription("HeatingPower", "W", "Heating power added to fluid", false));
 }
 
 
 void TNIdealHeaterCooler::modelQuantityValueRefs(std::vector<const double *> & valRefs) const {
-	valRefs.push_back(&m_heatLoss);
+	valRefs.push_back(&m_heatingPower);
+}
+
+
+
+
+
+// *** TNIdealHeaterCoolerLimited ***
+
+
+TNIdealHeaterCoolerLimited::TNIdealHeaterCoolerLimited(const NANDRAD::HydraulicFluid & fluid, const NANDRAD::HydraulicNetworkElement &e) :
+	m_id(e.m_id)
+{
+	m_fluidVolume = e.m_component->m_para[NANDRAD::HydraulicNetworkComponent::P_Volume].value;
+	m_fluidHeatCapacity = fluid.m_para[NANDRAD::HydraulicFluid::P_HeatCapacity].value;
+	m_fluidDensity = fluid.m_para[NANDRAD::HydraulicFluid::P_Density].value;
+	if (!e.m_component->m_para[NANDRAD::HydraulicNetworkComponent::P_MaximumHeatingPower].name.empty())
+		m_maxHeatingPower = e.m_component->m_para[NANDRAD::HydraulicNetworkComponent::P_MaximumHeatingPower].value;
+	if (!e.m_component->m_para[NANDRAD::HydraulicNetworkComponent::P_MaximumCoolingPower].name.empty())
+		m_maxCoolingPower = e.m_component->m_para[NANDRAD::HydraulicNetworkComponent::P_MaximumCoolingPower].value;
+}
+
+
+void TNIdealHeaterCoolerLimited::modelQuantities(std::vector<QuantityDescription> &quantities) const {
+	ThermalNetworkAbstractFlowElementWithHeatLoss::modelQuantities(quantities);
+	quantities.push_back(QuantityDescription("HeatingPower", "W", "Heating power added to fluid", false));
+}
+
+
+void TNIdealHeaterCoolerLimited::modelQuantityValueRefs(std::vector<const double *> &valRefs) const {
+	ThermalNetworkAbstractFlowElementWithHeatLoss::modelQuantityValueRefs(valRefs);
+	valRefs.push_back(&m_heatingPower);
+}
+
+
+void TNIdealHeaterCoolerLimited::internalDerivatives(double * ydot) {
+	// set heat loss
+	IBK_ASSERT(m_supplyTemperatureScheduleRef != nullptr);
+
+	double supplyTemperatureSetPoint = *m_supplyTemperatureScheduleRef;
+	double absMassFlux = std::fabs(m_massFlux);
+
+	// heat needed to provide the given temperature (If we are heating up the fluid, this is positive)
+	m_heatingPower = absMassFlux * m_fluidHeatCapacity * (supplyTemperatureSetPoint - m_inflowTemperature);
+	// limit heating and cooling power (only if according parameters are > 0)
+	if (m_maxHeatingPower > 0 && m_heatingPower > m_maxHeatingPower)
+		m_heatingPower = m_maxHeatingPower;
+	if (m_maxCoolingPower > 0 && m_heatingPower < -m_maxCoolingPower)
+		m_heatingPower = -m_maxCoolingPower;
+
+	m_heatLoss = -m_heatingPower;
+
+	// use basic routine
+	ThermalNetworkAbstractFlowElementWithHeatLoss::internalDerivatives(ydot);
+}
+
+
+void TNIdealHeaterCoolerLimited::inputReferences(std::vector<InputReference> & inputRefs) const {
+	InputReference ref;
+	ref.m_id = m_id;
+	ref.m_referenceType = NANDRAD::ModelInputReference::MRT_NETWORKELEMENT;
+	ref.m_name.m_name = "SupplyTemperatureSchedule";
+	ref.m_required = true;
+	inputRefs.push_back(ref);
+}
+
+
+void TNIdealHeaterCoolerLimited::setInputValueRefs(std::vector<const double *>::const_iterator & resultValueRefs) {
+	m_supplyTemperatureScheduleRef =  *(resultValueRefs++);
+}
+
+
+void TNIdealHeaterCoolerLimited::dependencies(const double * ydot, const double * y, const double * mdot,
+												 const double * TInflowLeft, const double * TInflowRight,
+												 std::vector<std::pair<const double *, const double *> > & resultInputDependencies) const
+{
+	ThermalNetworkAbstractFlowElementWithHeatLoss::dependencies(ydot, y , mdot, TInflowLeft, TInflowRight, resultInputDependencies);
+
+	if (m_supplyTemperatureScheduleRef != nullptr)
+		resultInputDependencies.push_back(std::make_pair(&m_heatLoss, m_supplyTemperatureScheduleRef) );
 }
 
 

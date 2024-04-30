@@ -439,6 +439,10 @@ void Project::readXMLDocument(TiXmlElement * rootElement) {
 			// the m_color property of edges and nodes is mutable
 			net.setDefaultColors();
 		}
+
+		// in case there is no active id set, but networks exist, choose the first network as active
+		if (m_activeNetworkId == INVALID_ID && !m_geometricNetworks.empty())
+			m_activeNetworkId = m_geometricNetworks[0].m_id;
 	}
 	catch (IBK::Exception & ex) {
 		throw IBK::Exception(ex, IBK::FormatString("Error reading project from text."), FUNC_ID);
@@ -464,6 +468,50 @@ void Project::writeXML(const IBK::Path & filename) const {
 	writeXML(root);
 
 	doc.SaveFile( filename.c_str() );
+}
+
+QString Project::writeXMLText() const {
+	TiXmlDocument doc;
+	TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "UTF-8", "" );
+	doc.LinkEndChild( decl );
+
+	TiXmlElement * root = new TiXmlElement( "VicusProject" );
+	doc.LinkEndChild(root);
+
+	root->SetAttribute("fileVersion", VERSION);
+
+	if (m_projectInfo != NANDRAD::ProjectInfo())
+		m_projectInfo.writeXML(root);
+	writeDirectoryPlaceholdersXML(root);
+
+	writeXML(root);
+
+	TiXmlPrinter printer;
+	printer.SetIndent( "    " );
+
+	doc.Accept( &printer );
+	std::string xmltext = printer.CStr();
+	return QString::fromStdString(xmltext);
+}
+
+
+void Project::writeDrawingXML(const IBK::Path & filename) const {
+
+	TiXmlDocument docDraw;
+	TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "UTF-8", "" );
+	docDraw.LinkEndChild( decl );
+
+	TiXmlElement * root = new TiXmlElement( "VicusDrawings" );
+	docDraw.LinkEndChild(root);
+
+	TiXmlElement * e = new TiXmlElement( "Drawings" );
+	root->LinkEndChild(e);
+
+	for (std::vector<Drawing>::const_iterator it = m_drawings.begin(); it != m_drawings.end(); ++it) {
+		it->writeXML(e);
+	}
+
+	docDraw.SaveFile( filename.c_str() );
 }
 
 
@@ -1280,6 +1328,16 @@ IBKMK::Vector3D Project::boundingBox(std::vector<const Drawing *> & drawings,
 
 	// set bounding box;
 	return IBKMK::Vector3D ( dX, dY, dZ );
+}
+
+
+void Project::networkExtends(std::vector<const Network*> &networks, double maxX, double maxY) {
+	for (const VICUS::Network *net: networks) {
+		for (const VICUS::NetworkNode & node : net->m_nodes) {
+			maxX = std::max(std::abs(maxX), node.m_position.m_x);
+			maxY = std::max(std::abs(maxY), node.m_position.m_y);
+		}
+	}
 }
 
 

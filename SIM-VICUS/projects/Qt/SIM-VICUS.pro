@@ -157,6 +157,7 @@ SOURCES += \
 	../../src/SVUndoAddStructuralUnit.cpp \
 	../../src/SVUndoDeleteStructuralUnit.cpp \
 	../../src/SVSnapOptionsDialog.cpp \
+	../../src/SVUndoModifyActiveNetworkId.cpp \
 	../../src/SVUndoModifyDrawingFile.cpp \
 	../../src/SVUndoModifyLcaLcc.cpp \
 	../../src/SVUndoModifyStructuralUnit.cpp \
@@ -407,6 +408,7 @@ HEADERS  += \
 	../../src/SVUndoAddStructuralUnit.h \
 	../../src/SVUndoDeleteStructuralUnit.h \
 	../../src/SVSnapOptionsDialog.h \
+	../../src/SVUndoModifyActiveNetworkId.h \
 	../../src/SVUndoModifyDrawingFile.h \
 	../../src/SVUndoModifyLcaLcc.h \
 	../../src/SVUndoModifyStructuralUnit.h \

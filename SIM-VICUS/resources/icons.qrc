@@ -144,7 +144,7 @@
         <file>icons/light/svg/network_icons/ConstantPressurePump.svg</file>
         <file>icons/light/svg/network_icons/ControlledPump.svg</file>
         <file>icons/light/svg/network_icons/ControlledValve.svg</file>
-	<file>icons/light/svg/network_icons/HeatExchanger.svg</file>
+		<file>icons/light/svg/network_icons/HeatExchanger.svg</file>
         <file>icons/light/svg/network_icons/HeatPumpOnOffSourceSide.svg</file>
         <file>icons/light/svg/network_icons/HeatPumpVariableIdealCarnotSourceSide.svg</file>
         <file>icons/light/svg/network_icons/HeatPumpVariableIdealCarnotSupplySide.svg</file>
@@ -152,5 +152,21 @@
         <file>icons/light/svg/network_icons/IdealHeaterCooler.svg</file>
         <file>icons/light/svg/network_icons/PressureLossElement.svg</file>
         <file>icons/light/svg/network_icons/VariablePressurePump.svg</file>
+
+        <file>icons/dark/svg/assign_db_element.svg</file>
+        <file>icons/dark/svg/assign_table_element.svg</file>
+        <file>icons/dark/svg/exchange_table_element.svg</file>
+        <file>icons/dark/svg/misc_geometry_operations.svg</file>
+        <file>icons/dark/svg/select_in_scene.svg</file>
+        <file>icons/light/svg/assign_db_element.svg</file>
+        <file>icons/light/svg/assign_table_element.svg</file>
+        <file>icons/light/svg/exchange_table_element.svg</file>
+        <file>icons/light/svg/misc_geometry_operations.svg</file>
+        <file>icons/light/svg/select_in_scene.svg</file>
+        <file>icons/dark/svg/edit_table_element.svg</file>
+        <file>icons/light/svg/edit_table_element.svg</file>
+        <file>icons/dark/png/edit_db_element.png</file>
+        <file>icons/light/png/edit_db_element.png</file>
+
     </qresource>
 </RCC>

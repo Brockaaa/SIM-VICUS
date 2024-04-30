@@ -105,6 +105,9 @@ private:
 	/*! Number of parallel pipes (=1 per default).*/
 	unsigned int					m_nParallelPipes;
 
+	/*! Pressure loss of pipe per length, used as output quantity only.*/
+	double							m_pressureLossPerLength = -999;
+
 	/*! the calculated controller zeta value for the valve */
 	double							m_zetaControlled = -999;
 
@@ -249,7 +252,8 @@ private:
 */
 class HNAbstractPowerLimitedPumpModel {
 public:
-	HNAbstractPowerLimitedPumpModel(const double & density, const NANDRAD::HydraulicNetworkComponent &component);
+	HNAbstractPowerLimitedPumpModel(const double & density, const NANDRAD::HydraulicNetworkComponent &component,
+									unsigned int numberParallelPumps);
 
 	void modelQuantities(std::vector<QuantityDescription> &quantities) const;
 
@@ -271,12 +275,15 @@ protected:
 	std::vector<double>				m_coefficientsDpMax;
 	/*! Determines wether pump has power limit, if not just a constant efficiency is given */
 	bool							m_isPowerLimited = true;
+	/*! Number of identical parallel pumps. */
+	unsigned int					m_numberParallelPumps = 1;
 
 	/*! Calculates actual maximum pressure head [Pa] which linear decreases with mass flux */
-	double maximumPressureHead(const double &mdot) const;
+	double maximumPressureHead(double mdot) const;
 	/*! Calculates actual efficiency */
-	double efficiency(const double &mdot, const double & dp) const;
-	double electricalPower(const double &mdot, const double & dp, const double & eta) const;
+	double efficiency(double mdot, double dp) const;
+	/*! Calculates the elctrical power demand based on given efficiency. */
+	double electricalPower(double mdot, double dp, double eta) const;
 
 }; // HNAbstractPowerLimitedPumpModel
 
@@ -291,7 +298,8 @@ public:
 	/*! C'tor, takes and caches parameters needed for function evaluation. */
 	HNConstantPressurePump(unsigned int id, const NANDRAD::HydraulicNetworkComponent & component,
 						   const NANDRAD::HydraulicFluid & fluid,
-						   const NANDRAD::HydraulicNetworkControlElement * ctr);
+						   const NANDRAD::HydraulicNetworkControlElement * ctr,
+							unsigned int numberParallelPumps);
 
 	double systemFunction(double mdot, double p_inlet, double p_outlet) const override;
 	void partials(double mdot, double p_inlet, double p_outlet,
@@ -320,9 +328,9 @@ private:
 	/*! Determines wether pump is currently in operation (used for on/off controlling) */
 	bool												m_pumpIsOn = true;
 	/*! The electrical power demand in current operation point in W */
-	double							m_electricalPower = -999;
+	double												m_electricalPower = -999;
 	/*! The efficiency in current operation point - */
-	double							m_efficiency = -999;
+	double												m_efficiency = -999;
 
 }; // HNConstantPressurePump
 
@@ -406,7 +414,8 @@ public:
 	/*! C'tor, takes and caches parameters needed for function evaluation. */
 	HNControlledPump(const NANDRAD::HydraulicNetworkElement & e,
 					 const NANDRAD::HydraulicFluid & fluid, const std::vector<unsigned int> * networkElementIds,
-					 const std::vector<double> * networkPressureDifferences);
+					 const std::vector<double> * networkPressureDifferences,
+					 unsigned int numberParallelPumps);
 
 	/*! Destructor, memory cleanup. */
 	~HNControlledPump() override;
@@ -499,12 +508,11 @@ private:
 	double							m_pressureDifferenceWorstpoint = -999;
 	/*! Id of point with minimum pressure difference (worst point), meant to be VICUS nodeId, used as output only */
 	double							m_nodeIdWorstpoint = 0;
-
 	/*! The electrical power demand in current operation point in W */
 	double							m_electricalPower = -999;
 	/*! The efficiency in current operation point - */
 	double							m_efficiency = -999;
-
+	/*! Controller error, output quantity. */
 	double							m_controllerError = -999;
 
 }; // HNControlledPump
@@ -520,7 +528,7 @@ class HNVariablePressureHeadPump: public HydraulicNetworkAbstractFlowElement,  /
 public:
 	/*! C'tor, takes and caches parameters needed for function evaluation. */
 	HNVariablePressureHeadPump(unsigned int id, const NANDRAD::HydraulicNetworkComponent & component,
-								const NANDRAD::HydraulicFluid & fluid);
+								const NANDRAD::HydraulicFluid & fluid, unsigned int numberParallelPumps);
 
 	double systemFunction(double mdot, double p_inlet, double p_outlet) const override;
 	void partials(double mdot, double p_inlet, double p_outlet,

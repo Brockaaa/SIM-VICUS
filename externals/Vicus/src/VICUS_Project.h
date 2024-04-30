@@ -131,6 +131,11 @@ public:
 	*/
 	void writeXML(const IBK::Path & filename) const;
 
+	/*! Writes the project file to an XML file.
+		\param filename  The full path to the project file.
+	*/
+	QString writeXMLText() const;
+
 	void writeDrawingXML(const IBK::Path & filename) const;
 
 	/*! Reads the placeholder section into m_placeholders map. */
@@ -289,6 +294,9 @@ public:
 									   const IBKMK::Vector3D &yAxis = IBKMK::Vector3D(0,1,0),
 									   const IBKMK::Vector3D &zAxis = IBKMK::Vector3D(0,0,1));
 
+	/*! Computes the maximum absolute x and y coordinates of given networks.*/
+	static void networkExtends(std::vector<const Network *> & networks, double maxX, double maxY);
+
 	/*! Attempts to create new surface-surface connections based on the current selection.
 		Newly created component instances are stored in vector newComponentInstances alongside
 		original component instances.
@@ -322,12 +330,14 @@ public:
 
 	LccSettings											m_lccSettings;				// XML:E
 
+	unsigned int										m_activeNetworkId = INVALID_ID;	// XML:E
+
 	std::vector<Network>								m_geometricNetworks;		// XML:E
 
 	std::vector<Building>								m_buildings;	 			// XML:E
 
-    /*! Store structural units */
-    std::vector<StructuralUnit>							m_structuralUnits;			// XML:E
+	/*! Store structural units */
+	std::vector<StructuralUnit>							m_structuralUnits;			// XML:E
 
 	/*! All components actually placed in the geometry.
 		This vector is outside buildings, so that two building parts can be connected with

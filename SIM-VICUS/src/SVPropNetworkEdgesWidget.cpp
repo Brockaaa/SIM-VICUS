@@ -33,6 +33,12 @@ SVPropNetworkEdgesWidget::SVPropNetworkEdgesWidget(QWidget *parent) :
 	m_ui->tableWidgetPipes->horizontalHeader()->setStretchLastSection(true);
 
 	on_tableWidgetPipes_itemSelectionChanged();
+
+	m_ui->pushButtonEditPipe->setIcon(QIcon::fromTheme("edit_table_element"));
+	m_ui->pushButtonExchangePipe->setIcon(QIcon::fromTheme("exchange_table_element"));
+	m_ui->pushButtonSelectEdgesWithPipe->setIcon(QIcon::fromTheme("select_in_scene"));
+
+	m_ui->pushButtonAssignPipe->setIcon(QIcon::fromTheme("assign_db_element"));
 }
 
 
@@ -46,8 +52,8 @@ void SVPropNetworkEdgesWidget::updateUi() {
 
 	// enable / disable wiudgets
 	bool uniformEdge = m_pa->uniformProperty(m_pa->m_currentEdges, &VICUS::NetworkEdge::m_idPipe) && m_pa->m_currentNodes.empty();
-	m_ui->groupBoxEdge->setEnabled(uniformEdge);
-	m_ui->groupBoxSelectedPipe->setEnabled(uniformEdge);
+	m_ui->groupBoxEdge->setEnabled(uniformEdge && m_pa->m_activeNetworkSelected);
+	m_ui->groupBoxSelectedPipe->setEnabled(uniformEdge && m_pa->m_activeNetworkSelected);
 
 	// update edge length and display name
 	if (m_pa->m_currentEdges.size() == 1){
@@ -170,7 +176,7 @@ void SVPropNetworkEdgesWidget::on_pushButtonEditPipe_clicked()
 
 void SVPropNetworkEdgesWidget::on_pushButtonRecalculateLength_clicked() {
 	VICUS::Project p = project();
-	VICUS::Network *network = VICUS::element(p.m_geometricNetworks, m_pa->m_currentNetwork->m_id);
+	VICUS::Network *network = VICUS::element(p.m_geometricNetworks, p.m_activeNetworkId);
 	Q_ASSERT(network!=nullptr);
 
 	network->updateNodeEdgeConnectionPointers();
@@ -264,4 +270,3 @@ void SVPropNetworkEdgesWidget::on_tableWidgetPipes_itemDoubleClicked(QTableWidge
 {
 	on_pushButtonEditPipe_clicked();
 }
-

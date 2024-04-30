@@ -19,7 +19,7 @@ SVPropBuildingZoneTemplatesWidget::SVPropBuildingZoneTemplatesWidget(QWidget *pa
 {
 	m_ui->setupUi(this);
 	//m_ui->verticalLayout_2->setContentsMargins(0,0,0,0);
-	m_ui->groupBoxSelectedRooms->setContentsMargins(9,9,9,9);
+	m_ui->widgetSelectedRooms->layout()->setMargin(0);
 
 	m_ui->tableWidgetZoneTemplates->setColumnCount(2);
 	m_ui->tableWidgetZoneTemplates->setHorizontalHeaderLabels(QStringList() << QString() << tr("Zone template"));
@@ -28,6 +28,14 @@ SVPropBuildingZoneTemplatesWidget::SVPropBuildingZoneTemplatesWidget(QWidget *pa
 	m_ui->tableWidgetZoneTemplates->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
 	m_ui->tableWidgetZoneTemplates->horizontalHeader()->resizeSection(0,20);
 	m_ui->tableWidgetZoneTemplates->horizontalHeader()->setStretchLastSection(true);
+
+	m_ui->pushButtonAssignZoneTemplate->setIcon(QIcon::fromTheme("assign_db_element"));
+	m_ui->pushButtonAssignSelectedZoneTemplate->setIcon(QIcon::fromTheme("assign_table_element"));
+
+	m_ui->pushButtonEditZoneTemplates->setIcon(QIcon::fromTheme("edit_table_element"));
+	m_ui->pushButtonExchangeZoneTemplates->setIcon(QIcon::fromTheme("exchange_table_element"));
+	m_ui->pushButtonSelectObjectsWithZoneTemplate->setIcon(QIcon::fromTheme("select_in_scene"));
+
 }
 
 
@@ -91,10 +99,10 @@ void SVPropBuildingZoneTemplatesWidget::updateUi() {
 	project().selectedRooms(rooms);
 	if (rooms.empty()) {
 		m_ui->labelSelectedZoneTemplates->setText("");
-		m_ui->groupBoxSelectedRooms->setEnabled(false);
+		m_ui->widgetSelectedRooms->setEnabled(false);
 	}
 	else {
-		m_ui->groupBoxSelectedRooms->setEnabled(true);
+		m_ui->widgetSelectedRooms->setEnabled(true);
 	}
 
 	// update push button for selected zone assignement
