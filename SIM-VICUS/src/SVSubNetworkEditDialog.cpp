@@ -1189,7 +1189,7 @@ void SVSubNetworkEditDialog::createNewScene()
 			VICUS::BMBlock *block = outletNodeBlocks[j];
 			if (!isBlockAlreadyPlacedOnScene[block->m_name.toUInt()]){
 				block->m_pos = QPointF(VICUS::ENTRANCEEXITBLOCK_WIDTH + (i) * distancePerBlock, 120 * j + 392  - 120 * ( outletNodeBlocks.size() / 2));
-				m_sceneManager->addBlock(*block);
+				m_sceneManager->addBlock(*block, m_networkComponents[componentIndex(block->m_componentId)].m_modelType);
 				isBlockAlreadyPlacedOnScene[block->m_name.toUInt()] = true;
 			}
 		}
@@ -1198,7 +1198,7 @@ void SVSubNetworkEditDialog::createNewScene()
 			VICUS::BMBlock *block = inletNodeBlocks[j];
 			if (!isBlockAlreadyPlacedOnScene[block->m_name.toUInt()]){
 				block->m_pos = QPointF(VICUS::BLOCK_WIDTH + (i+1) * distancePerBlock, 120 * (j) + 392 - 120 * ( inletNodeBlocks.size() / 2));
-				m_sceneManager->addBlock(*block);
+				m_sceneManager->addBlock(*block, m_networkComponents[componentIndex(block->m_componentId)].m_modelType);
 				isBlockAlreadyPlacedOnScene[block->m_name.toUInt()] = true;
 			}
 		}
@@ -1244,7 +1244,8 @@ void SVSubNetworkEditDialog::createNewScene()
 			continue;
 		}
 		mapWithAllBlocks[blocksConnectedToGlobalOutlet[i]].m_pos = QPointF(1102 / 2, 120 * (i) + 392 - 120 * ( blocksConnectedToGlobalOutlet.size() / 2));
-		m_sceneManager->addBlock(mapWithAllBlocks[blocksConnectedToGlobalOutlet[i]]);
+		VICUS::NetworkComponent::ModelType modelType = m_networkComponents[componentIndex(mapWithAllBlocks[blocksConnectedToGlobalOutlet[i]].m_componentId)].m_modelType;
+		m_sceneManager->addBlock(mapWithAllBlocks[blocksConnectedToGlobalOutlet[i]], modelType);
 		isBlockAlreadyPlacedOnScene[blocksConnectedToGlobalOutlet[i]] = true;
 	}
 
@@ -1290,7 +1291,8 @@ void SVSubNetworkEditDialog::createNewScene()
 			continue;
 		}
 		mapWithAllBlocks[blocksConnectedToGlobalInlet[i]].m_pos = QPointF(1102 / 2, 120 * (i) - 392 - 120 * ( blocksConnectedToGlobalInlet.size() / 2));
-		m_sceneManager->addBlock(mapWithAllBlocks[blocksConnectedToGlobalInlet[i]]);
+		VICUS::NetworkComponent::ModelType modelType = m_networkComponents[componentIndex(mapWithAllBlocks[blocksConnectedToGlobalOutlet[i]].m_componentId)].m_modelType;
+		m_sceneManager->addBlock(mapWithAllBlocks[blocksConnectedToGlobalInlet[i]], modelType);
 		isBlockAlreadyPlacedOnScene[blocksConnectedToGlobalInlet[i]] = true;
 	}
 
@@ -1369,7 +1371,7 @@ void SVSubNetworkEditDialog::on_copyBlockButton_clicked()
 		component.m_id = newComponentID();
 		newBlock.m_componentId = component.m_id;
 		m_networkComponents.push_back(component);
-		m_sceneManager->addBlock(newBlock);
+		m_sceneManager->addBlock(newBlock, component.m_modelType);
 
 		m_sceneManager->update();
 	}
