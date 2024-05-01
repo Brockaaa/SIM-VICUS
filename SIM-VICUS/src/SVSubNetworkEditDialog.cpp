@@ -749,6 +749,8 @@ void SVSubNetworkEditDialog::keyPressEvent(QKeyEvent *event)
 	if (event->key() == Qt::Key_Delete) {
 		if(m_sceneManager->selectedBlocks().size() >= 1){
 			m_sceneManager->removeSelectedBlocks();
+			m_ui->networkComponentEditWidget->updateInput(nullptr);
+			m_ui->stackedWidget->setCurrentIndex(0);
 		}
 		else if(m_sceneManager->selectedConnector() != nullptr){
 			m_sceneManager->removeSelectedConnector();
@@ -1347,6 +1349,8 @@ void SVSubNetworkEditDialog::on_removeButton_clicked()
 		if(selectedBlock->m_componentId != VICUS::INVALID_ID)
 			m_networkComponents.erase(m_networkComponents.begin() + componentIndex(selectedBlock->m_componentId));
 		m_sceneManager->removeBlock(selectedBlock);
+		m_ui->networkComponentEditWidget->updateInput(nullptr);
+		m_ui->stackedWidget->setCurrentIndex(0);
 		m_sceneManager->update();
 
 	} else if(m_sceneManager->selectedConnector()){
