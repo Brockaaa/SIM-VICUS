@@ -146,10 +146,6 @@ private:
 	*/
 	VICUS::NetworkComponent					*m_current = nullptr;
 
-	/*! The curve used to plot the polynoms. */
-	std::vector<QwtPlotCurve*>				m_curves1;
-	std::vector<QwtPlotCurve*>				m_curves2;
-
 	/*! The data vectors needed for plotting HeatLossSpline. */
 	std::vector<double>						m_xData;
 	std::vector<std::vector<double>>		m_yData1;

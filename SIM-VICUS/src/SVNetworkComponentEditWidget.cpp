@@ -878,17 +878,11 @@ void SVNetworkComponentEditWidget::on_tableWidgetPolynomCoefficients_cellChanged
 
 void SVNetworkComponentEditWidget::on_toolButtonControllerSet_clicked()
 {
-	VICUS::NetworkController controller;
-	controller.m_modelType = VICUS::NetworkController::MT_Constant;
-	controller.m_controlledProperty = VICUS::NetworkController::CP_TemperatureDifference;
-	m_current->m_networkController = controller;
-
 	if(m_controllerEditDialog == nullptr){
 		m_controllerEditDialog = new SVNetworkControllerEditDialog(this);
 	}
 
-	VICUS::NetworkController tmpController = m_current->m_networkController;
-	m_controllerEditDialog->setup(tmpController, m_current->m_modelType);
+	m_controllerEditDialog->setup(m_current->m_networkController, m_current->m_modelType);
 	m_controllerEditDialog->exec();
 
 	if (m_controllerEditDialog->result() == QDialog::Accepted){
