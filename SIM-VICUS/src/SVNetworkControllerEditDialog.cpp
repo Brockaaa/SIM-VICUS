@@ -145,9 +145,8 @@ VICUS::NetworkController SVNetworkControllerEditDialog::controller()
 
 void SVNetworkControllerEditDialog::on_lineEditSetpoint_editingFinished()
 {
-if (!m_ui->lineEditSetpoint->isValid())
+	if (!m_ui->lineEditSetpoint->isValid())
 		return;
-	//Q_ASSERT(m_currentController != nullptr);
 	VICUS::NetworkController::para_t setPointParaType = VICUS::NetworkController::setPointType(m_currentController.m_controlledProperty);
 	if (setPointParaType != VICUS::NetworkController::NUM_P) {
 		VICUS::KeywordList::setParameter(m_currentController.m_para, "NetworkController::para_t",
