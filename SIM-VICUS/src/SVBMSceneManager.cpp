@@ -101,6 +101,8 @@ void SVBMSceneManager::updateNetwork(VICUS::BMNetwork & network, std::vector<VIC
 			b.m_properties["ShowPixmap"] = true;
 			b.m_properties["Pixmap"] = pixmap;
 
+			b.m_sockets[0].m_pos = QPointF(0, VICUS::BLOCK_HEIGHT / 2);
+			b.m_sockets[1].m_pos = QPointF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT / 2);
 
 			Q_ASSERT(component != nullptr);
 			item = createBlockItem(b, component->m_modelType);
