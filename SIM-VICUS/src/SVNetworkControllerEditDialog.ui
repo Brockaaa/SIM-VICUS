@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>470</width>
-    <height>438</height>
+    <height>471</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -59,7 +59,11 @@
        <widget class="QComboBox" name="comboBoxProperty"/>
       </item>
       <item row="2" column="2">
-       <widget class="QLineEdit" name="lineEditSchedule"/>
+       <widget class="QLineEdit" name="lineEditSchedule">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="1" column="2">
        <widget class="QtExt::ValidatingLineEdit" name="lineEditSetpoint"/>
@@ -119,7 +123,7 @@
      </property>
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
-       <widget class="QLabel" name="label_3">
+       <widget class="QLabel" name="labelType">
         <property name="text">
          <string>Type</string>
         </property>
@@ -129,7 +133,7 @@
        <widget class="QComboBox" name="comboBoxControllerType"/>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label_6">
+       <widget class="QLabel" name="labelKp">
         <property name="text">
          <string>Kp</string>
         </property>
@@ -139,7 +143,7 @@
        <widget class="QtExt::ValidatingLineEdit" name="lineEditKp"/>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="label_7">
+       <widget class="QLabel" name="labelKi">
         <property name="text">
          <string>Ki</string>
         </property>
@@ -164,7 +168,7 @@
      </property>
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0">
-       <widget class="QLabel" name="label_4">
+       <widget class="QLabel" name="labelyMax">
         <property name="text">
          <string>yMax</string>
         </property>

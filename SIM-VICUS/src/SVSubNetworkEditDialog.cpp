@@ -234,7 +234,7 @@ void SVSubNetworkEditDialog::updateNetwork() {
 		if(block.m_mode != VICUS::NetworkComponentBlock) continue;
 		const VICUS::NetworkComponent* comp = VICUS::element(m_networkComponents, block.m_componentId);
 		if(comp->m_networkController.m_controlledProperty != VICUS::NetworkController::NUM_CP)
-			m_sceneManager->setController(&block, VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", comp->m_networkController.m_controlledProperty));
+			m_sceneManager->setController(&block, QString::fromStdString(comp->m_networkController.m_displayName.string(IBK::MultiLanguageString::m_language)));
 	}
 }
 

@@ -52,7 +52,6 @@ void SVNetworkControllerEditDialog::setup(VICUS::NetworkController &controller, 
 		m_currentController.m_controlledProperty = VICUS::NetworkController::ControlledProperty(availableCtrProps[0]);
 		m_currentController.m_displayName.setString((QString("New ") + QString(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(m_currentController.m_controlledProperty)))).toStdString(), "en");
 		m_currentController.m_displayName.setString((QString("Neu ") + QString(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(m_currentController.m_controlledProperty)))).toStdString(), "de");
-		m_ui->lineEditName->setText(QString::fromStdString(m_currentController.m_displayName.string(IBK::MultiLanguageString::m_language)));
 	}
 	update();
 
@@ -105,6 +104,16 @@ void SVNetworkControllerEditDialog::update()
 	}
 
 	// enable states and text
+	m_ui->lineEditName->setText(QString::fromStdString(m_currentController.m_displayName.string(IBK::MultiLanguageString::m_language)));
+	m_ui->radioButtonSchedule->setChecked(m_currentController.m_modelType == VICUS::NetworkController::MT_Scheduled);
+	m_ui->radioButtonSchedule->setEnabled(schedulePossible);
+	m_ui->lineEditSchedule->setEnabled(schedulePossible);
+	if(m_currentController.m_modelType == VICUS::NetworkController::NUM_MT || m_currentController.m_modelType == VICUS::NetworkController::MT_Constant){
+		m_ui->radioButtonFixedSetPoint->setChecked(true);
+		on_radioButtonFixedSetPoint_clicked(true);
+	}
+	m_ui->lineEditSetpoint->setEnabled(m_currentController.m_modelType == VICUS::NetworkController::MT_Constant);
+
 	m_ui->radioButtonFixedSetPoint->setText(tr("Set point ") + controlledPropertyName);
 	m_ui->radioButtonSchedule->setEnabled(schedulePossible);
 	if (schedulePossible)
@@ -134,17 +143,17 @@ void SVNetworkControllerEditDialog::update()
 	// controller type and parameters
 	int typeIdx = m_ui->comboBoxControllerType->findData(m_currentController.m_controllerType);
 	m_ui->comboBoxControllerType->setCurrentIndex(typeIdx);
-	m_ui->lineEditKp->setEnabled(m_currentController.m_controllerType == VICUS::NetworkController::CT_PController ||
-								 m_currentController.m_controllerType == VICUS::NetworkController::CT_PIController );
+	bool KpEnabled = m_currentController.m_controllerType == VICUS::NetworkController::CT_PController ||
+					 m_currentController.m_controllerType == VICUS::NetworkController::CT_PIController ;
+	m_ui->lineEditKp->setEnabled(KpEnabled);
+	m_ui->labelKp->setEnabled(KpEnabled);
 	m_ui->lineEditKp->setValue(m_currentController.m_para[VICUS::NetworkController::P_Kp].value);
-	m_ui->lineEditKi->setEnabled(m_currentController.m_controllerType == VICUS::NetworkController::CT_PIController);
+
+	bool KiEnabled = m_currentController.m_controllerType == VICUS::NetworkController::CT_PIController;
+	m_ui->lineEditKi->setEnabled(KiEnabled);
+	m_ui->labelKi->setEnabled(KiEnabled);
 	m_ui->lineEditKi->setValue(m_currentController.m_para[VICUS::NetworkController::P_Ki].value);
 	m_ui->lineEditMaxControllerResultValue->setValue(m_currentController.m_maximumControllerResultValue);
-	m_ui->radioButtonSchedule->setChecked(m_currentController.m_modelType == VICUS::NetworkController::MT_Scheduled);
-	m_ui->radioButtonSchedule->setEnabled(schedulePossible);
-	m_ui->lineEditSchedule->setEnabled(schedulePossible);
-	m_ui->radioButtonFixedSetPoint->setChecked(m_currentController.m_modelType == VICUS::NetworkController::MT_Constant);
-	m_ui->lineEditSetpoint->setEnabled(m_currentController.m_modelType == VICUS::NetworkController::MT_Constant);
 
 }
 
