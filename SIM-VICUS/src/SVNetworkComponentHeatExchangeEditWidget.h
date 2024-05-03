@@ -108,6 +108,8 @@ private slots:
 
 	void on_toolButtonSetDefaultValues_clicked();
 
+	void on_groupBoxDomesticHotWaterDemand_clicked(bool checked);
+
 private:
 
 	void updateHeatLossSplineSelectColumnList();
@@ -116,7 +118,9 @@ private:
 
 	void readTsvHeatLossSpline();
 
-	void readTsvTemperatureSpline();
+	void readTsvDomesticHotWaterDemand();
+
+	int indexHeatLossSplineHotWaterYData();
 
 	void updateHeatLossSplinePlotDataPredef();
 
@@ -134,9 +138,13 @@ private:
 
 	void calculateNewHeatLossSplineYData(double k, std::vector<double>& vectorToSaveNewValues, VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
 
+	void calculateNewHeatLossSplineHotWaterYData(double floorArea);
+
 	bool calculateNewK(double valueToReach, VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
 
 	void setCoolingCurve(bool set);
+
+	void setHotWaterCurve(bool set);
 
 	Ui::SVNetworkComponentHeatExchangeEditWidget *m_ui;
 
@@ -159,6 +167,7 @@ private:
 	/*! Curve visible in HeatLossSpline plot */
 	QwtPlotCurve							*m_heatLossSplineHeatingCurve = nullptr;
 	QwtPlotCurve							*m_heatLossSplineCoolingCurve = nullptr;
+	QwtPlotCurve							*m_heatLossSplineHotWaterCurve = nullptr;
 	QwtPlotZoomer							*m_heatLossSplineZoomer = nullptr;
 
 	/* data vector to be displayed in TemperatureSplinePlot */
@@ -172,6 +181,7 @@ private:
 	/*! Data vectors to store the original values of the tsv file */
 	std::vector<std::vector<double>>		m_vectorHeatLossSplineHeatingYData;
 	std::vector<std::vector<double>>		m_vectorHeatLossSplineCoolingYData;
+	std::vector<std::vector<double>>		m_vectorHeatLossSplineHotWaterYData;
 	std::vector<double>						m_vectorHeatLossSplineHeatingMaxValues;
 	std::vector<double>						m_vectorHeatLossSplineCoolingMaxValues;
 	std::vector<double>						m_heatLossSplineXData;
@@ -180,10 +190,6 @@ private:
 	std::vector<double>						m_vectorHeatLossSplineUserYData;
 	std::vector<double>						m_vectorHeatLossSplineUserXData;
 
-	/*! Current data for the active buildingType */
-	std::vector<double>						m_mapHeatLossSplineHeatingYData;
-	std::vector<double>						m_mapHeatLossSplineCoolingYData;
-
 	/*! Parameter to adjust curves to reach desired Energydemand */
 	double									m_kHeating = 1;
 	double									m_kCooling = 1;
@@ -191,6 +197,7 @@ private:
 	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
 	std::vector<double>						m_heatLossSplineHeatingYPlotData;
 	std::vector<double>						m_heatLossSplineCoolingYPlotData;
+	std::vector<double>						m_heatLossSplineHotWaterYPlotData;
 
 };
 

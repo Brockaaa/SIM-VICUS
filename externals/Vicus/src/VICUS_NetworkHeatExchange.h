@@ -127,6 +127,8 @@ public:
 
 	bool								m_withCoolingDemand = true;					// XML:A
 
+	bool								m_withDomesticHotWaterDemand = true;		// XML:A
+
 	BuildingType						m_buildingType = NUM_BT;					// XML:A
 
 	AmbientTemperatureType				m_ambientTemperatureType = NUM_AT;			// XML:A

@@ -138,7 +138,10 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossSpline()
 		m_vectorTempHeatExchangeBuildingType.push_back(newHeatExchange);
 	}
 
-	if(m_heatLossSplineXData.size() == 0) readTsvHeatLossSpline();
+	if(m_heatLossSplineXData.size() == 0) {
+		readTsvHeatLossSpline();
+		readTsvDomesticHotWaterDemand();
+	}
 
 	// set widgets in pageHeatLossSpline to appropriate values
 	m_ui->checkBoxHeatLossSplineIndividual->setChecked(m_current->m_heatExchange.m_individualHeatFlux);
@@ -960,9 +963,40 @@ void SVNetworkComponentHeatExchangeEditWidget::readTsvHeatLossSpline()
 	}
 }
 
-void SVNetworkComponentHeatExchangeEditWidget::readTsvTemperatureSpline()
-{
 
+void SVNetworkComponentHeatExchangeEditWidget::readTsvDomesticHotWaterDemand()
+{
+	std::vector<QString> directories;
+	directories.push_back(QString("/demandProfiles/Residential_HotWaterDemand.tsv"));
+
+	for(unsigned int i = 0; i < directories.size(); i++){
+		IBK::CSVReader reader;
+
+		directories[i] = QtExt::Directories::resourcesRootDir().append(directories[i]);
+
+		IBK::Path ibkDirectory(directories[i].toStdString());
+		try {
+			reader.read(ibkDirectory);
+		}
+		catch (...) {
+			qDebug() << "Could not load HotWaterSplineTSV successfully";
+		}
+
+		m_vectorHeatLossSplineHotWaterYData.push_back(reader.colData(1));
+	}
+}
+
+int SVNetworkComponentHeatExchangeEditWidget::indexHeatLossSplineHotWaterYData()
+{
+	// TODO when new tsvs and buildingTypes
+	switch(m_current->m_heatExchange.m_buildingType){
+		case VICUS::NetworkHeatExchange::BT_ResidentialBuildingSingleFamily:
+		case VICUS::NetworkHeatExchange::BT_ResidentialBuildingMultiFamily:
+		case VICUS::NetworkHeatExchange::BT_ResidentialBuildingLarge:
+			return 0;
+		default:
+			return -1;
+	}
 }
 
 void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePlotDataPredef()
@@ -1267,6 +1301,14 @@ void SVNetworkComponentHeatExchangeEditWidget::calculateNewHeatLossSplineYData(d
 	}
 }
 
+void SVNetworkComponentHeatExchangeEditWidget::calculateNewHeatLossSplineHotWaterYData(double floorArea)
+{
+	int idx = indexHeatLossSplineHotWaterYData();
+	Q_ASSERT(idx != -1);
+	m_heatLossSplineHotWaterYPlotData = m_vectorHeatLossSplineHotWaterYData[idx];
+	return;
+}
+
 bool SVNetworkComponentHeatExchangeEditWidget::calculateNewK(double energyDemandToReach, VICUS::NetworkHeatExchange::para_t parameter)
 {
 	/* check if demanded energyDemandToReach is 2500* bigger than maximumEnergyLoad. If yes,
@@ -1354,6 +1396,23 @@ void SVNetworkComponentHeatExchangeEditWidget::setCoolingCurve(bool set)
 	m_ui->widgetPlotHeatLossSpline->replot();
 }
 
+void SVNetworkComponentHeatExchangeEditWidget::setHotWaterCurve(bool set)
+{
+	if(m_heatLossSplineHotWaterCurve == nullptr){
+		m_heatLossSplineCoolingCurve = new QwtPlotCurve("Hot Water");
+		m_heatLossSplineCoolingCurve->setPen(Qt::magenta);
+	}
+
+	if(set){
+		std::vector<double> hotWaterValuesToPlot;
+		for(double value : m_heatLossSplineHotWaterYPlotData)
+			hotWaterValuesToPlot.push_back(value / 1000); // convert to kW
+		m_heatLossSplineHotWaterCurve->setSamples(m_heatLossSplineXData.data(), hotWaterValuesToPlot.data(), m_heatLossSplineXData.size());
+	} else {
+		m_heatLossSplineHotWaterCurve->detach();
+	}
+}
+
 void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxTemperatureSpline_activated(int index)
 {
 	m_current->m_heatExchange.m_ambientTemperatureType = static_cast<VICUS::NetworkHeatExchange::AmbientTemperatureType>(index);
@@ -1417,3 +1476,12 @@ void SVNetworkComponentHeatExchangeEditWidget::on_toolButtonSetDefaultValues_cli
 		on_comboBoxHeatLossSplineUserBuildingType_activated((int)m_current->m_heatExchange.m_buildingType);
 	}
 }
+
+
+void SVNetworkComponentHeatExchangeEditWidget::on_groupBoxDomesticHotWaterDemand_clicked(bool checked)
+{
+
+	qDebug() << "Domestic Hot Water Demand clicked. ";
+	m_current->m_heatExchange.m_withDomesticHotWaterDemand = checked;
+}
+

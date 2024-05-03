@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>425</width>
-    <height>638</height>
+    <height>688</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -641,13 +641,6 @@
                      </property>
                     </widget>
                    </item>
-                   <item row="2" column="0">
-                    <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemand">
-                     <property name="text">
-                      <string>Domestic Hot Water Demand:</string>
-                     </property>
-                    </widget>
-                   </item>
                    <item row="1" column="1">
                     <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineHeatingEnergyDemand"/>
                    </item>
@@ -665,16 +658,6 @@
                     <widget class="QLabel" name="labelHeatLossSplineMaximumHeatingLoad">
                      <property name="text">
                       <string>Maximum Heating Load:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="1">
-                    <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineDomesticHotWaterDemand"/>
-                   </item>
-                   <item row="2" column="2">
-                    <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemandUnit">
-                     <property name="text">
-                      <string>kWh</string>
                      </property>
                     </widget>
                    </item>
@@ -726,6 +709,35 @@
                    </item>
                    <item row="1" column="2">
                     <widget class="QLabel" name="labelHeatLossSplineCoolingEnergyDemandUnit">
+                     <property name="text">
+                      <string>kWh</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QGroupBox" name="groupBoxDomesticHotWaterDemand">
+                  <property name="title">
+                   <string>Domestic Hot Water Demand</string>
+                  </property>
+                  <property name="checkable">
+                   <bool>true</bool>
+                  </property>
+                  <layout class="QGridLayout" name="gridLayout_4">
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemand">
+                     <property name="text">
+                      <string>Hot Water Energy Demand:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineDomesticHotWaterDemand"/>
+                   </item>
+                   <item row="0" column="2">
+                    <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemandUnit">
                      <property name="text">
                       <string>kWh</string>
                      </property>
@@ -997,15 +1009,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QtExt::BrowseFilenameWidget</class>
-   <extends>QWidget</extends>
-   <header>QtExt_BrowseFilenameWidget.h</header>
-   <container>1</container>
-   <slots>
-    <signal>editingFinished()</signal>
-   </slots>
-  </customwidget>
-  <customwidget>
    <class>QtExt::ValidatingLineEdit</class>
    <extends>QLineEdit</extends>
    <header location="global">QtExt_ValidatingLineEdit.h</header>
@@ -1018,6 +1021,15 @@
    <extends>QFrame</extends>
    <header>qwt_plot.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QtExt::BrowseFilenameWidget</class>
+   <extends>QWidget</extends>
+   <header>QtExt_BrowseFilenameWidget.h</header>
+   <container>1</container>
+   <slots>
+    <signal>editingFinished()</signal>
+   </slots>
   </customwidget>
  </customwidgets>
  <resources/>
