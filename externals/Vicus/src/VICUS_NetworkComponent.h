@@ -151,6 +151,9 @@ public:
 	/*! returns additional required parameters */
 	static std::vector<unsigned int> requiredIntParameter(const ModelType modelType);
 
+	/*! Function that provides a list of possible controlled properties depending on the given model type. */
+	static std::vector<VICUS::NetworkController::ControlledProperty> availableControlledProperties(const ModelType modelType);
+
 	/*! checks additional required parameters, not included in NANDRAD::HydraulicNetworkComponent */
 	static void checkAdditionalParameter(const IBK::Parameter &para, const unsigned int numPara);
 

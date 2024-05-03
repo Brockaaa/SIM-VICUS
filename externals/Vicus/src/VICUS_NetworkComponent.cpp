@@ -254,6 +254,37 @@ std::vector<unsigned int> NetworkComponent::requiredIntParameter(const NetworkCo
 	return {};
 }
 
+std::vector<VICUS::NetworkController::ControlledProperty> NetworkComponent::availableControlledProperties(const ModelType modelType)
+{
+	switch (modelType) {
+		case MT_SimplePipe:
+			return {};
+		case MT_DynamicPipe:
+			return {};
+		case MT_HeatExchanger:
+			return {NetworkController::CP_TemperatureDifference};
+		case MT_ControlledValve:
+			return {NetworkController::CP_MassFlux, NetworkController::CP_TemperatureDifferenceOfFollowingElement};
+		case MT_ControlledPump:
+			return {NetworkController::CP_MassFlux, NetworkController::CP_TemperatureDifferenceOfFollowingElement, NetworkController::CP_PressureDifferenceWorstpoint};
+		case MT_ConstantPressurePump:
+			return {NetworkController::CP_PumpOperation};
+		case MT_ConstantMassFluxPump :
+		case MT_VariablePressurePump:
+		case MT_HeatPumpVariableIdealCarnotSourceSide:
+		case MT_HeatPumpVariableIdealCarnotSupplySide:
+		case MT_HeatPumpVariableSourceSide:
+		case MT_HeatPumpOnOffSourceSide:
+			//		case HydraulicNetworkComponent::MT_HeatPumpOnOffSourceSideWithBuffer:
+		case MT_IdealHeaterCooler:
+		case MT_ConstantPressureLossValve:
+		case MT_PressureLossElement:
+		case NUM_MT: ;		// just for compiler
+	}
+	return {};
+}
+
+
 void NetworkComponent::checkAdditionalParameter(const IBK::Parameter & para, const unsigned int numPara) {
 	const char * enumName = "NetworkComponent::para_t";
 	const char * name = KeywordList::Keyword(enumName, (int)numPara);
