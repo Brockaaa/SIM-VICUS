@@ -261,7 +261,7 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 		QFontMetrics fm(painter->font());
 
 		// Check length and insert line break if necessary
-		int maxTextWidth = 200; // max width before we need to break the line
+		int maxTextWidth = 350; // max width before we need to break the line
 		QString elidedText = fm.elidedText(m_controllerName, Qt::ElideRight, maxTextWidth);
 
 		// Calculate text rectangle

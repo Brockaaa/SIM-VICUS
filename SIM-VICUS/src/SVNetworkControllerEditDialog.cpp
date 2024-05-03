@@ -36,9 +36,8 @@ void SVNetworkControllerEditDialog::setup(VICUS::NetworkController &controller, 
 {
 	m_currentController = controller;
 	m_ui->comboBoxProperty->clear();
-	std::vector<NANDRAD::HydraulicNetworkControlElement::ControlledProperty> availableCtrProps;
-	NANDRAD::HydraulicNetworkComponent::ModelType nandradModelType = VICUS::NetworkComponent::nandradNetworkComponentModelType(modelType);
-	availableCtrProps = NANDRAD::HydraulicNetworkControlElement::availableControlledProperties(nandradModelType);
+	std::vector<VICUS::NetworkController::ControlledProperty> availableCtrProps;
+	availableCtrProps = VICUS::NetworkComponent::availableControlledProperties(modelType);
 	for(const auto& prop : availableCtrProps){
 		m_ui->comboBoxProperty->addItem(QString("%1")
 											.arg(VICUS::KeywordListQt::Description("NetworkController::ControlledProperty", static_cast<int>(prop))), static_cast<int>(prop));
@@ -51,8 +50,8 @@ void SVNetworkControllerEditDialog::setup(VICUS::NetworkController &controller, 
 	} else if (availableCtrProps.size() > 0) {
 		m_ui->comboBoxProperty->setCurrentIndex(0);
 		m_currentController.m_controlledProperty = VICUS::NetworkController::ControlledProperty(availableCtrProps[0]);
-		m_currentController.m_displayName.setString(QString("New " + VICUS::KeywordListQt::Description("NetworkController::ControlledProperty", static_cast<int>(availableCtrProps[0]))).toStdString(), "en");
-		m_currentController.m_displayName.setString(QString("Neu " + VICUS::KeywordListQt::Description("NetworkController::ControlledProperty", static_cast<int>(availableCtrProps[0]))).toStdString(), "de");
+		m_currentController.m_displayName.setString((QString("New ") + QString(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(m_currentController.m_controlledProperty)))).toStdString(), "en");
+		m_currentController.m_displayName.setString((QString("Neu ") + QString(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(m_currentController.m_controlledProperty)))).toStdString(), "de");
 		m_ui->lineEditName->setText(QString::fromStdString(m_currentController.m_displayName.string(IBK::MultiLanguageString::m_language)));
 	}
 	update();
@@ -233,8 +232,8 @@ void SVNetworkControllerEditDialog::on_comboBoxProperty_activated(int /*index*/)
 	unsigned int val = m_ui->comboBoxProperty->currentData().toUInt();
 	if (m_currentController.m_controlledProperty != val) {
 		m_currentController.m_controlledProperty = VICUS::NetworkController::ControlledProperty(val);
-		m_currentController.m_displayName.setString(QString("New " + VICUS::KeywordListQt::Description("NetworkController::ControlledProperty", val)).toStdString(), "en");
-		m_currentController.m_displayName.setString(QString("Neu " + VICUS::KeywordListQt::Description("NetworkController::ControlledProperty", val)).toStdString(), "de");
+		m_currentController.m_displayName.setString((QString("New ") + QString(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(m_currentController.m_controlledProperty)))).toStdString(), "en");
+		m_currentController.m_displayName.setString((QString("Neu ") + QString(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(m_currentController.m_controlledProperty)))).toStdString(), "de");
 		m_ui->lineEditName->setText(QString::fromStdString(m_currentController.m_displayName.string(IBK::MultiLanguageString::m_language)));
 	}
 	update();

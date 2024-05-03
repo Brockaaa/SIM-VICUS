@@ -184,14 +184,14 @@ void SVNetworkComponentEditWidget::update()
 	}
 
 	// update controller properties
-	std::vector<NANDRAD::HydraulicNetworkControlElement::ControlledProperty> availableCtrProps;
-	availableCtrProps = NANDRAD::HydraulicNetworkControlElement::availableControlledProperties(nandradModelType);
+	std::vector<VICUS::NetworkController::ControlledProperty> availableCtrProps;
+	availableCtrProps = VICUS::NetworkComponent::availableControlledProperties(m_current->m_modelType);
 	if(availableCtrProps.size() > 0){
 		m_ui->groupBoxController->setVisible(true);
 	}
 
 	if(m_current->m_networkController.m_controlledProperty != VICUS::NetworkController::NUM_CP){
-		m_ui->lineEditController->setText(QString::fromLatin1(VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", m_current->m_networkController.m_controlledProperty)));
+		m_ui->lineEditController->setText(QString::fromStdString(m_current->m_networkController.m_displayName.string(IBK::MultiLanguageString::m_language)));
 		m_ui->toolButtonControllerRemove->setEnabled(true);
 	} else {
 		m_ui->lineEditController->clear();
@@ -887,7 +887,7 @@ void SVNetworkComponentEditWidget::on_toolButtonControllerSet_clicked()
 
 	if (m_controllerEditDialog->result() == QDialog::Accepted){
 		m_current->m_networkController = m_controllerEditDialog->controller();
-		QString controllerName = VICUS::KeywordListQt::Keyword("NetworkController::ControlledProperty", static_cast<int>(m_current->m_networkController.m_controlledProperty));
+		QString controllerName = QString::fromStdString(m_current->m_networkController.m_displayName.string(IBK::MultiLanguageString::m_language));
 		m_ui->lineEditController->setText(controllerName);
 		m_ui->toolButtonControllerRemove->setEnabled(true);
 		emit controllerChanged(controllerName);
