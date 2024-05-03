@@ -43,6 +43,18 @@ void SVNetworkControllerEditDialog::setup(VICUS::NetworkController &controller, 
 		m_ui->comboBoxProperty->addItem(QString("%1")
 											.arg(VICUS::KeywordListQt::Description("NetworkController::ControlledProperty", static_cast<int>(prop))), static_cast<int>(prop));
 	}
+
+	int propIdx = m_ui->comboBoxProperty->findData(m_currentController.m_controlledProperty);
+	if(propIdx != -1 || propIdx == VICUS::NetworkController::ControlledProperty::NUM_CP){
+		m_ui->comboBoxProperty->setCurrentIndex(propIdx);
+		VICUS::NetworkController::ControlledProperty controlledProperty = VICUS::NetworkController::ControlledProperty(propIdx);
+	} else if (availableCtrProps.size() > 0) {
+		m_ui->comboBoxProperty->setCurrentIndex(0);
+		m_currentController.m_controlledProperty = VICUS::NetworkController::ControlledProperty(availableCtrProps[0]);
+		m_currentController.m_displayName.setString(QString("New " + VICUS::KeywordListQt::Description("NetworkController::ControlledProperty", static_cast<int>(availableCtrProps[0]))).toStdString(), "en");
+		m_currentController.m_displayName.setString(QString("Neu " + VICUS::KeywordListQt::Description("NetworkController::ControlledProperty", static_cast<int>(availableCtrProps[0]))).toStdString(), "de");
+		m_ui->lineEditName->setText(QString::fromStdString(m_currentController.m_displayName.string(IBK::MultiLanguageString::m_language)));
+	}
 	update();
 
 }
@@ -56,12 +68,9 @@ void SVNetworkControllerEditDialog::update()
 	// get schedule
 	const VICUS::Schedule * setPointSched = m_db.m_schedules[m_currentController.m_idReferences[VICUS::NetworkController::ID_Schedule]];
 
-	// controlled property
-	int propIdx = m_ui->comboBoxProperty->findData(m_currentController.m_controlledProperty);
-	m_ui->comboBoxProperty->setCurrentIndex(propIdx);
-	VICUS::NetworkController::ControlledProperty controlledProperty = VICUS::NetworkController::ControlledProperty(propIdx);
-
 	// define some properties based on current controlled property
+	VICUS::NetworkController::ControlledProperty controlledProperty = m_currentController.m_controlledProperty;
+
 	QString controlledPropertyName;
 	bool schedulePossible = false;
 	bool maxControllerValuePossible = false;
@@ -132,7 +141,9 @@ void SVNetworkControllerEditDialog::update()
 	m_ui->lineEditKi->setEnabled(m_currentController.m_controllerType == VICUS::NetworkController::CT_PIController);
 	m_ui->lineEditKi->setValue(m_currentController.m_para[VICUS::NetworkController::P_Ki].value);
 	m_ui->lineEditMaxControllerResultValue->setValue(m_currentController.m_maximumControllerResultValue);
-	m_ui->radioButtonSchedule->setChecked(m_currentController.m_modelType == VICUS::NetworkController::MT_Scheduled && !schedulePossible);
+	m_ui->radioButtonSchedule->setChecked(m_currentController.m_modelType == VICUS::NetworkController::MT_Scheduled);
+	m_ui->radioButtonSchedule->setEnabled(schedulePossible);
+	m_ui->lineEditSchedule->setEnabled(schedulePossible);
 	m_ui->radioButtonFixedSetPoint->setChecked(m_currentController.m_modelType == VICUS::NetworkController::MT_Constant);
 	m_ui->lineEditSetpoint->setEnabled(m_currentController.m_modelType == VICUS::NetworkController::MT_Constant);
 
@@ -222,7 +233,9 @@ void SVNetworkControllerEditDialog::on_comboBoxProperty_activated(int /*index*/)
 	unsigned int val = m_ui->comboBoxProperty->currentData().toUInt();
 	if (m_currentController.m_controlledProperty != val) {
 		m_currentController.m_controlledProperty = VICUS::NetworkController::ControlledProperty(val);
-
+		m_currentController.m_displayName.setString(QString("New " + VICUS::KeywordListQt::Description("NetworkController::ControlledProperty", val)).toStdString(), "en");
+		m_currentController.m_displayName.setString(QString("Neu " + VICUS::KeywordListQt::Description("NetworkController::ControlledProperty", val)).toStdString(), "de");
+		m_ui->lineEditName->setText(QString::fromStdString(m_currentController.m_displayName.string(IBK::MultiLanguageString::m_language)));
 	}
 	update();
 }
@@ -255,3 +268,10 @@ void SVNetworkControllerEditDialog::on_toolButtonRemoveSchedule_clicked()
 	m_currentController.m_idReferences[VICUS::NetworkController::ID_Schedule] = VICUS::INVALID_ID;
 	update();
 }
+
+
+void SVNetworkControllerEditDialog::on_lineEditName_editingFinished()
+{
+	m_currentController.m_displayName.setString(m_ui->lineEditName->text().toStdString(), IBK::MultiLanguageString::m_language);
+}
+

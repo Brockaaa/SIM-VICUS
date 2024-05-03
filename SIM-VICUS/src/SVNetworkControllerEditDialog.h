@@ -46,6 +46,8 @@ private slots:
 
 	void on_toolButtonRemoveSchedule_clicked();
 
+	void on_lineEditName_editingFinished();
+
 private:
 	Ui::SVNetworkControllerEditDialog *m_ui;
 
