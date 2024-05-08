@@ -63,8 +63,6 @@ public:
 	void updatePageHeatLossSpline();
 	void updatePageTemperatureConstant();
 	void updatePageTemperatureSpline();
-	void updatePageTemperatureSplineEvaporator(){}
-	void updatePageHeatingDemandSpaceHeating(){}
 
 private slots:
 

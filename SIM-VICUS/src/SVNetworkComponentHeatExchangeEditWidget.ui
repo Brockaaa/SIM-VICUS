@@ -39,7 +39,7 @@
      <item>
       <widget class="QStackedWidget" name="stackedWidgetHeatExchange">
        <property name="currentIndex">
-        <number>3</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="pageTemperatureConstant">
         <property name="sizePolicy">
@@ -64,13 +64,6 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item>
-          <widget class="QLabel" name="labelPageTemperatureConstant">
-           <property name="text">
-            <string>pageTemperatureConstant</string>
-           </property>
-          </widget>
-         </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayoutTemperatureConstantHeatTransferCoefficient">
            <item>
@@ -300,141 +293,6 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="pageTemperatureSplineEvaporator">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayoutPageTemperatureSplineEvaporator">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="labelPageTemperatureSplineEvaporator">
-           <property name="text">
-            <string>pageTemperatureSplineEvaporator</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="verticalSpacerTemperatureSplineEvaporator">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="pageTemperatureZone">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayoutPageTemperatureZone">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="labelPageTemperatureZone">
-           <property name="text">
-            <string>pageTemperatureZone</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="verticalSpacerTemperatureZone">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="pageTemperatureConstructionLayer">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayoutPageTemperatureConstructionLayer">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="labelPageTemperatureConstructionLayer">
-           <property name="text">
-            <string>pageTemperatureConstructionLayer</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="verticalSpacerTemperatureConstructionLayer">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
        <widget class="QWidget" name="pageHeatLossConstant">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -458,13 +316,6 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item>
-          <widget class="QLabel" name="labelPageHeatLossConstant">
-           <property name="text">
-            <string>pageHeatLossConstant</string>
-           </property>
-          </widget>
-         </item>
          <item>
           <widget class="QCheckBox" name="checkBoxHeatLossConstantIndividual">
            <property name="text">
@@ -863,96 +714,6 @@
             </item>
            </layout>
           </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="pageHeatLossSplineCondenser">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayoutPageHeatLossSplineCondenser">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="labelPageHeatLossSplineCondenser">
-           <property name="text">
-            <string>pageHeatLossSplineCondenser</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="verticalSpacerHeatLossSplineCondenser">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="pageHeatingDemandSpaceHeating">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayoutPageHeatingDemandSpaceHeating">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="labelPageHeatingDemandSpaceHeating">
-           <property name="text">
-            <string>pageHeatingDemandSpaceHeating</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="verticalSpacerHeatingDemandSpaceHeating">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
          </item>
         </layout>
        </widget>

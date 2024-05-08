@@ -48,6 +48,8 @@ void NetworkHeatExchange::readXML(const TiXmlElement * element) {
 				m_areaRelatedValues = NANDRAD::readPODAttributeValue<bool>(element, attrib);
 			else if (attribName == "withCoolingDemand")
 				m_withCoolingDemand = NANDRAD::readPODAttributeValue<bool>(element, attrib);
+			else if (attribName == "withDomesticHotWaterDemand")
+				m_withDomesticHotWaterDemand = NANDRAD::readPODAttributeValue<bool>(element, attrib);
 			else if (attribName == "buildingType")
 				try {
 					m_buildingType = (BuildingType)KeywordList::Enumeration("NetworkHeatExchange::BuildingType", attrib->ValueStr());
@@ -138,6 +140,8 @@ TiXmlElement * NetworkHeatExchange::writeXML(TiXmlElement * parent) const {
 		e->SetAttribute("areaRelatedValues", IBK::val2string<bool>(m_areaRelatedValues));
 	if (m_withCoolingDemand != NetworkHeatExchange().m_withCoolingDemand)
 		e->SetAttribute("withCoolingDemand", IBK::val2string<bool>(m_withCoolingDemand));
+	if (m_withDomesticHotWaterDemand != NetworkHeatExchange().m_withDomesticHotWaterDemand)
+		e->SetAttribute("withDomesticHotWaterDemand", IBK::val2string<bool>(m_withDomesticHotWaterDemand));
 	if (m_buildingType != NUM_BT)
 		e->SetAttribute("buildingType", KeywordList::Keyword("NetworkHeatExchange::BuildingType",  m_buildingType));
 	if (m_ambientTemperatureType != NUM_AT)

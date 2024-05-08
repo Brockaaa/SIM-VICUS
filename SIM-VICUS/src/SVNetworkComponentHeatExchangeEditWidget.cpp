@@ -86,9 +86,9 @@ void SVNetworkComponentHeatExchangeEditWidget::updateInput(VICUS::NetworkCompone
 	// insert all available HE modeltypes into the HE combobox, adds "None" last
 	for(VICUS::NetworkHeatExchange::ModelType heatExchangeMT : availableHeatExchangeModelTypes){
 		if (heatExchangeMT == VICUS::NetworkHeatExchange::NUM_T )
-			m_ui->comboBoxHeatExchange->addItem(tr("Adiabatic"), static_cast<int>(VICUS::NetworkHeatExchange::NUM_T));
+			m_ui->comboBoxHeatExchange->addItem(tr("Adiabatic"), VICUS::NetworkHeatExchange::NUM_T);
 		else
-			m_ui->comboBoxHeatExchange->addItem(VICUS::KeywordListQt::Keyword("NetworkHeatExchange::ModelType", static_cast<int>(heatExchangeMT)), heatExchangeMT);
+			m_ui->comboBoxHeatExchange->addItem(VICUS::KeywordListQt::Description("NetworkHeatExchange::ModelType", heatExchangeMT), heatExchangeMT);
 	}
 
 
@@ -97,25 +97,30 @@ void SVNetworkComponentHeatExchangeEditWidget::updateInput(VICUS::NetworkCompone
 	// fill vector with all available Heat Exchange modeltypes, adds "None"/NUM_T modeltype last
 	for(VICUS::NetworkHeatExchange::ModelType heatExchangeMT: availableHeatExchangeModelTypes){
 		if(heatExchangeMT == VICUS::NetworkHeatExchange::NUM_T) {
-			continue;
+			m_vectorTempHeatExchange.push_back(VICUS::NetworkHeatExchange());
 		}
-		VICUS::NetworkHeatExchange newHeatExchange;
-		newHeatExchange.m_modelType = heatExchangeMT;
-		newHeatExchange.setDefaultValues(heatExchangeMT);
-		m_vectorTempHeatExchange.push_back(newHeatExchange);
+		else {
+			VICUS::NetworkHeatExchange newHeatExchange;
+			newHeatExchange.m_modelType = heatExchangeMT;
+			newHeatExchange.setDefaultValues(heatExchangeMT);
+			m_vectorTempHeatExchange.push_back(newHeatExchange);
+		}
 	}
-	m_vectorTempHeatExchange.push_back(VICUS::NetworkHeatExchange());
+
 
 	// set the comboBox and stackedWidget to the HE modeltype of the current component
-	for(int index = 0; index < m_ui->comboBoxHeatExchange->count(); index++){
-		if(m_current->m_heatExchange.m_modelType == static_cast<VICUS::NetworkHeatExchange::ModelType>(m_ui->comboBoxHeatExchange->itemData(index).toInt())){
-			m_ui->comboBoxHeatExchange->setCurrentIndex(index);
-			on_comboBoxHeatExchange_activated(index);
-			return;
-		}
-	}
-	m_ui->comboBoxHeatExchange->setCurrentIndex(m_ui->comboBoxHeatExchange->count()-1);
-	on_comboBoxHeatExchange_activated(m_ui->comboBoxHeatExchange->count()-1);
+	int idx = m_ui->comboBoxHeatExchange->findData(m_current->m_heatExchange.m_modelType);
+	m_ui->comboBoxHeatExchange->setCurrentIndex(idx);
+
+//	for(int index = 0; index < m_ui->comboBoxHeatExchange->count(); index++){
+//		if(m_current->m_heatExchange.m_modelType == static_cast<VICUS::NetworkHeatExchange::ModelType>(m_ui->comboBoxHeatExchange->itemData(index).toInt())){
+//			m_ui->comboBoxHeatExchange->setCurrentIndex(index);
+//			on_comboBoxHeatExchange_activated(index);
+//			return;
+//		}
+//	}
+//	m_ui->comboBoxHeatExchange->setCurrentIndex(m_ui->comboBoxHeatExchange->count()-1);
+	on_comboBoxHeatExchange_activated(m_ui->comboBoxHeatExchange->currentIndex());
 }
 
 
@@ -171,29 +176,33 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated
 	}
 
 	//take newly selected Heat Exchanger from vector
-	m_current->m_heatExchange = m_vectorTempHeatExchange[index];
+	m_current->m_heatExchange = m_vectorTempHeatExchange[(unsigned int)index];
 
-	// change stackedWidget to the appropriate page
-	m_ui->stackedWidgetHeatExchange->setCurrentIndex(static_cast<int>(m_current->m_heatExchange.m_modelType));
-
+	// set according page and update content
 	switch(m_current->m_heatExchange.m_modelType){
 		case VICUS::NetworkHeatExchange::T_TemperatureConstant:
+			m_ui->stackedWidgetHeatExchange->setCurrentIndex(0);
 			updatePageTemperatureConstant();
 			break;
-		case VICUS::NetworkHeatExchange::T_HeatingDemandSpaceHeating:
-			updatePageHeatingDemandSpaceHeating();
+		case VICUS::NetworkHeatExchange::T_TemperatureSpline:
+		case VICUS::NetworkHeatExchange::T_TemperatureSplineEvaporator:
+			m_ui->stackedWidgetHeatExchange->setCurrentIndex(1);
+			updatePageTemperatureSpline();
 			break;
 		case VICUS::NetworkHeatExchange::T_HeatLossConstant:
+			m_ui->stackedWidgetHeatExchange->setCurrentIndex(2);
 			updatePageHeatLossConstant();
 			break;
 		case VICUS::NetworkHeatExchange::T_HeatLossSplineCondenser:
 		case VICUS::NetworkHeatExchange::T_HeatLossSpline:
+			m_ui->stackedWidgetHeatExchange->setCurrentIndex(3);
 			updatePageHeatLossSpline();
 			break;
-		case VICUS::NetworkHeatExchange::T_TemperatureSpline:
-			updatePageTemperatureSpline();
+		case VICUS::NetworkHeatExchange::T_TemperatureZone:
+		case VICUS::NetworkHeatExchange::T_TemperatureConstructionLayer:
+		case VICUS::NetworkHeatExchange::T_HeatingDemandSpaceHeating:
+		case VICUS::NetworkHeatExchange::NUM_T:
 			break;
-		default: break;
 	}
 }
 
