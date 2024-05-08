@@ -118,7 +118,8 @@ void SVSubNetworkEditDialog::show()
 	Q_ASSERT(screen!=nullptr);
 	QRect rect = screen->geometry();
 	int width = int(0.9 * rect.width());
-	int height = int(0.7 * rect.height());
+	// height should fit the required height but not more than 0.9 screen size
+	int height = std::min(int(0.9 * rect.height()), sizeHint().height());
 	resize(width, height);
 
 	// move window to center
@@ -192,6 +193,9 @@ void SVSubNetworkEditDialog::updateToolBoxPages(){
 
 void SVSubNetworkEditDialog::updateNetwork() {
 	FUNCID(SVSubNetworkEditDialog::updateNetwork);
+
+	setWindowTitle(QString::fromStdString(m_subNetwork->m_displayName.string()));
+
 	m_networkComponents = m_subNetwork->m_components;
 
 	checkValidityOfNetworkElements();
