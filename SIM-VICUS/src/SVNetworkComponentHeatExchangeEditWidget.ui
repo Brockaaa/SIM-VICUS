@@ -39,7 +39,7 @@
      <item>
       <widget class="QStackedWidget" name="stackedWidgetHeatExchange">
        <property name="currentIndex">
-        <number>6</number>
+        <number>3</number>
        </property>
        <widget class="QWidget" name="pageTemperatureConstant">
         <property name="sizePolicy">
@@ -982,7 +982,7 @@
          <item>
           <widget class="QLabel" name="labelPageNone">
            <property name="text">
-            <string>pageNone</string>
+            <string/>
            </property>
           </widget>
          </item>
@@ -1009,18 +1009,18 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>QwtPlot</class>
+   <extends>QFrame</extends>
+   <header>qwt_plot.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>QtExt::ValidatingLineEdit</class>
    <extends>QLineEdit</extends>
    <header location="global">QtExt_ValidatingLineEdit.h</header>
    <slots>
     <signal>editingFinishedSuccessfully()</signal>
    </slots>
-  </customwidget>
-  <customwidget>
-   <class>QwtPlot</class>
-   <extends>QFrame</extends>
-   <header>qwt_plot.h</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>QtExt::BrowseFilenameWidget</class>

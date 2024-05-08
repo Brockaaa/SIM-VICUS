@@ -395,9 +395,9 @@ std::vector<NetworkHeatExchange::ModelType> NetworkComponent::availableHeatExcha
 	// some models may be adiabatic, hence we also return NUM_T as available heat exchange type
 	switch (modelType) {
 		case NetworkComponent::MT_SimplePipe:
-			return {NetworkHeatExchange::NUM_T, NetworkHeatExchange::T_TemperatureConstant, NetworkHeatExchange::T_TemperatureSpline, NetworkHeatExchange::T_HeatLossConstant, NetworkHeatExchange::T_HeatLossSpline, NetworkHeatExchange::T_TemperatureZone, NetworkHeatExchange::T_TemperatureConstructionLayer};
+			return {NetworkHeatExchange::NUM_T, NetworkHeatExchange::T_TemperatureConstant, NetworkHeatExchange::T_TemperatureSpline, NetworkHeatExchange::T_HeatLossConstant, NetworkHeatExchange::T_HeatLossSpline};
 		case NetworkComponent::MT_DynamicPipe:
-			return {NetworkHeatExchange::NUM_T, NetworkHeatExchange::T_TemperatureConstant, NetworkHeatExchange::T_TemperatureSpline, NetworkHeatExchange::T_TemperatureZone, NetworkHeatExchange::T_TemperatureConstructionLayer};
+			return {NetworkHeatExchange::NUM_T, NetworkHeatExchange::T_TemperatureConstant, NetworkHeatExchange::T_TemperatureSpline};
 		case NetworkComponent::MT_HeatPumpVariableIdealCarnotSourceSide:
 		case NetworkComponent::MT_HeatPumpVariableSourceSide:
 			return {NetworkHeatExchange::T_HeatLossSpline};  // must not be adiabatic

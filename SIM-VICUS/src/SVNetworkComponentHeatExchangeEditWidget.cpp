@@ -85,12 +85,12 @@ void SVNetworkComponentHeatExchangeEditWidget::updateInput(VICUS::NetworkCompone
 	m_ui->comboBoxHeatExchange->clear();
 	// insert all available HE modeltypes into the HE combobox, adds "None" last
 	for(VICUS::NetworkHeatExchange::ModelType heatExchangeMT : availableHeatExchangeModelTypes){
-		if(heatExchangeMT == VICUS::NetworkHeatExchange::NUM_T || heatExchangeMT == VICUS::NetworkHeatExchange::T_TemperatureZone || heatExchangeMT == VICUS::NetworkHeatExchange::T_TemperatureConstructionLayer) {
-			continue;
-		}
-		m_ui->comboBoxHeatExchange->addItem(VICUS::KeywordListQt::Keyword("NetworkHeatExchange::ModelType", static_cast<int>(heatExchangeMT)), heatExchangeMT);
+		if (heatExchangeMT == VICUS::NetworkHeatExchange::NUM_T )
+			m_ui->comboBoxHeatExchange->addItem(tr("Adiabatic"), static_cast<int>(VICUS::NetworkHeatExchange::NUM_T));
+		else
+			m_ui->comboBoxHeatExchange->addItem(VICUS::KeywordListQt::Keyword("NetworkHeatExchange::ModelType", static_cast<int>(heatExchangeMT)), heatExchangeMT);
 	}
-	m_ui->comboBoxHeatExchange->addItem("None", static_cast<int>(VICUS::NetworkHeatExchange::NUM_T));
+
 
 	// clear vector that temporarily saves all changes made to a heat exchange
 	m_vectorTempHeatExchange.clear();

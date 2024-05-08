@@ -117,11 +117,16 @@ void SVSubNetworkEditDialog::show()
 	QScreen *screen = QGuiApplication::primaryScreen();
 	Q_ASSERT(screen!=nullptr);
 	QRect rect = screen->geometry();
-	int width = int(rect.width()* 0.9);
-	int height = int(0.7*rect.height());
-
+	int width = int(0.9 * rect.width());
+	int height = int(0.7 * rect.height());
 	resize(width, height);
 
+	// move window to center
+	int x = (rect.width() - width) / 2;
+	int y = (rect.height() - height) / 2;
+	move(x, y);
+
+	// set sizes in widget (splitter, ...)
 	QList<int> ratio;
 	ratio << 300 << m_ui->splitter->width()-300;
 	m_ui->splitter->setSizes(ratio);
@@ -131,7 +136,6 @@ void SVSubNetworkEditDialog::show()
 	selectionClearedEvent();
 	m_sceneManager->update();
 	updateToolBoxPages();
-
 }
 
 void SVSubNetworkEditDialog::updateToolBoxPages(){
@@ -794,7 +798,7 @@ void SVSubNetworkEditDialog::convertSubnetwork() {
 			component.m_id = VICUS::largestUniqueId(m_subNetwork->m_components);
 			element.m_componentId = component.m_id;
 
-			// copies controller out of database and into the component
+			// copies controller from database and to the component
 			if(element.m_controlElementId != VICUS::INVALID_ID){
 				VICUS::NetworkController *controllerPtr = m_db->m_networkControllers[element.m_controlElementId];
 				if (controllerPtr == nullptr)
