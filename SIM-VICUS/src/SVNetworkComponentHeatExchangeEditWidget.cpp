@@ -107,20 +107,12 @@ void SVNetworkComponentHeatExchangeEditWidget::updateInput(VICUS::NetworkCompone
 		}
 	}
 
-
-	// set the comboBox and stackedWidget to the HE modeltype of the current component
+	// set the comboBox and stackedWidget to the hx modeltype of the current component
 	int idx = m_ui->comboBoxHeatExchange->findData(m_current->m_heatExchange.m_modelType);
+	if (idx < 0) // in case there was an hx modeltype set which is not available, set the first one
+		idx = 0;
 	m_ui->comboBoxHeatExchange->setCurrentIndex(idx);
-
-//	for(int index = 0; index < m_ui->comboBoxHeatExchange->count(); index++){
-//		if(m_current->m_heatExchange.m_modelType == static_cast<VICUS::NetworkHeatExchange::ModelType>(m_ui->comboBoxHeatExchange->itemData(index).toInt())){
-//			m_ui->comboBoxHeatExchange->setCurrentIndex(index);
-//			on_comboBoxHeatExchange_activated(index);
-//			return;
-//		}
-//	}
-//	m_ui->comboBoxHeatExchange->setCurrentIndex(m_ui->comboBoxHeatExchange->count()-1);
-	on_comboBoxHeatExchange_activated(m_ui->comboBoxHeatExchange->currentIndex());
+	on_comboBoxHeatExchange_activated(idx);
 }
 
 
@@ -130,8 +122,12 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossConstant()
 	on_checkBoxHeatLossConstantIndividual_stateChanged(static_cast<int>(m_current->m_heatExchange.m_individualHeatFlux));
 }
 
-void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossSpline()
+void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossSpline(VICUS::NetworkHeatExchange::ModelType hxModelType)
 {
+	// hxModelType must be one of both!
+	Q_ASSERT(	hxModelType == VICUS::NetworkHeatExchange::T_HeatLossSpline
+			 || hxModelType == VICUS::NetworkHeatExchange::T_HeatLossSplineCondenser );
+
 	m_vectorTempHeatExchangeBuildingType.clear();
 	m_ui->filepathDataFile->setFilename("");
 
@@ -139,7 +135,7 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossSpline()
 		VICUS::NetworkHeatExchange::BuildingType buildingType = static_cast<VICUS::NetworkHeatExchange::BuildingType>(i);
 		VICUS::NetworkHeatExchange newHeatExchange;
 		newHeatExchange.m_buildingType = buildingType;
-		newHeatExchange.setDefaultValues(VICUS::NetworkHeatExchange::T_HeatLossSpline);
+		newHeatExchange.setDefaultValues(hxModelType);
 		m_vectorTempHeatExchangeBuildingType.push_back(newHeatExchange);
 	}
 
@@ -168,18 +164,18 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePageTemperatureSpline()
 
 void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated(int index)
 {
-	//store old heatExchange
+	// store old heat exchange to vector
 	for(VICUS::NetworkHeatExchange& heatExchange : m_vectorTempHeatExchange){
 		if(heatExchange.m_modelType == m_current->m_heatExchange.m_modelType){
 			heatExchange = m_current->m_heatExchange;
 		}
 	}
 
-	//take newly selected Heat Exchanger from vector
+	// take newly selected heat exchange from vector
 	m_current->m_heatExchange = m_vectorTempHeatExchange[(unsigned int)index];
 
 	// set according page and update content
-	switch(m_current->m_heatExchange.m_modelType){
+	switch (m_current->m_heatExchange.m_modelType){
 		case VICUS::NetworkHeatExchange::T_TemperatureConstant:
 			m_ui->stackedWidgetHeatExchange->setCurrentIndex(0);
 			updatePageTemperatureConstant();
@@ -196,12 +192,13 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated
 		case VICUS::NetworkHeatExchange::T_HeatLossSplineCondenser:
 		case VICUS::NetworkHeatExchange::T_HeatLossSpline:
 			m_ui->stackedWidgetHeatExchange->setCurrentIndex(3);
-			updatePageHeatLossSpline();
+			updatePageHeatLossSpline(m_current->m_heatExchange.m_modelType);
 			break;
 		case VICUS::NetworkHeatExchange::T_TemperatureZone:
 		case VICUS::NetworkHeatExchange::T_TemperatureConstructionLayer:
 		case VICUS::NetworkHeatExchange::T_HeatingDemandSpaceHeating:
 		case VICUS::NetworkHeatExchange::NUM_T:
+			m_ui->stackedWidgetHeatExchange->setCurrentIndex(4);
 			break;
 	}
 }
@@ -281,20 +278,21 @@ void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossSplineIndividu
 void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatLossSplineUserBuildingType_activated(int index)
 {
 	// if the index is NUM_BT or invalid, set to Residentialbuilding
-	if(index >= VICUS::NetworkHeatExchange::NUM_BT) index = 0;
+	if (index >= VICUS::NetworkHeatExchange::NUM_BT)
+		index = 0;
 	m_ui->comboBoxHeatLossSplineUserBuildingType->setCurrentIndex(index);
 
 	// store old heatExchange
-	for(unsigned int i = 0; i < m_vectorTempHeatExchangeBuildingType.size(); i++) {
-		if(m_vectorTempHeatExchangeBuildingType[i].m_buildingType == m_current->m_heatExchange.m_buildingType) {
+	for (unsigned int i = 0; i < m_vectorTempHeatExchangeBuildingType.size(); i++) {
+		if (m_vectorTempHeatExchangeBuildingType[i].m_buildingType == m_current->m_heatExchange.m_buildingType) {
 			m_vectorTempHeatExchangeBuildingType[i] = m_current->m_heatExchange;
 		}
 	}
 
 	// get new heatExchange from vector
-	m_current->m_heatExchange = m_vectorTempHeatExchangeBuildingType[index];
+	m_current->m_heatExchange = m_vectorTempHeatExchangeBuildingType[(unsigned int)index];
 
-	if(m_current->m_heatExchange.m_buildingType != VICUS::NetworkHeatExchange::BT_UserDefineBuilding){
+	if (m_current->m_heatExchange.m_buildingType != VICUS::NetworkHeatExchange::BT_UserDefineBuilding){
 		m_ui->stackedWidgetHeatLossSpline->setCurrentIndex(0);
 		m_ui->checkBoxHeatLossSplineAreaRelatedValues->setChecked(static_cast<int>(m_current->m_heatExchange.m_areaRelatedValues));
 		m_ui->lineEditHeatLossSplineMaximumHeatingLoad->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].get_value());

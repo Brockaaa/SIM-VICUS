@@ -39,7 +39,7 @@
      <item>
       <widget class="QStackedWidget" name="stackedWidgetHeatExchange">
        <property name="currentIndex">
-        <number>0</number>
+        <number>3</number>
        </property>
        <widget class="QWidget" name="pageTemperatureConstant">
         <property name="sizePolicy">
@@ -680,7 +680,7 @@
             <item>
              <widget class="QwtPlot" name="widgetPlotHeatLossSpline">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>

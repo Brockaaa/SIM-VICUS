@@ -52,7 +52,8 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 {
 	m_modelType = modelType;
 	switch(modelType){
-		case T_HeatLossSpline:{
+		case T_HeatLossSpline:
+		case T_HeatLossSplineCondenser: {
 			if(m_buildingType == NUM_BT){
 				m_buildingType = BT_ResidentialBuildingSingleFamily;
 			}

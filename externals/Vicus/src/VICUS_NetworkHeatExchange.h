@@ -50,14 +50,14 @@ public:
 	/*! Defines the type of heat exchange */
 	enum ModelType {
 		T_TemperatureConstant,				// Keyword: TemperatureConstant			'Constant temperature'
-		T_TemperatureSpline,				// Keyword: TemperatureSpline			'Time-dependent temperature from spline'
-		T_TemperatureSplineEvaporator,		// Keyword: TemperatureSplineEvaporator	'Evaporator medium temperature for heat pump'
+		T_TemperatureSpline,				// Keyword: TemperatureSpline			'Time-dependent temperature'
+		T_TemperatureSplineEvaporator,		// Keyword: TemperatureSplineEvaporator	'Heat pump evaporator mean temperature'
 		T_TemperatureZone,					// Keyword: TemperatureZone				'Zone air temperature'
 		T_TemperatureConstructionLayer,		// Keyword: TemperatureConstructionLayer 'Active construction layer (floor heating)'
 		T_HeatLossConstant,					// Keyword: HeatLossConstant			'Constant heat loss'
-		T_HeatLossSpline,					// Keyword: HeatLossSpline				'Heat loss from spline'
+		T_HeatLossSpline,					// Keyword: HeatLossSpline				'Time-dependent heat loss'
 		/*! Heat loss from condenser is not the heat loss of the fluid, hence different parameter than T_HeatLossSpline. */
-		T_HeatLossSplineCondenser,			// Keyword: HeatLossSplineCondenser		'Heat loss of condenser in heat pump model'
+		T_HeatLossSplineCondenser,			// Keyword: HeatLossSplineCondenser		'Time-dependent heat pump heating demand'
 		/*! Heating demand for space heating  */
 		T_HeatingDemandSpaceHeating,		// Keyword: HeatingDemandSpaceHeating	'Heating demand for space heating'
 		NUM_T
@@ -91,9 +91,9 @@ public:
 	};
 
 	enum BuildingType {
-		BT_ResidentialBuildingSingleFamily,		// Keyword: ResidentialBuildingSingleFamily		'Single Family House 100 m²'
-		BT_ResidentialBuildingMultiFamily,		// Keyword: ResidentialBuildingMultiFamily		'Multi Family House 1000 m²'
-		BT_ResidentialBuildingLarge,			// Keyword: ResidentialBuildingLarge			'Large Residential Building 3000 m²'
+		BT_ResidentialBuildingSingleFamily,		// Keyword: ResidentialBuildingSingleFamily		'Single Family House'
+		BT_ResidentialBuildingMultiFamily,		// Keyword: ResidentialBuildingMultiFamily		'Multi Family House'
+		BT_ResidentialBuildingLarge,			// Keyword: ResidentialBuildingLarge			'Large Residential Building'
 		BT_OfficeBuilding,						// Keyword: OfficeBuilding						'Office Building'
 		BT_UserDefineBuilding,					// Keyword: UserDefineBuilding					'User Defined Building'
 		NUM_BT

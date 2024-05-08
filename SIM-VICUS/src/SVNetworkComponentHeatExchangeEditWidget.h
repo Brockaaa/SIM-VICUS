@@ -60,7 +60,7 @@ public:
 
 	/*! updates pages */
 	void updatePageHeatLossConstant();
-	void updatePageHeatLossSpline();
+	void updatePageHeatLossSpline(VICUS::NetworkHeatExchange::ModelType hxModelType);
 	void updatePageTemperatureConstant();
 	void updatePageTemperatureSpline();
 
