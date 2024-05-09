@@ -72,7 +72,7 @@ public:
 
 	int													m_rowSize = 0;
 
-	int													m_defaultRowHeight = VICUS::BLOCK_HEIGHT;
+	int													m_defaultRowHeight = int(VICUS::BLOCK_HEIGHT / 1.5);
 
 	/* Pointer to ZoomMeshGraphicsView, needed to determine position of Dragged Element */
 	SVBMZoomMeshGraphicsView							*m_zoomMeshGraphicsView = nullptr;

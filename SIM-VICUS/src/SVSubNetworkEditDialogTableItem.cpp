@@ -13,10 +13,10 @@
 
 SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filename, QString text, QString tooltip, int height, QWidget *parent, bool subCategory, bool inBuild) :
 	QWidget(parent),
-	ui(new Ui::SVSubNetworkEditDialogTableItem),
+	m_ui(new Ui::SVSubNetworkEditDialogTableItem),
 	m_inbuild(inBuild)
 {
-	ui->setupUi(this);
+	m_ui->setupUi(this);
 	if(!subCategory){
 		QLabel *iconLabel = new QLabel(this);
 		QLabel *textLabel = new QLabel(text, this);
@@ -39,18 +39,19 @@ SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filenam
 		layout->addWidget(iconLabel);
 		layout->addWidget(textLabel);
 		layout->setContentsMargins(0,0,0,0);
-		layout->setSpacing(0);
+		layout->setSpacing(10);
 		layout->setStretchFactor(iconLabel, 0);
 		layout->setStretchFactor(textLabel, 1);
 		setToolTip(tooltip);
 		setLayout(layout);
 	} else {
-		QLabel *textLabel = new QLabel("        " + text, this);
+		QLabel *textLabel = new QLabel(text, this);
 		textLabel->setMinimumSize(0, 0);
 		textLabel->setAlignment(Qt::AlignLeft| Qt::AlignVCenter); // This will center the text both horizontally and vertically
 		textLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
 
 		QHBoxLayout *layout = new QHBoxLayout(this);
+		layout->addSpacing(height + 20);
 		layout->addWidget(textLabel);
 		layout->setContentsMargins(0,0,0,0);
 		layout->setStretchFactor(textLabel, 0);
@@ -66,5 +67,5 @@ SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filenam
 
 SVSubNetworkEditDialogTableItem::~SVSubNetworkEditDialogTableItem()
 {
-	delete ui;
+	delete m_ui;
 }
