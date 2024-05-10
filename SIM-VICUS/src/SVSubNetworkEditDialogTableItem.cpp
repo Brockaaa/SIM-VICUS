@@ -11,10 +11,11 @@
 #include <QHBoxLayout>
 
 
-SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filename, QString text, QString tooltip, int height, QWidget *parent, bool subCategory, bool inBuild) :
+SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filename, QString text, QString tooltip, int height, QWidget *parent, bool subCategory, bool builtIn, bool local) :
 	QWidget(parent),
 	m_ui(new Ui::SVSubNetworkEditDialogTableItem),
-	m_inbuild(inBuild)
+	m_builtIn(builtIn),
+	m_local(local)
 {
 	m_ui->setupUi(this);
 	if(!subCategory){
@@ -44,6 +45,7 @@ SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filenam
 		layout->setStretchFactor(textLabel, 1);
 		setToolTip(tooltip);
 		setLayout(layout);
+		m_local = true;
 	} else {
 		QLabel *textLabel = new QLabel(text, this);
 		textLabel->setMinimumSize(0, 0);

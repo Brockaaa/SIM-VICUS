@@ -63,7 +63,7 @@ void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent::ModelType 
 	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(type),
 																				   VICUS::NetworkComponent::detailledModelName(type),
 																				   VICUS::KeywordListQt::Description("NetworkComponent::ModelType", type),
-																				   m_defaultRowHeight, this);
+																				   m_defaultRowHeight, this, false);
 	setFixedHeight(height() + m_defaultRowHeight);
 	insertRow(m_rowSize);
 	setCellWidget(m_rowSize, 0, bmItem1);
@@ -82,11 +82,14 @@ void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent &component)
 	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(component.m_modelType),
 																				   VICUS::NetworkComponent::detailledModelName(component.m_modelType),
 																				   VICUS::KeywordListQt::Description("NetworkComponent::ModelType", component.m_modelType),
-																					m_defaultRowHeight, this, true, component.m_builtIn);
-	if (!component.m_local)
-		bmItem1->setStyleSheet(QString("background-color: %1;").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
+																					m_defaultRowHeight, this, true, component.m_builtIn, component.m_local);
+	if (component.m_local)
+		bmItem1->setStyleSheet(QString("background-color: %1;").arg(QtExt::Style::ToolBoxPageBackground));
 	else if (component.m_builtIn)
 		bmItem1->setStyleSheet(QString("background-color: %1;").arg(SVStyle::instance().m_alternativeBackgroundDark.name()));
+	else
+		bmItem1->setStyleSheet(QString("background-color: %1; ").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
+
 	setFixedHeight(height() + rowHeight);
 	insertRow(m_rowSize);
 	setCellWidget(m_rowSize, 0, bmItem1);
@@ -156,15 +159,18 @@ void SVSubNetworkEditDialogTable::on_itemSelectionChanged()
 
 	for(int i = 0; i < rowCount(); i++){
 		SVSubNetworkEditDialogTableItem *item = dynamic_cast<SVSubNetworkEditDialogTableItem*>(cellWidget(i, 0));
-		if(item->m_inbuild){
+
+		if(item->m_local) {
 			item->setStyleSheet(QString("background-color: %1; ").arg(QtExt::Style::ToolBoxPageBackground));
-		} else{
+		} else if(item->m_builtIn){
+			item->setStyleSheet(QString("background-color: %1; ").arg(SVStyle::instance().m_alternativeBackgroundDark.name()));
+		} else {
 			item->setStyleSheet(QString("background-color: %1; ").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
 		}
 	}
 	QModelIndexList selected = selectedIndexes();
 	for(auto index : selected){
 		SVSubNetworkEditDialogTableItem *item = dynamic_cast<SVSubNetworkEditDialogTableItem*>(cellWidget(index.row(), 0));
-		item->setStyleSheet(QString("background-color: %1; QToolTip { color: #000000; background-color: #ffffff; border: 1px solid black; }").arg(SVStyle::instance().m_alternativeBackgroundDark.name()));
+		item->setStyleSheet(QString("background-color: %1; QToolTip { color: #000000; background-color: #ffffff; border: 1px solid black; }").arg("#cc8425"));
 	}
 }

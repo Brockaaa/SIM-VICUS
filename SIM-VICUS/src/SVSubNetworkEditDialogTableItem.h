@@ -12,11 +12,11 @@ class SVSubNetworkEditDialogTableItem : public QWidget
 	Q_OBJECT
 
 public:
-	explicit SVSubNetworkEditDialogTableItem(QString filename, QString typeName, QString tooltip, int height, QWidget *parent = nullptr, bool subCategory = false, bool inbuild = true);
+	explicit SVSubNetworkEditDialogTableItem(QString filename, QString typeName, QString tooltip, int height, QWidget *parent = nullptr, bool subCategory = false, bool builtIn = false, bool local = false);
 	~SVSubNetworkEditDialogTableItem();
 
-	// TODO Maik: comment! Das soll heißen builtIn ?
-	bool m_inbuild;
+	// true if the item related to this Table Item is an builtIn database element
+	bool m_builtIn;
 
 	// TODO Maik: implement local
 	// DB Elemente können 1 aus 3 Zuständen haben: local, userDB, builtIn. Diese sind durch die Flags local und builtIn definiert.

@@ -75,8 +75,13 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	m_ui->viewWidget->setResolution(1);
 	m_ui->viewWidget->setStyleSheet("background-color: white;");
 
-	m_ui->frameBuiltIn->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(QtExt::Style::ToolBoxPageBackground));
-	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundBright.name()));
+	m_ui->labelBuiltIn->setMaximumWidth(m_ui->labelBuiltIn->sizeHint().width());
+	m_ui->labelUserDB->setMaximumWidth(m_ui->labelUserDB->sizeHint().width());
+	m_ui->labelProject->setMaximumWidth(m_ui->labelProject->sizeHint().width());
+
+	m_ui->frameBuiltIn->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_alternativeBackgroundDark.name()));
+	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
+	m_ui->frameProject->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(QtExt::Style::ToolBoxPageBackground));
 
 	connect(m_sceneManager, &SVBMSceneManager::newBlockSelected, this, &SVSubNetworkEditDialog::blockSelectedEvent);
 	connect(m_sceneManager, &SVBMSceneManager::newConnectorSelected, this, &SVSubNetworkEditDialog::connectorSelectedEvent);
@@ -1504,8 +1509,9 @@ void SVSubNetworkEditDialog::on_projectSaved()
 void SVSubNetworkEditDialog::on_styleChanged()
 {
 	qDebug() << "SVSubNetworkEditDialog::on_styleChanged()";
-	m_ui->frameBuiltIn->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(QtExt::Style::ToolBoxPageBackground));
-	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundBright.name()));
+	m_ui->frameBuiltIn->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_alternativeBackgroundDark.name()));
+	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
+	m_ui->frameProject->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(QtExt::Style::ToolBoxPageBackground));
 	m_ui->tbox->layout()->setMargin(0);
 	m_ui->tbox->layout()->setSpacing(0);
 }
