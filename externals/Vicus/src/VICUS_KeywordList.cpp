@@ -2142,13 +2142,13 @@ namespace VICUS {
 			case 55 :
 			switch (t) {
 				case 0 : return "Constant temperature";
-				case 1 : return "Time-dependent temperature from spline";
-				case 2 : return "Evaporator medium temperature for heat pump";
+				case 1 : return "Time-dependent temperature";
+				case 2 : return "Heat pump evaporator mean temperature";
 				case 3 : return "Zone air temperature";
 				case 4 : return "Active construction layer (floor heating)";
 				case 5 : return "Constant heat loss";
-				case 6 : return "Heat loss from spline";
-				case 7 : return "Heat loss of condenser in heat pump model";
+				case 6 : return "Time-dependent heat loss";
+				case 7 : return "Time-dependent heat pump heating demand";
 				case 8 : return "Heating demand for space heating";
 			} break;
 			// NetworkHeatExchange::para_t
@@ -2177,9 +2177,9 @@ namespace VICUS {
 			// NetworkHeatExchange::BuildingType
 			case 58 :
 			switch (t) {
-				case 0 : return "Single Family House 100 m²";
-				case 1 : return "Multi Family House 1000 m²";
-				case 2 : return "Large Residential Building 3000 m²";
+				case 0 : return "Single Family House";
+				case 1 : return "Multi Family House";
+				case 2 : return "Large Residential Building";
 				case 3 : return "Office Building";
 				case 4 : return "User Defined Building";
 			} break;

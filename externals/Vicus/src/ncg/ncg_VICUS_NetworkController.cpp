@@ -38,18 +38,6 @@ void NetworkController::readXML(const TiXmlElement * element) {
 
 	try {
 		// search for mandatory attributes
-		if (!TiXmlAttribute::attributeByName(element, "id"))
-			throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-				IBK::FormatString("Missing required 'id' attribute.") ), FUNC_ID);
-
-		if (!TiXmlAttribute::attributeByName(element, "modelType"))
-			throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-				IBK::FormatString("Missing required 'modelType' attribute.") ), FUNC_ID);
-
-		if (!TiXmlAttribute::attributeByName(element, "controlledProperty"))
-			throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-				IBK::FormatString("Missing required 'controlledProperty' attribute.") ), FUNC_ID);
-
 		// reading attributes
 		const TiXmlAttribute * attrib = element->FirstAttribute();
 		while (attrib) {
@@ -133,7 +121,6 @@ void NetworkController::readXML(const TiXmlElement * element) {
 }
 
 TiXmlElement * NetworkController::writeXML(TiXmlElement * parent) const {
-	if (m_id == VICUS::INVALID_ID)  return nullptr;
 	TiXmlElement * e = new TiXmlElement("NetworkController");
 	parent->LinkEndChild(e);
 

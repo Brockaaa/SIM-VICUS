@@ -90,12 +90,9 @@ public:
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
+	VICUS_READWRITE_OVERRIDE
 	VICUS_COMP(NetworkController)
 	VICUS_COMPARE_WITH_ID
-
-	void readXML(const TiXmlElement * element) override;
-
-	TiXmlElement * writeXML(TiXmlElement * parent) const override;
 
 	/*! Checks if all parameters are valid. */
 	bool isValid(const Database<Schedule> &scheduleDB) const;
@@ -112,7 +109,7 @@ public:
 
 	// *** PUBLIC MEMBER VARIABLES added for VICUS ***
 
-	//:inherited	unsigned int					m_id = INVALID_ID;				// XML:A:required
+	//:inherited	unsigned int					m_id = INVALID_ID;				// XML:A
 	//:inherited	IBK::MultiLanguageString		m_displayName;					// XML:A
 	//:inherited	QColor							m_color;						// XML:A
 
@@ -120,13 +117,13 @@ public:
 	// *** PUBLIC MEMBER VARIABLES from NANDRAD::HydraulicNetworkControlElement ***
 
 	/*! Determines variability of setpoint parameters. */
-	ModelType						m_modelType = NUM_MT;							// XML:A:required
+	ModelType						m_modelType = NUM_MT;							// XML:A
 
 	/*! Controller type (P, PI, ...) */
 	ControllerType					m_controllerType = NUM_CT;						// XML:A
 
 	/*! property which shall be controlled (temperature difference, ...) */
-	ControlledProperty				m_controlledProperty = NUM_CP;					// XML:A:required
+	ControlledProperty				m_controlledProperty = NUM_CP;					// XML:A
 
 	/*! Integer/ID reference parameters. */
 	IDType							m_idReferences[NUM_ID];							// XML:E

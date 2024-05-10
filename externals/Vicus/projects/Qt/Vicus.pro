@@ -223,6 +223,7 @@ SOURCES += \
 	../../src/ncg/ncg_VICUS_Network.cpp \
 	../../src/ncg/ncg_VICUS_NetworkBuriedPipeProperties.cpp \
 	../../src/ncg/ncg_VICUS_NetworkComponent.cpp \
+	../../src/ncg/ncg_VICUS_NetworkController.cpp \
 	../../src/ncg/ncg_VICUS_NetworkHeatExchange.cpp \
 	../../src/ncg/ncg_VICUS_NetworkEdge.cpp \
 	../../src/ncg/ncg_VICUS_NetworkElement.cpp \
