@@ -60,7 +60,10 @@ SVSubNetworkEditDialogTable::~SVSubNetworkEditDialogTable()
 }
 
 void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent::ModelType type){
-	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(type), VICUS::KeywordListQt::Keyword("NetworkComponent::ModelType", type), VICUS::KeywordListQt::Description("NetworkComponent::ModelType", type), m_defaultRowHeight, this);
+	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(type),
+																				   VICUS::NetworkComponent::detailledModelName(type),
+																				   VICUS::KeywordListQt::Description("NetworkComponent::ModelType", type),
+																				   m_defaultRowHeight, this);
 	setFixedHeight(height() + m_defaultRowHeight);
 	insertRow(m_rowSize);
 	setCellWidget(m_rowSize, 0, bmItem1);
@@ -77,8 +80,9 @@ void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent::ModelType 
 void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent &component){
 	const int rowHeight = 35;
 	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(component.m_modelType),
-		QString::fromStdString(component.m_displayName.string("en")), VICUS::KeywordListQt::Description("NetworkComponent::ModelType", component.m_modelType),
-		m_defaultRowHeight, this, true, component.m_builtIn);
+																				   VICUS::NetworkComponent::detailledModelName(component.m_modelType),
+																				   VICUS::KeywordListQt::Description("NetworkComponent::ModelType", component.m_modelType),
+																					m_defaultRowHeight, this, true, component.m_builtIn);
 	if (!component.m_local)
 		bmItem1->setStyleSheet(QString("background-color: %1;").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
 	else if (component.m_builtIn)

@@ -84,9 +84,9 @@ public:
 
 	/*! Spline parameter as functions of time. Defined similarly as time series for location object (i.e. with start time shift). */
 	enum splinePara_t {
-		SPL_Temperature,						// Keyword: Temperature							[C]		'Temperature for heat exchange'
+		SPL_Temperature,						// Keyword: Temperature							[C]		'Temperature spline'
 		/*! Heat loss spline is used for models T_HeatLossSpline and T_HeatLossSplineCondenser. */
-		SPL_HeatLoss,							// Keyword: HeatLoss							[W]		'Constant heat flux out of the element (heat loss)'
+		SPL_HeatLoss,							// Keyword: HeatLoss							[W]		'Heat flux spline'
 		NUM_SPL
 	};
 

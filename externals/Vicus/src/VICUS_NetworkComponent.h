@@ -28,6 +28,8 @@
 
 #include <map>
 
+#include <QCoreApplication> // for tr functions
+
 #include <IBK_MultiLanguageString.h>
 #include <IBK_Parameter.h>
 #include <IBK_IntPara.h>
@@ -53,23 +55,24 @@ namespace VICUS {
 	and forth between objects.
 */
 class NetworkComponent : public AbstractDBElement {
+	Q_DECLARE_TR_FUNCTIONS(NetworkComponent)
 public:
 
 	NetworkComponent() = default;
 
 	/*! The various types (equations) of the hydraulic component. */
 	enum ModelType {
-		MT_SimplePipe,						// Keyword: SimplePipe						'Pipe with a single fluid volume'
-		MT_DynamicPipe,						// Keyword: DynamicPipe						'Pipe with discretized fluid volume'
-		MT_ConstantPressurePump,			// Keyword: ConstantPressurePump			'Pump with defined pressure head'
+		MT_SimplePipe,						// Keyword: SimplePipe						'Simple pipe with single fluid volume'
+		MT_DynamicPipe,						// Keyword: DynamicPipe						'Detailled pipe with discretized fluid volume'
+		MT_ConstantPressurePump,			// Keyword: ConstantPressurePump			'Pump with constant pressure head'
 		MT_ConstantMassFluxPump,			// Keyword: ConstantMassFluxPump			'Pump with defined mass flux'
 		MT_ControlledPump,					// Keyword: ControlledPump					'Pump with controlled pressure head'
-		MT_VariablePressurePump,			// Keyword: VariablePressurePump			'Pump with linear pressure head curve'
+		MT_VariablePressurePump,			// Keyword: VariablePressurePump			'Pump with linear pressure head'
 		MT_HeatExchanger,					// Keyword: HeatExchanger					'Simple heat exchanger'
-		MT_HeatPumpVariableIdealCarnotSourceSide,	// Keyword: HeatPumpVariableIdealCarnotSourceSide	'Heat pump installed at source side, based on carnot efficiency'
-		MT_HeatPumpVariableIdealCarnotSupplySide,	// Keyword: HeatPumpVariableIdealCarnotSupplySide	'Heat pump installed at supply side, based on carnot efficiency'
-		MT_HeatPumpVariableSourceSide,		// Keyword: HeatPumpVariableSourceSide		'Heat pump installed at source side, based on polynom for COP'
-		MT_HeatPumpOnOffSourceSide,			// Keyword: HeatPumpOnOffSourceSide			'Heat pump (on-off) at source side, based on polynoms for heating power and el. power'
+		MT_HeatPumpVariableIdealCarnotSourceSide,	// Keyword: HeatPumpVariableIdealCarnotSourceSide	'Simple heat pump installed at evaporator (source) side, based on carnot efficiency'
+		MT_HeatPumpVariableIdealCarnotSupplySide,	// Keyword: HeatPumpVariableIdealCarnotSupplySide	'Simple heat pump installed at condenser (supply) side, based on carnot efficiency'
+		MT_HeatPumpVariableSourceSide,		// Keyword: HeatPumpVariableSourceSide		'Detailled heat pump installed at evaporator (source) side, based on polynom for COP'
+		MT_HeatPumpOnOffSourceSide,			// Keyword: HeatPumpOnOffSourceSide			'Detailled heat pump (on-off) at evaporator (source) source side, based on polynoms for heating power and el. power'
 //		xMT_HeatPumpOnOffSourceSideWithBuffer,	// xKeyword: HeatPumpOnOffSourceSideWithBuffer			'On-off-type heat pump based on polynoms for heating power and el. power, installed at source side'
 		MT_ControlledValve,					// Keyword: ControlledValve					'Controlled valve'
 		MT_ConstantPressureLossValve,		// Keyword: ConstantPressureLossValve		'Valve with constant pressure loss'
@@ -162,7 +165,7 @@ public:
 
 	static bool hasPipeProperties(const ModelType modelType);
 
-	// *** PUBLIC MEMBER VARIABLES added for VICUS ***
+	// *** PUBLIC MEMBER VARIABLES added for VICUS ***Simple
 
 	//:inherited	unsigned int					m_id = INVALID_ID;					// XML:A:required
 	//:inherited	IBK::MultiLanguageString		m_displayName;						// XML:A
@@ -224,6 +227,8 @@ public:
 
 	// Returns which heat exchanger types you can use with a given NetworkComponent type
 	static std::vector<VICUS::NetworkHeatExchange::ModelType> availableHeatExchangeTypes(const VICUS::NetworkComponent::ModelType modelType);
+
+	static QString detailledModelName(ModelType modelType);
 
 };
 

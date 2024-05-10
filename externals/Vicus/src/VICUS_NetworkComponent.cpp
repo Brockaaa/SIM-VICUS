@@ -91,7 +91,7 @@ bool NetworkComponent::isValid(const Database<Schedule> &scheduleDB) const {
 
 	// pipe properties
 	if (hasPipeProperties(m_modelType) && m_pipePropertiesId == INVALID_ID) {
-		m_errorMsg = "Pipe properties are not set.";
+		m_errorMsg = "Pipe properties are notreturn  set.";
 		return false;
 	}
 
@@ -157,7 +157,6 @@ bool NetworkComponent::isValid(const Database<Schedule> &scheduleDB) const {
 
 
 AbstractDBElement::ComparisonResult NetworkComponent::equal(const AbstractDBElement *other) const {
-
 	const NetworkComponent * otherNetComp = dynamic_cast<const NetworkComponent*>(other);
 	if (otherNetComp == nullptr)
 		return Different;
@@ -419,6 +418,43 @@ std::vector<NetworkHeatExchange::ModelType> NetworkComponent::availableHeatExcha
 		case NetworkComponent::NUM_MT: ; // just to make compiler happy
 	}
 	return {};
+}
+
+QString NetworkComponent::detailledModelName(ModelType modelType) {
+	switch (modelType) {
+		case NetworkComponent::MT_SimplePipe:
+			return tr("Simple pipe");
+		case NetworkComponent::MT_DynamicPipe:
+			return tr("Detailled pipe");
+		case NetworkComponent::MT_HeatPumpVariableIdealCarnotSourceSide:
+			return tr("Simple heat pump source side");
+		case NetworkComponent::MT_HeatPumpVariableSourceSide:
+			return tr("Detailled heat pump source side");
+		case NetworkComponent::MT_HeatExchanger:
+			return tr("Simple heat exchanger");
+		case NetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
+			return tr("Simple heat pump supply side");
+		case NetworkComponent::MT_ConstantPressurePump:
+			return tr("Pump with defined pressure head");
+		case NetworkComponent::MT_ConstantMassFluxPump:
+			return tr("Pump with defined mass flux");
+		case NetworkComponent::MT_VariablePressurePump:
+			return tr("Pump with linear pressure head");
+		case NetworkComponent::MT_ControlledPump:
+			return tr("Pump with controlled pressure head");
+		case NetworkComponent::MT_ControlledValve:
+			return tr("Valve with controller");
+		case NetworkComponent::MT_HeatPumpOnOffSourceSide:
+			return tr("Detailled on/off heat pump source side");
+		case NetworkComponent::MT_IdealHeaterCooler:
+			return tr("Ideal heater and cooler");
+		case NetworkComponent::MT_ConstantPressureLossValve:
+			return tr("Valve with defined pressure loss");
+		case NetworkComponent::MT_PressureLossElement:
+			return tr("Element with defined zeta");
+		case NetworkComponent::NUM_MT: ; // just to make compiler happy
+	}
+	return QString();
 }
 
 } // namespace VICUS
