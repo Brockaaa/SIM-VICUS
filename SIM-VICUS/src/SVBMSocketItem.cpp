@@ -107,7 +107,10 @@ void SVBMSocketItem::updateSocketItem() {
 			break;
 		}
 
-		case VICUS::NetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
+
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide:
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide:
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide:
 		{
 			if (m_socket->m_isInlet) {
 				switch (m_socket->direction()) {
@@ -171,9 +174,7 @@ void SVBMSocketItem::updateSocketItem() {
 			break;
 		}
 
-		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide:
-		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide:
-		case VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide:
+		case VICUS::NetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
 		{
 			if (m_socket->m_isInlet) {
 				switch (m_socket->direction()) {
