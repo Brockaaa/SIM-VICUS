@@ -34,7 +34,6 @@
 #include <VICUS_BMGlobals.h>
 #include <VICUS_BMGlobals.h>
 #include <VICUS_SubNetwork.h>
-#include <VICUS_NetworkComponent.h>
 #include <VICUS_NetworkElement.h>
 #include <VICUS_KeywordListQt.h>
 #include <VICUS_utilities.h>
@@ -105,9 +104,10 @@ SVSubNetworkEditDialog::~SVSubNetworkEditDialog()
 	delete m_ui;
 }
 
-void SVSubNetworkEditDialog::setupSubNetwork(VICUS::SubNetwork *subNetwork)
+void SVSubNetworkEditDialog::setupSubNetwork(VICUS::SubNetwork *subNetwork, SubnetworkMode mode)
 {
 	m_subNetwork = subNetwork;
+	m_mode = mode;
 	if(m_subNetwork->m_elements.size() != 0 && m_subNetwork->m_components.size() == 0){
 		convertSubnetwork();
 	}
@@ -151,40 +151,38 @@ void SVSubNetworkEditDialog::updateToolBoxPages(){
 		table->clear();
 	}
 
-	for(int i = 0; i < VICUS::NetworkComponent::ModelType::NUM_MT; ++i) {
-		VICUS::NetworkComponent::ModelType modelType = VICUS::NetworkComponent::ModelType(i);
+	std::vector<VICUS::NetworkComponent::ModelType> availableModelTypes = availableNetworkComponentModelTypes();
+
+	for(VICUS::NetworkComponent::ModelType modelType : availableModelTypes) {
+		//VICUS::NetworkComponent::ModelType modelType = VICUS::NetworkComponent::ModelType(i);
 		VICUS::NetworkComponent::ComponentCategory category = VICUS::NetworkComponent::componentCategoryFromModelType(modelType);
 		switch(category){
 		case VICUS::NetworkComponent::CC_Pipes: {
 			m_tables[category]->addElement(modelType);
-			for (auto it = m_db->m_networkComponents.begin(); it != m_db->m_networkComponents.end(); ++it) {
-				if(it->second.m_modelType == modelType){
-					m_tables[category]->addElement(it->second);
-				}
+			for(auto availableElement : availableDataBaseElements(modelType)){
+				m_tables[category]->addElement(availableElement);
+
 			}
 		} break;
 		case VICUS::NetworkComponent::CC_Pumps: {
 			m_tables[category]->addElement(modelType);
-			for (auto it = m_db->m_networkComponents.begin(); it != m_db->m_networkComponents.end(); ++it) {
-				if(it->second.m_modelType == modelType){
-					m_tables[category]->addElement(it->second);
-				}
+			for(VICUS::NetworkComponent &availableElement : availableDataBaseElements(modelType)){
+				m_tables[category]->addElement(availableElement);
+
 			}
 		} break;
 		case VICUS::NetworkComponent::CC_Heatpumps: {
 			m_tables[category]->addElement(modelType);
-			for (auto it = m_db->m_networkComponents.begin(); it != m_db->m_networkComponents.end(); ++it) {
-				if(it->second.m_modelType == modelType){
-					m_tables[category]->addElement(it->second);
-				}
+			for(VICUS::NetworkComponent &availableElement : availableDataBaseElements(modelType)){
+				m_tables[category]->addElement(availableElement);
+
 			}
 		} break;
 		case VICUS::NetworkComponent::CC_Other: {
 			m_tables[category]->addElement(modelType);
-			for (auto it = m_db->m_networkComponents.begin(); it != m_db->m_networkComponents.end(); ++it) {
-				if(it->second.m_modelType == modelType){
-					m_tables[category]->addElement(it->second);
-				}
+			for(VICUS::NetworkComponent &availableElement : availableDataBaseElements(modelType)){
+				m_tables[category]->addElement(availableElement);
+
 			}
 		} break;
 		default:
@@ -1344,6 +1342,30 @@ void SVSubNetworkEditDialog::createNewScene()
 	} else if (blocksConnectedToGlobalInlet.size() == 1){
 		m_sceneManager->createConnection(&bentry, &mapWithAllBlocks[blocksConnectedToGlobalInlet[0]], &bentry.m_sockets[0], &mapWithAllBlocks[blocksConnectedToGlobalInlet[0]].m_sockets[0]);
 	}
+}
+
+std::vector<VICUS::NetworkComponent::ModelType> SVSubNetworkEditDialog::availableNetworkComponentModelTypes()
+{
+	std::vector<VICUS::NetworkComponent::ModelType> availableNetworkComponentModelTypes;
+	switch(m_mode){
+		default:
+			for(int i = 0; i < VICUS::NetworkComponent::ModelType::NUM_MT - 1; i++){
+				availableNetworkComponentModelTypes.push_back(static_cast<VICUS::NetworkComponent::ModelType>(i));
+			}
+	}
+	return availableNetworkComponentModelTypes;
+}
+
+std::vector<std::reference_wrapper<VICUS::NetworkComponent>> SVSubNetworkEditDialog::availableDataBaseElements(VICUS::NetworkComponent::ModelType modelType)
+{
+	std::vector<std::reference_wrapper<VICUS::NetworkComponent>> availableElements;
+	for (auto it = m_db->m_networkComponents.begin(); it != m_db->m_networkComponents.end(); ++it) {
+		if(it->second.m_modelType == modelType){
+			availableElements.push_back(it->second);
+		}
+	}
+
+	return availableElements;
 }
 
 

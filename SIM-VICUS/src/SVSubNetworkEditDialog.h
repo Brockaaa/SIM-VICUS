@@ -2,6 +2,7 @@
 #define SVSUBNETWORKEDITDIALOGH
 
 #include <QWidget>
+#include <VICUS_NetworkComponent.h>
 
 namespace Ui {
 class SVSubNetworkEditDialog;
@@ -9,7 +10,6 @@ class SVSubNetworkEditDialog;
 
 namespace VICUS {
 class SubNetwork;
-class NetworkComponent;
 class NetworkController;
 class BMBlock;
 }
@@ -28,10 +28,20 @@ public:
 	explicit SVSubNetworkEditDialog(QWidget *parent = nullptr, VICUS::SubNetwork * subNetwork = nullptr, SVDatabase * db = nullptr);
 	/*! D-tor */
 	~SVSubNetworkEditDialog();
+
+	/* Different Modes of the SVSubNetworkEditDialog. Depending if started from SVDBSubNetworkEditWidget
+	 *  or SVDBSupplySystemEditWidget a different mode should be chosen. Restricts the available NetworkComponents
+	 *  and NetworkComponent Modeltypes in the Toolbox */
+	enum SubnetworkMode {
+		SM_EditDistrictNetworkPlant, // everything available, chosen when nothing specified
+		SM_EditBuildingSupplySystem,
+		NUM_SM
+	};
+
 	/*! Getter for private member ZoomMeshGraphicsView */
 	SVBMZoomMeshGraphicsView *zoomMeshGraphicsView();
 	/*! sets up Subnetwork and calls setNetwork)= */
-	void setupSubNetwork(VICUS::SubNetwork * subNetwork);
+	void setupSubNetwork(VICUS::SubNetwork * subNetwork, SubnetworkMode mode = SM_EditDistrictNetworkPlant);
 	/*! opens window, sets appropriate height and weight values for the Splitter and the Scene */
 	void show();
 
@@ -110,6 +120,10 @@ private:
 	bool checkValidityOfNetworkElementsAndGraphicalNetwork();
 	/*! erases previous graphical Network and fills scene with blocks and connectors */
 	void createNewScene();
+	/*! returns a vector with available NetworkComponent ModelTypes given the current mode */
+	std::vector<VICUS::NetworkComponent::ModelType> availableNetworkComponentModelTypes();
+	/*! returns all availble database elements given a NetworkComponent ModelType and the current mode */
+	std::vector<std::reference_wrapper<VICUS::NetworkComponent>> availableDataBaseElements(VICUS::NetworkComponent::ModelType modelType);
 
 	/*! The UI class. */
 	Ui::SVSubNetworkEditDialog									*m_ui;
@@ -125,6 +139,8 @@ private:
 	SVSubNetworkEditDialogTable									*m_senderTable = nullptr;
 	/*! Holds all Tables in the Toolbox */
 	std::vector<SVSubNetworkEditDialogTable*>                   m_tables;
+	/*! Current Mode of the Subnetwork. Changes what NetworkComponent Modeltypes and NetworkComponents in the database are available */
+	SubnetworkMode												m_mode;
 };
 
 #endif // SVSUBNETWORKEDITDIALOGH

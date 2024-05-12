@@ -37,10 +37,11 @@ SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filenam
 		textLabel->setMinimumSize(0, 0);
 		textLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 		textLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+		textLabel->setStyleSheet(QString("QLabel { padding-left: %1px; }").arg(10));
 		layout->addWidget(iconLabel);
 		layout->addWidget(textLabel);
 		layout->setContentsMargins(0,0,0,0);
-		layout->setSpacing(10);
+		layout->setSpacing(0);
 		layout->setStretchFactor(iconLabel, 0);
 		layout->setStretchFactor(textLabel, 1);
 		setToolTip(tooltip);
@@ -51,9 +52,8 @@ SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filenam
 		textLabel->setMinimumSize(0, 0);
 		textLabel->setAlignment(Qt::AlignLeft| Qt::AlignVCenter); // This will center the text both horizontally and vertically
 		textLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-
+		textLabel->setStyleSheet(QString("QLabel { padding-left: %1px; }").arg(height + 20));
 		QHBoxLayout *layout = new QHBoxLayout(this);
-		layout->addSpacing(height + 20);
 		layout->addWidget(textLabel);
 		layout->setContentsMargins(0,0,0,0);
 		layout->setStretchFactor(textLabel, 0);
