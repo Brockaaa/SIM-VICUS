@@ -356,7 +356,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineFloorAre
 	bool successfulNewHeatingK = calculateNewK(oldEnergyDemandHeating * newFloorArea );
 	bool successfulNewCoolingK = true;
 	if(m_current->m_heatExchange.m_withCoolingDemand) {
-		oldEnergyDemandCooling = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific].get_value();;
+		oldEnergyDemandCooling = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific].get_value();
 		successfulNewCoolingK = calculateNewK(oldEnergyDemandHeating * newFloorArea );
 	}
 
@@ -1032,7 +1032,7 @@ SVNetworkComponentHeatExchangeEditWidget::HotWaterPredefUserProfile SVNetworkCom
 
 void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePlotDataPredef()
 {
-	for(unsigned int i = 0; i < m_vectorHeatLossSplineHeatingYData.size(); i++){
+	for (unsigned int i = 0; i < m_vectorHeatLossSplineHeatingYData.size(); i++){
 		double maxValue = *(std::max_element(m_vectorHeatLossSplineHeatingYData[i].begin(), m_vectorHeatLossSplineHeatingYData[i].end()));
 		m_vectorHeatLossSplineHeatingMaxValues.push_back(maxValue);
 	}
@@ -1046,7 +1046,7 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePlotDataPrede
 	VICUS::NetworkHeatExchange::para_t parameterHeating, parameterCooling;
 	double floorArea = 1;
 
-	if(m_current->m_heatExchange.m_areaRelatedValues){
+	if (m_current->m_heatExchange.m_areaRelatedValues){
 		parameterHeating = VICUS::NetworkHeatExchange::P_HeatingEnergyDemandAreaSpecific;
 		parameterCooling = VICUS::NetworkHeatExchange::P_CoolingEnergyDemandAreaSpecific;
 		floorArea = m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value();
@@ -1056,7 +1056,7 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePlotDataPrede
 
 	}
 
-	if(m_current->m_heatExchange.m_para[parameterHeating].get_value() == 0){
+	if (m_current->m_heatExchange.m_para[parameterHeating].get_value() == 0){
 		m_kHeating = 1;
 		calculateNewHeatLossSplineYData(m_kHeating, m_heatLossSplineHeatingYPlotData);
 	} else {
@@ -1065,7 +1065,7 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePlotDataPrede
 		calculateNewHeatLossSplineYData(m_kHeating, m_heatLossSplineHeatingYPlotData);
 	}
 
-	if(m_current->m_heatExchange.m_para[parameterCooling].get_value() == 0){
+	if (m_current->m_heatExchange.m_para[parameterCooling].get_value() == 0){
 		m_kCooling = 1;
 		calculateNewHeatLossSplineYData(m_kCooling, m_heatLossSplineCoolingYPlotData, VICUS::NetworkHeatExchange::P_MaximumCoolingLoad);
 	} else {
@@ -1082,12 +1082,12 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePlotDataPrede
 	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::yLeft, 0, maximumHeatingLoad > maximumCoolingLoad ? maximumHeatingLoad / 1000 : maximumCoolingLoad / 1000);
 
 	//creating curve for heating
-	if(m_heatLossSplineHeatingCurve == nullptr) {
+	if (m_heatLossSplineHeatingCurve == nullptr) {
 		m_heatLossSplineHeatingCurve = new QwtPlotCurve("Heating");
 		m_heatLossSplineHeatingCurve->setPen(Qt::red);
 	}
 	std::vector<double> heatingValuesToPlot;
-	for(double value : m_heatLossSplineHeatingYPlotData)
+	for (double value : m_heatLossSplineHeatingYPlotData)
 		heatingValuesToPlot.push_back(value / 1000); // convert to kW
 	m_heatLossSplineHeatingCurve->setSamples(m_heatLossSplineXData.data(), heatingValuesToPlot.data(), m_heatLossSplineXData.size());
 	m_heatLossSplineHeatingCurve->attach(m_ui->widgetPlotHeatLossSpline);
@@ -1095,10 +1095,12 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePlotDataPrede
 	//creating curve for cooling
 	setCoolingCurve(m_current->m_heatExchange.m_withCoolingDemand);
 
-	if(m_heatLossSplineZoomer == nullptr) m_heatLossSplineZoomer = new QwtPlotZoomer(m_ui->widgetPlotHeatLossSpline->canvas() );
+	if (m_heatLossSplineZoomer == nullptr)
+		m_heatLossSplineZoomer = new QwtPlotZoomer(m_ui->widgetPlotHeatLossSpline->canvas() );
 	m_heatLossSplineZoomer->setZoomBase();
 
 }
+
 
 void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePlotDataUser()
 {
@@ -1310,12 +1312,13 @@ void SVNetworkComponentHeatExchangeEditWidget::calculateNewHeatLossSplineYData(d
 {
 	double maxValueUser = m_current->m_heatExchange.m_para[parameter].value;
 	double maxValue;
-	if( parameter == VICUS::NetworkHeatExchange::P_MaximumHeatingLoad)
+	if (parameter == VICUS::NetworkHeatExchange::P_MaximumHeatingLoad)
 		maxValue = m_vectorHeatLossSplineHeatingMaxValues[m_current->m_heatExchange.m_buildingType];
 	else
 		maxValue = m_vectorHeatLossSplineCoolingMaxValues[m_current->m_heatExchange.m_buildingType];
 
-	if (maxValueUser == 0.0) maxValueUser = maxValue;
+	if (maxValueUser == 0.0)
+		maxValueUser = maxValue;
 	double ratio =  maxValueUser / maxValue;
 
 	auto scaling = [k, maxValueUser, ratio](double y){
@@ -1351,7 +1354,7 @@ bool SVNetworkComponentHeatExchangeEditWidget::calculateNewK(double energyDemand
 	double maximumEnergyLoad = parameter == VICUS::NetworkHeatExchange::P_MaximumHeatingLoad ? m_current->m_heatExchange.m_para[parameter].get_value()
 																							 : m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].get_value();
 
-	if((energyDemandToReach / maximumEnergyLoad) > 2501) {
+	if ((energyDemandToReach / maximumEnergyLoad) > 2501) {
 		energyDemandToReach = maximumEnergyLoad * 2500;
 		calculateNewK(energyDemandToReach, parameter);
 		return false;
@@ -1367,11 +1370,11 @@ bool SVNetworkComponentHeatExchangeEditWidget::calculateNewK(double energyDemand
 	qDebug() << "calculateNewK Goal: " << energyDemandToReach;
 	std::vector<double> newlyCalculatedYPlotValues;
 	double newlyCalculatedIntegral;
-	for(int i = 0 ; i < maximumLoopDepth; i++){
+	for (int i = 0 ; i < maximumLoopDepth; i++){
 		calculateNewHeatLossSplineYData(currentK, newlyCalculatedYPlotValues, parameter);
 		newlyCalculatedIntegral = calculateEnergyDemand(newlyCalculatedYPlotValues);
 		newlyCalculatedIntegral /= 1000;
-		if(nearEqual(energyDemandToReach, newlyCalculatedIntegral)){
+		if (nearEqual(energyDemandToReach, newlyCalculatedIntegral)){
 			if(parameter == VICUS::NetworkHeatExchange::P_MaximumHeatingLoad) {
 				m_kHeating = currentK;
 				m_heatLossSplineHeatingYPlotData = newlyCalculatedYPlotValues;
@@ -1385,7 +1388,7 @@ bool SVNetworkComponentHeatExchangeEditWidget::calculateNewK(double energyDemand
 			qDebug() << "Success: new k: " << currentK << " New Integral: " << newlyCalculatedIntegral;
 			return true;
 		}
-		else if(newlyCalculatedIntegral < energyDemandToReach){
+		else if (newlyCalculatedIntegral < energyDemandToReach){
 			double difference = currentK - lowerBound;
 			upperBound = currentK;
 			currentK -= difference / 2;
@@ -1399,7 +1402,7 @@ bool SVNetworkComponentHeatExchangeEditWidget::calculateNewK(double energyDemand
 	qDebug() << "Unsuccessful k calculation";
 	qDebug() << "calculated integral set in lineEdit";
 	/* if energyDemandToReach was not reachable, set the last reached energyDemand in the lineEdit and return false */
-	if(parameter == VICUS::NetworkHeatExchange::P_MaximumHeatingLoad) {
+	if (parameter == VICUS::NetworkHeatExchange::P_MaximumHeatingLoad) {
 		m_kHeating = currentK;
 		m_heatLossSplineHeatingYPlotData = newlyCalculatedYPlotValues;
 		m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue(newlyCalculatedIntegral);
