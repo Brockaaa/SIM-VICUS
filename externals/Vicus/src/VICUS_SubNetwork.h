@@ -39,9 +39,7 @@ public:
 	VICUS_COMPARE_WITH_ID
 
 	/*! Checks if all referenced materials exist and if their parameters are valid. */
-	bool isValid(const Database<NetworkComponent> &compDB,
-				 const Database<NetworkController> &ctrlDB,
-				 const Database<Schedule> &scheduleDB) const;
+	bool isValid(const Database<Schedule> &scheduleDB) const;
 
 	/*! updates the BMBlocks in the graphical Network with data from the NetworkElements */
 	void init();

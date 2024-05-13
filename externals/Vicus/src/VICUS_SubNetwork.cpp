@@ -13,10 +13,8 @@
 
 namespace VICUS {
 
-//TODO:: deprecated, needs rework
-bool SubNetwork::isValid(const Database<NetworkComponent> &compDB,
-						 const Database<NetworkController> &ctrlDB,
-						 const Database<Schedule> &scheduleDB) const
+
+bool SubNetwork::isValid(const Database<Schedule> &scheduleDB) const
 {
 	if (m_elements.empty())
 		return false;
@@ -30,10 +28,12 @@ bool SubNetwork::isValid(const Database<NetworkComponent> &compDB,
 			return false;
 
 		// check if the component exists in DB
-		if (compDB[e.m_componentId] == nullptr)
-			return false;
-		if (!compDB[e.m_componentId]->isValid(scheduleDB))
-			return false;
+		for (const NetworkComponent &comp: m_components) {
+			if (!comp.isValid(scheduleDB))
+				return false;
+			if (!comp.m_networkController.isValid(scheduleDB))
+				return false;
+		}
 	}
 
 	return true;

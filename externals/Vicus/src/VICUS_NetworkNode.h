@@ -128,6 +128,7 @@ public:
 	/*! Reference id to a VICUS::SubNetwork */
 	unsigned int								m_idSubNetwork = INVALID_ID;							// XML:A
 
+	/*! Individual heat exchange of node. */
 	NANDRAD::HydraulicNetworkHeatExchange		m_heatExchange;											// XML:E
 
 

@@ -151,6 +151,7 @@ void ThermalNetworkStatesModel::setup(const NANDRAD::HydraulicNetwork & nw,
 							m_p->m_heatLossElements.push_back(pipeElement); // copy of pointer
 						} break;
 
+						case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser:
 						case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossSplineCondenser:
 						case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureSplineEvaporator:
 						case NANDRAD::HydraulicNetworkHeatExchange::T_HeatingDemandSpaceHeating :
@@ -191,6 +192,7 @@ void ThermalNetworkStatesModel::setup(const NANDRAD::HydraulicNetwork & nw,
 
 						case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant :
 						case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossSpline :
+						case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser:
 						case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossSplineCondenser :
 						case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureSplineEvaporator :
 						case NANDRAD::HydraulicNetworkHeatExchange::T_HeatingDemandSpaceHeating :
@@ -253,6 +255,7 @@ void ThermalNetworkStatesModel::setup(const NANDRAD::HydraulicNetwork & nw,
 
 						case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureConstant:
 						case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureSpline:
+						case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser:
 						case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureSplineEvaporator:
 						case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossSplineCondenser:
 						case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureZone:
@@ -397,7 +400,8 @@ void ThermalNetworkStatesModel::resultDescriptions(std::vector<QuantityDescripti
 				resDesc.push_back(desc);
 			} break;
 
-			case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossSplineCondenser : {
+			case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossSplineCondenser :
+			case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser: {
 				// currently, this result value is not directly used in other models, yet may be useful for FMI exchange
 				QuantityDescription desc("HeatExchangeHeatLossCondenser", "W", "Pre-described heat loss at condenser of heat pump.", false);
 				desc.m_referenceType = NANDRAD::ModelInputReference::MRT_NETWORKELEMENT;
@@ -471,6 +475,7 @@ const double * ThermalNetworkStatesModel::resultValueRef(const InputReference & 
 			const NANDRAD::HydraulicNetworkHeatExchange &heatExchange = m_network->m_elements[i].m_heatExchange;
 			switch (heatExchange.m_modelType) {
 				case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant:
+				case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser:
 					IBK_ASSERT(!heatExchange.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_HeatLoss].name.empty());
 					return &heatExchange.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_HeatLoss].value;
 
@@ -508,6 +513,7 @@ const double * ThermalNetworkStatesModel::resultValueRef(const InputReference & 
 				case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureZone:
 				case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureConstructionLayer:
 				case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant:
+				case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser:
 				case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossSpline:
 				case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossSplineCondenser:
 				case NANDRAD::HydraulicNetworkHeatExchange::T_HeatingDemandSpaceHeating:

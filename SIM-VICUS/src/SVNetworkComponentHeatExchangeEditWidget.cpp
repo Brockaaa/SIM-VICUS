@@ -30,12 +30,13 @@ SVNetworkComponentHeatExchangeEditWidget::SVNetworkComponentHeatExchangeEditWidg
 	m_ui->setupUi(this);
 
 	// checks if VICUS::NetworkHeatExchange was changed. stackedWidgetHeatExchange must be adjusted accordingly
-	Q_ASSERT(VICUS::NetworkHeatExchange::NUM_T == 9);
+	Q_ASSERT(VICUS::NetworkHeatExchange::NUM_T == 10);
 
 	configureChart(m_ui->widgetPlotHeatLossSpline);
 
 	//sets up validating line edit appropriately
-	m_ui->lineEditTemperatureConstantHeatTransferCoefficient->setMinimum(0, false);
+	m_ui->lineEditHeatTransferCoefficientConstant->setMinimum(0, false);
+	m_ui->lineEditHeatTransferCoefficientSpline->setMinimum(0, false);
 
 	m_ui->lineEditHeatLossSplineCoolingEnergyDemand->setFormat('f', 0);
 	m_ui->lineEditHeatLossSplineCoolingEnergyDemand->setMinimum(0, false);
@@ -118,8 +119,8 @@ void SVNetworkComponentHeatExchangeEditWidget::updateInput(VICUS::NetworkCompone
 
 void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossConstant()
 {
-	m_ui->checkBoxHeatLossConstantIndividual->setChecked(m_current->m_heatExchange.m_individualHeatFlux);
-	on_checkBoxHeatLossConstantIndividual_stateChanged(static_cast<int>(m_current->m_heatExchange.m_individualHeatFlux));
+	m_ui->checkBoxHeatLossConstantIndividual->setChecked(m_current->m_heatExchange.m_individualHeatExchange);
+	on_checkBoxHeatLossConstantIndividual_stateChanged(static_cast<int>(m_current->m_heatExchange.m_individualHeatExchange));
 }
 
 void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossSpline(VICUS::NetworkHeatExchange::ModelType hxModelType)
@@ -145,18 +146,19 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossSpline(VICUS::N
 	}
 
 	// set widgets in pageHeatLossSpline to appropriate values
-	m_ui->checkBoxHeatLossSplineIndividual->setChecked(m_current->m_heatExchange.m_individualHeatFlux);
-	on_checkBoxHeatLossSplineIndividual_clicked(m_current->m_heatExchange.m_individualHeatFlux);
+	m_ui->checkBoxHeatLossSplineIndividual->setChecked(m_current->m_heatExchange.m_individualHeatExchange);
+	on_checkBoxHeatLossSplineIndividual_clicked(m_current->m_heatExchange.m_individualHeatExchange);
 }
 
 void SVNetworkComponentHeatExchangeEditWidget::updatePageTemperatureConstant()
 {
-	m_ui->lineEditTemperatureConstantHeatTransferCoefficient->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_ExternalHeatTransferCoefficient].get_value());
-	m_ui->lineEditTemperatureConstantTemperature->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_Temperature].get_value());
+	m_ui->lineEditHeatTransferCoefficientConstant->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_ExternalHeatTransferCoefficient].value);
+	m_ui->lineEditTemperatureConstantTemperature->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_Temperature].value);
 }
 
 void SVNetworkComponentHeatExchangeEditWidget::updatePageTemperatureSpline()
 {
+	m_ui->lineEditHeatTransferCoefficientSpline->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_ExternalHeatTransferCoefficient].value);
 	m_ui->widgetTemperatureSplineFilePathDataFile->setFilename("");
 	m_ui->comboBoxTemperatureSpline->setCurrentIndex((int)m_current->m_heatExchange.m_ambientTemperatureType);
 	on_comboBoxTemperatureSpline_activated((int)m_current->m_heatExchange.m_ambientTemperatureType);
@@ -186,6 +188,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated
 			updatePageTemperatureSpline();
 			break;
 		case VICUS::NetworkHeatExchange::T_HeatLossConstant:
+		case VICUS::NetworkHeatExchange::T_HeatLossConstantCondenser:
 			m_ui->stackedWidgetHeatExchange->setCurrentIndex(2);
 			updatePageHeatLossConstant();
 			break;
@@ -207,20 +210,19 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated
 void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossConstantIndividual_stateChanged(int arg1)
 {
 	bool checked = static_cast<bool>(arg1);
-	m_current->m_heatExchange.m_individualHeatFlux = checked;
-	m_ui->labelHeatLossConstantUserHeatFlux->setEnabled(checked);
-	m_ui->labelHeatLossConstantUserUnit->setEnabled(checked);
-	m_ui->lineEditHeatLossConstantUser->setEnabled(checked);
-	m_ui->toolButtonSetDefaultValues->setEnabled(checked);
-	m_ui->lineEditHeatLossConstantUser->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatLoss].get_value());
+	m_current->m_heatExchange.m_individualHeatExchange = checked;
+	m_ui->labelHeatLossConstantUserHeatFlux->setEnabled(!checked);
+	m_ui->labelHeatLossConstantUserUnit->setEnabled(!checked);
+	m_ui->lineEditHeatLossConstantUser->setEnabled(!checked);
+	m_ui->toolButtonSetDefaultValues->setEnabled(!checked);
+	m_ui->lineEditHeatLossConstantUser->setValue(m_current->m_heatExchange.m_para[VICUS::NetworkHeatExchange::P_HeatLoss].get_value("kW"));
 }
 
 
 void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossConstantUser_editingFinishedSuccessfully()
 {
-	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatLoss, m_ui->lineEditHeatLossConstantUser->value());
+	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatLoss, m_ui->lineEditHeatLossConstantUser->value()*1000);
 }
-
 
 
 void SVNetworkComponentHeatExchangeEditWidget::on_lineEditTemperatureConstantTemperature_editingFinishedSuccessfully()
@@ -229,11 +231,22 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditTemperatureConstantTem
 }
 
 
+void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatTransferCoefficientConstant_editingFinishedSuccessfully()
+{
+	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_ExternalHeatTransferCoefficient, m_ui->lineEditHeatTransferCoefficientConstant->value());
+}
+
+
+void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatTransferCoefficientSpline_editingFinishedSuccessfully()
+{
+	VICUS::KeywordList::setParameter(m_current->m_heatExchange.m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_ExternalHeatTransferCoefficient, m_ui->lineEditHeatTransferCoefficientSpline->value());
+}
+
 void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossSplineIndividual_clicked(bool checked)
 {
-	m_current->m_heatExchange.m_individualHeatFlux = checked;
+	m_current->m_heatExchange.m_individualHeatExchange = checked;
 	// if checked, disable everything
-	if(m_current->m_heatExchange.m_individualHeatFlux){
+	if(m_current->m_heatExchange.m_individualHeatExchange){
 		if(m_heatLossSplineCoolingCurve != nullptr){
 			m_heatLossSplineCoolingCurve->detach();
 		}
@@ -825,7 +838,7 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplineSelectColumnL
 	}
 
 
-	m_ui->widgetHeatLossSplineSelectColumn->setEnabled(true);
+	m_ui->listWidgetHeatLossSplineSelectColumn->setEnabled(true);
 	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(true);
 
 	// process all columns past the first
@@ -1491,4 +1504,3 @@ void SVNetworkComponentHeatExchangeEditWidget::on_groupBoxDomesticHotWaterDemand
 	qDebug() << "Domestic Hot Water Demand clicked. ";
 	m_current->m_heatExchange.m_withDomesticHotWaterDemand = checked;
 }
-

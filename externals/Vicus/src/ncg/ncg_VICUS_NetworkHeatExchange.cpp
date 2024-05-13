@@ -42,8 +42,8 @@ void NetworkHeatExchange::readXML(const TiXmlElement * element) {
 		const TiXmlAttribute * attrib = element->FirstAttribute();
 		while (attrib) {
 			const std::string & attribName = attrib->NameStr();
-			if (attribName == "individualHeatFlux")
-				m_individualHeatFlux = NANDRAD::readPODAttributeValue<bool>(element, attrib);
+			if (attribName == "individualHeatExchange")
+				m_individualHeatExchange = NANDRAD::readPODAttributeValue<bool>(element, attrib);
 			else if (attribName == "areaRelatedValues")
 				m_areaRelatedValues = NANDRAD::readPODAttributeValue<bool>(element, attrib);
 			else if (attribName == "withCoolingDemand")
@@ -134,8 +134,8 @@ TiXmlElement * NetworkHeatExchange::writeXML(TiXmlElement * parent) const {
 	TiXmlElement * e = new TiXmlElement("NetworkHeatExchange");
 	parent->LinkEndChild(e);
 
-	if (m_individualHeatFlux != NetworkHeatExchange().m_individualHeatFlux)
-		e->SetAttribute("individualHeatFlux", IBK::val2string<bool>(m_individualHeatFlux));
+	if (m_individualHeatExchange != NetworkHeatExchange().m_individualHeatExchange)
+		e->SetAttribute("individualHeatExchange", IBK::val2string<bool>(m_individualHeatExchange));
 	if (m_areaRelatedValues != NetworkHeatExchange().m_areaRelatedValues)
 		e->SetAttribute("areaRelatedValues", IBK::val2string<bool>(m_areaRelatedValues));
 	if (m_withCoolingDemand != NetworkHeatExchange().m_withCoolingDemand)

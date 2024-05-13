@@ -94,7 +94,7 @@ bool SupplySystem::isValid(const Database<SubNetwork> &subNetworkDB,
 		if (m_supplyType == ST_SubNetwork) {
 			m_subNetwork = subNetworkDB[m_idSubNetwork];
 			if (m_subNetwork != nullptr) {
-				if (m_subNetwork->isValid(compDB, ctrlDB, scheduleDB))
+				if (m_subNetwork->isValid(scheduleDB))
 					return true;
 			}
 		}

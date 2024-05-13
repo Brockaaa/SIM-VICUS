@@ -53,6 +53,7 @@ public:
 		T_HeatLossConstant,					// Keyword: HeatLossConstant			'Constant heat loss'
 		T_HeatLossSpline,					// Keyword: HeatLossSpline				'Heat loss from spline'
 		/*! Heat loss from condenser is not the heat loss of the fluid, hence different parameter than T_HeatLossSpline. */
+		T_HeatLossConstantCondenser,		// Keyword: HeatLossConstantCondenser	'Constant heating demand'
 		T_HeatLossSplineCondenser,			// Keyword: HeatLossSplineCondenser		'Heat loss of condenser in heat pump model'
 		/*! Heating demand for space heating  */
 		T_HeatingDemandSpaceHeating,		// Keyword: HeatingDemandSpaceHeating	'Heating demand for space heating'

@@ -116,7 +116,9 @@ void ThermalNetworkBalanceModel::setup(ThermalNetworkStatesModel *statesModel) {
 		const NANDRAD::HydraulicNetworkHeatExchange &heatExchange = m_statesModel->m_network->m_elements[i].m_heatExchange;
 		switch (heatExchange.m_modelType) {
 			case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureConstant:
-			case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant: break;
+			case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant:
+			case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser:
+			break;
 
 			// zone heat exchange
 			case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureZone: {

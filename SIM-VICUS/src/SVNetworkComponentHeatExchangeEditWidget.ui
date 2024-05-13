@@ -6,252 +6,150 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>425</width>
-    <height>688</height>
+    <width>478</width>
+    <height>682</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="vericalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_7">
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayoutComboboxHeatExchange">
-       <item>
-        <widget class="QLabel" name="labelHeatExchangeCombo">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Heat Exchange: </string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="comboBoxHeatExchange"/>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QStackedWidget" name="stackedWidgetHeatExchange">
-       <property name="currentIndex">
-        <number>3</number>
+    <widget class="QComboBox" name="comboBoxHeatExchange"/>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidgetHeatExchange">
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="pageTemperatureConstant">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayoutPageTemperatureConstant">
+       <property name="spacing">
+        <number>10</number>
        </property>
-       <widget class="QWidget" name="pageTemperatureConstant">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayoutPageTemperatureConstant">
-         <property name="spacing">
-          <number>10</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayoutTemperatureConstantHeatTransferCoefficient">
-           <item>
-            <widget class="QLabel" name="labelTemperatureConstantHeatTransferCoefficient">
-             <property name="text">
-              <string>Heat Transfer Coefficient</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QtExt::ValidatingLineEdit" name="lineEditTemperatureConstantHeatTransferCoefficient"/>
-           </item>
-           <item>
-            <widget class="QLabel" name="labelTemperatureConstantHeatTransferCoefficientUnit">
-             <property name="text">
-              <string>W/m²K</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="1">
+          <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatTransferCoefficientConstant"/>
          </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayoutTemperatureConstantTemperature">
-           <item>
-            <widget class="QLabel" name="labelTemperatureConstantTemperature">
-             <property name="text">
-              <string>Temperature</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QtExt::ValidatingLineEdit" name="lineEditTemperatureConstantTemperature">
-             <property name="maximumSize">
-              <size>
-               <width>217</width>
-               <height>16777215</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="labelTemperatureConstantTemperatureUnit">
-             <property name="maximumSize">
-              <size>
-               <width>48</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>°C</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <spacer name="verticalSpacerTemperatureConstant">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+         <item row="0" column="0">
+          <widget class="QLabel" name="labelTemperatureConstantHeatTransferCoefficient">
+           <property name="text">
+            <string>Heat Transfer Coefficient</string>
            </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="pageTemperatureSpline">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayoutPageTemperatureSpline" stretch="0,0,0,0,0">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayoutPageTemperatureSplineCombobox">
-           <item>
-            <widget class="QLabel" name="labelTemperatureSplineComboBox">
-             <property name="text">
-              <string>Temperature</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="comboBoxTemperatureSpline"/>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayoutTemperatureSpline">
-           <item>
-            <widget class="QLabel" name="labelTemperatureSplineHeatFilePath">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>17</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>17</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>File Path </string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QtExt::BrowseFilenameWidget" name="widgetTemperatureSplineFilePathDataFile" native="true">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>17</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>17</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <widget class="QWidget" name="widgetTemperatureSplineSelectColumn" native="true">
-           <layout class="QVBoxLayout" name="verticalLayout">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="labelTemperatureSplineSelectColumn">
-              <property name="text">
-               <string>Select Column In Data file</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QListWidget" name="listWidgetTemperatureSplineSelectColumn"/>
-            </item>
-           </layout>
           </widget>
          </item>
-         <item>
-          <widget class="QwtPlot" name="widgetPlotTemperatureSpline">
+         <item row="0" column="2">
+          <widget class="QLabel" name="labelTemperatureConstantHeatTransferCoefficientUnit">
+           <property name="text">
+            <string>W/m²K</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="labelTemperatureConstantTemperature">
+           <property name="text">
+            <string>Temperature</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QtExt::ValidatingLineEdit" name="lineEditTemperatureConstantTemperature">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="labelTemperatureConstantTemperatureUnit">
+           <property name="maximumSize">
+            <size>
+             <width>48</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>°C</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacerTemperatureConstant">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageTemperatureSpline">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="0" column="0">
+          <widget class="QLabel" name="labelTemperatureConstantHeatTransferCoefficient_2">
+           <property name="text">
+            <string>Heat Transfer Coefficient</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="labelTemperatureConstantHeatTransferCoefficientUnit_2">
+           <property name="text">
+            <string>W/m²K</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="labelTemperatureSplineComboBox">
+           <property name="text">
+            <string>Temperature</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" colspan="2">
+          <widget class="QComboBox" name="comboBoxTemperatureSpline"/>
+         </item>
+         <item row="0" column="1">
+          <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatTransferCoefficientSpline"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="labelTemperatureSplineHeatFilePath">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -260,511 +158,596 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>405</width>
-             <height>201</height>
+             <width>0</width>
+             <height>0</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>16777215</width>
-             <height>300</height>
+             <height>16777215</height>
             </size>
            </property>
-           <property name="frameShape">
-            <enum>QFrame::StyledPanel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
+           <property name="text">
+            <string>File Path </string>
            </property>
           </widget>
          </item>
-         <item>
-          <spacer name="verticalSpacerTemperatureSpline">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+         <item row="2" column="1" colspan="2">
+          <widget class="QtExt::BrowseFilenameWidget" name="widgetTemperatureSplineFilePathDataFile" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
-           <property name="sizeHint" stdset="0">
+           <property name="minimumSize">
             <size>
-             <width>20</width>
-             <height>40</height>
+             <width>0</width>
+             <height>0</height>
             </size>
            </property>
-          </spacer>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
          </item>
         </layout>
-       </widget>
-       <widget class="QWidget" name="pageHeatLossConstant">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayoutPageHeatLossConstant">
-         <property name="spacing">
-          <number>10</number>
+       </item>
+       <item>
+        <widget class="QWidget" name="widgetTemperatureSplineSelectColumn" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="labelTemperatureSplineSelectColumn">
+            <property name="text">
+             <string>Select Column In Data file</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListWidget" name="listWidgetTemperatureSplineSelectColumn">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>100</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QwtPlot" name="widgetPlotTemperatureSpline">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <property name="leftMargin">
-          <number>0</number>
+         <property name="minimumSize">
+          <size>
+           <width>405</width>
+           <height>201</height>
+          </size>
          </property>
-         <property name="topMargin">
-          <number>0</number>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>500</height>
+          </size>
          </property>
-         <property name="rightMargin">
-          <number>0</number>
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
          </property>
-         <property name="bottomMargin">
-          <number>0</number>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
          </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacerTemperatureSpline">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>1000</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageHeatLossConstant">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayoutPageHeatLossConstant">
+       <property name="spacing">
+        <number>10</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QCheckBox" name="checkBoxHeatLossConstantIndividual">
+         <property name="text">
+          <string>individually defined in network node</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayoutPageHeatLossConstantUser">
          <item>
-          <widget class="QCheckBox" name="checkBoxHeatLossConstantIndividual">
+          <widget class="QLabel" name="labelHeatLossConstantUserHeatFlux">
            <property name="text">
-            <string>individually defined in network node</string>
+            <string>Heat Flux</string>
            </property>
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayoutPageHeatLossConstantUser">
-           <item>
-            <widget class="QLabel" name="labelHeatLossConstantUserHeatFlux">
-             <property name="text">
-              <string>Heat Flux</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossConstantUser"/>
-           </item>
-           <item>
-            <widget class="QLabel" name="labelHeatLossConstantUserUnit">
-             <property name="text">
-              <string>kW</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
+          <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossConstantUser"/>
          </item>
          <item>
-          <spacer name="verticalSpacerHeatLossConstant">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+          <widget class="QLabel" name="labelHeatLossConstantUserUnit">
+           <property name="text">
+            <string>kW</string>
            </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
+          </widget>
          </item>
         </layout>
-       </widget>
-       <widget class="QWidget" name="pageHeatLossSpline">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayoutPageHeatLossSpline">
-         <property name="spacing">
-          <number>10</number>
+       </item>
+       <item>
+        <spacer name="verticalSpacerHeatLossConstant">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-         <property name="leftMargin">
-          <number>0</number>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
          </property>
-         <property name="topMargin">
-          <number>0</number>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageHeatLossSpline">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayoutPageHeatLossSpline">
+       <property name="spacing">
+        <number>10</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QCheckBox" name="checkBoxHeatLossSplineIndividual">
+         <property name="text">
+          <string>individually defined in network node</string>
          </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QCheckBox" name="checkBoxHeatLossSplineIndividual">
-           <property name="text">
-            <string>individually defined in network node</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QWidget" name="widgetDefineHeatExchangeSpline" native="true">
-           <layout class="QVBoxLayout" name="verticalLayout_8">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widgetDefineHeatExchangeSpline" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_8">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <widget class="QLabel" name="labelHeatLossSplineUserBuildingType">
+              <property name="maximumSize">
+               <size>
+                <width>109</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Building Type:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBoxHeatLossSplineUserBuildingType"/>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButtonSetDefaultValues">
+              <property name="text">
+               <string>Reset </string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QStackedWidget" name="stackedWidgetHeatLossSpline">
+            <property name="currentIndex">
+             <number>1</number>
+            </property>
+            <widget class="QWidget" name="page">
+             <layout class="QVBoxLayout" name="verticalLayout_6">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
               <item>
-               <widget class="QLabel" name="labelHeatLossSplineUserBuildingType">
-                <property name="maximumSize">
-                 <size>
-                  <width>109</width>
-                  <height>16777215</height>
-                 </size>
+               <layout class="QHBoxLayout" name="horizontalLayoutHeatLossSplineFloorArea">
+                <item>
+                 <widget class="QCheckBox" name="checkBoxHeatLossSplineAreaRelatedValues">
+                  <property name="text">
+                   <string>Area related values</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacerHeatLossSpline">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QLabel" name="labelHeatLossSplineFloorArea">
+                  <property name="text">
+                   <string>Floor Area</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineFloorArea"/>
+                </item>
+                <item>
+                 <widget class="QLabel" name="labelHeatLossSplineFloorAreaUnit">
+                  <property name="text">
+                   <string>m²</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBoxHeatLossSplineHeating">
+                <property name="title">
+                 <string>Heating / DHW</string>
                 </property>
-                <property name="text">
-                 <string>Building Type:</string>
-                </property>
+                <layout class="QGridLayout" name="gridLayout">
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemand">
+                   <property name="text">
+                    <string>Heating Energy Demand:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineHeatingEnergyDemand"/>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QLabel" name="labelHeatLossSplineMaximumHeatingLoadUnit">
+                   <property name="text">
+                    <string>kW</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineMaximumHeatingLoad"/>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="labelHeatLossSplineMaximumHeatingLoad">
+                   <property name="text">
+                    <string>Maximum Heating Load:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemandUnit">
+                   <property name="text">
+                    <string>kWh</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </widget>
               </item>
               <item>
-               <widget class="QComboBox" name="comboBoxHeatLossSplineUserBuildingType"/>
+               <widget class="QGroupBox" name="groupBoxHeatLossSplineCooling">
+                <property name="title">
+                 <string>Cooling</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_3">
+                 <item row="0" column="1">
+                  <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineMaximumCoolingLoad"/>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="labelHeatLossSplineMaximumCoolingLoad">
+                   <property name="text">
+                    <string>Maximum Cooling Load:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QLabel" name="labelHeatLossSplineMaximumCoolingLoadUnit">
+                   <property name="text">
+                    <string>kW</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="labelHeatLossSplineCoolingEnergyDemand">
+                   <property name="text">
+                    <string>Cooling Energy Demand:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineCoolingEnergyDemand"/>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QLabel" name="labelHeatLossSplineCoolingEnergyDemandUnit">
+                   <property name="text">
+                    <string>kWh</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
               </item>
               <item>
-               <widget class="QToolButton" name="toolButtonSetDefaultValues">
-                <property name="text">
-                 <string>Reset Values</string>
+               <widget class="QGroupBox" name="groupBoxDomesticHotWaterDemand">
+                <property name="title">
+                 <string>Domestic Hot Water Demand</string>
                 </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_4">
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemand">
+                   <property name="text">
+                    <string>Hot Water Energy Demand:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineDomesticHotWaterDemand"/>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemandUnit">
+                   <property name="text">
+                    <string>kWh</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </widget>
               </item>
              </layout>
-            </item>
-            <item>
-             <widget class="QStackedWidget" name="stackedWidgetHeatLossSpline">
-              <property name="currentIndex">
+            </widget>
+            <widget class="QWidget" name="page_2">
+             <layout class="QVBoxLayout" name="verticalLayout_9" stretch="0,0,0,0">
+              <property name="leftMargin">
                <number>0</number>
               </property>
-              <widget class="QWidget" name="page">
-               <layout class="QVBoxLayout" name="verticalLayout_6">
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayoutFilePath">
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayoutHeatLossSplineFloorArea">
-                  <item>
-                   <widget class="QCheckBox" name="checkBoxHeatLossSplineAreaRelatedValues">
-                    <property name="text">
-                     <string>Area related values</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacerHeatLossSpline">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelHeatLossSplineFloorArea">
-                    <property name="text">
-                     <string>Floor Area</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineFloorArea"/>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelHeatLossSplineFloorAreaUnit">
-                    <property name="text">
-                     <string>m²</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <widget class="QGroupBox" name="groupBoxHeatLossSplineHeating">
-                  <property name="title">
-                   <string>Heating / DHW</string>
+                 <widget class="QLabel" name="labelFilePath">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
                   </property>
-                  <layout class="QGridLayout" name="gridLayout">
-                   <item row="1" column="0">
-                    <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemand">
-                     <property name="text">
-                      <string>Heating Energy Demand:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="1">
-                    <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineHeatingEnergyDemand"/>
-                   </item>
-                   <item row="0" column="2">
-                    <widget class="QLabel" name="labelHeatLossSplineMaximumHeatingLoadUnit">
-                     <property name="text">
-                      <string>kW</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="1">
-                    <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineMaximumHeatingLoad"/>
-                   </item>
-                   <item row="0" column="0">
-                    <widget class="QLabel" name="labelHeatLossSplineMaximumHeatingLoad">
-                     <property name="text">
-                      <string>Maximum Heating Load:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="2">
-                    <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemandUnit">
-                     <property name="text">
-                      <string>kWh</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Filepath</string>
+                  </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QGroupBox" name="groupBoxHeatLossSplineCooling">
-                  <property name="title">
-                   <string>Cooling</string>
+                 <widget class="QtExt::BrowseFilenameWidget" name="filepathDataFile" native="true">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
                   </property>
-                  <property name="checkable">
-                   <bool>true</bool>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>24</height>
+                   </size>
                   </property>
-                  <layout class="QGridLayout" name="gridLayout_3">
-                   <item row="0" column="1">
-                    <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineMaximumCoolingLoad"/>
-                   </item>
-                   <item row="0" column="0">
-                    <widget class="QLabel" name="labelHeatLossSplineMaximumCoolingLoad">
-                     <property name="text">
-                      <string>Maximum Cooling Load:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="2">
-                    <widget class="QLabel" name="labelHeatLossSplineMaximumCoolingLoadUnit">
-                     <property name="text">
-                      <string>kW</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="0">
-                    <widget class="QLabel" name="labelHeatLossSplineCoolingEnergyDemand">
-                     <property name="text">
-                      <string>Cooling Energy Demand:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="1">
-                    <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineCoolingEnergyDemand"/>
-                   </item>
-                   <item row="1" column="2">
-                    <widget class="QLabel" name="labelHeatLossSplineCoolingEnergyDemandUnit">
-                     <property name="text">
-                      <string>kWh</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QGroupBox" name="groupBoxDomesticHotWaterDemand">
-                  <property name="title">
-                   <string>Domestic Hot Water Demand</string>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
-                  </property>
-                  <layout class="QGridLayout" name="gridLayout_4">
-                   <item row="0" column="0">
-                    <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemand">
-                     <property name="text">
-                      <string>Hot Water Energy Demand:</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="1">
-                    <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineDomesticHotWaterDemand"/>
-                   </item>
-                   <item row="0" column="2">
-                    <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemandUnit">
-                     <property name="text">
-                      <string>kWh</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
                  </widget>
                 </item>
                </layout>
-              </widget>
-              <widget class="QWidget" name="page_2">
-               <layout class="QVBoxLayout" name="verticalLayout_9" stretch="0,1">
-                <property name="leftMargin">
-                 <number>0</number>
+              </item>
+              <item>
+               <widget class="QLabel" name="labelHeatLossSplineSelectColumn">
+                <property name="text">
+                 <string>Select Column In Data file</string>
                 </property>
-                <property name="rightMargin">
-                 <number>0</number>
+               </widget>
+              </item>
+              <item>
+               <widget class="QListWidget" name="listWidgetHeatLossSplineSelectColumn">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>100</height>
+                 </size>
                 </property>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayoutFilePath">
-                  <item>
-                   <widget class="QLabel" name="labelFilePath">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>16777215</width>
-                      <height>24</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>Filepath</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QtExt::BrowseFilenameWidget" name="filepathDataFile" native="true">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>16777215</width>
-                      <height>24</height>
-                     </size>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <widget class="QWidget" name="widgetHeatLossSplineSelectColumn" native="true">
-                  <widget class="QLabel" name="labelHeatLossSplineSelectColumn">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>0</y>
-                     <width>701</width>
-                     <height>21</height>
-                    </rect>
-                   </property>
-                   <property name="text">
-                    <string>Select Column In Data file</string>
-                   </property>
-                  </widget>
-                  <widget class="QListWidget" name="listWidgetHeatLossSplineSelectColumn">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>20</y>
-                     <width>701</width>
-                     <height>221</height>
-                    </rect>
-                   </property>
-                  </widget>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </widget>
-            </item>
-            <item>
-             <widget class="QwtPlot" name="widgetPlotHeatLossSpline">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>405</width>
-                <height>201</height>
-               </size>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="verticalSpacerHeatLossSpline">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="pageNone">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayoutPageNone">
-         <property name="spacing">
-          <number>0</number>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+          <item>
+           <widget class="QwtPlot" name="widgetPlotHeatLossSpline">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>405</width>
+              <height>201</height>
+             </size>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageNone">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayoutPageNone">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="labelPageNone">
+         <property name="text">
+          <string/>
          </property>
-         <property name="leftMargin">
-          <number>0</number>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacerNone">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-         <property name="topMargin">
-          <number>0</number>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
          </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="labelPageNone">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="verticalSpacerNone">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
-      </widget>
-     </item>
-    </layout>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </item>
   </layout>
  </widget>

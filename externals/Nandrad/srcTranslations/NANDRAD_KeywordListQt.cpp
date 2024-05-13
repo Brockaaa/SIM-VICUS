@@ -115,6 +115,7 @@ KeywordListQt::KeywordListQt() {
 	tr("Active construction layer (floor heating)");
 	tr("Constant heat loss");
 	tr("Heat loss from spline");
+	tr("Constant heating demand");
 	tr("Heat loss of condenser in heat pump model");
 	tr("Heating demand for space heating");
 	tr("Temperature for heat exchange");

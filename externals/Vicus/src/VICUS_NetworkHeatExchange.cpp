@@ -29,24 +29,6 @@
 
 namespace VICUS {
 
-AbstractDBElement::ComparisonResult NetworkHeatExchange::equal(const AbstractDBElement * other) const
-{
-	const NetworkHeatExchange * otherHeatExc = dynamic_cast<const NetworkHeatExchange*>(other);
-	if (otherHeatExc == nullptr)
-		return Different;
-
-	if (otherHeatExc->m_modelType != m_modelType)
-		return Different;
-
-	//check parameters
-	for (unsigned int i = 0; i < NetworkHeatExchange::NUM_T; ++i){
-		// TODO
-		//if (m_para[i] != otherHeatExc->m_para[i])
-		//	return Different;
-	}
-
-	return Equal;
-}
 
 void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelType)
 {
@@ -96,11 +78,13 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 			}
 			break;
 		}
-		case T_HeatLossConstant: {
-			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatLoss, 5);
+		case T_HeatLossConstant:
+		case T_HeatLossConstantCondenser: {
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatLoss, 5000);
 			break;
 		}
 		case T_TemperatureSpline:
+		case T_TemperatureSplineEvaporator:
 		{
 			m_ambientTemperatureType = VICUS::NetworkHeatExchange::AT_UndisturbedSoilTemperature;
 			break;
@@ -110,7 +94,48 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_Temperature, 20);
 			break;
 		}
+		case T_TemperatureConstructionLayer:
+		case T_TemperatureZone:
+		case T_HeatingDemandSpaceHeating:
+		case NUM_T:
+		break;
 	}
+}
+
+
+NANDRAD::HydraulicNetworkHeatExchange NetworkHeatExchange::toNandradHeatExchange() const {
+
+	NANDRAD::HydraulicNetworkHeatExchange hx = NANDRAD::HydraulicNetworkHeatExchange(NANDRAD::HydraulicNetworkHeatExchange::ModelType(m_modelType));
+	switch(m_modelType){
+		case T_HeatLossSpline:
+		case T_HeatLossSplineCondenser: {
+			hx.m_splPara[NANDRAD::HydraulicNetworkHeatExchange::SPL_HeatLoss] = m_splPara[SPL_HeatLoss];
+			break;
+		}
+		case T_HeatLossConstant:
+		case T_HeatLossConstantCondenser: {
+			hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_HeatLoss] = m_para[P_HeatLoss];
+			break;
+		}
+		case T_TemperatureSpline:
+		case T_TemperatureSplineEvaporator: {
+			hx.m_splPara[NANDRAD::HydraulicNetworkHeatExchange::SPL_Temperature] = m_splPara[SPL_Temperature];
+			hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_ExternalHeatTransferCoefficient] = m_para[P_ExternalHeatTransferCoefficient];
+			break;
+		}
+		case T_TemperatureConstant: {
+			hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_Temperature] = m_para[P_Temperature];
+			hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_ExternalHeatTransferCoefficient] = m_para[P_ExternalHeatTransferCoefficient];
+			break;
+		}
+		case T_TemperatureConstructionLayer:
+		case T_TemperatureZone:
+		case T_HeatingDemandSpaceHeating:
+		case NUM_T:
+		break;
+	}
+
+	return hx;
 }
 
 } //namespace VICUS

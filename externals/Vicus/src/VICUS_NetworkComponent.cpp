@@ -399,7 +399,7 @@ std::vector<NetworkHeatExchange::ModelType> NetworkComponent::availableHeatExcha
 			return {NetworkHeatExchange::NUM_T, NetworkHeatExchange::T_TemperatureConstant, NetworkHeatExchange::T_TemperatureSpline};
 		case NetworkComponent::MT_HeatPumpVariableIdealCarnotSourceSide:
 		case NetworkComponent::MT_HeatPumpVariableSourceSide:
-			return {NetworkHeatExchange::T_HeatLossSplineCondenser};  // must not be adiabatic
+			return {NetworkHeatExchange::T_HeatLossConstantCondenser, NetworkHeatExchange::T_HeatLossSplineCondenser};  // must not be adiabatic
 			//		case NetworkComponent::MT_HeatPumpOnOffSourceSideWithBuffer:
 			//			return {T_HeatingDemandSpaceHeating};  // must not be adiabatic
 		case NetworkComponent::MT_HeatExchanger:
@@ -435,15 +435,15 @@ QString NetworkComponent::detailledModelName(ModelType modelType) {
 		case NetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
 			return tr("Simple heat pump supply side");
 		case NetworkComponent::MT_ConstantPressurePump:
-			return tr("Pump with defined pressure head");
+			return tr("Pump defined pressure head");
 		case NetworkComponent::MT_ConstantMassFluxPump:
-			return tr("Pump with defined mass flux");
+			return tr("Pump defined mass flux");
 		case NetworkComponent::MT_VariablePressurePump:
-			return tr("Pump with linear pressure head");
+			return tr("Pump linear pressure head");
 		case NetworkComponent::MT_ControlledPump:
-			return tr("Pump with controlled pressure head");
+			return tr("Pump controlled pressure head");
 		case NetworkComponent::MT_ControlledValve:
-			return tr("Valve with controller");
+			return tr("Controlled valve");
 		case NetworkComponent::MT_HeatPumpOnOffSourceSide:
 			return tr("Detailled on/off heat pump source side");
 		case NetworkComponent::MT_IdealHeaterCooler:

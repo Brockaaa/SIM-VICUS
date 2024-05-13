@@ -108,6 +108,10 @@ private slots:
 
 	void on_groupBoxDomesticHotWaterDemand_clicked(bool checked);
 
+	void on_lineEditHeatTransferCoefficientConstant_editingFinishedSuccessfully();
+
+	void on_lineEditHeatTransferCoefficientSpline_editingFinishedSuccessfully();
+
 private:
 
 	void updateHeatLossSplineSelectColumnList();

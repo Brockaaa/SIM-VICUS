@@ -30,7 +30,7 @@
 #include "VICUS_Constants.h"
 #include "VICUS_AbstractDBElement.h"
 
-#include "NANDRAD_LinearSplineParameter.h"
+#include "NANDRAD_HydraulicNetworkHeatExchange.h"
 
 #include <IBK_Parameter.h>
 
@@ -42,7 +42,7 @@ namespace VICUS {
 	Definition of heat exchange is done in each flow element definition. If missing, the flow
 	element is treated as adiabat.
 */
-class NetworkHeatExchange : AbstractDBElement
+class NetworkHeatExchange
 {
 public:
 	NetworkHeatExchange() = default;
@@ -57,7 +57,8 @@ public:
 		T_HeatLossConstant,					// Keyword: HeatLossConstant			'Constant heat loss'
 		T_HeatLossSpline,					// Keyword: HeatLossSpline				'Time-dependent heat loss'
 		/*! Heat loss from condenser is not the heat loss of the fluid, hence different parameter than T_HeatLossSpline. */
-		T_HeatLossSplineCondenser,			// Keyword: HeatLossSplineCondenser		'Time-dependent heat pump heating demand'
+		T_HeatLossConstantCondenser,		// Keyword: HeatLossConstantCondenser	'Constant heating demand'
+		T_HeatLossSplineCondenser,			// Keyword: HeatLossSplineCondenser		'Time-dependent heating demand'
 		/*! Heating demand for space heating  */
 		T_HeatingDemandSpaceHeating,		// Keyword: HeatingDemandSpaceHeating	'Heating demand for space heating'
 		NUM_T
@@ -65,10 +66,11 @@ public:
 
 	/*! Parameters for the element . */
 	enum para_t {
+		// Basic parameters - identical to NANDRAD::HydraulicNetworkHeatExchange
 		P_Temperature,							// Keyword: Temperature							[C]		'Temperature for heat exchange'
 		P_HeatLoss,								// Keyword: HeatLoss							[W]		'Constant heat flux out of the element (heat loss)'
 		P_ExternalHeatTransferCoefficient,		// Keyword: ExternalHeatTransferCoefficient		[W/m2K]	'External heat transfer coeffient for the outside boundary'
-		P_HeatFlux,								// Keyword: HeatFlux							[W]			'TODO'
+		// parameters for GUI
 		P_FloorArea,							// Keyword: FloorArea							[m2]		'FloorArea'
 		P_MaximumHeatingLoad,					// Keyword: MaximumHeatingLoad					[kW]		'MaximumHeatingLoad'
 		P_HeatingEnergyDemand,					// Keyword: HeatingEnergyDemand					[kWh]		'HeatingEnergyDemand'
@@ -108,20 +110,18 @@ public:
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
-	VICUS_READWRITE_OVERRIDE
-	VICUS_COMP(NetworkHeatExchange)
-	VICUS_COMPARE_WITH_ID
-
-	ComparisonResult equal(const AbstractDBElement * other) const;
+	VICUS_READWRITE
 
 	void setDefaultValues(ModelType modelType);
+
+	NANDRAD::HydraulicNetworkHeatExchange toNandradHeatExchange() const;
 
 	// *** Public Member variables ***
 
 	/*! Model Type */
 	ModelType							m_modelType		= NUM_T;					// XML:E
 
-	bool								m_individualHeatFlux = false;				// XML:A
+	bool								m_individualHeatExchange = false;			// XML:A
 
 	bool								m_areaRelatedValues = false;				// XML:A
 
