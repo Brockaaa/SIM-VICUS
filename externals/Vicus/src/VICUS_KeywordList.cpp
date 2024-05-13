@@ -657,16 +657,15 @@ namespace VICUS {
 				case 0 : return "Temperature";
 				case 1 : return "HeatLoss";
 				case 2 : return "ExternalHeatTransferCoefficient";
-				case 3 : return "HeatFlux";
-				case 4 : return "FloorArea";
-				case 5 : return "MaximumHeatingLoad";
-				case 6 : return "HeatingEnergyDemand";
-				case 7 : return "HeatingEnergyDemandAreaSpecific";
-				case 8 : return "MaximumCoolingLoad";
-				case 9 : return "CoolingEnergyDemand";
-				case 10 : return "CoolingEnergyDemandAreaSpecific";
-				case 11 : return "DomesticHotWaterDemand";
-				case 12 : return "DomesticHotWaterDemandAreaRelated";
+				case 3 : return "FloorArea";
+				case 4 : return "MaximumHeatingLoad";
+				case 5 : return "HeatingEnergyDemand";
+				case 6 : return "HeatingEnergyDemandAreaSpecific";
+				case 7 : return "MaximumCoolingLoad";
+				case 8 : return "CoolingEnergyDemand";
+				case 9 : return "CoolingEnergyDemandAreaSpecific";
+				case 10 : return "DomesticHotWaterDemand";
+				case 11 : return "DomesticHotWaterDemandAreaRelated";
 			} break;
 			// NetworkHeatExchange::splinePara_t
 			case 57 :
@@ -1408,16 +1407,15 @@ namespace VICUS {
 				case 0 : return "Temperature";
 				case 1 : return "HeatLoss";
 				case 2 : return "ExternalHeatTransferCoefficient";
-				case 3 : return "HeatFlux";
-				case 4 : return "FloorArea";
-				case 5 : return "MaximumHeatingLoad";
-				case 6 : return "HeatingEnergyDemand";
-				case 7 : return "HeatingEnergyDemandAreaSpecific";
-				case 8 : return "MaximumCoolingLoad";
-				case 9 : return "CoolingEnergyDemand";
-				case 10 : return "CoolingEnergyDemandAreaSpecific";
-				case 11 : return "DomesticHotWaterDemand";
-				case 12 : return "DomesticHotWaterDemandAreaRelated";
+				case 3 : return "FloorArea";
+				case 4 : return "MaximumHeatingLoad";
+				case 5 : return "HeatingEnergyDemand";
+				case 6 : return "HeatingEnergyDemandAreaSpecific";
+				case 7 : return "MaximumCoolingLoad";
+				case 8 : return "CoolingEnergyDemand";
+				case 9 : return "CoolingEnergyDemandAreaSpecific";
+				case 10 : return "DomesticHotWaterDemand";
+				case 11 : return "DomesticHotWaterDemandAreaRelated";
 			} break;
 			// NetworkHeatExchange::splinePara_t
 			case 57 :
@@ -2160,16 +2158,15 @@ namespace VICUS {
 				case 0 : return "Temperature for heat exchange";
 				case 1 : return "Constant heat flux out of the element (heat loss)";
 				case 2 : return "External heat transfer coeffient for the outside boundary";
-				case 3 : return "TODO";
-				case 4 : return "FloorArea";
-				case 5 : return "MaximumHeatingLoad";
-				case 6 : return "HeatingEnergyDemand";
-				case 7 : return "HeatingEnergyDemandAreaSpecific";
-				case 8 : return "MaximumCoolingLoad";
-				case 9 : return "CoolingEnergyDemand";
-				case 10 : return "CoolingEnergyDemandAreaSpecific";
-				case 11 : return "DomesticHotWaterDemand";
-				case 12 : return "DomesticHotWaterDemandAreaRelated";
+				case 3 : return "FloorArea";
+				case 4 : return "MaximumHeatingLoad";
+				case 5 : return "HeatingEnergyDemand";
+				case 6 : return "HeatingEnergyDemandAreaSpecific";
+				case 7 : return "MaximumCoolingLoad";
+				case 8 : return "CoolingEnergyDemand";
+				case 9 : return "CoolingEnergyDemandAreaSpecific";
+				case 10 : return "DomesticHotWaterDemand";
+				case 11 : return "DomesticHotWaterDemandAreaRelated";
 			} break;
 			// NetworkHeatExchange::splinePara_t
 			case 57 :
@@ -2911,16 +2908,15 @@ namespace VICUS {
 				case 0 : return "C";
 				case 1 : return "W";
 				case 2 : return "W/m2K";
-				case 3 : return "W";
-				case 4 : return "m2";
-				case 5 : return "kW";
-				case 6 : return "kWh";
-				case 7 : return "kWh/m2";
-				case 8 : return "kW";
-				case 9 : return "kWh";
-				case 10 : return "kWh/m2";
-				case 11 : return "kWh";
-				case 12 : return "kWh/m2";
+				case 3 : return "m2";
+				case 4 : return "kW";
+				case 5 : return "kWh";
+				case 6 : return "kWh/m2";
+				case 7 : return "kW";
+				case 8 : return "kWh";
+				case 9 : return "kWh/m2";
+				case 10 : return "kWh";
+				case 11 : return "kWh/m2";
 			} break;
 			// NetworkHeatExchange::splinePara_t
 			case 57 :
@@ -3671,7 +3667,6 @@ namespace VICUS {
 				case 9 : return "#FFFFFF";
 				case 10 : return "#FFFFFF";
 				case 11 : return "#FFFFFF";
-				case 12 : return "#FFFFFF";
 			} break;
 			// NetworkHeatExchange::splinePara_t
 			case 57 :
@@ -4422,7 +4417,6 @@ namespace VICUS {
 				case 9 : return std::numeric_limits<double>::quiet_NaN();
 				case 10 : return std::numeric_limits<double>::quiet_NaN();
 				case 11 : return std::numeric_limits<double>::quiet_NaN();
-				case 12 : return std::numeric_limits<double>::quiet_NaN();
 			} break;
 			// NetworkHeatExchange::splinePara_t
 			case 57 :
@@ -4758,7 +4752,7 @@ namespace VICUS {
 			// NetworkHeatExchange::ModelType
 			case 55 : return 10;
 			// NetworkHeatExchange::para_t
-			case 56 : return 13;
+			case 56 : return 12;
 			// NetworkHeatExchange::splinePara_t
 			case 57 : return 2;
 			// NetworkHeatExchange::BuildingType
@@ -4940,7 +4934,7 @@ namespace VICUS {
 			// NetworkHeatExchange::ModelType
 			case 55 : return 9;
 			// NetworkHeatExchange::para_t
-			case 56 : return 12;
+			case 56 : return 11;
 			// NetworkHeatExchange::splinePara_t
 			case 57 : return 1;
 			// NetworkHeatExchange::BuildingType
