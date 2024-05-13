@@ -114,6 +114,12 @@ private slots:
 
 private:
 
+	enum HotWaterPredefUserProfile{
+		HW_Residential,
+		HW_Hotel,
+		NUM_HW
+	};
+
 	void updateHeatLossSplineSelectColumnList();
 
 	void updateTemperatureSplineSelectColumnList();
@@ -122,7 +128,7 @@ private:
 
 	void readTsvDomesticHotWaterDemand();
 
-	int indexHeatLossSplineHotWaterYData();
+	HotWaterPredefUserProfile mappingHeatLossSplineHotWaterYData();
 
 	void updateHeatLossSplinePlotDataPredef();
 
@@ -166,6 +172,9 @@ private:
 	/*! Vector to temporarily store a NetworkHeatExchange to be saved when the building type was changed */
 	std::vector<VICUS::NetworkHeatExchange> m_vectorTempHeatExchangeBuildingType;
 
+	/*! Domestic Hot Water Demand User Profile */
+	HotWaterPredefUserProfile				m_heatLossSplineHwUserProfile = NUM_HW;
+
 	/*! Curve visible in HeatLossSpline plot */
 	QwtPlotCurve							*m_heatLossSplineHeatingCurve = nullptr;
 	QwtPlotCurve							*m_heatLossSplineCoolingCurve = nullptr;
@@ -183,7 +192,7 @@ private:
 	/*! Data vectors to store the original values of the tsv file */
 	std::vector<std::vector<double>>		m_vectorHeatLossSplineHeatingYData;
 	std::vector<std::vector<double>>		m_vectorHeatLossSplineCoolingYData;
-	std::vector<std::vector<double>>		m_vectorHeatLossSplineHotWaterYData;
+	std::map<HotWaterPredefUserProfile, std::vector<double>>		m_mapHeatLossSplineHotWaterYData;
 	std::vector<double>						m_vectorHeatLossSplineHeatingMaxValues;
 	std::vector<double>						m_vectorHeatLossSplineCoolingMaxValues;
 	std::vector<double>						m_heatLossSplineXData;

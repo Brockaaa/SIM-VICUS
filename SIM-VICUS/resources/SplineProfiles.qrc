@@ -6,5 +6,6 @@
     	<file>demandProfiles/Residential_HeatingLoad.tsv</file>
     	<file>demandProfiles/BoreholeHeatExchange.tsv</file>
     	<file>demandProfiles/SoilTemperature.tsv</file>
+    	<file>demandProfiles/Residential_HotWaterDemand.tsv</file>
     </qresource>
 </RCC>
