@@ -218,9 +218,9 @@ void SVNetworkComponentEditWidget::update()
 
 	m_ui->tabWidget->setTabEnabled(1, enableHeatExchangeWidget);
 
-	if(m_ui->tabWidget->currentIndex() == 1)
-		m_ui->widgetNetworkComponentHeatExchangeEditWidget->updateInput(m_current);
+	m_ui->widgetNetworkComponentHeatExchangeEditWidget->updateInput(m_current);
 }
+
 
 void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 	FUNCID(SVNetworkComponentEditWidget::updateParameterTableWidget);
@@ -922,9 +922,3 @@ SVNetworkComponentEditWidget::HeatLossSplineEnergyDemandDialog::HeatLossSplineEn
 		connect(button2, &QPushButton::clicked, this, [this]() { this->done(2); });
 		connect(button3, &QPushButton::clicked, this, [this]() { this->done(3); });
 }
-
-void SVNetworkComponentEditWidget::on_tabWidget_currentChanged(int index)
-{
-	m_ui->widgetNetworkComponentHeatExchangeEditWidget->updateInput(m_current);
-}
-

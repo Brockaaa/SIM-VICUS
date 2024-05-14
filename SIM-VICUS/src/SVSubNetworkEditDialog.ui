@@ -80,7 +80,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string> built-in elements </string>
+            <string> built-in </string>
            </property>
           </widget>
          </item>
@@ -121,7 +121,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>  user db elements </string>
+            <string>  user db</string>
            </property>
           </widget>
          </item>
@@ -162,7 +162,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>project element</string>
+            <string>project</string>
            </property>
           </widget>
          </item>
@@ -236,7 +236,16 @@
            <property name="spacing">
             <number>0</number>
            </property>
-           <property name="margin" stdset="0">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
             <number>0</number>
            </property>
            <item>
@@ -376,7 +385,7 @@
            </property>
            <property name="icon">
             <iconset resource="../resources/SIM-VICUS.qrc">
-             <normaloff>:/gfx/actions/24x24/toDB.png</normaloff>:/gfx/actions/24x24/toDB.png</iconset>
+             <normaloff>:/gfx/actions/24x24/edit.png</normaloff>:/gfx/actions/24x24/edit.png</iconset>
            </property>
            <property name="iconSize">
             <size>

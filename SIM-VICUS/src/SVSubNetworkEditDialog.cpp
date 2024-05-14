@@ -735,17 +735,19 @@ void SVSubNetworkEditDialog::on_newBlockAdded(VICUS::BMBlock *block, unsigned in
 
 	// create new component
 	if (componentID == VICUS::INVALID_ID){
+		// new id
 		unsigned int newCompID = newComponentID();
-		m_networkComponents.push_back(VICUS::NetworkComponent());
-		m_networkComponents.back().m_modelType = static_cast<VICUS::NetworkComponent::ModelType>(block->m_componentId);
-		QString name = tr("<new %1>").arg( VICUS::KeywordListQt::Keyword("NetworkComponent::ModelType", m_networkComponents.back().m_modelType) );
-		m_networkComponents.back().m_displayName.setString(name.toStdString(), IBK::MultiLanguageString::m_language);
+		// create component with this new id
+		VICUS::NetworkComponent newComp;
+		newComp.m_id = newCompID;
+		newComp.m_modelType = static_cast<VICUS::NetworkComponent::ModelType>(block->m_componentId);
+		QString name = tr("<new %1>").arg( VICUS::KeywordListQt::Keyword("NetworkComponent::ModelType", newComp.m_modelType) );
+		newComp.m_displayName.setString(name.toStdString(), IBK::MultiLanguageString::m_language);
+		m_networkComponents.push_back(newComp);
 		block->m_componentId = newCompID;
-		m_networkComponents.back().m_id = newCompID;
 	}
 	// copy component from DB
 	else {
-		auto itNetworkComp = m_db->m_networkComponents.begin();
 		Q_ASSERT(m_db->m_networkComponents[componentID] != nullptr);
 		VICUS::NetworkComponent component =	*m_db->m_networkComponents[componentID];
 		component.m_builtIn = false;

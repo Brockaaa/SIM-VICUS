@@ -14,6 +14,7 @@
 #include <QSvgRenderer>
 
 #include <QtExt_Style.h>
+#include <QtExt_Conversions.h>
 
 #include <VICUS_NetworkController.h>
 #include <VICUS_KeywordListQt.h>
@@ -78,9 +79,8 @@ void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent::ModelType 
 }
 
 void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent &component){
-	const int rowHeight = 35;
 	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(component.m_modelType),
-																				   VICUS::NetworkComponent::detailledModelName(component.m_modelType),
+																				   QtExt::MultiLangString2QString(component.m_displayName),
 																				   VICUS::KeywordListQt::Description("NetworkComponent::ModelType", component.m_modelType),
 																					m_defaultRowHeight, this, true, component.m_builtIn, component.m_local);
 	if (component.m_local)
@@ -90,6 +90,7 @@ void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent &component)
 	else
 		bmItem1->setStyleSheet(QString("background-color: %1; ").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
 
+	const int rowHeight = 20;
 	setFixedHeight(height() + rowHeight);
 	insertRow(m_rowSize);
 	setCellWidget(m_rowSize, 0, bmItem1);

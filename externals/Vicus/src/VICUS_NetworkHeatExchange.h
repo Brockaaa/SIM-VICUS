@@ -30,7 +30,7 @@
 #include "VICUS_Constants.h"
 #include "VICUS_AbstractDBElement.h"
 
-#include "NANDRAD_HydraulicNetworkHeatExchange.h"
+#include <NANDRAD_HydraulicNetworkHeatExchange.h>
 
 #include <IBK_Parameter.h>
 
@@ -66,20 +66,17 @@ public:
 
 	/*! Parameters for the element . */
 	enum para_t {
-		// Basic parameters - identical to NANDRAD::HydraulicNetworkHeatExchange
+		/*! Basic parameters - identical to NANDRAD::HydraulicNetworkHeatExchange */
 		P_Temperature,							// Keyword: Temperature							[C]		'Temperature for heat exchange'
 		P_HeatLoss,								// Keyword: HeatLoss							[W]		'Constant heat flux out of the element (heat loss)'
 		P_ExternalHeatTransferCoefficient,		// Keyword: ExternalHeatTransferCoefficient		[W/m2K]	'External heat transfer coeffient for the outside boundary'
-		// parameters for GUI
+		/*! parameters for GUI */
 		P_FloorArea,							// Keyword: FloorArea							[m2]		'FloorArea'
 		P_MaximumHeatingLoad,					// Keyword: MaximumHeatingLoad					[kW]		'MaximumHeatingLoad'
 		P_HeatingEnergyDemand,					// Keyword: HeatingEnergyDemand					[kWh]		'HeatingEnergyDemand'
-		P_HeatingEnergyDemandAreaSpecific,		// Keyword: HeatingEnergyDemandAreaSpecific		[kWh/m2]	'HeatingEnergyDemandAreaSpecific'
 		P_MaximumCoolingLoad,					// Keyword: MaximumCoolingLoad					[kW]		'MaximumCoolingLoad'
 		P_CoolingEnergyDemand,					// Keyword: CoolingEnergyDemand					[kWh]		'CoolingEnergyDemand'
-		P_CoolingEnergyDemandAreaSpecific,		// Keyword: CoolingEnergyDemandAreaSpecific		[kWh/m2]	'CoolingEnergyDemandAreaSpecific'
 		P_DomesticHotWaterDemand,				// Keyword: DomesticHotWaterDemand				[kWh]		'DomesticHotWaterDemand'
-		P_DomesticHotWaterDemandAreaSpecific,	// Keyword: DomesticHotWaterDemandAreaRelated	[kWh/m2]	'DomesticHotWaterDemandAreaRelated'
 		NUM_P
 	};
 
@@ -112,7 +109,23 @@ public:
 
 	VICUS_READWRITE
 
+	/*! Sets default values for all parameters, depending on model type */
 	void setDefaultValues(ModelType modelType);
+
+	/*! Read all tsv files */
+	void readTSVFiles(QString ressourcesDir, BuildingType buildingType);
+
+	/*! Wrap file reading */
+	void readSingleTSVFile(QString filename, std::vector<double> &xData, std::vector<double> &yData);
+
+	void updateSplines(QString ressourcesDir);
+
+	bool heatingDemandSpline(std::vector<double> &spline, double k=-1);
+	bool coolingDemandSpline(std::vector<double> &spline, double k=-1);
+
+	void calculateHeatLossSplineFromKValue(double k, const std::vector<double> & original, std::vector<double> & result, double maxValueRequired, double maxValueExisting=-1);
+
+	bool calculateNewKValue(const std::vector<double> & original, double integralRequired, double maxValueRequired, double & integralResult, double & KResult);
 
 	NANDRAD::HydraulicNetworkHeatExchange toNandradHeatExchange() const;
 
@@ -127,9 +140,9 @@ public:
 
 	bool								m_withCoolingDemand = true;					// XML:A
 
-	bool								m_withDomesticHotWaterDemand = true;		// XML:A
+	bool								m_withDomesticHotWaterDemand = false;		// XML:A
 
-	BuildingType						m_buildingType = NUM_BT;					// XML:A
+	BuildingType						m_buildingType = BT_ResidentialBuildingSingleFamily; // XML:A
 
 	AmbientTemperatureType				m_ambientTemperatureType = NUM_AT;			// XML:A
 
@@ -143,6 +156,11 @@ public:
 
 	/*! IBK::Path to user defined tsv-file to be displayed in the plot */
 	IBK::Path							m_userDefinedTsvFile;						// XML:E
+
+
+	std::vector<double>					m_heatingDemandTimeData;
+	std::vector<double>					m_heatingDemandSplineOrig;
+	std::vector<double>					m_coolingDemandSplineOrig;
 
 };
 

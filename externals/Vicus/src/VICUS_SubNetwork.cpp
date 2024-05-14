@@ -31,7 +31,8 @@ bool SubNetwork::isValid(const Database<Schedule> &scheduleDB) const
 		for (const NetworkComponent &comp: m_components) {
 			if (!comp.isValid(scheduleDB))
 				return false;
-			if (!comp.m_networkController.isValid(scheduleDB))
+			if (comp.m_networkController.m_modelType != VICUS::NetworkController::NUM_MT &&
+				!comp.m_networkController.isValid(scheduleDB))
 				return false;
 		}
 	}

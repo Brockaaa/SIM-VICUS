@@ -121,6 +121,14 @@ public:
 		NUM_IP
 	};
 
+	/*! Categories in SubnetworkEditDialog */
+	enum ComponentCategory{
+		CC_Pipes,                                      // Keyword: Pipes
+		CC_Pumps,                                      // Keyword: Pumps
+		CC_Heatpumps,                                  // Keyword: Heatpumps
+		CC_Other,                                      // Keyword: Other
+		NUM_CC
+	};
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
@@ -165,6 +173,18 @@ public:
 
 	static bool hasPipeProperties(const ModelType modelType);
 
+
+	// Helper function to get iconFile from ModelType
+	static QString iconFileFromModelType(VICUS::NetworkComponent::ModelType modelType);
+
+	// Helper function to get NetComCategory from ModelType
+	static ComponentCategory componentCategoryFromModelType(VICUS::NetworkComponent::ModelType modelType);
+
+	// Returns which heat exchanger types you can use with a given NetworkComponent type
+	static std::vector<VICUS::NetworkHeatExchange::ModelType> availableHeatExchangeTypes(const VICUS::NetworkComponent::ModelType modelType);
+
+	static QString detailledModelName(ModelType modelType);
+
 	// *** PUBLIC MEMBER VARIABLES added for VICUS ***Simple
 
 	//:inherited	unsigned int					m_id = INVALID_ID;					// XML:A:required
@@ -207,28 +227,6 @@ public:
 
 	/*! Heat Exchange Component of NetworkComponent */
 	VICUS::NetworkHeatExchange			m_heatExchange;									// XML:E
-
-	/*! Categories in SubnetworkEditDialog */
-	enum ComponentCategory{
-		CC_Pipes,                                      // Keyword: Pipes
-		CC_Pumps,                                      // Keyword: Pumps
-		CC_Heatpumps,                                  // Keyword: Heatpumps
-		CC_Other,                                      // Keyword: Other
-		NUM_CC
-	};
-
-	// *** Static functions ***
-
-	// Helper function to get iconFile from ModelType
-	static QString iconFileFromModelType(VICUS::NetworkComponent::ModelType modelType);
-
-	// Helper function to get NetComCategory from ModelType
-	static ComponentCategory componentCategoryFromModelType(VICUS::NetworkComponent::ModelType modelType);
-
-	// Returns which heat exchanger types you can use with a given NetworkComponent type
-	static std::vector<VICUS::NetworkHeatExchange::ModelType> availableHeatExchangeTypes(const VICUS::NetworkComponent::ModelType modelType);
-
-	static QString detailledModelName(ModelType modelType);
 
 };
 

@@ -320,12 +320,9 @@ KeywordListQt::KeywordListQt() {
 	tr("FloorArea");
 	tr("MaximumHeatingLoad");
 	tr("HeatingEnergyDemand");
-	tr("HeatingEnergyDemandAreaSpecific");
 	tr("MaximumCoolingLoad");
 	tr("CoolingEnergyDemand");
-	tr("CoolingEnergyDemandAreaSpecific");
 	tr("DomesticHotWaterDemand");
-	tr("DomesticHotWaterDemandAreaRelated");
 	tr("Temperature spline");
 	tr("Heat flux spline");
 	tr("Single Family House");

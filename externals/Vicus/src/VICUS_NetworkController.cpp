@@ -193,7 +193,7 @@ void NetworkController::checkParameters() const {
 																"W", "W", 0, false, std::numeric_limits<double>::max(), true, nullptr);
 			} break;
 
-				case NUM_CT:
+			case NUM_CT:
 				throw IBK::Exception("Missing or invalid attribute 'controllerType'.", FUNC_ID);
 		}
 	}

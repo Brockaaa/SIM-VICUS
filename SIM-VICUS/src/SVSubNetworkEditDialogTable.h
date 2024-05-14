@@ -46,10 +46,10 @@ public:
 	explicit SVSubNetworkEditDialogTable(QWidget *parent = nullptr);
 	~SVSubNetworkEditDialogTable();
 	int rowSize() const;
-	/* adds Default Element to Table, includes QPixmap */
+	/* adds default element to table, includes QPixmap */
 	void addElement(VICUS::NetworkComponent::ModelType type);
-	/* adds Element to Table */
-	void addElement(VICUS::NetworkComponent &controller);
+	/* adds database element to Table */
+	void addElement(VICUS::NetworkComponent &component);
 	/* removes all Elements from Table */
 	void clear();
 

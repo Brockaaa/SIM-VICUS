@@ -100,8 +100,6 @@ private slots:
 
 	void on_toolButtonControllerRemove_clicked();
 
-	void on_tabWidget_currentChanged(int index);
-
 private:
 	void updateParameterTableWidget() const;
 

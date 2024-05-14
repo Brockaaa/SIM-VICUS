@@ -56,7 +56,7 @@ public:
 	~SVNetworkComponentHeatExchangeEditWidget();
 
 	/*! updates the Widget and sets current Component with this. */
-	void updateInput(VICUS::NetworkComponent *component);
+	void updateInput(VICUS::NetworkComponent * component);
 
 	/*! updates pages */
 	void updatePageHeatLossConstant();
@@ -75,8 +75,6 @@ private slots:
 	void on_lineEditTemperatureConstantTemperature_editingFinishedSuccessfully();
 
 	void on_checkBoxHeatLossSplineIndividual_clicked(bool checked);
-
-	void on_comboBoxHeatLossSplineUserBuildingType_activated(int index);
 
 	void on_lineEditHeatLossSplineFloorArea_editingFinishedSuccessfully();
 
@@ -112,68 +110,50 @@ private slots:
 
 	void on_lineEditHeatTransferCoefficientSpline_editingFinishedSuccessfully();
 
+	void on_comboBoxHeatLossSplineBuildingType_activated(int index);
+
 private:
 
-	enum HotWaterPredefUserProfile{
-		HW_Residential,
-		HW_Hotel,
-		NUM_HW
-	};
+	void updateHeatLossSplinePageForBuildingType();
+
+	void calculateCurrentHeatLossSplines();
+
+	void updateEnergyDemandValuesAreaSpecific();
+
+	void modifyEnergyDemandValue(bool heating);
 
 	void updateHeatLossSplineSelectColumnList();
 
 	void updateTemperatureSplineSelectColumnList();
 
-	void readTsvHeatLossSpline();
+	void updateHeatLossSplinePlots();
 
-	void readTsvDomesticHotWaterDemand();
+	void updateUserHeatLossSplinePlotData();
 
-	HotWaterPredefUserProfile mappingHeatLossSplineHotWaterYData();
+	void updatePredefinedTemperatureSplinePlotData();
 
-	void updateHeatLossSplinePlotDataPredef();
-
-	void updateHeatLossSplinePlotDataUser();
-
-	void updateTemperatureSplinePlotData();
-
-	void updateTemperatureSplinePlotDataUser();
-
-	void initializeHeatLossSplineAreaRelatedValues();
-
-	double calculateEnergyDemand(VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_HeatingEnergyDemand);
-
-	double calculateEnergyDemand(const std::vector<double>& vectorWithValues);
-
-	void calculateNewHeatLossSplineYData(double k, std::vector<double>& vectorToSaveNewValues, VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
+	void updateUserTemperatureSplinePlotData();
 
 	void calculateNewHeatLossSplineHotWaterYData(double floorArea);
-
-	bool calculateNewK(double valueToReach, VICUS::NetworkHeatExchange::para_t parameter = VICUS::NetworkHeatExchange::P_MaximumHeatingLoad);
-
-	void setCoolingCurve(bool set);
 
 	void setHotWaterCurve(bool set);
 
 	Ui::SVNetworkComponentHeatExchangeEditWidget *m_ui;
 
-	/*! Pointer to currently edited component.
+	/*! Pointer to currently edited heat exchange of component.
 		The pointer is updated whenever updateInput() is called.
 		A nullptr pointer means that there is no component to edit.
 	*/
-	VICUS::NetworkComponent					*m_current = nullptr;
+	VICUS::NetworkHeatExchange				*m_hx = nullptr;
 
-	/*! The data vectors needed for plotting HeatLossSpline. */
-	std::vector<double>						m_xData;
-	std::vector<std::vector<double>>		m_yData1;
-	std::vector<std::vector<double>>		m_yData2;
+	/*! False before first call of updateInput(). Used to make sure that tsv files are read only once during run time. */
+	bool									m_hasBeenInitialized = false;
 
 	/*! Vector to temporarily hold all NetworkHeatExchange that were modified after a Block was selected in the scene */
 	std::vector<VICUS::NetworkHeatExchange>	m_vectorTempHeatExchange;
-	/*! Vector to temporarily store a NetworkHeatExchange to be saved when the building type was changed */
-	std::vector<VICUS::NetworkHeatExchange> m_vectorTempHeatExchangeBuildingType;
 
-	/*! Domestic Hot Water Demand User Profile */
-	HotWaterPredefUserProfile				m_heatLossSplineHwUserProfile = NUM_HW;
+	/*! Vector to temporarily store a NetworkHeatExchange to be saved when the building type was changed */
+	VICUS::NetworkHeatExchange				m_vectorTempHeatExchangeBuildingType[VICUS::NetworkHeatExchange::NUM_BT];
 
 	/*! Curve visible in HeatLossSpline plot */
 	QwtPlotCurve							*m_heatLossSplineHeatingCurve = nullptr;
@@ -181,34 +161,26 @@ private:
 	QwtPlotCurve							*m_heatLossSplineHotWaterCurve = nullptr;
 	QwtPlotZoomer							*m_heatLossSplineZoomer = nullptr;
 
-	/* data vector to be displayed in TemperatureSplinePlot */
-	std::vector<double>						m_temperatureSplineYPlotData;
-	std::vector<double>						m_temperatureSplineXPlotData;
-
 	/*! Curve visible in TemperatureSpline plot */
 	QwtPlotCurve							*m_temperatureSplineCurve = nullptr;
 	QwtPlotZoomer							*m_temperatureSplineZoomer = nullptr;
 
-	/*! Data vectors to store the original values of the tsv file */
-	std::vector<std::vector<double>>		m_vectorHeatLossSplineHeatingYData;
-	std::vector<std::vector<double>>		m_vectorHeatLossSplineCoolingYData;
-	std::map<HotWaterPredefUserProfile, std::vector<double>>		m_mapHeatLossSplineHotWaterYData;
-	std::vector<double>						m_vectorHeatLossSplineHeatingMaxValues;
-	std::vector<double>						m_vectorHeatLossSplineCoolingMaxValues;
-	std::vector<double>						m_heatLossSplineXData;
-
-	/*! Data vectors to store data values from tsv specified by user */
-	std::vector<double>						m_vectorHeatLossSplineUserYData;
-	std::vector<double>						m_vectorHeatLossSplineUserXData;
-
-	/*! Parameter to adjust curves to reach desired Energydemand */
-	double									m_kHeating = 1;
-	double									m_kCooling = 1;
+	/*! Data vector to be displayed in TemperatureSplinePlot */
+	std::vector<double>						m_temperatureSplineYPlotData;
+	std::vector<double>						m_temperatureSplineXPlotData;
 
 	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
 	std::vector<double>						m_heatLossSplineHeatingYPlotData;
 	std::vector<double>						m_heatLossSplineCoolingYPlotData;
 	std::vector<double>						m_heatLossSplineHotWaterYPlotData;
+
+	/*! Data vectors to store data values from tsv specified by user */
+	std::vector<double>						m_vectorHeatLossSplineUserYData;
+	std::vector<double>						m_vectorHeatLossSplineUserXData;
+
+	/*! Parameter to adjust curves to reach desired energy demand */
+	double									m_kHeating = -1;
+	double									m_kCooling = -1;
 
 };
 
