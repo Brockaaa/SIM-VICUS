@@ -80,15 +80,6 @@ public:
 		NUM_P
 	};
 
-
-	/*! Spline parameter as functions of time. Defined similarly as time series for location object (i.e. with start time shift). */
-	enum splinePara_t {
-		SPL_Temperature,						// Keyword: Temperature							[C]		'Temperature spline'
-		/*! Heat loss spline is used for models T_HeatLossSpline and T_HeatLossSplineCondenser. */
-		SPL_HeatLoss,							// Keyword: HeatLoss							[W]		'Heat flux spline'
-		NUM_SPL
-	};
-
 	enum BuildingType {
 		BT_ResidentialBuildingSingleFamily,		// Keyword: ResidentialBuildingSingleFamily		'Single Family House'
 		BT_ResidentialBuildingMultiFamily,		// Keyword: ResidentialBuildingMultiFamily		'Multi Family House'
@@ -113,26 +104,28 @@ public:
 	void setDefaultValues(ModelType modelType);
 
 	/*! Read all tsv files */
-	void readTSVFiles(QString ressourcesDir, BuildingType buildingType);
+	void readPredefinedTSVFiles() const;
 
 	/*! Wrap file reading */
-	void readSingleTSVFile(QString filename, std::vector<double> &xData, std::vector<double> &yData);
+	void readSingleTSVFile(QString filename, std::vector<double> &yData) const;
 
-	void updateSplines(QString ressourcesDir);
+	void checkAndInitializeSpline() const;
 
-	bool heatingDemandSpline(std::vector<double> &spline, double k=-1);
-	bool coolingDemandSpline(std::vector<double> &spline, double k=-1);
+	void generateHeatFluxSplines() const;
 
-	void calculateHeatLossSplineFromKValue(double k, const std::vector<double> & original, std::vector<double> & result, double maxValueRequired, double maxValueExisting=-1);
+	bool generateheatingDemandSpline(std::vector<double> &spline, double k=-1) const;
+	bool generateCoolingDemandSpline(std::vector<double> &spline, double k=-1) const;
 
-	bool calculateNewKValue(const std::vector<double> & original, double integralRequired, double maxValueRequired, double & integralResult, double & KResult);
+	void calculateHeatLossSplineFromKValue(double k, const std::vector<double> & original, std::vector<double> & result, double maxValueRequired, double maxValueExisting=-1) const;
+
+	bool calculateNewKValue(const std::vector<double> & original, double integralRequired, double maxValueRequired, double & integralResult, double & KResult) const;
 
 	NANDRAD::HydraulicNetworkHeatExchange toNandradHeatExchange() const;
 
 	// *** Public Member variables ***
 
 	/*! Model Type */
-	ModelType							m_modelType		= NUM_T;					// XML:E
+	ModelType							m_modelType		= NUM_T;					// XML:A
 
 	bool								m_individualHeatExchange = false;			// XML:A
 
@@ -151,16 +144,14 @@ public:
 	/*! Parameters for the element . */
 	IBK::Parameter						m_para[NUM_P];								// XML:E
 
-	/*! Time-series of heat flux or temperature (can be spline or tsv-file). */
-	NANDRAD::LinearSplineParameter		m_splPara[NUM_SPL];							// XML:E
-
 	/*! IBK::Path to user defined tsv-file to be displayed in the plot */
 	IBK::Path							m_userDefinedTsvFile;						// XML:E
 
-
-	std::vector<double>					m_heatingDemandTimeData;
-	std::vector<double>					m_heatingDemandSplineOrig;
-	std::vector<double>					m_coolingDemandSplineOrig;
+	// *** Run time variables
+	mutable std::vector<double>					m_heatingDemandSplineOrig;
+	mutable std::vector<double>					m_coolingDemandSplineOrig;
+	mutable std::vector<double>					m_temperatureSplineY;
+	mutable NANDRAD::LinearSplineParameter		m_exportSpline;
 
 };
 

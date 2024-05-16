@@ -126,8 +126,8 @@ void SVNetworkComponentHeatExchangeEditWidget::updateInput(VICUS::NetworkCompone
 		return;
 	}
 	else {
-		// we store the default values for all building types, including splines from tsv here, these will be read only once
 		if (!m_hasBeenInitialized) {
+			// we store the default values for all building types, including splines from tsv here, these will be read only once
 			for (unsigned int i = 0; i < VICUS::NetworkHeatExchange::NUM_BT; i++){
 				m_vectorTempHeatExchangeBuildingType[i] = VICUS::NetworkHeatExchange();
 				VICUS::NetworkHeatExchange::BuildingType buildingType = VICUS::NetworkHeatExchange::BuildingType(i);
@@ -135,18 +135,28 @@ void SVNetworkComponentHeatExchangeEditWidget::updateInput(VICUS::NetworkCompone
 				newHeatExchange.m_buildingType = buildingType;
 				newHeatExchange.setDefaultValues(VICUS::NetworkHeatExchange::T_HeatLossSpline);
 				try {
-					newHeatExchange.readTSVFiles(QtExt::Directories::resourcesRootDir(), buildingType);
+					newHeatExchange.readPredefinedTSVFiles();
 				}  catch (IBK::Exception &ex) {
 					throw IBK::Exception(ex, tr("Could not read tsv file for updating pre-defined heating demands.").toStdString(), FUNC_ID);
 				}
 				m_vectorTempHeatExchangeBuildingType[i] = newHeatExchange;
 			}
+
+			// also read and store predefined temperature splines
+			VICUS::NetworkHeatExchange tempHX;
+			tempHX.m_modelType = VICUS::NetworkHeatExchange::T_TemperatureSpline;
+			for (unsigned int i=0; i<VICUS::NetworkHeatExchange::AT_UserDefined; ++i) {
+				tempHX.m_ambientTemperatureType = VICUS::NetworkHeatExchange::AmbientTemperatureType(i);
+				tempHX.readPredefinedTSVFiles();
+				m_predefinedTemperatureSpline[i] = tempHX.m_temperatureSplineY;
+			}
+
+			// initialization only once!
 			m_hasBeenInitialized = true;
 		}
 
 		// if we have a new component with missing splines from tsv, we provide them
-		if (m_hx->m_heatingDemandTimeData.empty()) {
-			m_hx->m_heatingDemandTimeData = m_vectorTempHeatExchangeBuildingType[m_hx->m_buildingType].m_heatingDemandTimeData;
+		if (m_hx->m_heatingDemandSplineOrig.empty()) {
 			m_hx->m_heatingDemandSplineOrig = m_vectorTempHeatExchangeBuildingType[m_hx->m_buildingType].m_heatingDemandSplineOrig;
 			m_hx->m_coolingDemandSplineOrig = m_vectorTempHeatExchangeBuildingType[m_hx->m_buildingType].m_coolingDemandSplineOrig;
 		}
@@ -333,7 +343,6 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePageForBuildi
 void SVNetworkComponentHeatExchangeEditWidget::updateEnergyDemandValuesAreaSpecific() {
 	bool areaRelated = m_hx->m_areaRelatedValues;
 	m_ui->checkBoxHeatLossSplineAreaRelatedValues->setChecked(areaRelated);
-//	m_ui->labelHeatLossSplineFloorArea->setEnabled(areaRelated);
 	m_ui->labelHeatLossSplineFloorAreaUnit->setEnabled(areaRelated);
 	m_ui->lineEditHeatLossSplineFloorArea->setEnabled(areaRelated);
 	if (areaRelated) {
@@ -377,9 +386,9 @@ void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossSplineIndividu
 	// if unchecked: re-plot
 	else {
 		if (m_hx->m_buildingType == VICUS::NetworkHeatExchange::BT_UserDefineBuilding)
-			updateUserHeatLossSplinePlotData();
+			updateHeatLossSplineUserPlot();
 		else
-			updateHeatLossSplinePlots();
+			updateHeatLossSplinePredefPlot();
 	}
 }
 
@@ -405,7 +414,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatLossSplineBuilding
 		on_filepathDataFile_editingFinished();
 	}
 	if (m_hx->m_buildingType < VICUS::NetworkHeatExchange::BT_UserDefineBuilding)
-		updateHeatLossSplinePlots();
+		updateHeatLossSplinePredefPlot();
 }
 
 
@@ -469,7 +478,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineFloorAre
 	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_FloorArea, newFloorArea);
 
 	// plot
-	updateHeatLossSplinePlots();
+	updateHeatLossSplinePredefPlot();
 }
 
 
@@ -477,16 +486,16 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineMaximumH
 	// set new max value
 	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_MaximumHeatingLoad,
 									 m_ui->lineEditHeatLossSplineMaximumHeatingLoad->value());
-	bool success = m_hx->heatingDemandSpline(m_heatLossSplineHeatingYPlotData, m_kHeating);
+	bool success = m_hx->generateheatingDemandSpline(m_heatLossSplineHeatingY, m_kHeating);
 	Q_ASSERT(success); //  we only scale the curve, should never give any problems
 
 	// also calculate new energy demand value
-	double newHeatingDemand = std::accumulate(m_heatLossSplineHeatingYPlotData.begin(), m_heatLossSplineHeatingYPlotData.end(), 0);
+	double newHeatingDemand = std::accumulate(m_heatLossSplineHeatingY.begin(), m_heatLossSplineHeatingY.end(), 0);
 	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemand,
 									   newHeatingDemand / 1000);
 	// and update values
 	updateEnergyDemandValuesAreaSpecific();
-	updateHeatLossSplinePlots();
+	updateHeatLossSplinePredefPlot();
 }
 
 
@@ -501,7 +510,7 @@ void SVNetworkComponentHeatExchangeEditWidget::modifyEnergyDemandValue(bool heat
 	}
 	else {
 		para = VICUS::NetworkHeatExchange::P_CoolingEnergyDemand;
-		requestedDemand = m_ui->lineEditHeatLossSplineCoolingEnergyDemand->value() * 1000; // to ^Wh
+		requestedDemand = m_ui->lineEditHeatLossSplineCoolingEnergyDemand->value() * 1000; // to Wh
 		m_ui->lineEditHeatLossSplineCoolingEnergyDemand->clearFocus();
 	}
 
@@ -551,7 +560,7 @@ void SVNetworkComponentHeatExchangeEditWidget::modifyEnergyDemandValue(bool heat
 	}
 
 	updateEnergyDemandValuesAreaSpecific();
-	updateHeatLossSplinePlots();
+	updateHeatLossSplinePredefPlot();
 }
 
 
@@ -582,7 +591,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineCoolingE
 
 void SVNetworkComponentHeatExchangeEditWidget::on_groupBoxHeatLossSplineCooling_clicked(bool checked) {
 	m_hx->m_withCoolingDemand = checked;
-	updateHeatLossSplinePlots();
+	updateHeatLossSplinePredefPlot();
 }
 
 
@@ -590,24 +599,20 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineMaximumC
 	// set new max value
 	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_MaximumCoolingLoad,
 									 m_ui->lineEditHeatLossSplineMaximumCoolingLoad->value());
-	bool success = m_hx->coolingDemandSpline(m_heatLossSplineCoolingYPlotData, m_kCooling);
+	bool success = m_hx->generateCoolingDemandSpline(m_heatLossSplineCoolingY, m_kCooling);
 	Q_ASSERT(success); //  we only scale the curve, should never give any problems
 
 	// also calculate new energy demand value
-	double newCoolingDemand = std::accumulate(m_heatLossSplineCoolingYPlotData.begin(), m_heatLossSplineCoolingYPlotData.end(), 0);
+	double newCoolingDemand = std::accumulate(m_heatLossSplineCoolingY.begin(), m_heatLossSplineCoolingY.end(), 0);
 	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemand,
 									   newCoolingDemand / 1000);
 	// and update values
 	updateEnergyDemandValuesAreaSpecific();
-	updateHeatLossSplinePlots();
+	updateHeatLossSplinePredefPlot();
 }
 
 
 void SVNetworkComponentHeatExchangeEditWidget::on_filepathDataFile_editingFinished() {
-	// clear embedded spline data
-	m_vectorHeatLossSplineUserYData.clear();
-	m_vectorHeatLossSplineUserXData.clear();
-
 	QString dataFilePath = m_ui->filepathDataFile->filename();
 	if (dataFilePath.trimmed().isEmpty()) {
 		m_hx->m_userDefinedTsvFile.clear();
@@ -630,11 +635,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_widgetTemperatureSplineFilePat
 }
 
 
-void SVNetworkComponentHeatExchangeEditWidget::on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
-{
-	if (current == nullptr)
-		return; // do nothing
-
+void SVNetworkComponentHeatExchangeEditWidget::on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous) {
 	// get column index
 	int currentListItem = current->data(Qt::UserRole).toInt();
 	if (currentListItem < 0) {
@@ -653,14 +654,12 @@ void SVNetworkComponentHeatExchangeEditWidget::on_listWidgetHeatLossSplineSelect
 	m_ui->filepathDataFile->setFilename( extendedFilename );
 	m_hx->m_userDefinedTsvFile = IBK::Path(extendedFilename.toStdString());
 
-	updateUserHeatLossSplinePlotData();
+	updateHeatLossSplineUserPlot();
 }
 
 
 void SVNetworkComponentHeatExchangeEditWidget::on_listWidgetTemperatureSplineSelectColumn_currentItemChanged(QListWidgetItem * current, QListWidgetItem * previous)
 {
-	if (current == nullptr)
-		return; // do nothing
 
 	// get column index
 	int currentListItem = current->data(Qt::UserRole).toInt();
@@ -691,8 +690,8 @@ void SVNetworkComponentHeatExchangeEditWidget::on_listWidgetTemperatureSplineSel
 		return;
 	}
 
-	m_temperatureSplineXPlotData = spl.m_values.x();
-	m_temperatureSplineYPlotData = spl.m_values.y();
+	m_temperatureSplineTime = spl.m_values.x();
+	m_temperatureSplineY = spl.m_values.y();
 
 	updatePredefinedTemperatureSplinePlotData();
 }
@@ -837,37 +836,40 @@ void SVNetworkComponentHeatExchangeEditWidget::updateTemperatureSplineSelectColu
 }
 
 
-void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePlots() {
+void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePredefPlot() {
 	Q_ASSERT(m_hx->m_buildingType < VICUS::NetworkHeatExchange::BT_UserDefineBuilding);
 
-	if (m_hx->m_buildingType < VICUS::NetworkHeatExchange::BT_UserDefineBuilding)
-
 	// calculates new 'k' only if needed
-	if (!m_hx->heatingDemandSpline(m_heatLossSplineHeatingYPlotData, m_kHeating))
+	if (!m_hx->generateheatingDemandSpline(m_heatLossSplineHeatingY, m_kHeating))
 		return;
 	if (m_hx->m_withCoolingDemand)
-		if (!m_hx->coolingDemandSpline(m_heatLossSplineCoolingYPlotData, m_kCooling))
+		if (!m_hx->generateCoolingDemandSpline(m_heatLossSplineCoolingY, m_kCooling))
 			return;
+
+	// time expected in hours
+	std::vector<double> time(m_heatLossSplineHeatingY.size());
+	for (unsigned int i=0; i<m_heatLossSplineHeatingY.size(); ++i)
+		time[i] = i;
 
 	double maximumHeatingLoad, maximumCoolingLoad;
 	maximumHeatingLoad = m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value;
 	maximumCoolingLoad = m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].value;
-	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, m_hx->m_heatingDemandTimeData.back());
+	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, time.back());
 	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::yLeft, 0, maximumHeatingLoad > maximumCoolingLoad ? maximumHeatingLoad / 1000 : maximumCoolingLoad / 1000);
 
 	//creating curve for heating
 	std::vector<double> heatingValuesToPlot;
-	for (double value : m_heatLossSplineHeatingYPlotData)
+	for (double value : m_heatLossSplineHeatingY)
 		heatingValuesToPlot.push_back(value / 1000); // convert to kW
-	m_heatLossSplineHeatingCurve->setSamples(m_hx->m_heatingDemandTimeData.data(), heatingValuesToPlot.data(), m_hx->m_heatingDemandTimeData.size());
+	m_heatLossSplineHeatingCurve->setSamples(time.data(), heatingValuesToPlot.data(), time.size());
 	m_heatLossSplineHeatingCurve->attach(m_ui->widgetPlotHeatLossSpline);
 
 	//creating curve for cooling
 	if (m_hx->m_withCoolingDemand) {
 		std::vector<double> coolingValuesToPlot;
-		for(double value : m_heatLossSplineCoolingYPlotData)
+		for(double value : m_heatLossSplineCoolingY)
 			coolingValuesToPlot.push_back(value / 1000); // convert to kW
-		m_heatLossSplineCoolingCurve->setSamples(m_hx->m_heatingDemandTimeData.data(), coolingValuesToPlot.data(), m_hx->m_heatingDemandTimeData.size());
+		m_heatLossSplineCoolingCurve->setSamples(time.data(), coolingValuesToPlot.data(), time.size());
 		m_heatLossSplineCoolingCurve->attach(m_ui->widgetPlotHeatLossSpline);
 	} else {
 		m_heatLossSplineCoolingCurve->detach();
@@ -877,9 +879,9 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePlots() {
 }
 
 
-void SVNetworkComponentHeatExchangeEditWidget::updateUserHeatLossSplinePlotData()
+void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplineUserPlot()
 {
-	IBK::Path fname(m_ui->filepathDataFile->filename().toStdString());
+	IBK::Path fname(m_hx->m_userDefinedTsvFile);
 	if (!fname.isValid()) {
 		m_heatLossSplineHeatingCurve->detach();
 		m_heatLossSplineCoolingCurve->detach();
@@ -901,51 +903,48 @@ void SVNetworkComponentHeatExchangeEditWidget::updateUserHeatLossSplinePlotData(
 		return;
 	}
 
-	m_vectorHeatLossSplineUserXData = spl.m_values.x();
-	m_vectorHeatLossSplineUserYData = spl.m_values.y();
+	std::vector<double> time = spl.m_values.x();
+	std::vector<double> heatLossSpline = spl.m_values.x();
 
 	bool containsNegativeValues = false;
 	double maximumHeatingLoad = 0;
 	double maximumCoolingLoad = 0;
-	for(double value : m_vectorHeatLossSplineUserYData){
+	for(double value : heatLossSpline){
 		if(value < 0){
 			containsNegativeValues = true;
 			break;
 		}
 	}
 
-	std::vector<double> vectorContainingCoolingValues;
-	if(containsNegativeValues) {
-		// read neg values
-		for(unsigned int i = 0; i < m_vectorHeatLossSplineUserXData.size(); i++){
-			if(m_vectorHeatLossSplineUserYData[i] < 0){
-				vectorContainingCoolingValues.push_back(-m_vectorHeatLossSplineUserYData[i]);
-				m_vectorHeatLossSplineUserYData[i] = 0;
-				if (maximumCoolingLoad < *vectorContainingCoolingValues.end())
-					maximumCoolingLoad = *vectorContainingCoolingValues.end();
-			} else {
-				vectorContainingCoolingValues.push_back(0);
+	// filter negative values and plot cooling curve
+	std::vector<double> negativeHeatfluxes;
+	if (containsNegativeValues) {
+		for(unsigned int i = 0; i < time.size(); i++){
+			if(heatLossSpline[i] < 0){
+				negativeHeatfluxes.push_back(-heatLossSpline[i] / 1000);
+				heatLossSpline[i] = 0;
+				if (maximumCoolingLoad < negativeHeatfluxes.back())
+					maximumCoolingLoad = negativeHeatfluxes.back();
+			}
+			else {
+				negativeHeatfluxes.push_back(0);
 			}
 		}
-		// read pos values
-		std::vector<double> coolingValuesToPlot;
-		for(double value : m_heatLossSplineCoolingYPlotData)
-			coolingValuesToPlot.push_back(value / 1000); // convert to kW
-		m_heatLossSplineCoolingCurve->setSamples(m_vectorHeatLossSplineUserXData.data(), coolingValuesToPlot.data(), m_vectorHeatLossSplineUserXData.size());
+		m_heatLossSplineCoolingCurve->setSamples(time.data(), negativeHeatfluxes.data(), time.size());
 		m_heatLossSplineCoolingCurve->attach(m_ui->widgetPlotHeatLossSpline);
-	} else {
-		if (m_heatLossSplineCoolingCurve != nullptr)
-			m_heatLossSplineCoolingCurve->detach();
+	}
+	else {
+		m_heatLossSplineCoolingCurve->detach();
 	}
 
-	maximumHeatingLoad = *std::max_element(m_vectorHeatLossSplineUserYData.begin(), m_vectorHeatLossSplineUserYData.end());
-
+	// plot heating curve
+	maximumHeatingLoad = *std::max_element(heatLossSpline.begin(), heatLossSpline.end());
 	std::vector<double> heatingValuesToPlot;
-	for(double value : m_heatLossSplineHeatingYPlotData)
+	for(double value : heatLossSpline)
 		heatingValuesToPlot.push_back(value / 1000); // convert to kW
-	m_heatLossSplineHeatingCurve->setSamples(m_vectorHeatLossSplineUserXData.data(), heatingValuesToPlot.data(), m_vectorHeatLossSplineUserXData.size());
+	m_heatLossSplineHeatingCurve->setSamples(time.data(), heatingValuesToPlot.data(), time.size());
 	m_heatLossSplineHeatingCurve->attach(m_ui->widgetPlotHeatLossSpline);
-	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, m_vectorHeatLossSplineUserXData.back());
+	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, time.back());
 	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::yLeft, 0, maximumHeatingLoad > maximumCoolingLoad ? maximumHeatingLoad / 1000 : maximumCoolingLoad / 1000);
 	m_ui->widgetPlotHeatLossSpline->replot();
 
@@ -953,29 +952,30 @@ void SVNetworkComponentHeatExchangeEditWidget::updateUserHeatLossSplinePlotData(
 }
 
 
-void SVNetworkComponentHeatExchangeEditWidget::updatePredefinedTemperatureSplinePlotData()
-{
+void SVNetworkComponentHeatExchangeEditWidget::updatePredefinedTemperatureSplinePlotData() {
+	Q_ASSERT(m_hx->m_ambientTemperatureType < VICUS::NetworkHeatExchange::AT_UserDefined);
+
 	m_ui->widgetPlotTemperatureSpline->setEnabled(true);
 	double minYValue, maxYValue;
 
-	minYValue = *(std::min_element(m_temperatureSplineYPlotData.begin(), m_temperatureSplineYPlotData.end()));
-	maxYValue = *(std::max_element(m_temperatureSplineYPlotData.begin(), m_temperatureSplineYPlotData.end()));
+	std::vector<double> &temperatureSpline = m_predefinedTemperatureSpline[m_hx->m_ambientTemperatureType];
+
+	minYValue = *(std::min_element(temperatureSpline.begin(), temperatureSpline.end()));
+	maxYValue = *(std::max_element(temperatureSpline.begin(), temperatureSpline.end()));
 	double scaleYMin = minYValue < 0 ? minYValue * 1.1 : minYValue * 0.9;
 	double scaleYMax = maxYValue < 0 ? maxYValue * 0.9 : maxYValue * 1.1;
 
-	QFont ft;
-	ft.setPointSize(10);
-	QwtText xl(tr("Time [h]"));
-	xl.setFont(ft);
-	QwtText yl(tr("Temperature [C]"));
-	yl.setFont(ft);
-	m_ui->widgetPlotTemperatureSpline->setAxisTitle(QwtPlot::xBottom, xl);
-	m_ui->widgetPlotTemperatureSpline->setAxisTitle(QwtPlot::yLeft, yl);
-	m_ui->widgetPlotTemperatureSpline->setAxisScale(QwtPlot::xBottom, 0, m_temperatureSplineXPlotData.back());
+	// time expected in hours
+	std::vector<double> time(temperatureSpline.size());
+	for (unsigned int i=0; i<temperatureSpline.size(); ++i)
+		time[i] = i;
+
+	m_ui->widgetPlotTemperatureSpline->setAxisScale(QwtPlot::xBottom, 0, time.back());
 	m_ui->widgetPlotTemperatureSpline->setAxisScale(QwtPlot::yLeft, scaleYMin, scaleYMax);
 
-	m_temperatureSplineCurve->setSamples(m_temperatureSplineXPlotData.data(), m_temperatureSplineYPlotData.data(), m_temperatureSplineYPlotData.size());
+	m_temperatureSplineCurve->setSamples(time.data(), temperatureSpline.data(), temperatureSpline.size());
 	m_temperatureSplineCurve->attach(m_ui->widgetPlotTemperatureSpline);
+
 	m_ui->widgetPlotTemperatureSpline->replot();
 
 	m_temperatureSplineZoomer->setZoomBase();
@@ -1040,8 +1040,9 @@ void SVNetworkComponentHeatExchangeEditWidget::setHotWaterCurve(bool set)
 
 void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxTemperatureSpline_activated(int index)
 {
-	m_hx->m_ambientTemperatureType = static_cast<VICUS::NetworkHeatExchange::AmbientTemperatureType>(index);
+	m_hx->m_ambientTemperatureType = VICUS::NetworkHeatExchange::AmbientTemperatureType(index);
 	bool isUserDefined = m_hx->m_ambientTemperatureType == VICUS::NetworkHeatExchange::AT_UserDefined;
+
 	m_ui->listWidgetTemperatureSplineSelectColumn->setVisible(isUserDefined);
 	m_ui->labelTemperatureSplineHeatFilePath->setVisible(isUserDefined);
 	m_ui->labelTemperatureSplineSelectColumn->setVisible(isUserDefined);
@@ -1050,42 +1051,10 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxTemperatureSpline_acti
 
 	if (!isUserDefined){
 		m_hx->m_userDefinedTsvFile.clear();
-		QString directory;
-		switch(m_hx->m_ambientTemperatureType){
-			case VICUS::NetworkHeatExchange::AT_BoreholeHeatExchangerTemperature:
-				directory = QString("/demandProfiles/BoreholeHeatExchange.tsv");
-				break;
-			case VICUS::NetworkHeatExchange::AT_UndisturbedSoilTemperature:
-				directory  = QString("/demandProfiles/SoilTemperature.tsv");
-				break;
-			default:
-				directory = QString("/demandProfiles/BoreholeHeatExchange.tsv"); // compiler happy
-		}
-		directory = QtExt::Directories::resourcesRootDir().append(directory);
-		IBK::Path ibkDirectory(directory.toStdString());
-		IBK::CSVReader reader;
-
-		qDebug() << "TemperatureTSV directory" << directory;
-
-		try {
-			reader.read(ibkDirectory);
-		}
-		catch (...) {
-			qDebug() << "Could not load TemperatureSplineTSV successfully";
-		}
-
-		m_temperatureSplineXPlotData = reader.colData(0);
-		m_temperatureSplineYPlotData = reader.colData(1);
 		updatePredefinedTemperatureSplinePlotData();
 	} else {
-		if(!m_hx->m_userDefinedTsvFile.isValid()){
-			m_ui->widgetTemperatureSplineFilePathDataFile->setFilename("");
-			m_temperatureSplineCurve->detach();
-			m_ui->widgetPlotTemperatureSpline->setEnabled(false);
-		} else {
-			m_ui->widgetTemperatureSplineFilePathDataFile->setFilename(QString::fromStdString(m_hx->m_userDefinedTsvFile.str()));
-		}
-
+		m_ui->widgetTemperatureSplineFilePathDataFile->setFilename(QString::fromStdString(m_hx->m_userDefinedTsvFile.str()));
+		m_ui->widgetPlotTemperatureSpline->setEnabled(m_hx->m_userDefinedTsvFile.isValid());
 		updateTemperatureSplineSelectColumnList();
 	}
 }
@@ -1098,7 +1067,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_toolButtonSetDefaultValues_cli
 
 	updateEnergyDemandValuesAreaSpecific();
 	updateHeatLossSplinePageForBuildingType();
-	updateHeatLossSplinePlots();
+	updateHeatLossSplinePredefPlot();
 }
 
 

@@ -32,9 +32,6 @@ namespace NANDRAD {
 bool HydraulicNetworkComponent::operator!=(const HydraulicNetworkComponent &other) const {
 
 	if (m_id != other.m_id)									return true;
-	if (m_displayName != other.m_displayName)				return true;
-	if (m_modelType != other.m_modelType)					return true;
-
 	if (!sameParametersAs(other))							return true;
 
 	return false;
@@ -46,6 +43,7 @@ bool HydraulicNetworkComponent::sameParametersAs(const HydraulicNetworkComponent
 		if (m_para[n] != other.m_para[n])
 			return false;
 	}
+	if (m_displayName != other.m_displayName)				return false;
 	if (m_modelType != other.m_modelType)					return false;
 	if (m_polynomCoefficients != other.m_polynomCoefficients) return false;
 	return true;

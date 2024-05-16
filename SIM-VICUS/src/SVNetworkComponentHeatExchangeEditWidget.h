@@ -58,12 +58,6 @@ public:
 	/*! updates the Widget and sets current Component with this. */
 	void updateInput(VICUS::NetworkComponent * component);
 
-	/*! updates pages */
-	void updatePageHeatLossConstant();
-	void updatePageHeatLossSpline(VICUS::NetworkHeatExchange::ModelType hxModelType);
-	void updatePageTemperatureConstant();
-	void updatePageTemperatureSpline();
-
 private slots:
 
 	void on_comboBoxHeatExchange_activated(int index);
@@ -113,6 +107,14 @@ private slots:
 	void on_comboBoxHeatLossSplineBuildingType_activated(int index);
 
 private:
+	/*! updates pages */
+	void updatePageHeatLossConstant();
+
+	void updatePageHeatLossSpline(VICUS::NetworkHeatExchange::ModelType hxModelType);
+
+	void updatePageTemperatureConstant();
+
+	void updatePageTemperatureSpline();
 
 	void updateHeatLossSplinePageForBuildingType();
 
@@ -126,9 +128,9 @@ private:
 
 	void updateTemperatureSplineSelectColumnList();
 
-	void updateHeatLossSplinePlots();
+	void updateHeatLossSplinePredefPlot();
 
-	void updateUserHeatLossSplinePlotData();
+	void updateHeatLossSplineUserPlot();
 
 	void updatePredefinedTemperatureSplinePlotData();
 
@@ -166,21 +168,20 @@ private:
 	QwtPlotZoomer							*m_temperatureSplineZoomer = nullptr;
 
 	/*! Data vector to be displayed in TemperatureSplinePlot */
-	std::vector<double>						m_temperatureSplineYPlotData;
-	std::vector<double>						m_temperatureSplineXPlotData;
+	std::vector<double>						m_temperatureSplineY;
+	std::vector<double>						m_temperatureSplineTime;
 
 	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
-	std::vector<double>						m_heatLossSplineHeatingYPlotData;
-	std::vector<double>						m_heatLossSplineCoolingYPlotData;
-	std::vector<double>						m_heatLossSplineHotWaterYPlotData;
-
-	/*! Data vectors to store data values from tsv specified by user */
-	std::vector<double>						m_vectorHeatLossSplineUserYData;
-	std::vector<double>						m_vectorHeatLossSplineUserXData;
+	std::vector<double>						m_heatLossSplineHeatingY;
+	std::vector<double>						m_heatLossSplineCoolingY;
+	std::vector<double>						m_heatLossSplineHotWaterY;
 
 	/*! Parameter to adjust curves to reach desired energy demand */
 	double									m_kHeating = -1;
 	double									m_kCooling = -1;
+
+	/*! Array that caches predefined temperature splines from tsv files. Should have the size of the number of predefined spline types. */
+	std::vector<double>						m_predefinedTemperatureSpline[VICUS::NetworkHeatExchange::AT_UserDefined];
 
 };
 

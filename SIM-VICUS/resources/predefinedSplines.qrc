@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>predefinedSplines/heatFluxes/Office_CoolingLoad.tsv</file>
+        <file>predefinedSplines/heatFluxes/Office_HeatingLoad.tsv</file>
+        <file>predefinedSplines/heatFluxes/Residential_HotWaterDemand.tsv</file>
+        <file>predefinedSplines/heatFluxes/Residential_Large_CoolingLoad.tsv</file>
+        <file>predefinedSplines/heatFluxes/Residential_Large_HeatingLoad.tsv</file>
+        <file>predefinedSplines/heatFluxes/Residential_MultiFamily_CoolingLoad.tsv</file>
+        <file>predefinedSplines/heatFluxes/Residential_MultiFamily_HeatingLoad.tsv</file>
+        <file>predefinedSplines/heatFluxes/Residential_SingleFamily_CoolingLoad.tsv</file>
+        <file>predefinedSplines/heatFluxes/Residential_SingleFamily_HeatingLoad.tsv</file>
+        <file>predefinedSplines/temperatures/BoreholeHeatExchangerTemperature.tsv</file>
+        <file>predefinedSplines/temperatures/UndisturbedSoilTemperature.tsv</file>
+    </qresource>
+</RCC>

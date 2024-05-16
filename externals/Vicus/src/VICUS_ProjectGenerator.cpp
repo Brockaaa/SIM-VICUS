@@ -4186,10 +4186,6 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 
 
 	// create Databases from embedded Databases
-	Database<NetworkComponent> dbNetworkComps = Database<NetworkComponent>(1); // we dont care
-	dbNetworkComps.setData(m_embeddedDB.m_networkComponents);
-	Database<NetworkController> dbNetworkCtrl = Database<NetworkController>(1); // we dont care
-	dbNetworkCtrl.setData(m_embeddedDB.m_networkControllers);
 	Database<Schedule> dbSchedules = Database<Schedule>(1); // we dont care
 	dbSchedules.setData(m_embeddedDB.m_schedules);
 
@@ -4221,6 +4217,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 
 
 	// *** Transfer ELEMENTS from Vicus to Nandrad
+
 
 	// estimated number of elements
 	nandradNetwork.m_elements.reserve(vicusNetwork.m_nodes.size() * maxNumberElements + 2 * vicusNetwork.m_edges.size());
@@ -4329,7 +4326,6 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 				referenceElementHeight = node.m_position.m_z;
 			}
 
-
 			// check component
 			const VICUS::NetworkComponent *comp = VICUS::element(sub->m_components, elem.m_componentId);
 			if (comp == nullptr){
@@ -4339,14 +4335,34 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 			if (!comp->isValid(dbSchedules))
 				errorStack.append(tr("Network component #%1 in sub network #%2 has invalid parameters").arg(elem.m_componentId).arg(sub->m_id));
 
+
 			// transfer component
+
 			NANDRAD::HydraulicNetworkComponent nandradComp;
-			nandradComp.m_id = uniqueIdAdd(allComponentIds);
 			nandradComp.m_displayName = comp->m_displayName.string(IBK::MultiLanguageString::m_language, "en");
 			nandradComp.m_modelType = VICUS::NetworkComponent::nandradNetworkComponentModelType(comp->m_modelType);
 			comp->nandradNetworkComponentParameter(nandradComp.m_para);
 			nandradComp.m_polynomCoefficients = comp->m_polynomCoefficients;
-			nandradNetwork.m_components.push_back(nandradComp);
+
+			// check if there is another one that is identical
+			bool foundIdentical = false;
+			NANDRAD::HydraulicNetworkComponent otherComp;
+			for (const NANDRAD::HydraulicNetworkComponent &c: nandradNetwork.m_components) {
+				if (c.sameParametersAs(nandradComp)) {
+					foundIdentical = true;
+					otherComp = c;
+					break;
+				}
+			}
+			// add new one or use existing component
+			if (foundIdentical) {
+				nandradElement.m_componentId = otherComp.m_id;
+			} else {
+				nandradComp.m_id = uniqueIdAdd(allComponentIds);
+				nandradElement.m_componentId = nandradComp.m_id;
+				nandradNetwork.m_components.push_back(nandradComp);
+			}
+
 
 			// only few components have a pipeId, this is not mandatory
 			if (comp->m_pipePropertiesId != INVALID_ID)
@@ -4374,16 +4390,17 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 				nandradElement.m_heatExchange = comp->m_heatExchange.toNandradHeatExchange();
 			}
 
-			// check heat exchange
-			if (nandradElement.m_heatExchange != NANDRAD::HydraulicNetworkHeatExchange()) {
-				try {
-					nandradElement.m_heatExchange.checkParameters(p.m_placeholders, p.m_zones, p.m_constructionInstances, false);
-				}  catch (IBK::Exception &ex) {
-					errorStack.append(tr("Problem in heat exchange definition of node #%1\n%2").arg(node.m_id).arg(QString::fromStdString(ex.msgStack())));
-				}
-			}
+//			// check heat exchange
+//			if (nandradElement.m_heatExchange != NANDRAD::HydraulicNetworkHeatExchange()) {
+//				try {
+//					nandradElement.m_heatExchange.checkParameters(p.m_placeholders, p.m_zones, p.m_constructionInstances, false);
+//				}  catch (IBK::Exception &ex) {
+//					errorStack.append(tr("Problem in heat exchange definition of node #%1\n%2").arg(node.m_id).arg(QString::fromStdString(ex.msgStack())));
+//				}
+//			}
 
 			// transfer controller
+//			if (comp->m_networkController.m)
 			NANDRAD::HydraulicNetworkControlElement nandradCtr;
 			nandradCtr.m_id = uniqueIdAdd(allControllerIds);
 			nandradCtr.m_modelType = NANDRAD::HydraulicNetworkControlElement::ModelType(comp->m_networkController.m_modelType);
@@ -4395,6 +4412,8 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 			for (unsigned int i=0; i<NANDRAD::HydraulicNetworkControlElement::NUM_ID; ++i)
 				nandradCtr.m_idReferences[i] = comp->m_networkController.m_idReferences[i];
 			nandradNetwork.m_controlElements.push_back(nandradCtr);
+
+//			nandradElement.m_controlElement
 
 
 			// SPECIAL CASE: pipes which are used in a sub network for e.g. ground heat exchangers (not the general network edge pipes)
@@ -4457,7 +4476,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 		}
 
 	}  // end of iteration over network nodes
-	if(!errorStack.empty())
+	if (!errorStack.empty())
 		return;
 
 
@@ -4876,19 +4895,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 				continue;
 			}
 			if (sched->m_haveAnnualSchedule){
-				// copy schedule and check it
-				NANDRAD::LinearSplineParameter annualSched = sched->m_annualSchedule;
-				//				try {
-				//					annualSched.m_tsvFile.withReplacedPlaceholders(p.m_placeholders);
-				//					annualSched.checkAndInitialize(requiredScheduleNames[i], IBK::Unit("m"), IBK::Unit("m"), IBK::Unit("m"),
-				//												   std::numeric_limits<double>::lowest(), false,
-				//												   std::numeric_limits<double>::max(), false, "", true);
-				//					annualSched.m_values.clear();
-				//				} catch (std::exception &ex) {
-				//					errorStack.append(tr("Error reading in schedule file '%1':\n%2")
-				//									  .arg(QString::fromStdString(annualSched.m_tsvFile.str())).arg(ex.what()));
-				//				}
-				p.m_schedules.m_annualSchedules[objList.m_name].push_back(annualSched);
+				p.m_schedules.m_annualSchedules[objList.m_name].push_back(sched->m_annualSchedule);
 			}
 			else
 				addVicusScheduleToNandradProject(*sched, requiredScheduleNames[i], p.m_schedules, objList.m_name);

@@ -127,7 +127,8 @@ void SVPropNetworkHeatExchangeWidget::updateUi() {
 
 	// enable widgets based on current heat exchange type
 	switch (hx.m_modelType) {
-		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant:{
+		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant:
+		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser:{
 			m_ui->labelHeatFlux->setEnabled(true);
 			m_ui->lineEditHeatFlux->setEnabled(true);
 			break;
@@ -272,7 +273,8 @@ void SVPropNetworkHeatExchangeWidget::modifyHeatExchangeParameters() {
 
 	// set parameters depending on model type
 	switch (hx.m_modelType) {
-		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant: {
+		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant:
+		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser: {
 			// set heat loss
 			if (m_ui->lineEditHeatFlux->isValid())
 				NANDRAD::KeywordList::setParameter(hx.m_para, "HydraulicNetworkHeatExchange::para_t",

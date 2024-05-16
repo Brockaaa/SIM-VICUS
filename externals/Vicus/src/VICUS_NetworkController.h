@@ -117,13 +117,13 @@ public:
 	// *** PUBLIC MEMBER VARIABLES from NANDRAD::HydraulicNetworkControlElement ***
 
 	/*! Determines variability of setpoint parameters. */
-	ModelType						m_modelType = NUM_MT;							// XML:A
+	ModelType						m_modelType = NUM_MT;							// XML:A:required
 
 	/*! Controller type (P, PI, ...) */
-	ControllerType					m_controllerType = NUM_CT;						// XML:A
+	ControllerType					m_controllerType = NUM_CT;						// XML:A:required
 
 	/*! property which shall be controlled (temperature difference, ...) */
-	ControlledProperty				m_controlledProperty = NUM_CP;					// XML:A
+	ControlledProperty				m_controlledProperty = NUM_CP;					// XML:A:required
 
 	/*! Integer/ID reference parameters. */
 	IDType							m_idReferences[NUM_ID];							// XML:E

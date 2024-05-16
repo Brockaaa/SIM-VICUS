@@ -323,8 +323,6 @@ KeywordListQt::KeywordListQt() {
 	tr("MaximumCoolingLoad");
 	tr("CoolingEnergyDemand");
 	tr("DomesticHotWaterDemand");
-	tr("Temperature spline");
-	tr("Heat flux spline");
 	tr("Single Family House");
 	tr("Multi Family House");
 	tr("Large Residential Building");

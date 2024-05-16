@@ -42,7 +42,15 @@ void NetworkHeatExchange::readXML(const TiXmlElement * element) {
 		const TiXmlAttribute * attrib = element->FirstAttribute();
 		while (attrib) {
 			const std::string & attribName = attrib->NameStr();
-			if (attribName == "individualHeatExchange")
+			if (attribName == "modelType")
+				try {
+					m_modelType = (ModelType)KeywordList::Enumeration("NetworkHeatExchange::ModelType", attrib->ValueStr());
+				}
+				catch (IBK::Exception & ex) {
+					throw IBK::Exception( ex, IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
+						IBK::FormatString("Invalid or unknown keyword '"+attrib->ValueStr()+"'.") ), FUNC_ID);
+				}
+			else if (attribName == "individualHeatExchange")
 				m_individualHeatExchange = NANDRAD::readPODAttributeValue<bool>(element, attrib);
 			else if (attribName == "areaRelatedValues")
 				m_areaRelatedValues = NANDRAD::readPODAttributeValue<bool>(element, attrib);
@@ -83,12 +91,6 @@ void NetworkHeatExchange::readXML(const TiXmlElement * element) {
 				if (p.m_name == "UserDefinedHeatFlux") {
 					m_userDefinedHeatFlux = p; success = true;
 				}
-				try {
-					splinePara_t ptype;
-					ptype = (splinePara_t)KeywordList::Enumeration("NetworkHeatExchange::splinePara_t", p.m_name);
-					m_splPara[ptype] = p; success = true;
-				}
-				catch (...) { /* intentional fail */  }
 				if (!success)
 					IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_NAME).arg(p.m_name).arg(cName).arg(c->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 			}
@@ -107,15 +109,6 @@ void NetworkHeatExchange::readXML(const TiXmlElement * element) {
 			}
 			else if (cName == "UserDefinedTsvFile")
 				m_userDefinedTsvFile = IBK::Path(c->GetText());
-			else if (cName == "ModelType") {
-				try {
-					m_modelType = (ModelType)KeywordList::Enumeration("NetworkHeatExchange::ModelType", c->GetText());
-				}
-				catch (IBK::Exception & ex) {
-					throw IBK::Exception( ex, IBK::FormatString(XML_READ_ERROR).arg(c->Row()).arg(
-						IBK::FormatString("Invalid or unknown keyword '"+std::string(c->GetText())+"'.") ), FUNC_ID);
-				}
-			}
 			else {
 				IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(cName).arg(c->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 			}
@@ -134,6 +127,8 @@ TiXmlElement * NetworkHeatExchange::writeXML(TiXmlElement * parent) const {
 	TiXmlElement * e = new TiXmlElement("NetworkHeatExchange");
 	parent->LinkEndChild(e);
 
+	if (m_modelType != NUM_T)
+		e->SetAttribute("modelType", KeywordList::Keyword("NetworkHeatExchange::ModelType",  m_modelType));
 	if (m_individualHeatExchange != NetworkHeatExchange().m_individualHeatExchange)
 		e->SetAttribute("individualHeatExchange", IBK::val2string<bool>(m_individualHeatExchange));
 	if (m_areaRelatedValues != NetworkHeatExchange().m_areaRelatedValues)
@@ -146,9 +141,6 @@ TiXmlElement * NetworkHeatExchange::writeXML(TiXmlElement * parent) const {
 		e->SetAttribute("buildingType", KeywordList::Keyword("NetworkHeatExchange::BuildingType",  m_buildingType));
 	if (m_ambientTemperatureType != NUM_AT)
 		e->SetAttribute("ambientTemperatureType", KeywordList::Keyword("NetworkHeatExchange::AmbientTemperatureType",  m_ambientTemperatureType));
-
-	if (m_modelType != NUM_T)
-		TiXmlElement::appendSingleAttributeElement(e, "ModelType", nullptr, std::string(), KeywordList::Keyword("NetworkHeatExchange::ModelType",  m_modelType));
 	if (!m_userDefinedHeatFlux.m_name.empty()) {
 		IBK_ASSERT("UserDefinedHeatFlux" == m_userDefinedHeatFlux.m_name);
 		m_userDefinedHeatFlux.writeXML(e);
@@ -157,11 +149,6 @@ TiXmlElement * NetworkHeatExchange::writeXML(TiXmlElement * parent) const {
 	for (unsigned int i=0; i<NUM_P; ++i) {
 		if (!m_para[i].name.empty()) {
 			TiXmlElement::appendIBKParameterElement(e, m_para[i].name, m_para[i].IO_unit.name(), m_para[i].get_value(m_para[i].IO_unit));
-		}
-	}
-	for (int i=0; i<NUM_SPL; ++i) {
-		if (!m_splPara[i].m_name.empty()) {
-			m_splPara[i].writeXML(e);
 		}
 	}
 	if (m_userDefinedTsvFile.isValid())

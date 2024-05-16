@@ -75,7 +75,8 @@ set( APP_QRCS
 	${PROJECT_SOURCE_DIR}/../../resources/SIM-VICUS.qrc 
 	${PROJECT_SOURCE_DIR}/../../resources/icons.qrc 
 	${PROJECT_SOURCE_DIR}/../../resources/qdarkstyle/style.qrc
-	${PROJECT_SOURCE_DIR}/../../src/shaders/shaders.qrc 
+	${PROJECT_SOURCE_DIR}/../../resources/predefinedSplines.qrc 
+	${PROJECT_SOURCE_DIR}/../../src/shaders/shaders.qrc 	
 )
 
 # set rc file
