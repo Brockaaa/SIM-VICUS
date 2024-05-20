@@ -285,6 +285,18 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 		painter->drawText(textRect, Qt::AlignCenter | Qt::AlignHCenter, elidedText);
 	}
 
+	if(m_heatExchageModelType != VICUS::NetworkHeatExchange::NUM_T){
+		p.setStyle(Qt::SolidLine);
+		p.setColor(Qt::black);
+		QRectF hXRect(QPointF(rect().width(),0), QPointF(rect().height() + 5,5));
+		QLinearGradient gradHx(QPointF(0, 0), QPointF(0, 0));
+		gradHx.setColorAt(0, QColor(255,0,0));
+		gradHx.setColorAt(1, QColor(255,0,0));
+		painter->setBrush(gradHx);
+		painter->fillRect(hXRect, gradHx);
+		painter->setPen(p);
+		painter->drawRect(hXRect);
+	}
 
 	painter->restore();
 }

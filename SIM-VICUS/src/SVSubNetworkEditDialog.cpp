@@ -76,11 +76,9 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 
 	m_ui->labelBuiltIn->setMaximumWidth(m_ui->labelBuiltIn->sizeHint().width());
 	m_ui->labelUserDB->setMaximumWidth(m_ui->labelUserDB->sizeHint().width());
-	m_ui->labelProject->setMaximumWidth(m_ui->labelProject->sizeHint().width());
 
 	m_ui->frameBuiltIn->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_alternativeBackgroundDark.name()));
 	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
-	m_ui->frameProject->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(QtExt::Style::ToolBoxPageBackground));
 
 	connect(m_sceneManager, &SVBMSceneManager::newBlockSelected, this, &SVSubNetworkEditDialog::blockSelectedEvent);
 	connect(m_sceneManager, &SVBMSceneManager::newConnectorSelected, this, &SVSubNetworkEditDialog::connectorSelectedEvent);
@@ -96,6 +94,7 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 
 	connect(&SVProjectHandler::instance(), &SVProjectHandler::projectSaved, this, &SVSubNetworkEditDialog::on_projectSaved);
 	connect(m_ui->networkComponentEditWidget, &SVNetworkComponentEditWidget::controllerChanged, this, &SVSubNetworkEditDialog::on_controllerChanged);
+	connect(m_ui->networkComponentEditWidget, &SVNetworkComponentEditWidget::heatExchangeChanged, this, &SVSubNetworkEditDialog::on_heatExchangeChanged);
 
 }
 
@@ -240,12 +239,14 @@ void SVSubNetworkEditDialog::updateNetwork() {
 	} else
 		m_sceneManager->updateNetwork(m_subNetwork->m_graphicalNetwork, m_networkComponents);
 
-	// add Controller displayName to BlockItem
+	// add Controller displayName and NetworkHeatExchange to BlockItem
 	for (auto& block : m_sceneManager->network().m_blocks){
 		if(block.m_mode != VICUS::NetworkComponentBlock) continue;
 		const VICUS::NetworkComponent* comp = VICUS::element(m_networkComponents, block.m_componentId);
-		if(comp->m_networkController.m_controlledProperty != VICUS::NetworkController::NUM_CP)
+		if(comp->m_networkController.m_controlledProperty != VICUS::NetworkController::NUM_CP){
 			m_sceneManager->setController(&block, QString::fromStdString(comp->m_networkController.m_displayName.string(IBK::MultiLanguageString::m_language)));
+		}
+		m_sceneManager->setHeatExchange(&block,comp->m_heatExchange.m_modelType);
 	}
 }
 
@@ -1535,7 +1536,6 @@ void SVSubNetworkEditDialog::on_styleChanged()
 	qDebug() << "SVSubNetworkEditDialog::on_styleChanged()";
 	m_ui->frameBuiltIn->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_alternativeBackgroundDark.name()));
 	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
-	m_ui->frameProject->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(QtExt::Style::ToolBoxPageBackground));
 	m_ui->tbox->layout()->setMargin(0);
 	m_ui->tbox->layout()->setSpacing(0);
 }
@@ -1547,4 +1547,14 @@ void SVSubNetworkEditDialog::on_controllerChanged(QString controllerName)
 	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().first());
 	m_sceneManager->setController(selectedBlock, controllerName);
 	m_sceneManager->update();
+}
+
+void SVSubNetworkEditDialog::on_heatExchangeChanged(VICUS::NetworkHeatExchange::ModelType modelType)
+{
+	if(m_sceneManager->selectedBlocks().size() != 1)
+		return;
+	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().first());
+	m_sceneManager->setHeatExchange(selectedBlock, modelType);
+	m_sceneManager->update();
+
 }

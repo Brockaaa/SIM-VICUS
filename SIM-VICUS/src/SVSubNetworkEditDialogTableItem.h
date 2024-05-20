@@ -12,11 +12,11 @@ class SVSubNetworkEditDialogTableItem : public QWidget
 	Q_OBJECT
 
 public:
-	explicit SVSubNetworkEditDialogTableItem(QString filename, QString typeName, QString tooltip, int height, QWidget *parent = nullptr, bool subCategory = false, bool builtIn = false, bool local = false);
+	explicit SVSubNetworkEditDialogTableItem(QString filename, QString typeName, QString tooltip, int height, QWidget *parent = nullptr, bool modelType = false);
 	~SVSubNetworkEditDialogTableItem();
 
 	// true if the item related to this Table Item is an builtIn database element
-	bool m_builtIn;
+	bool m_builtIn = false;
 
 	// TODO Maik: implement local
 	// DB Elemente können 1 aus 3 Zuständen haben: local, userDB, builtIn. Diese sind durch die Flags local und builtIn definiert.
@@ -24,7 +24,7 @@ public:
 	// und builtIn elemente haben grünen Background (alternativeBackgroundColor)
 	// Die selection color sollte immer gelb sein, das ist die default color für selections im gesamten Programm, muss normalerweise nicht explizit gesetzt werden.
 	// Als Beispiel kannst du einen anderen DB Dialog z.b. Pipes anschauen.
-	bool m_local;
+	bool m_local = false;
 
 private:
 	Ui::SVSubNetworkEditDialogTableItem *m_ui;

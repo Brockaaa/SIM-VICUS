@@ -182,9 +182,11 @@ public:
 	/*! Removes previous connection and creates ConnectorBlock between three Blocks */
 	void convertConnectionToConnectorBlock(const VICUS::BMBlock * connectedBlock, const VICUS::BMSocket * connectedSocket, const VICUS::BMBlock * newBlock, const VICUS::BMSocket * newSocket, const VICUS::BMConnector * oldCon);
 
-	// sets controllerID of Block and it's BlockItem
+	/*! sets controllerID of Block and it's BlockItem */
 	void setController(const VICUS::BMBlock * block, QString controllerName);
 
+	/*! sets NetworkHeatExchange ModelType of Block and it's BlockItem */
+	void setHeatExchange(const VICUS::BMBlock * block, VICUS::NetworkHeatExchange::ModelType modelType);
 
 	/*! Creates new Connector between two Blocks and Sockets */
 	void createConnection(const VICUS::BMBlock * startBlock, const VICUS::BMBlock * targetBlock, const VICUS::BMSocket * startSocket, const VICUS::BMSocket * targetSocket);

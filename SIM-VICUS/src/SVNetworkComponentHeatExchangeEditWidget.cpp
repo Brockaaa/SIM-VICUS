@@ -285,6 +285,8 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated
 			m_ui->stackedWidgetHeatExchange->setCurrentIndex(4);
 			break;
 	}
+
+	emit heatExchangeChanged(m_hx->m_modelType);
 }
 
 

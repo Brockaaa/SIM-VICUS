@@ -36,6 +36,7 @@
 
 #include <QGraphicsRectItem>
 #include <VICUS_NetworkComponent.h>
+#include <VICUS_NetworkHeatExchange.h>
 
 namespace VICUS{
 	class BMBlock;
@@ -110,8 +111,10 @@ protected:
 private:
 
 	/*! Name of Controller from VICUS::KeywordListQt */
-	QString                     m_controllerName;
-
+	QString								  m_controllerName;
+\
+	/*! HeatExchange to draw small icon */
+	VICUS::NetworkHeatExchange::ModelType m_heatExchageModelType = VICUS::NetworkHeatExchange::NUM_T;
 
 	friend class SVBMSceneManager;
 };

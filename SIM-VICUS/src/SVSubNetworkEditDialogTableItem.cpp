@@ -11,14 +11,12 @@
 #include <QHBoxLayout>
 
 
-SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filename, QString text, QString tooltip, int height, QWidget *parent, bool subCategory, bool builtIn, bool local) :
+SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filename, QString text, QString tooltip, int height, QWidget *parent, bool modelType) :
 	QWidget(parent),
-	m_ui(new Ui::SVSubNetworkEditDialogTableItem),
-	m_builtIn(builtIn),
-	m_local(local)
+	m_ui(new Ui::SVSubNetworkEditDialogTableItem)
 {
 	m_ui->setupUi(this);
-	if(!subCategory){
+	if(modelType){
 		QLabel *iconLabel = new QLabel(this);
 		QLabel *textLabel = new QLabel(text, this);
 		QHBoxLayout *layout = new QHBoxLayout(this);

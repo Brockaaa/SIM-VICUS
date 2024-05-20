@@ -547,6 +547,14 @@ void SVBMSceneManager::setController(const VICUS::BMBlock * block, QString contr
 	}
 }
 
+void SVBMSceneManager::setHeatExchange(const VICUS::BMBlock * block, VICUS::NetworkHeatExchange::ModelType modelType) {
+	for(SVBMBlockItem * item : m_blockItems){
+		if(item->m_block == block){
+			item->m_heatExchageModelType = modelType;
+		}
+	}
+}
+
 
 void SVBMSceneManager::createConnection(const VICUS::BMBlock * startBlock, const VICUS::BMBlock * targetBlock,
 										const VICUS::BMSocket * startSocket, const VICUS::BMSocket * targetSocket) {

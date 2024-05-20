@@ -58,6 +58,9 @@ public:
 	/*! updates the Widget and sets current Component with this. */
 	void updateInput(VICUS::NetworkComponent * component);
 
+signals:
+	void heatExchangeChanged(VICUS::NetworkHeatExchange::ModelType modelType);
+
 private slots:
 
 	void on_comboBoxHeatExchange_activated(int index);

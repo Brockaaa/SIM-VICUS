@@ -96,6 +96,8 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 
 	// workaround for stubborn layout bug
 	m_ui->tableWidgetParameters->setMaximumHeight(0);
+
+	connect(m_ui->widgetNetworkComponentHeatExchangeEditWidget, &SVNetworkComponentHeatExchangeEditWidget::heatExchangeChanged, this, &SVNetworkComponentEditWidget::heatExchangeChanged);
 }
 
 
