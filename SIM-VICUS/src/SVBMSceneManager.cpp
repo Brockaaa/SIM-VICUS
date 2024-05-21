@@ -523,9 +523,9 @@ void SVBMSceneManager::addBlock(VICUS::NetworkComponent::ModelType type, QPoint 
 	else
 		b.m_componentId = static_cast<unsigned int>(type);
 
-	emit newBlockAdded(&b, componentID);
-
 	addBlock(b, type);
+
+	emit newBlockAdded(&m_network->m_blocks.back(), componentID);
 }
 
 

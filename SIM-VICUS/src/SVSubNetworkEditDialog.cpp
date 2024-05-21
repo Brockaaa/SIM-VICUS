@@ -35,6 +35,7 @@
 #include <VICUS_BMGlobals.h>
 #include <VICUS_SubNetwork.h>
 #include <VICUS_NetworkElement.h>
+#include <VICUS_NetworkHeatExchange.h>
 #include <VICUS_KeywordListQt.h>
 #include <VICUS_utilities.h>
 #include <VICUS_Database.h>
@@ -744,10 +745,21 @@ void SVSubNetworkEditDialog::on_newBlockAdded(VICUS::BMBlock *block, unsigned in
 		newComp.m_modelType = static_cast<VICUS::NetworkComponent::ModelType>(block->m_componentId);
 		QString name = tr("<new %1>").arg( VICUS::KeywordListQt::Keyword("NetworkComponent::ModelType", newComp.m_modelType) );
 		newComp.m_displayName.setString(name.toStdString(), IBK::MultiLanguageString::m_language);
+
+		std::vector<VICUS::NetworkHeatExchange::ModelType> availableHxModelTypes = VICUS::NetworkComponent::availableHeatExchangeTypes(newComp.m_modelType);
+
+		if(std::find(availableHxModelTypes.begin(), availableHxModelTypes.end(), VICUS::NetworkHeatExchange::NUM_T) == availableHxModelTypes.end() && availableHxModelTypes.size() != 0){
+			VICUS::NetworkHeatExchange::ModelType newModelType = availableHxModelTypes.front();
+			newComp.m_heatExchange.m_modelType = newModelType;
+			newComp.m_heatExchange.setDefaultValues(newModelType);
+		}
+
 		m_networkComponents.push_back(newComp);
 		block->m_componentId = newCompID;
+		m_sceneManager->setHeatExchange(block, newComp.m_heatExchange.m_modelType);
 	}
 	// copy component from DB
+	// TODO	add a default HeatExchange when no heatExchange/NUM_T not allowed?
 	else {
 		Q_ASSERT(m_db->m_networkComponents[componentID] != nullptr);
 		VICUS::NetworkComponent component =	*m_db->m_networkComponents[componentID];
@@ -755,6 +767,7 @@ void SVSubNetworkEditDialog::on_newBlockAdded(VICUS::BMBlock *block, unsigned in
 		component.m_id = newComponentID();
 		block->m_componentId = component.m_id;
 		m_networkComponents.push_back(component);
+		m_sceneManager->setHeatExchange(block, component.m_heatExchange.m_modelType);
 	}
 }
 
