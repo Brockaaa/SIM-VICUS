@@ -127,9 +127,7 @@ private:
 
 	void modifyEnergyDemandValue(bool heating);
 
-	void updateHeatLossSplineSelectColumnList();
-
-	void updateTemperatureSplineSelectColumnList();
+	void updateSplineSelectColumnList(VICUS::NetworkHeatExchange::ModelType modelType);
 
 	void updateHeatLossSplinePredefPlot();
 

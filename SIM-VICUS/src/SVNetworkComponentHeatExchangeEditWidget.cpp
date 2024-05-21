@@ -628,12 +628,12 @@ void SVNetworkComponentHeatExchangeEditWidget::on_filepathDataFile_editingFinish
 		return;
 	}
 
-	updateHeatLossSplineSelectColumnList(); // if there are columns to be selected, the widget will be re-enabled here
+	updateSplineSelectColumnList(VICUS::NetworkHeatExchange::T_HeatLossSpline); // if there are columns to be selected, the widget will be re-enabled here
 }
 
 
 void SVNetworkComponentHeatExchangeEditWidget::on_widgetTemperatureSplineFilePathDataFile_editingFinished(){
-	updateTemperatureSplineSelectColumnList();
+	updateSplineSelectColumnList(VICUS::NetworkHeatExchange::T_TemperatureSpline);
 }
 
 
@@ -681,160 +681,97 @@ void SVNetworkComponentHeatExchangeEditWidget::on_listWidgetTemperatureSplineSel
 	m_ui->widgetTemperatureSplineFilePathDataFile->setFilename( extendedFilename );
 	m_hx->m_userDefinedTsvFile = IBK::Path(extendedFilename.toStdString());
 
-	NANDRAD::LinearSplineParameter spl;
-	spl.m_tsvFile = IBK::Path(extendedFilename.toStdString());
-
-	try {
-		spl.readTsv();
-	}
-	catch (IBK::Exception & ex) {
-		ex.writeMsgStackToError();
-		return;
-	}
-
-	m_temperatureSplineTime = spl.m_values.x();
-	m_temperatureSplineY = spl.m_values.y();
-
-	updatePredefinedTemperatureSplinePlotData();
+	updateUserTemperatureSplinePlotData();
 }
 
 
-void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplineSelectColumnList()
-{
-	// clear list widget
-	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(true);
-	m_ui->listWidgetHeatLossSplineSelectColumn->clear();
-	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(false);
+void SVNetworkComponentHeatExchangeEditWidget::updateSplineSelectColumnList(VICUS::NetworkHeatExchange::ModelType modelType){
+	QListWidget* listWidget;
+	QtExt::BrowseFilenameWidget* filePathWidget;
 
-	QString dataFilePath = m_ui->filepathDataFile->filename();
-	if(dataFilePath == QString("")) return;
-	// parse tsv-file and if several data columns are in file, show the column selection list widget
-	IBK::Path filePath(dataFilePath.toStdString()); // this is always an absolute path
-	// check if we have a  csv/tsv file
+	switch(modelType){
+		case VICUS::NetworkHeatExchange::T_TemperatureSpline:
+		{
+			listWidget = m_ui->listWidgetTemperatureSplineSelectColumn;
+			filePathWidget = m_ui->widgetTemperatureSplineFilePathDataFile;
+			break;
+		}
+
+		case VICUS::NetworkHeatExchange::T_HeatLossSpline:
+		{
+			listWidget = m_ui->listWidgetHeatLossSplineSelectColumn;
+			filePathWidget = m_ui->filepathDataFile;
+			break;
+		}
+		default:
+			return;
+	}
+
+	// Clear list widget
+	listWidget->selectionModel()->blockSignals(true);
+	listWidget->clear();
+	listWidget->selectionModel()->blockSignals(false);
+
+	// Get the file path from the UI
+	QString dataFilePath = filePathWidget->filename();
+	if(dataFilePath.isEmpty()) {
+		listWidget->clear();
+		return;
+	}
+
+	// Check and parse the data file
+	IBK::Path filePath(dataFilePath.toStdString());
 	IBK::Path adjustedFileName;
 	int selectedColumn = 1;
 	IBK::extract_number_suffix(filePath, adjustedFileName, selectedColumn);
 	std::string extension = IBK::tolower_string(adjustedFileName.extension());
-	// read first line of file
+
+	// Read only the header of the file to extract column names and units
 	IBK::CSVReader reader;
 	try {
-		// read only header
 		reader.read(adjustedFileName, true, true);
 	}
 	catch (...) {
-		//m_ui->widgetTimeSeriesPreview->setErrorMessage(tr("Error reading data file.")); //TODO
 		return;
 	}
 
 	if(selectedColumn != -1){
-		auto item = m_ui->listWidgetHeatLossSplineSelectColumn->item(selectedColumn);
-		m_ui->listWidgetHeatLossSplineSelectColumn->setCurrentItem(item);
+		auto item = listWidget->item(selectedColumn);
+		listWidget->setCurrentItem(item);
 	}
 
-	m_ui->listWidgetHeatLossSplineSelectColumn->setEnabled(true);
-	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(true);
-
-	// process all columns past the first
-	for (unsigned int i=1; i<reader.m_captions.size(); ++i) {
-
-		// try to extract unit
-		QListWidgetItem * item = nullptr;
+	// Populate the list widget with column names and units
+	for (unsigned int i = 1; i < reader.m_captions.size(); ++i) {
 		std::string ustr = reader.m_units[i];
 		if (ustr.empty())
 			ustr = "-";
-		item = new QListWidgetItem(QString("%1 [%2]").arg(QString::fromStdString(reader.m_captions[i]),
-														  QString::fromStdString(ustr)) );
+		QListWidgetItem *item = new QListWidgetItem(QString("%1 [%2]").arg(
+			QString::fromStdString(reader.m_captions[i]), QString::fromStdString(ustr)));
+
 		try {
-			IBK::Unit u(ustr); // will throw in case of unknown unit
+			IBK::Unit u(ustr);
 			item->setData(Qt::UserRole, i);
 			item->setData(Qt::UserRole+1, QString::fromStdString(ustr));
 			item->setData(Qt::UserRole+2, QString::fromStdString(reader.m_captions[i]));
-			item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		}
 		catch (...) {
-			item->setData(Qt::UserRole, -2); // unrecognized unit
+			item->setData(Qt::UserRole, -2);
 			item->setForeground(Qt::gray);
 		}
-		m_ui->listWidgetHeatLossSplineSelectColumn->addItem(item);
+		listWidget->addItem(item);
 	}
-	selectedColumn = qMin(selectedColumn, (int)reader.m_captions.size());
+	selectedColumn = qMin(selectedColumn, (int)reader.m_captions.size() - 1);
 
-	m_ui->listWidgetHeatLossSplineSelectColumn->setCurrentRow(selectedColumn-1);
-	m_ui->listWidgetHeatLossSplineSelectColumn->selectionModel()->blockSignals(false);
+	// Update the list widget selection and enable it
+	listWidget->setCurrentRow(selectedColumn-1);
+	listWidget->selectionModel()->blockSignals(false);
 
-	// we now have a column selected, trigger update of diagram
-	on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(m_ui->listWidgetHeatLossSplineSelectColumn->currentItem(), nullptr);
-}
-
-
-void SVNetworkComponentHeatExchangeEditWidget::updateTemperatureSplineSelectColumnList() {
-	// clear list widget
-	m_ui->listWidgetTemperatureSplineSelectColumn->selectionModel()->blockSignals(true);
-	m_ui->listWidgetTemperatureSplineSelectColumn->clear();
-	m_ui->listWidgetTemperatureSplineSelectColumn->selectionModel()->blockSignals(false);
-
-	QString dataFilePath = m_ui->widgetTemperatureSplineFilePathDataFile->filename();
-	if(dataFilePath == QString("")) {
-		return;
-	}
-	// parse tsv-file and if several data columns are in file, show the column selection list widget
-	IBK::Path filePath(dataFilePath.toStdString()); // this is always an absolute path
-	// check if we have a  csv/tsv file
-	IBK::Path adjustedFileName;
-	int selectedColumn = 1;
-	IBK::extract_number_suffix(filePath, adjustedFileName, selectedColumn);
-	std::string extension = IBK::tolower_string(adjustedFileName.extension());
-	// read first line of file
-	IBK::CSVReader reader;
-	try {
-		// read only header
-		reader.read(adjustedFileName, true, true);
-	}
-	catch (...) {
-		//m_ui->widgetTimeSeriesPreview->setErrorMessage(tr("Error reading data file.")); //TODO
-		return;
-	}
-
-	if(selectedColumn != -1){
-		auto item = m_ui->listWidgetTemperatureSplineSelectColumn->item(selectedColumn);
-		m_ui->listWidgetTemperatureSplineSelectColumn->setCurrentItem(item);
-	}
-
-	m_ui->widgetTemperatureSplineSelectColumn->setEnabled(true);
-	m_ui->listWidgetTemperatureSplineSelectColumn->selectionModel()->blockSignals(true);
-
-
-	// process all columns past the first
-	for (unsigned int i=1; i<reader.m_captions.size(); ++i) {
-
-		// try to extract unit
-		QListWidgetItem * item = nullptr;
-		std::string ustr = reader.m_units[i];
-		if (ustr.empty())
-			ustr = "-";
-		item = new QListWidgetItem(QString("%1 [%2]").arg(QString::fromStdString(reader.m_captions[i]),
-														  QString::fromStdString(ustr)) );
-		try {
-			IBK::Unit u(ustr); // will throw in case of unknown unit
-
-			item->setData(Qt::UserRole, i);
-			item->setData(Qt::UserRole+1, QString::fromStdString(ustr));
-			item->setData(Qt::UserRole+2, QString::fromStdString(reader.m_captions[i]));
-			item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-		}
-		catch (...) {
-			item->setData(Qt::UserRole, -2); // unrecognized unit
-			item->setForeground(Qt::gray);
-		}
-		m_ui->listWidgetTemperatureSplineSelectColumn->addItem(item);
-	}
-	selectedColumn = qMin(selectedColumn, (int)reader.m_captions.size());
-
-	m_ui->listWidgetTemperatureSplineSelectColumn->setCurrentRow(selectedColumn-1);
-	m_ui->listWidgetTemperatureSplineSelectColumn->selectionModel()->blockSignals(false);
-
-	// we now have a column selected, trigger update of diagram
-	on_listWidgetTemperatureSplineSelectColumn_currentItemChanged(m_ui->listWidgetTemperatureSplineSelectColumn->currentItem(), nullptr);
+	// Trigger an update based on the new selection
+	if(modelType == VICUS::NetworkHeatExchange::T_TemperatureSpline)
+		on_listWidgetTemperatureSplineSelectColumn_currentItemChanged(listWidget->currentItem(), nullptr);
+	else
+		on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(listWidget->currentItem(), nullptr);
 }
 
 
@@ -893,9 +830,10 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplineUserPlot()
 
 	NANDRAD::LinearSplineParameter spl;
 	spl.m_tsvFile = fname;
+	spl.m_name = "HeatFlux";
 
 	try {
-		spl.checkAndInitialize("", IBK::Unit("h"), IBK::Unit("W"), IBK::Unit("W"), std::numeric_limits<double>::lowest(), false, std::numeric_limits<double>::max(), false, nullptr);
+		spl.checkAndInitialize("", IBK::Unit("h"), IBK::Unit("W"), IBK::Unit("W"), std::numeric_limits<double>::lowest(), false, std::numeric_limits<double>::max(), false, nullptr, true);
 	}
 	catch (IBK::Exception & ex) {
 		QMessageBox::critical(this, QString(), tr("Could not read file. It might not fit tsv format.\n%1").arg(ex.what()));
@@ -905,8 +843,12 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplineUserPlot()
 		return;
 	}
 
-	std::vector<double> time = spl.m_values.x();
-	std::vector<double> heatLossSpline = spl.m_values.x();
+	std::vector<double> heatLossSpline = spl.m_values.y();
+
+	// time expected in hours
+	std::vector<double> time(m_heatLossSplineHeatingY.size());
+	for (unsigned int i=0; i<heatLossSpline.size(); ++i)
+		time[i] = i;
 
 	bool containsNegativeValues = false;
 	double maximumHeatingLoad = 0;
@@ -940,14 +882,17 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplineUserPlot()
 	}
 
 	// plot heating curve
-	maximumHeatingLoad = *std::max_element(heatLossSpline.begin(), heatLossSpline.end());
 	std::vector<double> heatingValuesToPlot;
-	for(double value : heatLossSpline)
+	for (double value : heatLossSpline){
 		heatingValuesToPlot.push_back(value / 1000); // convert to kW
+		if(maximumHeatingLoad < heatingValuesToPlot.back())
+			maximumHeatingLoad = heatingValuesToPlot.back();
+	}
+
+	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, time.size());
+	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::yLeft, 0, maximumHeatingLoad > maximumCoolingLoad ? maximumHeatingLoad  : maximumCoolingLoad );
 	m_heatLossSplineHeatingCurve->setSamples(time.data(), heatingValuesToPlot.data(), time.size());
 	m_heatLossSplineHeatingCurve->attach(m_ui->widgetPlotHeatLossSpline);
-	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::xBottom, 0, time.back());
-	m_ui->widgetPlotHeatLossSpline->setAxisScale(QwtPlot::yLeft, 0, maximumHeatingLoad > maximumCoolingLoad ? maximumHeatingLoad / 1000 : maximumCoolingLoad / 1000);
 	m_ui->widgetPlotHeatLossSpline->replot();
 
 	m_heatLossSplineZoomer->setZoomBase();
@@ -989,32 +934,38 @@ void SVNetworkComponentHeatExchangeEditWidget::updateUserTemperatureSplinePlotDa
 	IBK::Path fname(m_ui->widgetTemperatureSplineFilePathDataFile->filename().toStdString());
 	NANDRAD::LinearSplineParameter spl;
 	spl.m_tsvFile = fname;
+	spl.m_name = "Temperature";
 
 	try {
-		spl.checkAndInitialize("", IBK::Unit("h"), IBK::Unit("C"), IBK::Unit("C"), std::numeric_limits<double>::lowest(), false, std::numeric_limits<double>::max(), false, nullptr);
+		spl.checkAndInitialize("", IBK::Unit("h"), IBK::Unit("C"), IBK::Unit("C"), std::numeric_limits<double>::lowest(), false, std::numeric_limits<double>::max(), false, nullptr, true);
 	}
 	catch (IBK::Exception & ex) {
 		QMessageBox::critical(this, QString(), tr("Could not read file. It might not fit tsv format.\n%1").arg(ex.what()));
-		m_heatLossSplineHeatingCurve->detach();
-		m_heatLossSplineCoolingCurve->detach();
-		m_ui->widgetPlotHeatLossSpline->replot();
+		m_temperatureSplineCurve->detach();
+		m_ui->widgetPlotTemperatureSpline->replot();
 		return;
 	}
 
-	//m_vectorHeatLossSplineUserXData = spl.m_values.x();
-	//m_vectorHeatLossSplineUserYData = spl.m_values.y();
 
-	bool containsNegativeValues = false;
-	double maximumHeatingLoad = 0;
-	double maximumCoolingLoad = 0;
-	//for(double value : m_vectorHeatLossSplineUserYData){
-	//	if(value < 0){
-	//		containsNegativeValues = true;
-	//		break;
-	//	}
-	//}
+	// values in K instead of C, TODO
+	std::vector<double> temperatureSpline = spl.m_values.y();
 
-	// TODO Maik ...
+	std::vector<double> time(temperatureSpline.size());
+	for (unsigned int i=0; i<temperatureSpline.size(); ++i)
+		time[i] = i;
+
+
+	// plot heating curve
+	double maximumTemperature = *std::max_element(temperatureSpline.begin(), temperatureSpline.end());
+	double minimumTemperature = *std::min_element(temperatureSpline.begin(), temperatureSpline.end());
+	m_temperatureSplineCurve->setSamples(time.data(), temperatureSpline.data(), time.size());
+	m_temperatureSplineCurve->attach(m_ui->widgetPlotTemperatureSpline);
+	m_ui->widgetPlotTemperatureSpline->setAxisScale(QwtPlot::xBottom, 0, time.back());
+	m_ui->widgetPlotTemperatureSpline->setAxisScale(QwtPlot::yLeft, minimumTemperature, maximumTemperature);
+	m_ui->widgetPlotTemperatureSpline->replot();
+
+	m_temperatureSplineZoomer->setZoomBase();
+
 }
 
 
@@ -1056,8 +1007,14 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxTemperatureSpline_acti
 		updatePredefinedTemperatureSplinePlotData();
 	} else {
 		m_ui->widgetTemperatureSplineFilePathDataFile->setFilename(QString::fromStdString(m_hx->m_userDefinedTsvFile.str()));
+
+		bool validFileName = m_hx->m_userDefinedTsvFile.isValid();
 		m_ui->widgetPlotTemperatureSpline->setEnabled(m_hx->m_userDefinedTsvFile.isValid());
-		updateTemperatureSplineSelectColumnList();
+		if(!validFileName){
+			m_temperatureSplineCurve->detach();
+			m_ui->widgetPlotTemperatureSpline->replot();
+		}
+		updateSplineSelectColumnList(VICUS::NetworkHeatExchange::T_TemperatureSpline);
 	}
 }
 
