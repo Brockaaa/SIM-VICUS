@@ -146,8 +146,12 @@ void SVNetworkComponentEditWidget::update()
 	// enable schedules tool buttons (based on required schedules)
 	std::vector<std::string> reqScheduleNames = NANDRAD::HydraulicNetworkComponent::requiredScheduleNames(nandradModelType);
 	m_ui->groupBoxSchedules->setVisible(!reqScheduleNames.empty());
-	m_ui->toolButtonSchedule1->setVisible(reqScheduleNames.size()==1 || reqScheduleNames.size()==2);
-	m_ui->toolButtonSchedule2->setVisible(reqScheduleNames.size()==2);
+	bool schedule1Visible = reqScheduleNames.size()==1 || reqScheduleNames.size()==2;
+	bool schedule2Visible = reqScheduleNames.size()==2;
+	m_ui->toolButtonSchedule1->setVisible(schedule1Visible);
+	m_ui->labelSchedule1->setVisible(schedule1Visible);
+	m_ui->toolButtonSchedule2->setVisible(schedule2Visible);
+	m_ui->labelSchedule2->setVisible(schedule2Visible);
 
 	// update schedule labels
 	m_ui->labelSchedule1->clear();

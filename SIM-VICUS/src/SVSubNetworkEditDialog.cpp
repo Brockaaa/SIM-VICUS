@@ -1425,8 +1425,13 @@ void SVSubNetworkEditDialog::on_copyBlockButton_clicked()
 		VICUS::NetworkComponent component = m_networkComponents[componentIndex(selectedBlock->m_componentId)];
 		component.m_id = newComponentID();
 		newBlock.m_componentId = component.m_id;
+
+		newBlock.m_sockets[0].m_pos = QPointF(0, VICUS::BLOCK_HEIGHT / 2);
+		newBlock.m_sockets[1].m_pos = QPointF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT / 2);
+
 		m_networkComponents.push_back(component);
 		m_sceneManager->addBlock(newBlock, component.m_modelType);
+		m_sceneManager->setHeatExchange(&m_sceneManager->network().m_blocks.back(), component.m_heatExchange.m_modelType);
 
 		m_sceneManager->update();
 	}
