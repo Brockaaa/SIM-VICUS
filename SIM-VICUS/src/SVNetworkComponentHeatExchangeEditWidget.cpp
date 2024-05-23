@@ -188,7 +188,13 @@ void SVNetworkComponentHeatExchangeEditWidget::updateInput(VICUS::NetworkCompone
 			newHeatExchange.setDefaultValues(heatExchangeMT);
 			if (heatExchangeMT == VICUS::NetworkHeatExchange::T_HeatLossSpline ||
 				heatExchangeMT == VICUS::NetworkHeatExchange::T_HeatLossSplineCondenser) {
+				/* sets default values for all buildingType HeatExchangers */
+				for (VICUS::NetworkHeatExchange& heatExchangeBT : m_vectorTempHeatExchangeBuildingType){
+					heatExchangeBT.m_modelType = heatExchangeMT;
+					heatExchangeBT.setDefaultValues(heatExchangeMT);
+				}
 				newHeatExchange = m_vectorTempHeatExchangeBuildingType[newHeatExchange.m_buildingType];
+				newHeatExchange.m_modelType = heatExchangeMT;
 			}
 			m_vectorTempHeatExchange.push_back(newHeatExchange);
 		}
@@ -256,6 +262,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated
 
 	// take newly selected heat exchange from vector
 	*m_hx = m_vectorTempHeatExchange[(unsigned int)index];
+
 
 	// set according page and update content
 	switch (m_hx->m_modelType){
