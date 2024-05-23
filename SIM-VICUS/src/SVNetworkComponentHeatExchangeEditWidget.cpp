@@ -497,9 +497,17 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineFloorAre
 
 
 void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineMaximumHeatingLoad_editingFinishedSuccessfully() {
+	// get old and new max Value and adjust HeatingEnergyDemand
+	double oldMaximumHeatingLoad =  m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value;
+	double newMaximumHeatingLoad = m_ui->lineEditHeatLossSplineMaximumHeatingLoad->value();
+	double oldHeatingEnergyDemand = m_hx->m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].value;
+	double newHeatingEnergyDemand = oldHeatingEnergyDemand * (newMaximumHeatingLoad * 1000) / oldMaximumHeatingLoad;
+
+	m_hx->m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].value = newHeatingEnergyDemand;
+
 	// set new max value
 	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_MaximumHeatingLoad,
-									 m_ui->lineEditHeatLossSplineMaximumHeatingLoad->value());
+									 newMaximumHeatingLoad);
 	bool success = m_hx->generateheatingDemandSpline(m_heatLossSplineHeatingY, m_kHeating);
 	Q_ASSERT(success); //  we only scale the curve, should never give any problems
 
@@ -610,9 +618,17 @@ void SVNetworkComponentHeatExchangeEditWidget::on_groupBoxHeatLossSplineCooling_
 
 
 void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineMaximumCoolingLoad_editingFinishedSuccessfully() {
+	// get old and new max Value and adjust HeatingEnergyDemand
+	double oldMaximumCoolingLoad =  m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].value;
+	double newMaximumCoolingLoad = m_ui->lineEditHeatLossSplineMaximumCoolingLoad->value();
+	double oldCoolingEnergyDemand = m_hx->m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemand].value;
+	double newCoolingEnergyDemand = oldCoolingEnergyDemand * (newMaximumCoolingLoad * 1000) / oldMaximumCoolingLoad;
+
+	m_hx->m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemand].value = newCoolingEnergyDemand;
+
 	// set new max value
 	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_MaximumCoolingLoad,
-									 m_ui->lineEditHeatLossSplineMaximumCoolingLoad->value());
+									 newMaximumCoolingLoad);
 	bool success = m_hx->generateCoolingDemandSpline(m_heatLossSplineCoolingY, m_kCooling);
 	Q_ASSERT(success); //  we only scale the curve, should never give any problems
 
