@@ -453,8 +453,9 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineFloorAre
 	// check if we can find a new k with that area
 	bool successfulNewCoolingK = true;
 	double fallbackFloorAreaCooling = newFloorArea;
+	double finalCoolingDemand;
 	if (m_hx->m_withCoolingDemand) {
-		double requestedCoolingDemand, finalCoolingDemand;
+		double requestedCoolingDemand;
 		requestedCoolingDemand = m_hx->m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemand].get_value("Wh") / previousFloorArea * newFloorArea;
 		bool successfulNewCoolingK = m_hx->calculateNewKValue(m_hx->m_coolingDemandSplineOrig, requestedCoolingDemand,
 															  m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].value,
@@ -485,6 +486,10 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineFloorAre
 	// finally set value back to line edit (might have changed) and store it
 	m_ui->lineEditHeatLossSplineFloorArea->setValue(newFloorArea);
 	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_FloorArea, newFloorArea);
+	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemand, finalHeatingDemand / 1000);
+	if (m_hx->m_withCoolingDemand) {
+		VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemand, finalCoolingDemand / 1000);
+	}
 
 	// plot
 	updateHeatLossSplinePredefPlot();
