@@ -227,6 +227,14 @@ bool NetworkHeatExchange::calculateNewKValue(const std::vector<double> & origina
 
 	double maxValueExisting = *std::max_element(original.begin(), original.end());
 
+	// if maxValueRequired is too large, scale both maxValueRequired and integral down to avoid double imprecision //
+	int power = 0;
+	while( maxValueRequired > 1000000/* 5mW */ ){
+		maxValueRequired /= 10;
+		integralRequired /= 10;
+		power++;
+	}
+
 	std::vector<double> newlyCalculatedYPlotValues;
 
 	// constants
@@ -239,8 +247,9 @@ bool NetworkHeatExchange::calculateNewKValue(const std::vector<double> & origina
 	KResult = 1;
 	for (int i = 0 ; i < maxLoopIterations; i++){
 		calculateHeatLossSplineFromKValue(KResult, original, newlyCalculatedYPlotValues, maxValueRequired, maxValueExisting);
-		integralResult = std::accumulate(newlyCalculatedYPlotValues.begin(), newlyCalculatedYPlotValues.end(), 0);
+		integralResult = std::accumulate(newlyCalculatedYPlotValues.begin(), newlyCalculatedYPlotValues.end(), 0.0);
 		if (nearEqual(integralRequired, integralResult)){
+			integralResult = integralResult * pow(10, power);
 			return true;
 		}
 		else if (integralResult < integralRequired){
@@ -254,6 +263,7 @@ bool NetworkHeatExchange::calculateNewKValue(const std::vector<double> & origina
 		}
 	}
 
+	integralResult = integralResult * pow(10, power);
 	return false;
 }
 

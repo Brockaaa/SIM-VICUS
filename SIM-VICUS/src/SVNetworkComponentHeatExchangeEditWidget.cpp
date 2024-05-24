@@ -504,15 +504,15 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineMaximumH
 	double newHeatingEnergyDemand = oldHeatingEnergyDemand * (newMaximumHeatingLoad * 1000) / oldMaximumHeatingLoad;
 
 	m_hx->m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].value = newHeatingEnergyDemand;
+	m_ui->lineEditHeatLossSplineHeatingEnergyDemand->setValue((int)newHeatingEnergyDemand / 1000);
 
 	// set new max value
 	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_MaximumHeatingLoad,
 									 newMaximumHeatingLoad);
-	bool success = m_hx->generateheatingDemandSpline(m_heatLossSplineHeatingY, m_kHeating);
-	Q_ASSERT(success); //  we only scale the curve, should never give any problems
+	m_hx->calculateHeatLossSplineFromKValue(m_kHeating, m_hx->m_heatingDemandSplineOrig, m_heatLossSplineHeatingY, m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value);
 
 	// also calculate new energy demand value
-	double newHeatingDemand = std::accumulate(m_heatLossSplineHeatingY.begin(), m_heatLossSplineHeatingY.end(), 0);
+	double newHeatingDemand = std::accumulate(m_heatLossSplineHeatingY.begin(), m_heatLossSplineHeatingY.end(), 0.0);
 	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_HeatingEnergyDemand,
 									   newHeatingDemand / 1000);
 	// and update values
@@ -633,7 +633,7 @@ void SVNetworkComponentHeatExchangeEditWidget::on_lineEditHeatLossSplineMaximumC
 	Q_ASSERT(success); //  we only scale the curve, should never give any problems
 
 	// also calculate new energy demand value
-	double newCoolingDemand = std::accumulate(m_heatLossSplineCoolingY.begin(), m_heatLossSplineCoolingY.end(), 0);
+	double newCoolingDemand = std::accumulate(m_heatLossSplineCoolingY.begin(), m_heatLossSplineCoolingY.end(), 0.0);
 	VICUS::KeywordList::setParameter(m_hx->m_para, "NetworkHeatExchange::para_t", VICUS::NetworkHeatExchange::P_CoolingEnergyDemand,
 									   newCoolingDemand / 1000);
 	// and update values
@@ -807,11 +807,24 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePredefPlot() 
 	Q_ASSERT(m_hx->m_buildingType < VICUS::NetworkHeatExchange::BT_UserDefineBuilding);
 
 	// calculates new 'k' only if needed
-	if (!m_hx->generateheatingDemandSpline(m_heatLossSplineHeatingY, m_kHeating))
-		return;
-	if (m_hx->m_withCoolingDemand)
-		if (!m_hx->generateCoolingDemandSpline(m_heatLossSplineCoolingY, m_kCooling))
+	if (m_kHeating<0){
+		double finalHeatingDemand;
+		if (!m_hx->calculateNewKValue(m_hx->m_heatingDemandSplineOrig, m_hx->m_para[VICUS::NetworkHeatExchange::P_HeatingEnergyDemand].get_value("Wh"), m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value, finalHeatingDemand, m_kHeating) )
 			return;
+	}
+	m_hx->calculateHeatLossSplineFromKValue(m_kHeating, m_hx->m_heatingDemandSplineOrig, m_heatLossSplineHeatingY, m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].value);
+
+	if (m_hx->m_withCoolingDemand)
+	{
+		if(m_kCooling<0){
+			double finalCoolingDemand;
+			if (!m_hx->calculateNewKValue(m_hx->m_coolingDemandSplineOrig, m_hx->m_para[VICUS::NetworkHeatExchange::P_CoolingEnergyDemand].get_value("Wh"), m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].value, finalCoolingDemand, m_kCooling) )
+				return;
+		}
+		m_hx->calculateHeatLossSplineFromKValue(m_kCooling, m_hx->m_coolingDemandSplineOrig, m_heatLossSplineCoolingY, m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].value);
+	}
+
+
 
 	// time expected in hours
 	std::vector<double> time(m_heatLossSplineHeatingY.size());
