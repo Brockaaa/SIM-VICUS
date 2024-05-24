@@ -973,6 +973,7 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePredefinedTemperatureSpline
 void SVNetworkComponentHeatExchangeEditWidget::updateUserTemperatureSplinePlotData()
 {
 	IBK::Path fname(m_ui->widgetTemperatureSplineFilePathDataFile->filename().toStdString());
+	m_ui->widgetPlotTemperatureSpline->setEnabled(fname.isValid());
 	NANDRAD::LinearSplineParameter spl;
 	spl.m_tsvFile = fname;
 	spl.m_name = "Temperature";
@@ -1048,7 +1049,6 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxTemperatureSpline_acti
 		updatePredefinedTemperatureSplinePlotData();
 	} else {
 		m_ui->widgetTemperatureSplineFilePathDataFile->setFilename(QString::fromStdString(m_hx->m_userDefinedTsvFile.str()));
-
 		bool validFileName = m_hx->m_userDefinedTsvFile.isValid();
 		m_ui->widgetPlotTemperatureSpline->setEnabled(m_hx->m_userDefinedTsvFile.isValid());
 		if(!validFileName){
