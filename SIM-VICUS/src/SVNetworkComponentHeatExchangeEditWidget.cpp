@@ -979,7 +979,7 @@ void SVNetworkComponentHeatExchangeEditWidget::updateUserTemperatureSplinePlotDa
 	spl.m_name = "Temperature";
 
 	try {
-		spl.checkAndInitialize("", IBK::Unit("h"), IBK::Unit("C"), IBK::Unit("C"), std::numeric_limits<double>::lowest(), false, std::numeric_limits<double>::max(), false, nullptr, true);
+		spl.checkAndInitialize("", IBK::Unit("s"), IBK::Unit("K"), IBK::Unit("K"), std::numeric_limits<double>::lowest(), false, std::numeric_limits<double>::max(), false, nullptr);
 	}
 	catch (IBK::Exception & ex) {
 		QMessageBox::critical(this, QString(), tr("Could not read file. It might not fit tsv format.\n%1").arg(ex.what()));
@@ -989,8 +989,11 @@ void SVNetworkComponentHeatExchangeEditWidget::updateUserTemperatureSplinePlotDa
 	}
 
 
-	// values in K instead of C, TODO
 	std::vector<double> temperatureSpline = spl.m_values.y();
+	// values converting from K to C
+	for(int i = 0; i < temperatureSpline.size(); i++){
+		temperatureSpline[i] -= 274.15;
+	}
 
 	std::vector<double> time(temperatureSpline.size());
 	for (unsigned int i=0; i<temperatureSpline.size(); ++i)
