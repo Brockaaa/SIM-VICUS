@@ -75,15 +75,15 @@ public:
 		SQ_LightingHeatLoadPerAreaSchedule,						// Keyword: LightingHeatLoadPerAreaSchedule					[W/m2]
 		SQ_HeatingSetpointSchedule,								// Keyword: HeatingSetpointSchedule							[C]
 		SQ_CoolingSetpointSchedule,								// Keyword: CoolingSetpointSchedule							[C]
-		SQ_CondenserMeanTemperatureSchedule,					// Keyword: CondenserMeanTemperatureSchedule				[C]
-		SQ_CondenserOutletSetpointSchedule,						// Keyword: CondenserOutletSetpointSchedule					[C]
-		SQ_EvaporatorMeanTemperatureSchedule,					// Keyword: EvaporatorMeanTemperatureSchedule				[C]
+		SQ_CondenserMeanTemperatureSchedule,					// Keyword: CondenserMeanTemperatureSchedule				[C]			'Mean fluid temperature at heat pump condenser'
+		SQ_CondenserOutletSetpointSchedule,						// Keyword: CondenserOutletSetpointSchedule					[C]			'Fluid outlet temperature at heat pump condenser'
+		SQ_EvaporatorMeanTemperatureSchedule,					// Keyword: EvaporatorMeanTemperatureSchedule				[C]			'Mean fluid temperature at heat pump evaporator'
 		SQ_MaxMassFluxSchedule,									// Keyword: MaxMassFluxSchedule								[kg/s]
 		/*! This schedule is used when the mass flux is defined/given. */
-		SQ_MassFluxSchedule,									// Keyword: MassFluxSchedule								[kg/s]
+		SQ_MassFluxSchedule,									// Keyword: MassFluxSchedule								[kg/s]		'Mass flux'
 		/*! This schedule is used when the mass flux is desired (as a setpoint value) and used as input for a controller. */
-		SQ_MassFluxSetpointSchedule,							// Keyword: MassFluxSetpointSchedule						[kg/s]
-		SQ_TemperatureDifferenceSetpointSchedule,				// Keyword: TemperatureDifferenceSetpointSchedule			[K]
+		SQ_MassFluxSetpointSchedule,							// Keyword: MassFluxSetpointSchedule						[kg/s]		'Mass flux setpoint'
+		SQ_TemperatureDifferenceSetpointSchedule,				// Keyword: TemperatureDifferenceSetpointSchedule			[K]			'Temperature difference'
 		SQ_HeatPumpOnOffSignalSchedule,							// Keyword: HeatPumpOnOffSignalSchedule						[---]
 		SQ_DomesticHotWaterDemandSchedule,						// Keyword: DomesticHotWaterDemandSchedule					[W]
 		SQ_SupplyTemperatureSchedule,							// Keyword: SupplyTemperatureSchedule						[C]

@@ -126,6 +126,9 @@ public:
 	/*! Actual read function, called from both variants of readXML(). */
 	void readXMLDocument(TiXmlElement * rootElement);
 
+	/*! Converts old project version to new ones. Implement any required fixes here. */
+	void convertProject();
+
 	/*! Writes the project file to an XML file.
 		\param filename  The full path to the project file.
 	*/

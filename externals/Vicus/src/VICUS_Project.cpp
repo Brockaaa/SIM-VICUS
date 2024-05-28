@@ -380,6 +380,11 @@ void Project::readXMLDocument(TiXmlElement * rootElement) {
 	// we read our subsections from this handle
 	TiXmlHandle xmlRoot = TiXmlHandle(rootElement);
 
+	// read file version and current SIM-VICUS version
+	std::string fileVersion;
+	std::string valueStr;
+	TiXmlElement::readSingleAttributeElement(xmlRoot.ToElement(), "fileVersion", fileVersion, valueStr);
+
 	// clear existing grid planes
 	m_viewSettings.m_gridPlanes.clear();
 
@@ -447,8 +452,17 @@ void Project::readXMLDocument(TiXmlElement * rootElement) {
 	catch (IBK::Exception & ex) {
 		throw IBK::Exception(ex, IBK::FormatString("Error reading project from text."), FUNC_ID);
 	}
-
 }
+
+
+//void Project::convertProject() {
+//	unsigned int majorRequired, majorFile, minorRequired, minorFile , patch;
+//	IBK::decode_version_number(VICUS::VERSION, majorRequired, minorRequired, patch);
+//	IBK::decode_version_number(fileVersion, majorFile, minorFile, patch);
+
+//	//
+//	if (majorRequired == 1 && majorFile == 1 && minorRequired > 1 && minorFile <=1)
+//}
 
 
 void Project::writeXML(const IBK::Path & filename) const {
