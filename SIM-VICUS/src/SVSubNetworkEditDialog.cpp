@@ -96,7 +96,7 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	connect(&SVProjectHandler::instance(), &SVProjectHandler::projectSaved, this, &SVSubNetworkEditDialog::on_projectSaved);
 	connect(m_ui->networkComponentEditWidget, &SVNetworkComponentEditWidget::controllerChanged, this, &SVSubNetworkEditDialog::on_controllerChanged);
 	connect(m_ui->networkComponentEditWidget, &SVNetworkComponentEditWidget::heatExchangeChanged, this, &SVSubNetworkEditDialog::on_heatExchangeChanged);
-
+	connect(m_ui->networkComponentEditWidget, &SVNetworkComponentEditWidget::externallyDefinedStateChanged, this, &SVSubNetworkEditDialog::on_externallyDefinedStateChanged);
 }
 
 SVSubNetworkEditDialog::~SVSubNetworkEditDialog()
@@ -254,6 +254,19 @@ void SVSubNetworkEditDialog::updateNetwork() {
 
 bool SVSubNetworkEditDialog::checkAcceptedNetwork()
 {
+	/* checks that at most one HeatExchanger is externally defined */
+	bool oneHeatExchangeExternallyDefined = false;
+
+	for(const VICUS::NetworkComponent& component : m_networkComponents){
+		if(component.m_heatExchange.m_individualHeatExchange){
+			if(oneHeatExchangeExternallyDefined){
+				QMessageBox::warning(this, tr("HeatExchange Conflict"), tr("Another Heat Exchanged is externally defined. Only one externally defined Heat Exchanger is allowed. Please make sure to choose only one."));
+				return false;
+			}
+			oneHeatExchangeExternallyDefined = true;
+		}
+	}
+
 	/* checks if every block has at least one inlet and one outlet connection, if not,
 	throw warning and decline to close the window */
 	for(const VICUS::BMBlock &block : m_sceneManager->network().m_blocks){
@@ -615,17 +628,6 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 	m_subNetwork->m_elements.clear();
 	m_subNetwork->m_components.clear();
 
-	/* Copy all used components */
-	std::set<unsigned int> usedComponentIds;
-	for (auto& block : m_subNetwork->m_graphicalNetwork.m_blocks) {
-		if (block.m_mode == VICUS::BMBlockType::NetworkComponentBlock)
-			usedComponentIds.insert(block.m_componentId);
-	}
-	for (unsigned int id: usedComponentIds) {
-		m_subNetwork->m_components.push_back( m_networkComponents[componentIndex(id)] );
-	}
-
-
 	/* creates the appropriate Network Elements for the Subnetwork */
 	for (auto& block : m_subNetwork->m_graphicalNetwork.m_blocks){
 		if (block.m_mode == VICUS::BMBlockType::NetworkComponentBlock){
@@ -636,6 +638,32 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 			m_subNetwork->m_elements.push_back(networkElement);
 		}
 	}
+
+	/* Copy all used components */
+	std::set<unsigned int> usedComponentIds;
+	for (auto& block : m_subNetwork->m_graphicalNetwork.m_blocks) {
+		if (block.m_mode == VICUS::BMBlockType::NetworkComponentBlock)
+			usedComponentIds.insert(block.m_componentId);
+	}
+
+	bool heatExchangeExternallyDefined = false;
+	for (unsigned int id : usedComponentIds) {
+		/* Checks if a component is externally defined, if yes, set the attribute in the Subnetwork to the ID of the NetworkElement */
+		unsigned int idx = componentIndex(id);
+		if (m_networkComponents[idx].m_heatExchange.m_individualHeatExchange){
+			heatExchangeExternallyDefined = true;
+			for (const VICUS::NetworkElement& element : m_subNetwork->m_elements )
+			{
+				if (element.m_componentId == m_networkComponents[idx].m_id)
+					m_subNetwork->m_idHeatExchangeElement = element.m_id;
+			}
+		}
+
+		m_subNetwork->m_components.push_back( m_networkComponents[idx] );
+	}
+
+	if(!heatExchangeExternallyDefined)
+		m_subNetwork->m_idHeatExchangeElement = VICUS::INVALID_ID;
 
 	emit widgetClosed();
 	this->close();
@@ -1574,5 +1602,25 @@ void SVSubNetworkEditDialog::on_heatExchangeChanged(VICUS::NetworkHeatExchange::
 	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().first());
 	m_sceneManager->setHeatExchange(selectedBlock, modelType);
 	m_sceneManager->update();
+
+}
+
+void SVSubNetworkEditDialog::on_externallyDefinedStateChanged(bool checked)
+{
+	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().first());
+	VICUS::NetworkComponent& component = m_networkComponents[componentIndex(selectedBlock->m_componentId)];
+	component.m_heatExchange.m_individualHeatExchange = checked;
+
+	if(!checked) return;
+
+	// check if there is another NetworkComponent whose HeatExchanger is set to externally defined
+	bool anotherChecked = false;
+	for(VICUS::NetworkComponent& componentTmp : m_networkComponents){
+		if(componentTmp.m_heatExchange.m_individualHeatExchange == true && component.m_id != componentTmp.m_id)
+			anotherChecked = true;
+	}
+
+	if(anotherChecked)
+		QMessageBox::warning(this, tr("HeatExchange Conflict"), tr("Another Heat Exchanged is externally defined. Only one externally defined Heat Exchanger is allowed. Please make sure to choose only one."));
 
 }

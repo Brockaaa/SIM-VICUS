@@ -59,19 +59,23 @@ public:
 	void updateInput(VICUS::NetworkComponent * component);
 
 signals:
+	/*! informs SubNetworkDialog that heat Exchange was changed to adjust the HxIcon in the scene */
 	void heatExchangeChanged(VICUS::NetworkHeatExchange::ModelType modelType);
+	/*! informs the SubNetwork that externally Defined State was changed. The dialog will perform a check if it was checked multiple times and
+	 *  inform the user */
+	void externallyDefinedStateChanged(bool checked);
 
 private slots:
 
 	void on_comboBoxHeatExchange_activated(int index);
 
-	void on_checkBoxHeatLossConstantIndividual_stateChanged(int arg1);
+	void on_checkBoxHeatLossConstantExternal_stateChanged(int arg1);
 
 	void on_lineEditHeatLossConstantUser_editingFinishedSuccessfully();
 
 	void on_lineEditTemperatureConstantTemperature_editingFinishedSuccessfully();
 
-	void on_checkBoxHeatLossSplineIndividual_clicked(bool checked);
+	void on_checkBoxHeatLossSplineExternal_clicked(bool checked);
 
 	void on_lineEditHeatLossSplineFloorArea_editingFinishedSuccessfully();
 

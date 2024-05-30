@@ -98,6 +98,7 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 	m_ui->tableWidgetParameters->setMaximumHeight(0);
 
 	connect(m_ui->widgetNetworkComponentHeatExchangeEditWidget, &SVNetworkComponentHeatExchangeEditWidget::heatExchangeChanged, this, &SVNetworkComponentEditWidget::heatExchangeChanged);
+	connect(m_ui->widgetNetworkComponentHeatExchangeEditWidget, &SVNetworkComponentHeatExchangeEditWidget::externallyDefinedStateChanged, this, &SVNetworkComponentEditWidget::externallyDefinedStateChanged);
 }
 
 

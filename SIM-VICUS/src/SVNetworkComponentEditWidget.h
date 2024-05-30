@@ -85,8 +85,9 @@ public:
 signals:
 	void controllerChanged(QString controllerName);
 
-	/* signal to pass a signal from SVNetworkComponentHeatExchange to SVSubNetworkEditDialog*/
+	/* signals to forward signal from SVNetworkComponentHeatExchange to SVSubNetworkEditDialog*/
 	void heatExchangeChanged(VICUS::NetworkHeatExchange::ModelType modelType);
+	void externallyDefinedStateChanged(bool checked);
 
 private slots:
 	void on_tableWidgetParameters_cellChanged(int row, int column);

@@ -78,6 +78,8 @@ private slots:
 	void on_controllerChanged(QString controllerName);
 	/*! Connected to singal heatExchangeChanged()from SVNetworkComponentEditWidget */
 	void on_heatExchangeChanged(VICUS::NetworkHeatExchange::ModelType modelType);
+	/*! Connected to singal externallyDefinedStateChanged()from SVNetworkComponentEditWidget */
+	void on_externallyDefinedStateChanged(bool checked);
 
 private:
 	/*! Connected to slot newBlockSelected() in SVBMSceneManager, updates the widgets displaying informations of selected Block.

@@ -213,9 +213,13 @@ void SVNetworkComponentHeatExchangeEditWidget::updateInput(VICUS::NetworkCompone
 
 void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossConstant()
 {
-	m_ui->checkBoxHeatLossConstantIndividual->setChecked(m_hx->m_individualHeatExchange);
+	m_ui->checkBoxHeatLossConstantExternal->setChecked(m_hx->m_individualHeatExchange);
 	m_ui->lineEditHeatLossConstantUser->setValue(m_hx->m_para[VICUS::NetworkHeatExchange::P_HeatLoss].get_value("kW"));
-	on_checkBoxHeatLossConstantIndividual_stateChanged(static_cast<int>(m_hx->m_individualHeatExchange));
+	bool checked = m_hx->m_individualHeatExchange;
+	m_ui->labelHeatLossConstantUserHeatFlux->setEnabled(!checked);
+	m_ui->labelHeatLossConstantUserUnit->setEnabled(!checked);
+	m_ui->lineEditHeatLossConstantUser->setEnabled(!checked);
+	m_ui->toolButtonSetDefaultValues->setEnabled(!checked);
 }
 
 
@@ -230,8 +234,27 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossSpline(VICUS::N
 	// set default building type
 	on_comboBoxHeatLossSplineBuildingType_activated(m_hx->m_buildingType);
 
-	m_ui->checkBoxHeatLossSplineIndividual->setChecked(m_hx->m_individualHeatExchange);
-	on_checkBoxHeatLossSplineIndividual_clicked(m_hx->m_individualHeatExchange);
+	m_ui->checkBoxHeatLossSplineExternal->setChecked(m_hx->m_individualHeatExchange);
+	bool checked = m_hx->m_individualHeatExchange;
+	// enable / disable widgets
+	m_ui->widgetDefineHeatExchangeSpline->setEnabled(!checked);
+	m_ui->widgetPlotHeatLossSpline->setEnabled(!checked);
+	if (checked){
+		if (m_heatLossSplineCoolingCurve != nullptr){
+			m_heatLossSplineCoolingCurve->detach();
+		}
+		if(m_heatLossSplineHeatingCurve != nullptr){
+			m_heatLossSplineHeatingCurve->detach();
+		}
+		m_ui->widgetPlotHeatLossSpline->replot();
+	}
+	// if unchecked: re-plot
+	else {
+		if (m_hx->m_buildingType == VICUS::NetworkHeatExchange::BT_UserDefineBuilding)
+			updateHeatLossSplineUserPlot();
+		else
+			updateHeatLossSplinePredefPlot();
+	}
 }
 
 
@@ -297,10 +320,10 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated
 }
 
 
-void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossConstantIndividual_stateChanged(int arg1)
+void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossConstantExternal_stateChanged(int arg1)
 {
 	bool checked = static_cast<bool>(arg1);
-	m_hx->m_individualHeatExchange = arg1;
+	emit externallyDefinedStateChanged(checked);
 	m_ui->labelHeatLossConstantUserHeatFlux->setEnabled(!checked);
 	m_ui->labelHeatLossConstantUserUnit->setEnabled(!checked);
 	m_ui->lineEditHeatLossConstantUser->setEnabled(!checked);
@@ -376,9 +399,9 @@ void SVNetworkComponentHeatExchangeEditWidget::updateEnergyDemandValuesAreaSpeci
 }
 
 
-void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossSplineIndividual_clicked(bool checked) {
+void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossSplineExternal_clicked(bool checked) {
 
-	m_hx->m_individualHeatExchange = checked;
+	emit externallyDefinedStateChanged(checked);
 
 	// enable / disable widgets
 	m_ui->widgetDefineHeatExchangeSpline->setEnabled(!checked);

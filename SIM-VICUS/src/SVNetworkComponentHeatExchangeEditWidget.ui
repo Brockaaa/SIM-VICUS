@@ -334,9 +334,9 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QCheckBox" name="checkBoxHeatLossConstantIndividual">
+        <widget class="QCheckBox" name="checkBoxHeatLossConstantExternal">
          <property name="text">
-          <string>individually defined in network node</string>
+          <string>externally defined in network node</string>
          </property>
         </widget>
        </item>
@@ -416,9 +416,9 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QCheckBox" name="checkBoxHeatLossSplineIndividual">
+        <widget class="QCheckBox" name="checkBoxHeatLossSplineExternal">
          <property name="text">
-          <string>individually defined in network node</string>
+          <string>externally defined in network node</string>
          </property>
         </widget>
        </item>
