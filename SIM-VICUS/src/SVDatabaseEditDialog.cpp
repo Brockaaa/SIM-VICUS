@@ -44,6 +44,7 @@
 #include "SVMainWindow.h"
 #include "SVAbstractDatabaseEditWidget.h"
 #include "SVDBDialogAddDependentElements.h"
+#include "SVNetworkComponentEditWidget.h"
 
 // includes for all the dialogs
 
@@ -120,8 +121,8 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 	m_dbModel(tableModel),
 	m_editWidget(editWidget)
 {
-	// dialog most only be created by main window
-	Q_ASSERT(dynamic_cast<SVMainWindow*>(parent) != nullptr);
+	// dialog most only be created by main window or SVSubNetworkEditDialog
+	Q_ASSERT(dynamic_cast<SVMainWindow*>(parent) != nullptr || dynamic_cast<SVNetworkComponentEditWidget*>(parent) != nullptr);
 	m_ui->setupUi(this);
 	m_ui->gridLayoutTableView->setMargin(4);
 

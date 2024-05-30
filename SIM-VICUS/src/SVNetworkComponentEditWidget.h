@@ -42,6 +42,7 @@ class SVNetworkComponentHeatExchangeEditWidget;
 class SVDBNetworkComponentTableModel;
 class SVNetworkControllerEditDialog;
 class SVNetworkComponentHeatExchangeEditWidget;
+class SVDatabaseEditDialog;
 class SVDatabase;
 class QwtPlot;
 class QwtPlotCurve;
@@ -104,6 +105,8 @@ private slots:
 
 	void on_toolButtonControllerRemove_clicked();
 
+	void on_toolButtonComponentDBDialogOpen_clicked();
+
 private:
 	void updateParameterTableWidget() const;
 
@@ -133,6 +136,8 @@ private:
 	std::vector<double>						m_xData;
 	std::vector<std::vector<double>>		m_yData1;
 	std::vector<std::vector<double>>		m_yData2;
+
+	SVDatabaseEditDialog					*m_componentDBEditDialog;
 
 };
 

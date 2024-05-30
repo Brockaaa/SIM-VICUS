@@ -37,6 +37,9 @@
 #include "SVChartUtils.h"
 #include "SVNetworkControllerEditDialog.h"
 #include "SVNetworkComponentHeatExchangeEditWidget.h"
+#include "SVSubNetworkComponentDBTableModel.h"
+#include "SVSubNetworkComponentDBEditWidget.h"
+#include "SVDatabaseEditDialog.h"
 
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
@@ -928,4 +931,18 @@ SVNetworkComponentEditWidget::HeatLossSplineEnergyDemandDialog::HeatLossSplineEn
 		connect(button1, &QPushButton::clicked, this, [this]() { this->done(1); });
 		connect(button2, &QPushButton::clicked, this, [this]() { this->done(2); });
 		connect(button3, &QPushButton::clicked, this, [this]() { this->done(3); });
+}
+
+
+void SVNetworkComponentEditWidget::on_toolButtonComponentDBDialogOpen_clicked()
+{
+	if (m_componentDBEditDialog == nullptr){
+		m_componentDBEditDialog = new SVDatabaseEditDialog(this,
+														 new SVSubNetworkComponentDBTableModel(this, SVSettings::instance().m_db),
+														 new SVSubNetworkComponentDBEditWidget(this),
+														 tr("Network Component Database"), tr("Network Component properties"), true
+														 );
+	}
+
+	m_componentDBEditDialog->show();
 }
