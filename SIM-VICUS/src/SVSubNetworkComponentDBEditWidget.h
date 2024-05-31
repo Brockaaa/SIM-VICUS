@@ -7,6 +7,8 @@ namespace Ui {
 class SVSubNetworkComponentDBEditWidget;
 }
 
+class SVNetworkComponentEditWidget;
+
 class SVSubNetworkComponentDBEditWidget : public SVAbstractDatabaseEditWidget
 {
 	Q_OBJECT
@@ -15,13 +17,17 @@ public:
 	explicit SVSubNetworkComponentDBEditWidget(QWidget *parent = nullptr);
 	~SVSubNetworkComponentDBEditWidget();
 
-private:
-	Ui::SVSubNetworkComponentDBEditWidget *m_ui;
-
 	// SVAbstractDatabaseEditWidget interface
-public:
 	void updateInput(int id);
 	void setup(SVDatabase * db, SVAbstractDatabaseTableModel * dbModel);
+
+private:
+	Ui::SVSubNetworkComponentDBEditWidget	*m_ui;
+	SVDatabase								*m_db;
+	SVAbstractDatabaseTableModel			*m_dbModel;
+
+	SVNetworkComponentEditWidget			*m_networkComponentEditWidget;
+
 };
 
 #endif // SVSUBNETWORKCOMPONENTDBEDITWIDGET_H

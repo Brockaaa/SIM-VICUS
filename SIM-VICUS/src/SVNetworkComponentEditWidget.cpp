@@ -107,6 +107,8 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent, bool
 		m_ui->toolButtonControllerRemove->setVisible(false);
 		m_ui->toolButtonSchedule1->setVisible(false);
 		m_ui->toolButtonSchedule2->setVisible(false);
+		m_ui->toolButtonControllerSet->setVisible(false);
+		m_ui->toolButtonPipeProperties->setVisible(false);
 
 		return;
 	}
@@ -166,9 +168,9 @@ void SVNetworkComponentEditWidget::update()
 	m_ui->groupBoxSchedules->setVisible(!reqScheduleNames.empty());
 	bool schedule1Visible = reqScheduleNames.size()==1 || reqScheduleNames.size()==2;
 	bool schedule2Visible = reqScheduleNames.size()==2;
-	m_ui->toolButtonSchedule1->setVisible(schedule1Visible);
+	m_ui->toolButtonSchedule1->setVisible(schedule1Visible && !m_readOnly);
 	m_ui->labelSchedule1->setVisible(schedule1Visible);
-	m_ui->toolButtonSchedule2->setVisible(schedule2Visible);
+	m_ui->toolButtonSchedule2->setVisible(schedule2Visible && !m_readOnly);
 	m_ui->labelSchedule2->setVisible(schedule2Visible);
 
 	// update schedule labels
@@ -242,6 +244,7 @@ void SVNetworkComponentEditWidget::update()
 
 	m_ui->tabWidget->setTabEnabled(1, enableHeatExchangeWidget);
 
+	if(m_readOnly) return;
 	m_widgetNetworkComponentHeatExchangeEditWidget->updateInput(m_current);
 }
 
@@ -289,12 +292,14 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Keyword("NetworkComponent::para_t", (int)para));
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		if(m_readOnly)
-			item->setFlags(item->flags() ^ Qt::ItemIsEditable);
+			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 		m_ui->tableWidgetParameters->setItem(rowCounter, 0, item);
 		try {
 			IBK::Unit ioUnit(VICUS::KeywordListQt::Unit("NetworkComponent::para_t", (int)para));
 			item = new QTableWidgetItem(QString::fromStdString(ioUnit.name()));
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+			if(m_readOnly)
+				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			m_ui->tableWidgetParameters->setItem(rowCounter, 2, item);
 
 			if (m_current->m_para[para].name.empty())
@@ -302,6 +307,8 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 			else
 				item = new QTableWidgetItem(QString("%L1").arg(m_current->m_para[para].get_value(ioUnit)));
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+			if(m_readOnly)
+				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			if ((unsigned int)rowCounter < paraVecStd.size())
 				item->setData(Qt::UserRole, DT_DoubleStd);
 			else
@@ -323,11 +330,16 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 		// parameter name
 		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Keyword("NetworkComponent::intPara_t", (int)paraInt));
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+		if(m_readOnly)
+			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+
 		m_ui->tableWidgetParameters->setItem(rowCounter, 0, item);
 		try {
 			// parameter unit
 			item = new QTableWidgetItem("-");
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+			if(m_readOnly)
+				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			m_ui->tableWidgetParameters->setItem(rowCounter, 2, item);
 			// parameter value
 			if (m_current->m_intPara[paraInt].name.empty())
@@ -355,6 +367,8 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Keyword("NetworkComponent::para_t", (int)paraOpt));
 		item->setFont(fnt);
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+		if(m_readOnly)
+			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 		m_ui->tableWidgetParameters->setItem(rowCounter, 0, item);
 		try {
 			// parameter unit
@@ -362,6 +376,8 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 			item = new QTableWidgetItem(QString::fromStdString(ioUnit.name()));
 			item->setFont(fnt);
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+			if(m_readOnly)
+				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			m_ui->tableWidgetParameters->setItem(rowCounter, 2, item);
 			// parameter value
 			if (m_current->m_para[paraOpt].name.empty())
@@ -371,6 +387,8 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 			item->setFont(fnt);
 			item->setData(Qt::UserRole, DT_DoubleOptional);
 			item->setData(Qt::UserRole+1, paraOpt);
+			if(m_readOnly)
+				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			m_ui->tableWidgetParameters->setItem(rowCounter, 1, item);
 
 			++rowCounter;
@@ -450,6 +468,8 @@ void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget() const {
 				val = values.at(header[row])[col];
 			QTableWidgetItem *item = new QTableWidgetItem(QString("%1").arg(val));
 			item->setFont(font);
+			if(m_readOnly)
+				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			m_ui->tableWidgetPolynomCoefficients->setItem((int)row, (int)col, item);
 		}
 	}
@@ -868,7 +888,7 @@ void SVNetworkComponentEditWidget::on_toolButtonPipeProperties_clicked()
 
 
 void SVNetworkComponentEditWidget::on_tableWidgetPolynomCoefficients_cellChanged(int row, int /*column*/) {
-
+	if(m_readOnly) return;
 	std::string header = m_ui->tableWidgetPolynomCoefficients->verticalHeaderItem(row)->text().toStdString();
 
 	m_current->m_polynomCoefficients.m_values[header].clear();
@@ -960,5 +980,5 @@ void SVNetworkComponentEditWidget::on_toolButtonComponentDBDialogOpen_clicked()
 														 );
 	}
 
-	m_componentDBEditDialog->show();
+	m_componentDBEditDialog->exec();
 }
