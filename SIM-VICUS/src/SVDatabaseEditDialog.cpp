@@ -44,7 +44,7 @@
 #include "SVMainWindow.h"
 #include "SVAbstractDatabaseEditWidget.h"
 #include "SVDBDialogAddDependentElements.h"
-#include "SVNetworkComponentEditWidget.h"
+#include "SVSubNetworkEditDialog.h"
 
 // includes for all the dialogs
 
@@ -122,10 +122,10 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 	m_editWidget(editWidget)
 {
 	// dialog most only be created by main window or SVSubNetworkEditDialog
-	// check if the parent is a SVMainWindow or a SVNetworkComponentEditWidget
+	// check if the parent is a SVMainWindow or a SVSubNetworkEditDialog
 	SVMainWindow* pointerSVMainWindow = dynamic_cast<SVMainWindow*>(parent);
-	SVNetworkComponentEditWidget* pointerSVNetworkComponentEditWidget = dynamic_cast<SVNetworkComponentEditWidget*>(parent);
-	Q_ASSERT(pointerSVMainWindow != nullptr || pointerSVNetworkComponentEditWidget != nullptr);
+	SVSubNetworkEditDialog* pointerSVSubNetworkEditDialog = dynamic_cast<SVSubNetworkEditDialog*>(parent);
+	Q_ASSERT(pointerSVMainWindow != nullptr || pointerSVSubNetworkEditDialog != nullptr);
 	m_ui->setupUi(this);
 	m_ui->gridLayoutTableView->setMargin(4);
 
@@ -204,7 +204,7 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 	if(pointerSVMainWindow){
 		// connect to main window to recognise if main screen has changed
 		connect(&SVMainWindow::instance(), &SVMainWindow::screenHasChanged, this, &SVDatabaseEditDialog::onScreenChanged);
-	} else if(pointerSVNetworkComponentEditWidget){
+	} else if(pointerSVSubNetworkEditDialog){
 		m_ui->toolButtonAdd->setVisible(false);
 		m_ui->toolButtonCopy->setVisible(false);
 		m_ui->toolButtonRemoveFromUserDB->setVisible(false);

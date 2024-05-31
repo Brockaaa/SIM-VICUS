@@ -104,6 +104,10 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent, bool
 	if(m_readOnly){
 		m_ui->tabWidget->removeTab(1);
 		m_ui->toolButtonComponentDBDialogOpen->setVisible(false);
+		m_ui->toolButtonControllerRemove->setVisible(false);
+		m_ui->toolButtonSchedule1->setVisible(false);
+		m_ui->toolButtonSchedule2->setVisible(false);
+
 		return;
 	}
 
@@ -949,9 +953,9 @@ SVNetworkComponentEditWidget::HeatLossSplineEnergyDemandDialog::HeatLossSplineEn
 void SVNetworkComponentEditWidget::on_toolButtonComponentDBDialogOpen_clicked()
 {
 	if (m_componentDBEditDialog == nullptr){
-		m_componentDBEditDialog = new SVDatabaseEditDialog(this,
-														 new SVSubNetworkComponentDBTableModel(this, SVSettings::instance().m_db),
-														 new SVSubNetworkComponentDBEditWidget(this),
+		m_componentDBEditDialog = new SVDatabaseEditDialog(window(),
+														 new SVSubNetworkComponentDBTableModel(window(), SVSettings::instance().m_db),
+														 new SVSubNetworkComponentDBEditWidget(window()),
 														   tr("Network Component Database"), QString(), true
 														 );
 	}
