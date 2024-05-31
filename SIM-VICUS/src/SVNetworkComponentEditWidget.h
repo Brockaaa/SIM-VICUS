@@ -74,7 +74,7 @@ public:
 		HeatLossSplineEnergyDemandDialog(QWidget *parent = nullptr);
 	};
 
-	explicit SVNetworkComponentEditWidget(QWidget *parent = nullptr);
+	explicit SVNetworkComponentEditWidget(QWidget *parent, bool readOnly = false);
 	~SVNetworkComponentEditWidget() ;
 
 	/*! set current Component with this. */
@@ -138,6 +138,11 @@ private:
 	std::vector<std::vector<double>>		m_yData2;
 
 	SVDatabaseEditDialog					*m_componentDBEditDialog;
+
+	SVNetworkComponentHeatExchangeEditWidget *m_widgetNetworkComponentHeatExchangeEditWidget;
+
+	/*! bool to make the widget read only - used in Database dialog for parametrization */
+	bool									m_readOnly = false;
 
 };
 

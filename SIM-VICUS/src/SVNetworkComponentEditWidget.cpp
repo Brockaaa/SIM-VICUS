@@ -71,8 +71,9 @@
 
 
 
-SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
+SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent, bool readOnly) :
 	QWidget(parent),
+	m_readOnly(readOnly),
 	m_ui(new Ui::SVNetworkComponentEditWidget)
 {
 	m_ui->setupUi(this);
@@ -100,8 +101,17 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent) :
 	// workaround for stubborn layout bug
 	m_ui->tableWidgetParameters->setMaximumHeight(0);
 
-	connect(m_ui->widgetNetworkComponentHeatExchangeEditWidget, &SVNetworkComponentHeatExchangeEditWidget::heatExchangeChanged, this, &SVNetworkComponentEditWidget::heatExchangeChanged);
-	connect(m_ui->widgetNetworkComponentHeatExchangeEditWidget, &SVNetworkComponentHeatExchangeEditWidget::externallyDefinedStateChanged, this, &SVNetworkComponentEditWidget::externallyDefinedStateChanged);
+	if(m_readOnly){
+		m_ui->tabWidget->removeTab(1);
+		m_ui->toolButtonComponentDBDialogOpen->setVisible(false);
+		return;
+	}
+
+	m_widgetNetworkComponentHeatExchangeEditWidget = new SVNetworkComponentHeatExchangeEditWidget(this);
+	m_ui->verticalLayoutTabHeatExchange->addWidget(m_widgetNetworkComponentHeatExchangeEditWidget);
+
+	connect(m_widgetNetworkComponentHeatExchangeEditWidget, &SVNetworkComponentHeatExchangeEditWidget::heatExchangeChanged, this, &SVNetworkComponentEditWidget::heatExchangeChanged);
+	connect(m_widgetNetworkComponentHeatExchangeEditWidget, &SVNetworkComponentHeatExchangeEditWidget::externallyDefinedStateChanged, this, &SVNetworkComponentEditWidget::externallyDefinedStateChanged);
 }
 
 
@@ -228,7 +238,7 @@ void SVNetworkComponentEditWidget::update()
 
 	m_ui->tabWidget->setTabEnabled(1, enableHeatExchangeWidget);
 
-	m_ui->widgetNetworkComponentHeatExchangeEditWidget->updateInput(m_current);
+	m_widgetNetworkComponentHeatExchangeEditWidget->updateInput(m_current);
 }
 
 
@@ -274,6 +284,8 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 	for (unsigned int para: paraVec) {
 		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Keyword("NetworkComponent::para_t", (int)para));
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+		if(m_readOnly)
+			item->setFlags(item->flags() ^ Qt::ItemIsEditable);
 		m_ui->tableWidgetParameters->setItem(rowCounter, 0, item);
 		try {
 			IBK::Unit ioUnit(VICUS::KeywordListQt::Unit("NetworkComponent::para_t", (int)para));
@@ -940,7 +952,7 @@ void SVNetworkComponentEditWidget::on_toolButtonComponentDBDialogOpen_clicked()
 		m_componentDBEditDialog = new SVDatabaseEditDialog(this,
 														 new SVSubNetworkComponentDBTableModel(this, SVSettings::instance().m_db),
 														 new SVSubNetworkComponentDBEditWidget(this),
-														 tr("Network Component Database"), tr("Network Component properties"), true
+														   tr("Network Component Database"), QString(), true
 														 );
 	}
 

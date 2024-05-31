@@ -122,7 +122,10 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 	m_editWidget(editWidget)
 {
 	// dialog most only be created by main window or SVSubNetworkEditDialog
-	Q_ASSERT(dynamic_cast<SVMainWindow*>(parent) != nullptr || dynamic_cast<SVNetworkComponentEditWidget*>(parent) != nullptr);
+	// check if the parent is a SVMainWindow or a SVNetworkComponentEditWidget
+	SVMainWindow* pointerSVMainWindow = dynamic_cast<SVMainWindow*>(parent);
+	SVNetworkComponentEditWidget* pointerSVNetworkComponentEditWidget = dynamic_cast<SVNetworkComponentEditWidget*>(parent);
+	Q_ASSERT(pointerSVMainWindow != nullptr || pointerSVNetworkComponentEditWidget != nullptr);
 	m_ui->setupUi(this);
 	m_ui->gridLayoutTableView->setMargin(4);
 
@@ -132,9 +135,6 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 	QScreen *screen = QGuiApplication::primaryScreen();
 	Q_ASSERT(screen!=nullptr);
 	m_screenSize = screen->size();
-
-	// connect to main window to recognise if main screen has changed
-	connect(&SVMainWindow::instance(), &SVMainWindow::screenHasChanged, this, &SVDatabaseEditDialog::onScreenChanged);
 
 	SVStyle::formatDatabaseTableView(m_ui->tableView);
 	m_ui->tableView->horizontalHeader()->setVisible(true);
@@ -186,8 +186,6 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 
 	m_ui->tableView->installEventFilter(this);
 
-	connect(SVMainWindow::instance().preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged, this, &SVDatabaseEditDialog::onStyleChanged);
-
 	// modify frames and update colors
 	m_ui->frameBuildInDB->setFrameShape(QFrame::NoFrame);
 	m_ui->frameUserDB->setFrameShape(QFrame::NoFrame);
@@ -199,6 +197,21 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 		QString name = m_dbModel->headerData(i, Qt::Horizontal).toString();
 		if (name == "") continue; // Skip valid column
 		m_ui->comboBoxColumn->addItem(name, i);
+	}
+
+	connect(SVMainWindow::instance().preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged, this, &SVDatabaseEditDialog::onStyleChanged);
+
+	if(pointerSVMainWindow){
+		// connect to main window to recognise if main screen has changed
+		connect(&SVMainWindow::instance(), &SVMainWindow::screenHasChanged, this, &SVDatabaseEditDialog::onScreenChanged);
+	} else if(pointerSVNetworkComponentEditWidget){
+		m_ui->toolButtonAdd->setVisible(false);
+		m_ui->toolButtonCopy->setVisible(false);
+		m_ui->toolButtonRemoveFromUserDB->setVisible(false);
+		m_ui->toolButtonStoreInUserDB->setVisible(false);
+		m_ui->pushButtonRemoveUnusedElements->setVisible(false);
+		m_ui->label_3->setVisible(false);
+		m_ui->frameProject->setVisible(false);
 	}
 }
 

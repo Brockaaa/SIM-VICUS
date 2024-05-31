@@ -24,13 +24,13 @@
     <number>0</number>
    </property>
    <property name="topMargin">
-    <number>9</number>
+    <number>0</number>
    </property>
    <property name="rightMargin">
     <number>0</number>
    </property>
    <property name="bottomMargin">
-    <number>9</number>
+    <number>0</number>
    </property>
    <item>
     <widget class="QTabWidget" name="tabWidget">
@@ -42,6 +42,9 @@
      </property>
      <property name="currentIndex">
       <number>0</number>
+     </property>
+     <property name="tabBarAutoHide">
+      <bool>true</bool>
      </property>
      <widget class="QWidget" name="tabComponent">
       <property name="sizePolicy">
@@ -440,9 +443,6 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <item>
-        <widget class="SVNetworkComponentHeatExchangeEditWidget" name="widgetNetworkComponentHeatExchangeEditWidget" native="true"/>
-       </item>
       </layout>
      </widget>
     </widget>
@@ -454,12 +454,6 @@
    <class>QwtPlot</class>
    <extends>QFrame</extends>
    <header>qwt_plot.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>SVNetworkComponentHeatExchangeEditWidget</class>
-   <extends>QWidget</extends>
-   <header>SVNetworkComponentHeatExchangeEditWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

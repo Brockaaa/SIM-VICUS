@@ -4,7 +4,7 @@
 #include "SVAbstractDatabaseEditWidget.h"
 
 namespace Ui {
-class SVSubNetworkComponentDBEditDialog;
+class SVSubNetworkComponentDBEditWidget;
 }
 
 class SVSubNetworkComponentDBEditWidget : public SVAbstractDatabaseEditWidget
@@ -16,7 +16,7 @@ public:
 	~SVSubNetworkComponentDBEditWidget();
 
 private:
-	Ui::SVSubNetworkComponentDBEditDialog *m_ui;
+	Ui::SVSubNetworkComponentDBEditWidget *m_ui;
 
 	// SVAbstractDatabaseEditWidget interface
 public:
