@@ -181,25 +181,39 @@ void HydraulicNetworkElement::checkParameters(const HydraulicNetwork & nw, const
 	}
 
 	// *** Heat Exchange Parameter compatibility checks ***
-
 	// check if given heat exchange type is supported for this component, but only for ThermoHydraulic networks
 	if (nw.m_modelType == NANDRAD::HydraulicNetwork::MT_ThermalHydraulicNetwork) {
-		std::vector<HydraulicNetworkHeatExchange::ModelType> hxTypes = HydraulicNetworkHeatExchange::availableHeatExchangeTypes(m_component->m_modelType);
-		if (std::find(hxTypes.begin(), hxTypes.end(), m_heatExchange.m_modelType) == hxTypes.end()) {
-			if (m_heatExchange.m_modelType == HydraulicNetworkHeatExchange::NUM_T)
-				throw IBK::Exception(IBK::FormatString("Heat exchange type required for component '%1'!")
-									 .arg(KeywordList::Keyword("HydraulicNetworkComponent::ModelType", m_component->m_modelType)), FUNC_ID);
-			else
-				throw IBK::Exception(IBK::FormatString("Invalid type of heat exchange '%1' for component '%2'!")
-									 .arg(KeywordList::Keyword("HydraulicNetworkHeatExchange::ModelType", m_heatExchange.m_modelType))
-									 .arg(KeywordList::Keyword("HydraulicNetworkComponent::ModelType", m_component->m_modelType)), FUNC_ID);
+
+		bool skipCheckHeatExchange = false;
+		// heat exchange can be defined either in component or in element, not both
+		if (m_component->m_heatExchange.m_modelType != HydraulicNetworkHeatExchange::NUM_T &&
+			m_heatExchange.m_modelType != HydraulicNetworkHeatExchange::NUM_T) {
+			throw IBK::Exception(IBK::FormatString("Heat exchange is defined in network element #%1 as well as in its component #%2. "
+												   "Only one of both is possible.").arg(m_id).arg(m_componentId), FUNC_ID);
+		}
+		else if (m_component->m_heatExchange.m_modelType != HydraulicNetworkHeatExchange::NUM_T) {
+			m_heatExchange = m_component->m_heatExchange;  // we just copy it to the element
+			skipCheckHeatExchange = true; // check has been done in component already, avoid checking again
 		}
 
-		// check for valid heat exchange parameters
-		if (m_heatExchange.m_modelType != HydraulicNetworkHeatExchange::NUM_T)
-			m_heatExchange.checkParameters(prj.m_placeholders, prj.m_zones, prj.m_constructionInstances, true);
-	}
-	else if (m_heatExchange.m_modelType != HydraulicNetworkHeatExchange::NUM_T) {
+		if (!skipCheckHeatExchange)	{
+			std::vector<HydraulicNetworkHeatExchange::ModelType> hxTypes = HydraulicNetworkComponent::availableHeatExchangeTypes(m_component->m_modelType);
+			if (std::find(hxTypes.begin(), hxTypes.end(), m_heatExchange.m_modelType) == hxTypes.end()) {
+				if (m_heatExchange.m_modelType == HydraulicNetworkHeatExchange::NUM_T)
+					throw IBK::Exception(IBK::FormatString("Heat exchange type required for component '%1'!")
+										 .arg(KeywordList::Keyword("HydraulicNetworkComponent::ModelType", m_component->m_modelType)), FUNC_ID);
+				else
+					throw IBK::Exception(IBK::FormatString("Invalid type of heat exchange '%1' for component '%2'!")
+										 .arg(KeywordList::Keyword("HydraulicNetworkHeatExchange::ModelType", m_heatExchange.m_modelType))
+										 .arg(KeywordList::Keyword("HydraulicNetworkComponent::ModelType", m_component->m_modelType)), FUNC_ID);
+			}
+
+			// check for valid heat exchange parameters
+			if (m_heatExchange.m_modelType != HydraulicNetworkHeatExchange::NUM_T) {
+				m_heatExchange.checkParameters(prj.m_placeholders, prj.m_zones, prj.m_constructionInstances, true);
+			}
+		}
+	} else if (m_heatExchange.m_modelType != HydraulicNetworkHeatExchange::NUM_T) {
 		IBK::IBK_Message("HydraulicNetworkHeatExchange parameter in element #%1 has no effect for HydraulicNetwork calculation.", IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 	}
 

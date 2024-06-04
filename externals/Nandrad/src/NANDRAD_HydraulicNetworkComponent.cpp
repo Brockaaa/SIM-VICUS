@@ -25,7 +25,7 @@
 
 #include "NANDRAD_HydraulicNetwork.h"
 #include "NANDRAD_KeywordList.h"
-
+#include "NANDRAD_Project.h"
 
 namespace NANDRAD {
 
@@ -50,7 +50,7 @@ bool HydraulicNetworkComponent::sameParametersAs(const HydraulicNetworkComponent
 }
 
 
-void HydraulicNetworkComponent::checkParameters(int networkModelType) {
+void HydraulicNetworkComponent::checkParameters(int networkModelType, const Project & prj) {
 	FUNCID(HydraulicNetworkComponent::checkParameters);
 
 	try {
@@ -136,6 +136,22 @@ void HydraulicNetworkComponent::checkParameters(int networkModelType) {
 						m_para[NANDRAD::HydraulicNetworkComponent::P_PumpMaximumEfficiency].empty())
 					throw IBK::Exception("Missing paramneter 'PumpMaximumEfficiency'!", FUNC_ID);
 			}
+		}
+
+		// check heat exchange definition
+		std::vector<HydraulicNetworkHeatExchange::ModelType> hxTypes = availableHeatExchangeTypes(m_modelType);
+		if (std::find(hxTypes.begin(), hxTypes.end(), m_heatExchange.m_modelType) == hxTypes.end()) {
+			if (m_heatExchange.m_modelType == HydraulicNetworkHeatExchange::NUM_T)
+				throw IBK::Exception(IBK::FormatString("Heat exchange type required for component '%1'!")
+									 .arg(KeywordList::Keyword("HydraulicNetworkComponent::ModelType", m_modelType)), FUNC_ID);
+			else
+				throw IBK::Exception(IBK::FormatString("Invalid type of heat exchange '%1' for component '%2'!")
+									 .arg(KeywordList::Keyword("HydraulicNetworkHeatExchange::ModelType", m_heatExchange.m_modelType))
+									 .arg(KeywordList::Keyword("HydraulicNetworkComponent::ModelType", m_modelType)), FUNC_ID);
+		}
+		// check for valid heat exchange parameters
+		if (m_heatExchange.m_modelType != HydraulicNetworkHeatExchange::NUM_T) {
+			m_heatExchange.checkParameters(prj.m_placeholders, prj.m_zones, prj.m_constructionInstances, true);
 		}
 	}
 	catch (IBK::Exception & ex) {
@@ -304,6 +320,40 @@ void HydraulicNetworkComponent::checkModelParameter(const IBK::Parameter &para, 
 	}
 }
 
+
+std::vector<HydraulicNetworkHeatExchange::ModelType> NANDRAD::HydraulicNetworkComponent::availableHeatExchangeTypes(const ModelType modelType)
+{
+	// some models may be adiabatic, hence we also return NUM_T as available heat exchange type
+	switch (modelType) {
+		case HydraulicNetworkComponent::MT_SimplePipe:
+			return {HydraulicNetworkHeatExchange::NUM_T, HydraulicNetworkHeatExchange::T_TemperatureConstant,
+						HydraulicNetworkHeatExchange::T_TemperatureSpline, HydraulicNetworkHeatExchange::T_HeatLossConstant,
+						HydraulicNetworkHeatExchange::T_HeatLossSpline, HydraulicNetworkHeatExchange::T_TemperatureZone, HydraulicNetworkHeatExchange::T_TemperatureConstructionLayer};
+		case HydraulicNetworkComponent::MT_DynamicPipe:
+			return {HydraulicNetworkHeatExchange::NUM_T, HydraulicNetworkHeatExchange::T_TemperatureConstant, HydraulicNetworkHeatExchange::T_TemperatureSpline,
+						HydraulicNetworkHeatExchange::T_TemperatureZone, HydraulicNetworkHeatExchange::T_TemperatureConstructionLayer};
+		case HydraulicNetworkComponent::MT_HeatPumpVariableIdealCarnotSourceSide:
+		case HydraulicNetworkComponent::MT_HeatPumpVariableSourceSide:
+			return {HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser, HydraulicNetworkHeatExchange::T_HeatLossSplineCondenser};  // must not be adiabatic
+//		case HydraulicNetworkComponent::MT_HeatPumpOnOffSourceSideWithBuffer:
+//			return {T_HeatingDemandSpaceHeating};  // must not be adiabatic
+		case HydraulicNetworkComponent::MT_HeatExchanger:
+			return {HydraulicNetworkHeatExchange::T_HeatLossConstant, HydraulicNetworkHeatExchange::T_HeatLossSpline}; // must not be adiabatic
+		case HydraulicNetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
+		case HydraulicNetworkComponent::MT_ConstantPressurePump:
+		case HydraulicNetworkComponent::MT_ConstantMassFluxPump:
+		case HydraulicNetworkComponent::MT_VariablePressurePump:
+		case HydraulicNetworkComponent::MT_ControlledPump:
+		case HydraulicNetworkComponent::MT_ControlledValve:
+		case HydraulicNetworkComponent::MT_HeatPumpOnOffSourceSide:
+		case HydraulicNetworkComponent::MT_IdealHeaterCooler:
+		case HydraulicNetworkComponent::MT_ConstantPressureLossValve:
+		case HydraulicNetworkComponent::MT_PressureLossElement:
+			return {HydraulicNetworkHeatExchange::NUM_T};
+		case HydraulicNetworkComponent::NUM_MT: ; // just to make compiler happy
+	}
+	return {};
+}
 
 
 } // namespace NANDRAD

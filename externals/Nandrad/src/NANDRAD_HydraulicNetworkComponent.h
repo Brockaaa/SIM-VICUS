@@ -25,12 +25,13 @@
 #include <IBK_Parameter.h>
 
 #include "NANDRAD_CodeGenMacros.h"
-#include "NANDRAD_Constants.h"
-#include "NANDRAD_LinearSplineParameter.h"
 #include "NANDRAD_DataTable.h"
+#include "NANDRAD_HydraulicNetworkHeatExchange.h"
 
 
 namespace NANDRAD {
+
+class Project;
 
 /*! Parameters for a hydraulic component for the network. */
 class HydraulicNetworkComponent {
@@ -100,7 +101,7 @@ public:
 	/*! Checks for valid and required parameters (value ranges).
 		\param networkModelType Type of network calculation model (HydraulicNetwork::ModelType).
 	*/
-	void checkParameters(int networkModelType);
+	void checkParameters(int networkModelType, const Project & prj);
 
 	// *** PUBLIC MEMBER VARIABLES ***
 
@@ -119,6 +120,9 @@ public:
 	/*! Array parameters of the flow component */
 	DataTable						m_polynomCoefficients;								// XML:E
 
+	/*! Optional definition of heat exchange calculation model, can be either defined in network element or here. */
+	HydraulicNetworkHeatExchange	m_heatExchange;										// XML:E
+
 	// *** STATIC FUNCTIONS ***
 
 	/*! Needed both in user interface and for valid parameter checking in solver.
@@ -127,6 +131,8 @@ public:
 	static std::vector<unsigned int> requiredParameter(const ModelType modelType, int networkModelType);
 
 	static std::vector<std::string> requiredScheduleNames(const ModelType modelType);
+
+	static std::vector<HydraulicNetworkHeatExchange::ModelType> availableHeatExchangeTypes(const ModelType modelType);
 
 	/*! Helper function that implements specific rules for testing a single parameter.
 		This is useful if the same parameter is used by several models and we want to avoid implementing

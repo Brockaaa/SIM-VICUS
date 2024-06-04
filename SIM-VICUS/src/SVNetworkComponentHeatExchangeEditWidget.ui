@@ -20,7 +20,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidgetHeatExchange">
      <property name="currentIndex">
-      <number>1</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="pageTemperatureConstant">
       <property name="sizePolicy">
@@ -448,8 +448,15 @@
            <number>0</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <item>
+           <layout class="QGridLayout" name="gridLayout_6">
+            <item row="0" column="2">
+             <widget class="QToolButton" name="toolButtonSetDefaultValues">
+              <property name="text">
+               <string>Reset </string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
              <widget class="QLabel" name="labelHeatLossSplineUserBuildingType">
               <property name="maximumSize">
                <size>
@@ -462,15 +469,8 @@
               </property>
              </widget>
             </item>
-            <item>
+            <item row="0" column="1">
              <widget class="QComboBox" name="comboBoxHeatLossSplineBuildingType"/>
-            </item>
-            <item>
-             <widget class="QToolButton" name="toolButtonSetDefaultValues">
-              <property name="text">
-               <string>Reset </string>
-              </property>
-             </widget>
             </item>
            </layout>
           </item>
@@ -509,121 +509,261 @@
                </layout>
               </item>
               <item>
-               <widget class="QGroupBox" name="groupBoxHeatLossSplineHeating">
-                <property name="title">
-                 <string>Heating / DHW</string>
+               <widget class="QTabWidget" name="tabWidget">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
                 </property>
-                <layout class="QGridLayout" name="gridLayout">
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemand">
-                   <property name="text">
-                    <string>Heating Energy Demand:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineHeatingEnergyDemand"/>
-                 </item>
-                 <item row="0" column="2">
-                  <widget class="QLabel" name="labelHeatLossSplineMaximumHeatingLoadUnit">
-                   <property name="text">
-                    <string>kW</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineMaximumHeatingLoad"/>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="labelHeatLossSplineMaximumHeatingLoad">
-                   <property name="text">
-                    <string>Maximum Heating Load:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemandUnit">
-                   <property name="text">
-                    <string>kWh</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="groupBoxHeatLossSplineCooling">
-                <property name="title">
-                 <string>Cooling</string>
+                <property name="currentIndex">
+                 <number>2</number>
                 </property>
-                <property name="checkable">
+                <property name="usesScrollButtons">
                  <bool>true</bool>
                 </property>
-                <layout class="QGridLayout" name="gridLayout_3">
-                 <item row="0" column="1">
-                  <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineMaximumCoolingLoad"/>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="labelHeatLossSplineMaximumCoolingLoad">
-                   <property name="text">
-                    <string>Maximum Cooling Load:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="2">
-                  <widget class="QLabel" name="labelHeatLossSplineMaximumCoolingLoadUnit">
-                   <property name="text">
-                    <string>kW</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="labelHeatLossSplineCoolingEnergyDemand">
-                   <property name="text">
-                    <string>Cooling Energy Demand:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineCoolingEnergyDemand"/>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QLabel" name="labelHeatLossSplineCoolingEnergyDemandUnit">
-                   <property name="text">
-                    <string>kWh</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="groupBoxDomesticHotWaterDemand">
-                <property name="title">
-                 <string>Domestic Hot Water Demand</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_4">
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemand">
-                   <property name="text">
-                    <string>Hot Water Energy Demand:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineDomesticHotWaterDemand"/>
-                 </item>
-                 <item row="0" column="2">
-                  <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemandUnit">
-                   <property name="text">
-                    <string>kWh</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                <widget class="QWidget" name="tab">
+                 <attribute name="title">
+                  <string>Heating</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="verticalLayout_4">
+                  <item>
+                   <widget class="QCheckBox" name="checkBoxHeating">
+                    <property name="text">
+                     <string>use Heating</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QWidget" name="widgetHeating" native="true">
+                    <layout class="QGridLayout" name="gridLayout">
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                     <item row="0" column="1">
+                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineMaximumHeatingLoad"/>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemand">
+                       <property name="text">
+                        <string>Heating Energy Demand:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="labelHeatLossSplineMaximumHeatingLoadUnit">
+                       <property name="text">
+                        <string>kW</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemand_2">
+                       <property name="text">
+                        <string>Supply Temperature:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatingSupplyTemperature"/>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="labelHeatLossSplineMaximumHeatingLoad">
+                       <property name="text">
+                        <string>Maximum Heating Load:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemandUnit">
+                       <property name="text">
+                        <string>kWh</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemandUnit_2">
+                       <property name="text">
+                        <string>C</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineHeatingEnergyDemand"/>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="verticalSpacer_8">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>5</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="tab_3">
+                 <attribute name="title">
+                  <string>Cooling</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="verticalLayout_5">
+                  <item>
+                   <widget class="QCheckBox" name="checkBoxCooling">
+                    <property name="text">
+                     <string>use Cooling</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QWidget" name="widgetCooling" native="true">
+                    <layout class="QGridLayout" name="gridLayout_3">
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="labelHeatLossSplineCoolingEnergyDemand">
+                       <property name="text">
+                        <string>Cooling Energy Demand:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="labelHeatLossSplineMaximumCoolingLoad">
+                       <property name="text">
+                        <string>Maximum Cooling Load:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineMaximumCoolingLoad"/>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QLabel" name="labelHeatLossSplineCoolingEnergyDemandUnit">
+                       <property name="text">
+                        <string>kWh</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="labelHeatLossSplineMaximumCoolingLoadUnit">
+                       <property name="text">
+                        <string>kW</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineCoolingEnergyDemand"/>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="verticalSpacer_6">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeType">
+                     <enum>QSizePolicy::Expanding</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>2</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="tab_2">
+                 <attribute name="title">
+                  <string>Domestic Hot Water</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="verticalLayout_7">
+                  <item>
+                   <widget class="QCheckBox" name="checkBoxDHW">
+                    <property name="text">
+                     <string>use Domestic Hot Water </string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QWidget" name="widgetDHW" native="true">
+                    <layout class="QGridLayout" name="gridLayout_4">
+                     <property name="leftMargin">
+                      <number>9</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemand">
+                       <property name="text">
+                        <string>Hot Water Energy Demand:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QtExt::ValidatingLineEdit" name="lineEditDHWTemperature"/>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QtExt::ValidatingLineEdit" name="lineEditHeatLossSplineDomesticHotWaterDemand"/>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemandUnit">
+                       <property name="text">
+                        <string>kWh</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QLabel" name="labelHeatLossSplineDomesticHotWaterDemandUnit_2">
+                       <property name="text">
+                        <string>C</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="labelHeatLossSplineHeatingEnergyDemand_3">
+                       <property name="text">
+                        <string>Supply Temperature:</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="verticalSpacer_7">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>5</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
                </widget>
               </item>
              </layout>

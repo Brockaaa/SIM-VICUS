@@ -87,6 +87,8 @@ void HydraulicNetworkComponent::readXML(const TiXmlElement * element) {
 			}
 			else if (cName == "PolynomCoefficients")
 				m_polynomCoefficients.setEncodedString(c->GetText());
+			else if (cName == "HydraulicNetworkHeatExchange")
+				m_heatExchange.readXML(c);
 			else {
 				IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(cName).arg(c->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 			}
@@ -120,6 +122,8 @@ TiXmlElement * HydraulicNetworkComponent::writeXML(TiXmlElement * parent) const 
 	}
 	if (!m_polynomCoefficients.m_values.empty())
 		TiXmlElement::appendSingleAttributeElement(e, "PolynomCoefficients", nullptr, std::string(), m_polynomCoefficients.encodedString());
+
+	m_heatExchange.writeXML(e);
 	return e;
 }
 

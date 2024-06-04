@@ -113,6 +113,12 @@ private slots:
 
 	void on_comboBoxHeatLossSplineBuildingType_activated(int index);
 
+	void on_checkBoxDHW_stateChanged(int arg1);
+
+	void on_checkBoxCooling_stateChanged(int arg1);
+
+	void on_checkBoxHeating_stateChanged(int arg1);
+
 private:
 	/*! updates pages */
 	void updatePageHeatLossConstant();

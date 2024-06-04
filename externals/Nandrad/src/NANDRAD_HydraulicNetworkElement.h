@@ -23,11 +23,12 @@
 #define NANDRAD_HydraulicNetworkElementH
 
 #include <IBK_Parameter.h>
+#include <IBK_IntPara.h>
 
 #include "NANDRAD_CodeGenMacros.h"
 #include "NANDRAD_Constants.h"
-#include "NANDRAD_HydraulicNetworkHeatExchange.h"
 #include "NANDRAD_IDVectorMap.h"
+#include "NANDRAD_HydraulicNetworkHeatExchange.h"
 
 
 namespace NANDRAD {
@@ -119,7 +120,7 @@ public:
 	/*! Integer parameters. */
 	IBK::IntPara					m_intPara[NUM_IP];										// XML:E
 
-	/*! Optional definition of heat exchange calculation model (if missing, flow element is adiabat). */
+	/*! Optional definition of heat exchange calculation model, can be either defined in network component or here. */
 	HydraulicNetworkHeatExchange	m_heatExchange;											// XML:E
 
 	/*! Stores ids of hydraulic network elements that shall be observed for worst-point controller

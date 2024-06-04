@@ -81,7 +81,7 @@ public:
 	/*! Unique identification name of this block instance. */
 	QString						m_name;
 
-	/* Name to be displayed in Scene */
+	/*! Name to be displayed in Scene */
 	QString                     m_displayName;
 
 

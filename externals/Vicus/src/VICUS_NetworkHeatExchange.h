@@ -77,6 +77,8 @@ public:
 		P_MaximumCoolingLoad,					// Keyword: MaximumCoolingLoad					[kW]		'MaximumCoolingLoad'
 		P_CoolingEnergyDemand,					// Keyword: CoolingEnergyDemand					[kWh]		'CoolingEnergyDemand'
 		P_DomesticHotWaterDemand,				// Keyword: DomesticHotWaterDemand				[kWh]		'DomesticHotWaterDemand'
+		P_HeatingSupplyTemperature,				// Keyword: HeatingSupplyTemperature			[C]			'HeatingSupplyTemperature'
+		P_DomesticHotWaterSupplyTemperature,	// Keyword: DomesticHotWaterSupplyTemperature	[C]			'DomesticHotWaterSupplyTemperature'
 		NUM_P
 	};
 
@@ -130,6 +132,8 @@ public:
 	bool								m_individualHeatExchange = false;			// XML:A
 
 	bool								m_areaRelatedValues = false;				// XML:A
+
+	bool								m_withHeatingDemand = true;					// XML:A
 
 	bool								m_withCoolingDemand = true;					// XML:A
 

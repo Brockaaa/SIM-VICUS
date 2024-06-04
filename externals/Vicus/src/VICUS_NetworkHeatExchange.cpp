@@ -50,6 +50,8 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 5);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 1200);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingSupplyTemperature, 35);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterSupplyTemperature, 50);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 150);
 			} else if (m_buildingType == BT_ResidentialBuildingMultiFamily) {
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 100);
@@ -57,6 +59,8 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 25);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 25000);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingSupplyTemperature, 35);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterSupplyTemperature, 50);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1000);
 			} else if (m_buildingType == BT_ResidentialBuildingLarge) {
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 100);
@@ -64,6 +68,8 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 25);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 25000);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingSupplyTemperature, 35);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterSupplyTemperature, 50);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1000);
 			} else if (m_buildingType == BT_OfficeBuilding) {
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 100);
@@ -71,6 +77,8 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 25);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 25000);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingSupplyTemperature, 35);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterSupplyTemperature, 50);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1000);
 			}
 			break;
@@ -314,7 +322,7 @@ void NetworkHeatExchange::checkAndInitializeSpline() const {
 					time[i] = i; // we assume spline in hourly values
 
 				NANDRAD::LinearSplineParameter spl;
-				m_exportSpline.m_name = "HeatLoss"; // this name is checked for in NANDRAD
+				m_exportSpline.m_name = "Temperature"; // this name is checked for in NANDRAD
 				m_exportSpline.m_xUnit = IBK::Unit("h");
 				m_exportSpline.m_yUnit = IBK::Unit("C");
 				m_exportSpline.m_interpolationMethod = NANDRAD::LinearSplineParameter::I_LINEAR;
@@ -356,10 +364,10 @@ void NetworkHeatExchange::checkAndInitializeSpline() const {
 					if (heatingSpline[i] > 0)
 						heatFlux[i] = heatingSpline[i];
 					else if (coolingSpline.size() > 0 && coolingSpline[i] > 0)
-						heatFlux[i] = coolingSpline[i];
+						heatFlux[i] = -coolingSpline[i];
 				}
 
-				m_exportSpline.m_name = "Temperature"; // this name is checked for in NANDRAD
+				m_exportSpline.m_name = "HeatLoss"; // this name is checked for in NANDRAD
 				m_exportSpline.m_xUnit = IBK::Unit("h");
 				m_exportSpline.m_yUnit = IBK::Unit("W");
 				m_exportSpline.m_interpolationMethod = NANDRAD::LinearSplineParameter::I_LINEAR;
@@ -394,7 +402,8 @@ void NetworkHeatExchange::generateHeatFluxSplines()const{
 
 NANDRAD::HydraulicNetworkHeatExchange NetworkHeatExchange::toNandradHeatExchange() const {
 
-	NANDRAD::HydraulicNetworkHeatExchange hx = NANDRAD::HydraulicNetworkHeatExchange(NANDRAD::HydraulicNetworkHeatExchange::ModelType(m_modelType));
+	NANDRAD::HydraulicNetworkHeatExchange hx = NANDRAD::HydraulicNetworkHeatExchange();
+	hx.m_modelType = NANDRAD::HydraulicNetworkHeatExchange::ModelType(m_modelType);
 	switch(m_modelType){
 		case T_TemperatureConstant: {
 			hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_Temperature] = m_para[P_Temperature];

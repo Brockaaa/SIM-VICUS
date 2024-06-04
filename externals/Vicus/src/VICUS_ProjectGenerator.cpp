@@ -4190,6 +4190,14 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 	dbSchedules.setData(m_embeddedDB.m_schedules);
 
 
+	// stores the created nandrad component id for each pair of vicus subnetwork and component id
+	std::map<std::pair<unsigned int, unsigned int>, unsigned int> mapVicusComp2NandradComp;
+	// stores the created nandrad controller id for each pair of vicus subnetwork and component id
+	std::map<std::pair<unsigned int, unsigned int>, unsigned int> mapVicusComp2NandradController;
+	// stores the schedule ids for each NANDRAD component id
+	std::map<unsigned int, std::vector<unsigned int>> mapNandradComp2Schedules;
+	std::set<unsigned int> pipeIds; // collect pipe ids
+
 	// collect sub networks
 	std::set<unsigned int> subNetworkIds;
 	for (const VICUS::NetworkNode &node: vicusNetwork.m_nodes){
@@ -4211,9 +4219,64 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 		// determine maximum number of elements of all sub networks
 		if (sub->m_elements.size() > maxNumberElements)
 			maxNumberElements = sub->m_elements.size();
+
+
+		// ** transfer COMPONENT
+		for (const NetworkComponent &comp: sub->m_components){
+
+			if (!comp.isValid(dbSchedules))
+				errorStack.append(tr("Network component #%1 in sub network #%2 has invalid parameters").arg(comp.m_id).arg(sub->m_id));
+
+			NANDRAD::HydraulicNetworkComponent nandradComp;
+			nandradComp.m_id = uniqueIdAdd(allComponentIds);
+			nandradComp.m_displayName = comp.m_displayName.string();
+			nandradComp.m_modelType = VICUS::NetworkComponent::nandradNetworkComponentModelType(comp.m_modelType);
+			comp.nandradNetworkComponentParameter(nandradComp.m_para);
+			nandradComp.m_polynomCoefficients = comp.m_polynomCoefficients;
+			if (comp.m_pipePropertiesId != INVALID_ID)
+				pipeIds.insert(comp.m_pipePropertiesId);
+			if (comp.m_heatExchange.m_modelType != NetworkHeatExchange::NUM_T)
+				nandradComp.m_heatExchange = comp.m_heatExchange.toNandradHeatExchange();
+			nandradNetwork.m_components.push_back(nandradComp);
+
+			// store nandrad component id in map
+			mapVicusComp2NandradComp[std::make_pair(sub->m_id, comp.m_id)] = nandradComp.m_id;
+
+			// check schedules of component and add them to map
+			std::vector<std::string> requiredScheduleNames= NANDRAD::HydraulicNetworkComponent::requiredScheduleNames(
+						NetworkComponent::nandradNetworkComponentModelType(comp.m_modelType));
+			if (requiredScheduleNames.size() > 0 && requiredScheduleNames.size() != comp.m_scheduleIds.size()){
+				std::string names;
+				for (const std::string & name: requiredScheduleNames)
+					names += name + ", ";
+				errorStack.append(tr("Component with #%1 requires schedules '%2' but only %3 is given")
+								  .arg(comp.m_id).arg(names.c_str()).arg(comp.m_scheduleIds.size()));
+			}
+			else
+				mapNandradComp2Schedules[nandradComp.m_id] = comp.m_scheduleIds;
+
+			// ** transfer CONTROLLER
+			if (comp.m_networkController.m_controlledProperty != NetworkController::NUM_CP) {
+				NANDRAD::HydraulicNetworkControlElement nandradCtr;
+				nandradCtr.m_id = uniqueIdAdd(allControllerIds);
+				nandradCtr.m_modelType = NANDRAD::HydraulicNetworkControlElement::ModelType(comp.m_networkController.m_modelType);
+				nandradCtr.m_controllerType = NANDRAD::HydraulicNetworkControlElement::ControllerType(comp.m_networkController.m_controllerType);
+				nandradCtr.m_controlledProperty = NANDRAD::HydraulicNetworkControlElement::ControlledProperty(comp.m_networkController.m_controlledProperty);
+				nandradCtr.m_maximumControllerResultValue = comp.m_networkController.m_maximumControllerResultValue;
+				for (unsigned int i=0; i<NANDRAD::HydraulicNetworkControlElement::NUM_P; ++i)
+					nandradCtr.m_para[i] = comp.m_networkController.m_para[i];
+				for (unsigned int i=0; i<NANDRAD::HydraulicNetworkControlElement::NUM_ID; ++i)
+					nandradCtr.m_idReferences[i] = comp.m_networkController.m_idReferences[i];
+				nandradNetwork.m_controlElements.push_back(nandradCtr);
+				// store nandrad controller id in map
+				mapVicusComp2NandradController[std::make_pair(sub->m_id, comp.m_id)] = nandradCtr.m_id;
+			}
+
+		}
 	}
 	if (!errorStack.empty())
 		return;
+
 
 
 	// *** Transfer ELEMENTS from Vicus to Nandrad
@@ -4224,9 +4287,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 
 	unsigned int fmiValueRef = 100;
 
-	std::set<unsigned int> pipeIds;
 	std::map<unsigned int, std::vector<unsigned int>> componentElementMap; // this map stores the NANDRAD element ids for each NANDRAD component id
-	std::map<unsigned int, std::vector<unsigned int>> componentScheduleMap; // this map stores the schedule ids for each NANDRAD component id
 	std::vector<unsigned int> allNodeIds = {};			// stores all nodeIds of the network (the ids which are used to connect elements)
 	std::map<unsigned int, unsigned int> supplyNodeIdMap; // a map that stores for each VICUS geometric node the NANDRAD inlet node
 	std::map<unsigned int, unsigned int> returnNodeIdMap; // a map that stores for each VICUS geometric node the NANDRAD outlet node
@@ -4326,94 +4387,24 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 				referenceElementHeight = node.m_position.m_z;
 			}
 
-			// check component
+			// get component reference
 			const VICUS::NetworkComponent *comp = VICUS::element(sub->m_components, elem.m_componentId);
-			if (comp == nullptr){
-				errorStack.append(tr("Network component #%1 does not exist in sub network #%2").arg(elem.m_componentId).arg(sub->m_id));
-				continue;
-			}
-			if (!comp->isValid(dbSchedules))
-				errorStack.append(tr("Network component #%1 in sub network #%2 has invalid parameters").arg(elem.m_componentId).arg(sub->m_id));
+			Q_ASSERT(comp != nullptr);
 
-
-			// transfer component
-
-			NANDRAD::HydraulicNetworkComponent nandradComp;
-			nandradComp.m_displayName = comp->m_displayName.string(IBK::MultiLanguageString::m_language, "en");
-			nandradComp.m_modelType = VICUS::NetworkComponent::nandradNetworkComponentModelType(comp->m_modelType);
-			comp->nandradNetworkComponentParameter(nandradComp.m_para);
-			nandradComp.m_polynomCoefficients = comp->m_polynomCoefficients;
-
-			// check if there is another one that is identical
-			bool foundIdentical = false;
-			NANDRAD::HydraulicNetworkComponent otherComp;
-			for (const NANDRAD::HydraulicNetworkComponent &c: nandradNetwork.m_components) {
-				if (c.sameParametersAs(nandradComp)) {
-					foundIdentical = true;
-					otherComp = c;
-					break;
-				}
-			}
-			// add new one or use existing component
-			if (foundIdentical) {
-				nandradElement.m_componentId = otherComp.m_id;
-			} else {
-				nandradComp.m_id = uniqueIdAdd(allComponentIds);
-				nandradElement.m_componentId = nandradComp.m_id;
-				nandradNetwork.m_components.push_back(nandradComp);
-			}
-
-
-			// only few components have a pipeId, this is not mandatory
-			if (comp->m_pipePropertiesId != INVALID_ID)
-				pipeIds.insert(comp->m_pipePropertiesId);
-
-			// check schedules of component and add them to map
-			std::vector<std::string> requiredScheduleNames= NANDRAD::HydraulicNetworkComponent::requiredScheduleNames(
-						NetworkComponent::nandradNetworkComponentModelType(comp->m_modelType));
-			if (requiredScheduleNames.size() > 0 && requiredScheduleNames.size() != comp->m_scheduleIds.size()){
-				std::string names;
-				for (const std::string & name: requiredScheduleNames)
-					names += name + ", ";
-				errorStack.append(tr("Component with #%1 requires schedules '%2' but only %1 is given")
-								  .arg(comp->m_id).arg(names.c_str()).arg(comp->m_scheduleIds.size()));
-			}
-			else
-				componentScheduleMap[nandradComp.m_id] = comp->m_scheduleIds;
-
-
-			// transfer heat exchange
-			if (comp->m_heatExchange.m_individualHeatExchange) {
+			// transfer heat exchange if it is individual (otherwise, if part of component, this is done above in the component transfer)
+			if (comp->m_heatExchange.m_individualHeatExchange)
 				nandradElement.m_heatExchange = node.m_heatExchange;
+
+			// assign the component id of the NANDRAD component created above, using the map
+			std::pair<unsigned int, unsigned int> subCompPair = std::make_pair(sub->m_id, comp->m_id);
+			Q_ASSERT(mapVicusComp2NandradComp.find(subCompPair) != mapVicusComp2NandradComp.end());
+			nandradElement.m_componentId  = mapVicusComp2NandradComp.at(subCompPair);
+
+			// assign the controller id of the NANDRAD controller created above, using the map
+			if (comp->m_networkController.m_modelType != VICUS::NetworkController::NUM_MT) {
+				Q_ASSERT(mapVicusComp2NandradController.find(subCompPair) != mapVicusComp2NandradController.end());
+				nandradElement.m_controlElementId = mapVicusComp2NandradController.at(subCompPair);
 			}
-			else if (comp->m_heatExchange.m_modelType != NetworkHeatExchange::NUM_T){
-				nandradElement.m_heatExchange = comp->m_heatExchange.toNandradHeatExchange();
-			}
-
-//			// check heat exchange
-//			if (nandradElement.m_heatExchange != NANDRAD::HydraulicNetworkHeatExchange()) {
-//				try {
-//					nandradElement.m_heatExchange.checkParameters(p.m_placeholders, p.m_zones, p.m_constructionInstances, false);
-//				}  catch (IBK::Exception &ex) {
-//					errorStack.append(tr("Problem in heat exchange definition of node #%1\n%2").arg(node.m_id).arg(QString::fromStdString(ex.msgStack())));
-//				}
-//			}
-
-			// transfer controller
-//			if (comp->m_networkController.m)
-			NANDRAD::HydraulicNetworkControlElement nandradCtr;
-			nandradCtr.m_id = uniqueIdAdd(allControllerIds);
-			nandradCtr.m_modelType = NANDRAD::HydraulicNetworkControlElement::ModelType(comp->m_networkController.m_modelType);
-			nandradCtr.m_controllerType = NANDRAD::HydraulicNetworkControlElement::ControllerType(comp->m_networkController.m_controllerType);
-			nandradCtr.m_controlledProperty = NANDRAD::HydraulicNetworkControlElement::ControlledProperty(comp->m_networkController.m_controlledProperty);
-			nandradCtr.m_maximumControllerResultValue = comp->m_networkController.m_maximumControllerResultValue;
-			for (unsigned int i=0; i<NANDRAD::HydraulicNetworkControlElement::NUM_P; ++i)
-				nandradCtr.m_para[i] = comp->m_networkController.m_para[i];
-			for (unsigned int i=0; i<NANDRAD::HydraulicNetworkControlElement::NUM_ID; ++i)
-				nandradCtr.m_idReferences[i] = comp->m_networkController.m_idReferences[i];
-			nandradNetwork.m_controlElements.push_back(nandradCtr);
-
-//			nandradElement.m_controlElement
 
 
 			// SPECIAL CASE: pipes which are used in a sub network for e.g. ground heat exchangers (not the general network edge pipes)
@@ -4851,6 +4842,8 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 
 	// *** Create Object List for each component
 
+	std::set<std::string> allObjListNames;
+
 	std::map<unsigned int, NANDRAD::ObjectList> objectListMap;
 	for (auto it=componentElementMap.begin(); it!=componentElementMap.end(); ++it){
 
@@ -4859,7 +4852,9 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 
 		// create and add object list
 		NANDRAD::ObjectList objList;
-		objList.m_name = comp->m_displayName + " elements";
+		std::string objListName = comp->m_displayName + " elements";
+		std::string uniqueObjListName = VICUS::uniqueName(objListName, allObjListNames);
+		objList.m_name = uniqueObjListName;
 		objList.m_referenceType = NANDRAD::ModelInputReference::MRT_NETWORKELEMENT;
 		for (unsigned int elementId: it->second)
 			objList.m_filterID.m_ids.insert(elementId);
@@ -4871,7 +4866,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 
 	// *** Transfer SCHEDULES for each VICUS component
 
-	for (auto it=componentScheduleMap.begin(); it!=componentScheduleMap.end(); ++it){
+	for (auto it=mapNandradComp2Schedules.begin(); it!=mapNandradComp2Schedules.end(); ++it){
 
 		unsigned int compId = it->first;
 		std::vector<unsigned int> scheduleIds = it->second;

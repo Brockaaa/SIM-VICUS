@@ -37,6 +37,15 @@ QString uniqueName(const QString & baseName, const std::set<QString> & existingN
 }
 
 
+std::string uniqueName(const std::string & baseName, const std::set<std::string> & existingNames) {
+	std::set<QString> exNames;
+	for (const std::string &name: existingNames)
+		exNames.insert(QString::fromStdString(name));
+	QString name = uniqueName(QString::fromStdString(baseName), exNames);
+	return name.toStdString();
+}
+
+
 QString camelCase2ReadableString(const std::string & original) {
 	QString readableString;
 	for (char s: original){
@@ -46,5 +55,6 @@ QString camelCase2ReadableString(const std::string & original) {
 	}
 	return readableString;
 }
+
 
 } // namespace VICUS

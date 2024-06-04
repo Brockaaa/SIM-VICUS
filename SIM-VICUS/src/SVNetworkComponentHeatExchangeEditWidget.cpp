@@ -364,8 +364,15 @@ void SVNetworkComponentHeatExchangeEditWidget::updateHeatLossSplinePageForBuildi
 	m_ui->lineEditHeatLossSplineMaximumHeatingLoad->setValue(m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].get_value());
 	m_ui->lineEditHeatLossSplineFloorArea->setValue(m_hx->m_para[VICUS::NetworkHeatExchange::P_FloorArea].get_value());
 	m_ui->lineEditHeatLossSplineMaximumCoolingLoad->setValue(m_hx->m_para[VICUS::NetworkHeatExchange::P_MaximumCoolingLoad].get_value());
-	m_ui->groupBoxHeatLossSplineCooling->setChecked(m_hx->m_withCoolingDemand);
-	m_ui->groupBoxDomesticHotWaterDemand->setChecked(m_hx->m_withDomesticHotWaterDemand);
+
+	m_ui->checkBoxCooling->setChecked(m_hx->m_withCoolingDemand);
+	m_ui->widgetCooling->setEnabled(m_hx->m_withCoolingDemand);
+
+	m_ui->checkBoxDHW->setChecked(m_hx->m_withDomesticHotWaterDemand);
+	m_ui->widgetDHW->setEnabled(m_hx->m_withDomesticHotWaterDemand);
+
+	m_ui->checkBoxHeating->setChecked(m_hx->m_withHeatingDemand);
+	m_ui->widgetHeating->setEnabled(m_hx->m_withHeatingDemand);
 
 	// update area related values
 	updateEnergyDemandValuesAreaSpecific();
@@ -1101,5 +1108,20 @@ void SVNetworkComponentHeatExchangeEditWidget::on_groupBoxDomesticHotWaterDemand
 {
 	qDebug() << "Domestic Hot Water Demand clicked. ";
 	m_hx->m_withDomesticHotWaterDemand = checked;
+}
+
+
+void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxDHW_stateChanged(int arg1) {
+	m_ui->widgetDHW->setEnabled(arg1);
+}
+
+
+void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxCooling_stateChanged(int arg1) {
+	m_ui->widgetCooling->setEnabled(arg1);
+}
+
+
+void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeating_stateChanged(int arg1) {
+	m_ui->widgetHeating->setEnabled(arg1);
 }
 

@@ -23,9 +23,10 @@
 #define NANDRAD_HydraulicNetworkHeatExchangeH
 
 #include "NANDRAD_LinearSplineParameter.h"
-#include "NANDRAD_HydraulicNetworkComponent.h"
+#include "NANDRAD_Constants.h"
 
 #include <IBK_IntPara.h>
+#include <IBK_Parameter.h>
 
 namespace NANDRAD {
 
@@ -61,7 +62,8 @@ public:
 	};
 
 	HydraulicNetworkHeatExchange() {
-		for (unsigned int & i : m_idReferences) i = INVALID_ID;
+		for (unsigned int & i : m_idReferences)
+			i = INVALID_ID;
 	}
 
 	HydraulicNetworkHeatExchange(ModelType modelType) {
@@ -116,10 +118,6 @@ public:
 	/*! Time-series of heat flux or temperature (can be spline or tsv-file). */
 	LinearSplineParameter			m_splPara[NUM_SPL];										// XML:E
 
-
-	// *** Static functions ***
-
-	static std::vector<ModelType> availableHeatExchangeTypes(const HydraulicNetworkComponent::ModelType modelType);
 };
 
 

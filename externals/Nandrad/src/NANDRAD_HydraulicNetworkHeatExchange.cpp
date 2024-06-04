@@ -125,7 +125,8 @@ void HydraulicNetworkHeatExchange::checkParameters(const std::map<std::string, I
 			}
 			break;
 
-			case T_HeatLossConstant: {
+			case T_HeatLossConstant:
+			case T_HeatLossConstantCondenser: {
 				// check heat flux
 				m_para[P_HeatLoss].checkedValue("HeatLoss", "W", "W",
 												std::numeric_limits<double>::lowest(), false, std::numeric_limits<double>::max(), false, nullptr);
@@ -196,41 +197,6 @@ bool HydraulicNetworkHeatExchange::operator!=(const HydraulicNetworkHeatExchange
 
 	return false;
 }
-
-
-
-std::vector<HydraulicNetworkHeatExchange::ModelType> NANDRAD::HydraulicNetworkHeatExchange::availableHeatExchangeTypes(
-		const NANDRAD::HydraulicNetworkComponent::ModelType modelType)
-{
-	// some models may be adiabatic, hence we also return NUM_T as available heat exchange type
-	switch (modelType) {
-		case HydraulicNetworkComponent::MT_SimplePipe:
-			return {NUM_T, T_TemperatureConstant, T_TemperatureSpline, T_HeatLossConstant, T_HeatLossSpline, T_TemperatureZone, T_TemperatureConstructionLayer};
-		case HydraulicNetworkComponent::MT_DynamicPipe:
-			return {NUM_T, T_TemperatureConstant, T_TemperatureSpline, T_TemperatureZone, T_TemperatureConstructionLayer};
-		case HydraulicNetworkComponent::MT_HeatPumpVariableIdealCarnotSourceSide:
-		case HydraulicNetworkComponent::MT_HeatPumpVariableSourceSide:
-			return {T_HeatLossConstantCondenser, T_HeatLossSplineCondenser};  // must not be adiabatic
-//		case HydraulicNetworkComponent::MT_HeatPumpOnOffSourceSideWithBuffer:
-//			return {T_HeatingDemandSpaceHeating};  // must not be adiabatic
-		case HydraulicNetworkComponent::MT_HeatExchanger:
-			return {T_HeatLossConstant, T_HeatLossSpline}; // must not be adiabatic
-		case HydraulicNetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
-		case HydraulicNetworkComponent::MT_ConstantPressurePump:
-		case HydraulicNetworkComponent::MT_ConstantMassFluxPump:
-		case HydraulicNetworkComponent::MT_VariablePressurePump:
-		case HydraulicNetworkComponent::MT_ControlledPump:
-		case HydraulicNetworkComponent::MT_ControlledValve:
-		case HydraulicNetworkComponent::MT_HeatPumpOnOffSourceSide:
-		case HydraulicNetworkComponent::MT_IdealHeaterCooler:
-		case HydraulicNetworkComponent::MT_ConstantPressureLossValve:
-		case HydraulicNetworkComponent::MT_PressureLossElement:
-			return {NUM_T};
-		case HydraulicNetworkComponent::NUM_MT: ; // just to make compiler happy
-	}
-	return {};
-}
-
 
 
 } // namespace NANDRAD

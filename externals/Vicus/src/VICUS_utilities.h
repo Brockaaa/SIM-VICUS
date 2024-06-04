@@ -184,6 +184,9 @@ unsigned int largestUniqueId(const std::vector<T>& vec) {
 */
 QString uniqueName(const QString & baseName, const std::set<QString> & existingNames);
 
+/*! Overloaded version with std::string */
+std::string uniqueName(const std::string & baseName, const std::set<std::string> & existingNames);
+
 
 /*! Test function that checks that all objects in the given vector have unique m_id parameters.
 	The set passed as second argument is used for comparison. Pass an empty set if only the elements

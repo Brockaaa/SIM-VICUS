@@ -31,7 +31,6 @@
 #include "NANDRAD_HydraulicNetworkElement.h"
 #include "NANDRAD_HydraulicFluid.h"
 #include "NANDRAD_HydraulicNetworkPipeProperties.h"
-#include "NANDRAD_HydraulicNetworkComponent.h"
 #include "NANDRAD_HydraulicNetworkControlElement.h"
 #include "NANDRAD_HydraulicNetworkNode.h"
 

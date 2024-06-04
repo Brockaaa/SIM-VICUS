@@ -79,6 +79,17 @@ void HydraulicNetwork::checkParameters(const Project & prj, std::set<unsigned in
 		throw IBK::Exception(ex, IBK::FormatString("Error initializing fluid properties."), FUNC_ID);
 	}
 
+	// check parameters of all components, we need to do that before checking the elements, as it includes initializing splines for heat exchange
+	for (HydraulicNetworkComponent &c : m_components) {
+		try {
+			c.checkParameters(m_modelType, prj);
+		}
+		catch(IBK::Exception &ex) {
+			throw IBK::Exception(ex, IBK::FormatString("Error initializing network component with id #%1.")
+								 .arg(c.m_id), FUNC_ID);
+		}
+	}
+
 	std::set<unsigned int> conInstanceIds;
 	// check all elements and fill references to components and pipe properties
 	for (HydraulicNetworkElement &e : m_elements) {
@@ -156,16 +167,6 @@ void HydraulicNetwork::checkParameters(const Project & prj, std::set<unsigned in
 		}
 	}
 
-	// check parameters of all components
-	for (HydraulicNetworkComponent &c : m_components) {
-		try {
-			c.checkParameters(m_modelType);
-		}
-		catch(IBK::Exception &ex) {
-			throw IBK::Exception(ex, IBK::FormatString("Error initializing network component with id #%1.")
-								 .arg(c.m_id), FUNC_ID);
-		}
-	}
 	// check parameters of all pipe properties
 	for (HydraulicNetworkPipeProperties &p : m_pipeProperties) {
 		try {

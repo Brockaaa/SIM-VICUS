@@ -662,6 +662,8 @@ namespace VICUS {
 				case 6 : return "MaximumCoolingLoad";
 				case 7 : return "CoolingEnergyDemand";
 				case 8 : return "DomesticHotWaterDemand";
+				case 9 : return "HeatingSupplyTemperature";
+				case 10 : return "DomesticHotWaterSupplyTemperature";
 			} break;
 			// NetworkHeatExchange::BuildingType
 			case 57 :
@@ -1403,6 +1405,8 @@ namespace VICUS {
 				case 6 : return "MaximumCoolingLoad";
 				case 7 : return "CoolingEnergyDemand";
 				case 8 : return "DomesticHotWaterDemand";
+				case 9 : return "HeatingSupplyTemperature";
+				case 10 : return "DomesticHotWaterSupplyTemperature";
 			} break;
 			// NetworkHeatExchange::BuildingType
 			case 57 :
@@ -2145,6 +2149,8 @@ namespace VICUS {
 				case 6 : return "MaximumCoolingLoad";
 				case 7 : return "CoolingEnergyDemand";
 				case 8 : return "DomesticHotWaterDemand";
+				case 9 : return "HeatingSupplyTemperature";
+				case 10 : return "DomesticHotWaterSupplyTemperature";
 			} break;
 			// NetworkHeatExchange::BuildingType
 			case 57 :
@@ -2886,6 +2892,8 @@ namespace VICUS {
 				case 6 : return "kW";
 				case 7 : return "kWh";
 				case 8 : return "kWh";
+				case 9 : return "C";
+				case 10 : return "C";
 			} break;
 			// NetworkHeatExchange::BuildingType
 			case 57 :
@@ -3627,6 +3635,8 @@ namespace VICUS {
 				case 6 : return "#FFFFFF";
 				case 7 : return "#FFFFFF";
 				case 8 : return "#FFFFFF";
+				case 9 : return "#FFFFFF";
+				case 10 : return "#FFFFFF";
 			} break;
 			// NetworkHeatExchange::BuildingType
 			case 57 :
@@ -4368,6 +4378,8 @@ namespace VICUS {
 				case 6 : return std::numeric_limits<double>::quiet_NaN();
 				case 7 : return std::numeric_limits<double>::quiet_NaN();
 				case 8 : return std::numeric_limits<double>::quiet_NaN();
+				case 9 : return std::numeric_limits<double>::quiet_NaN();
+				case 10 : return std::numeric_limits<double>::quiet_NaN();
 			} break;
 			// NetworkHeatExchange::BuildingType
 			case 57 :
@@ -4697,7 +4709,7 @@ namespace VICUS {
 			// NetworkHeatExchange::ModelType
 			case 55 : return 10;
 			// NetworkHeatExchange::para_t
-			case 56 : return 9;
+			case 56 : return 11;
 			// NetworkHeatExchange::BuildingType
 			case 57 : return 5;
 			// NetworkHeatExchange::AmbientTemperatureType
@@ -4877,7 +4889,7 @@ namespace VICUS {
 			// NetworkHeatExchange::ModelType
 			case 55 : return 9;
 			// NetworkHeatExchange::para_t
-			case 56 : return 8;
+			case 56 : return 10;
 			// NetworkHeatExchange::BuildingType
 			case 57 : return 4;
 			// NetworkHeatExchange::AmbientTemperatureType

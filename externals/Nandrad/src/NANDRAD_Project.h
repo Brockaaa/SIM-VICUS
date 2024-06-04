@@ -40,7 +40,6 @@
 #include "NANDRAD_Models.h"
 #include "NANDRAD_WindowGlazingSystem.h"
 #include "NANDRAD_HydraulicNetwork.h"
-#include "NANDRAD_HydraulicNetworkComponent.h"
 #include "NANDRAD_KeywordList.h"
 #include "NANDRAD_FMIDescription.h"
 
