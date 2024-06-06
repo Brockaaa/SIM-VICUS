@@ -48,8 +48,6 @@ public:
 	int rowSize() const;
 	/* adds default element to table, includes QPixmap */
 	void addElement(VICUS::NetworkComponent::ModelType type);
-	/* adds database element to Table */
-	void addElement(VICUS::NetworkComponent &component);
 	/* removes all Elements from Table */
 	void clear();
 

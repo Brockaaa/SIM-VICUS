@@ -80,36 +80,6 @@ void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent::ModelType 
 
 }
 
-void SVSubNetworkEditDialogTable::addElement(VICUS::NetworkComponent &component){
-	SVSubNetworkEditDialogTableItem *bmItem1 = new SVSubNetworkEditDialogTableItem(VICUS::NetworkComponent::iconFileFromModelType(component.m_modelType),
-																				   QtExt::MultiLangString2QString(component.m_displayName),
-																				   VICUS::KeywordListQt::Description("NetworkComponent::ModelType", component.m_modelType),
-																					m_defaultRowHeight, this);
-
-	bmItem1->m_builtIn = component.m_builtIn;
-	bmItem1->m_local = component.m_local;
-
-	if (component.m_builtIn) {
-		bmItem1->setStyleSheet(QString("background-color: %1;").arg(SVStyle::instance().m_alternativeBackgroundDark.name()));
-	} else if (component.m_local) {
-		bmItem1->setStyleSheet(QString("background-color: %1;").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
-	} else {
-		bmItem1->setStyleSheet(QString("background-color: %1; ").arg(QtExt::Style::ToolBoxPageBackground));
-	}
-
-		const int rowHeight = 20;
-	setFixedHeight(height() + rowHeight);
-	insertRow(m_rowSize);
-	setCellWidget(m_rowSize, 0, bmItem1);
-	setRowHeight(m_rowSize, rowHeight);
-	SubNetworkEditDialogTableEntry entry;
-	entry.m_modelType = component.m_modelType;
-	entry.m_id = component.m_id;
-	QString generatedString = entry.toText();
-	m_elementList.push_back(generatedString);
-	m_rowSize++;
-
-}
 
 void SVSubNetworkEditDialogTable::clear()
 {

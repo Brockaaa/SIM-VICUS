@@ -51,29 +51,6 @@ QVariant SVSubNetworkComponentDBTableModel::data(const QModelIndex & index, int 
 			}
 		} break;
 
-		case Qt::DecorationRole : {
-			if (index.column() == ColCheck) {
-				if (it->second.isValid(m_db->m_schedules))
-					return QIcon(":/gfx/actions/16x16/ok.png");
-				else
-					return QIcon(":/gfx/actions/16x16/error.png");
-			}
-		} break;
-
-		case Qt::BackgroundRole : {
-			if (index.column() == ColColor) {
-				return it->second.m_color;
-			}
-		} break;
-
-		case Qt::SizeHintRole :
-			switch (index.column()) {
-				case ColCheck :
-				case ColColor :
-					return QSize(22, 16);
-			} // switch
-			break;
-
 		case Role_Id :
 			return it->first;
 
@@ -85,14 +62,6 @@ QVariant SVSubNetworkComponentDBTableModel::data(const QModelIndex & index, int 
 
 		case Role_Referenced:
 			return it->second.m_isReferenced;
-
-		case Qt::ToolTipRole: {
-			if(index.column() == ColCheck) {
-				std::string errorMsg = "";
-				if (!it->second.isValid(m_db->m_schedules))
-					return QString::fromStdString(it->second.m_errorMsg);
-			}
-		}
 	}
 
 	return QVariant();
@@ -124,12 +93,13 @@ QVariant SVSubNetworkComponentDBTableModel::headerData(int section, Qt::Orientat
 
 int SVSubNetworkComponentDBTableModel::columnIndexId() const
 {
-	return 0;
+	return ColId;
 }
 
 void SVSubNetworkComponentDBTableModel::resetModel()
 {
-
+	beginResetModel();
+	endResetModel();
 }
 
 
@@ -146,7 +116,5 @@ void SVSubNetworkComponentDBTableModel::deleteItem(const QModelIndex & index)
 
 void SVSubNetworkComponentDBTableModel::setColumnResizeModes(QTableView * tableView)
 {
-	tableView->horizontalHeader()->setSectionResizeMode(SVSubNetworkComponentDBTableModel::ColCheck, QHeaderView::Fixed);
-	tableView->horizontalHeader()->setSectionResizeMode(SVSubNetworkComponentDBTableModel::ColColor, QHeaderView::Fixed);
 	tableView->horizontalHeader()->setSectionResizeMode(SVSubNetworkComponentDBTableModel::ColName, QHeaderView::Stretch);
 }

@@ -85,6 +85,7 @@ public:
 
 signals:
 	void controllerChanged(QString controllerName);
+	void componentParametrizationChanged(unsigned int id);
 
 	/* signals to forward signal from SVNetworkComponentHeatExchange to SVSubNetworkEditDialog*/
 	void heatExchangeChanged(VICUS::NetworkHeatExchange::ModelType modelType);
@@ -137,7 +138,7 @@ private:
 	std::vector<std::vector<double>>		m_yData1;
 	std::vector<std::vector<double>>		m_yData2;
 
-	SVDatabaseEditDialog					*m_componentDBEditDialog;
+	SVDatabaseEditDialog					*m_componentDBEditDialog = nullptr;
 
 	SVNetworkComponentHeatExchangeEditWidget *m_widgetNetworkComponentHeatExchangeEditWidget;
 

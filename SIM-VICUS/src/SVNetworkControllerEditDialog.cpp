@@ -8,8 +8,9 @@
 
 #include <VICUS_KeywordListQt.h>
 
-SVNetworkControllerEditDialog::SVNetworkControllerEditDialog(QWidget *parent) :
+SVNetworkControllerEditDialog::SVNetworkControllerEditDialog(QWidget *parent, bool readOnly) :
 	QDialog(parent),
+	m_readOnly(readOnly),
 	m_ui(new Ui::SVNetworkControllerEditDialog)
 {
 	m_ui->setupUi(this);
@@ -63,6 +64,26 @@ void SVNetworkControllerEditDialog::update()
 	// re-enable all controls
 	setEnabled(true);
 
+	if(m_readOnly){
+		m_ui->lineEditName->setReadOnly(true);
+		m_ui->comboBoxProperty->setEnabled(false);
+		m_ui->radioButtonFixedSetPoint->setEnabled(false);
+		m_ui->lineEditSetpoint->setReadOnly(true);
+		m_ui->radioButtonSchedule->setEnabled(false);
+		m_ui->radioButtonSchedule->setEnabled(false);
+
+		m_ui->comboBoxControllerType->setEnabled(false);
+		m_ui->lineEditKp->setReadOnly(true);
+		m_ui->lineEditKi->setReadOnly(true);
+
+		m_ui->lineEditMaxControllerResultValue->setReadOnly(true);
+
+		m_ui->toolButtonSchedule->setVisible(false);
+		m_ui->toolButtonRemoveSchedule->setVisible(false);
+		m_ui->buttonBox->setVisible(false);
+
+	}
+
 	// get schedule
 	const VICUS::Schedule * setPointSched = m_db.m_schedules[m_currentController.m_idReferences[VICUS::NetworkController::ID_Schedule]];
 
@@ -106,21 +127,21 @@ void SVNetworkControllerEditDialog::update()
 	// enable states and text
 	m_ui->lineEditName->setText(QString::fromStdString(m_currentController.m_displayName.string(IBK::MultiLanguageString::m_language)));
 	m_ui->radioButtonSchedule->setChecked(m_currentController.m_modelType == VICUS::NetworkController::MT_Scheduled);
-	m_ui->radioButtonSchedule->setEnabled(schedulePossible);
-	m_ui->lineEditSchedule->setEnabled(schedulePossible);
+	m_ui->radioButtonSchedule->setEnabled(schedulePossible && !m_readOnly);
+	m_ui->lineEditSchedule->setEnabled(schedulePossible && !m_readOnly);
 	if(m_currentController.m_modelType == VICUS::NetworkController::NUM_MT || m_currentController.m_modelType == VICUS::NetworkController::MT_Constant){
 		m_ui->radioButtonFixedSetPoint->setChecked(true);
 		on_radioButtonFixedSetPoint_clicked(true);
 	}
-	m_ui->lineEditSetpoint->setEnabled(m_currentController.m_modelType == VICUS::NetworkController::MT_Constant);
+	m_ui->lineEditSetpoint->setEnabled(m_currentController.m_modelType == VICUS::NetworkController::MT_Constant && !m_readOnly);
 
 	m_ui->radioButtonFixedSetPoint->setText(tr("Set point ") + controlledPropertyName);
-	m_ui->radioButtonSchedule->setEnabled(schedulePossible);
+	m_ui->radioButtonSchedule->setEnabled(schedulePossible && !m_readOnly);
 	if (schedulePossible)
 		m_ui->radioButtonSchedule->setText(tr("Schedule ") + controlledPropertyName);
 	else
 		m_ui->radioButtonSchedule->setText("");
-	m_ui->toolButtonSchedule->setEnabled(m_ui->radioButtonSchedule->isChecked());
+	m_ui->toolButtonSchedule->setEnabled(m_ui->radioButtonSchedule->isChecked() && !m_readOnly);
 	m_ui->groupBoxMaximumOutput->setEnabled(maxControllerValuePossible);
 	m_ui->toolButtonRemoveSchedule->setEnabled(setPointSched != nullptr);
 

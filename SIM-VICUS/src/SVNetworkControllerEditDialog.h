@@ -16,7 +16,7 @@ class SVNetworkControllerEditDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit SVNetworkControllerEditDialog(QWidget *parent = nullptr);
+	explicit SVNetworkControllerEditDialog(QWidget *parent, bool readOnly = false);
 	~SVNetworkControllerEditDialog();
 
 	void setup(VICUS::NetworkController &controller, VICUS::NetworkComponent::ModelType modelType);
@@ -54,6 +54,9 @@ private:
 	SVDatabase              m_db;
 	/* currently edited controller */
 	VICUS::NetworkController			m_currentController;
+
+	/*! bool to make the widget read only - used in Database dialog for parametrization */
+	bool									m_readOnly = false;
 };
 
 #endif // SVNETWORKCONTROLLEREDITDIALOG_H

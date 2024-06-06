@@ -75,12 +75,6 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 	m_ui->viewWidget->setResolution(1);
 	m_ui->viewWidget->setStyleSheet("background-color: white;");
 
-	m_ui->labelBuiltIn->setMaximumWidth(m_ui->labelBuiltIn->sizeHint().width());
-	m_ui->labelUserDB->setMaximumWidth(m_ui->labelUserDB->sizeHint().width());
-
-	m_ui->frameBuiltIn->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_alternativeBackgroundDark.name()));
-	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
-
 	connect(m_sceneManager, &SVBMSceneManager::newBlockSelected, this, &SVSubNetworkEditDialog::blockSelectedEvent);
 	connect(m_sceneManager, &SVBMSceneManager::newConnectorSelected, this, &SVSubNetworkEditDialog::connectorSelectedEvent);
 	connect(m_sceneManager, &SVBMSceneManager::selectionCleared, this, &SVSubNetworkEditDialog::selectionClearedEvent);
@@ -95,6 +89,7 @@ SVSubNetworkEditDialog::SVSubNetworkEditDialog(QWidget *parent, VICUS::SubNetwor
 
 	connect(&SVProjectHandler::instance(), &SVProjectHandler::projectSaved, this, &SVSubNetworkEditDialog::on_projectSaved);
 	connect(m_ui->networkComponentEditWidget, &SVNetworkComponentEditWidget::controllerChanged, this, &SVSubNetworkEditDialog::on_controllerChanged);
+	connect(m_ui->networkComponentEditWidget, &SVNetworkComponentEditWidget::componentParametrizationChanged, this, &SVSubNetworkEditDialog::on_componentParametrizationChanged);
 	connect(m_ui->networkComponentEditWidget, &SVNetworkComponentEditWidget::heatExchangeChanged, this, &SVSubNetworkEditDialog::on_heatExchangeChanged);
 	connect(m_ui->networkComponentEditWidget, &SVNetworkComponentEditWidget::externallyDefinedStateChanged, this, &SVSubNetworkEditDialog::on_externallyDefinedStateChanged);
 }
@@ -159,31 +154,15 @@ void SVSubNetworkEditDialog::updateToolBoxPages(){
 		switch(category){
 		case VICUS::NetworkComponent::CC_Pipes: {
 			m_tables[category]->addElement(modelType);
-			for(auto availableElement : availableDataBaseElements(modelType)){
-				m_tables[category]->addElement(availableElement);
-
-			}
 		} break;
 		case VICUS::NetworkComponent::CC_Pumps: {
 			m_tables[category]->addElement(modelType);
-			for(VICUS::NetworkComponent &availableElement : availableDataBaseElements(modelType)){
-				m_tables[category]->addElement(availableElement);
-
-			}
 		} break;
 		case VICUS::NetworkComponent::CC_Heatpumps: {
 			m_tables[category]->addElement(modelType);
-			for(VICUS::NetworkComponent &availableElement : availableDataBaseElements(modelType)){
-				m_tables[category]->addElement(availableElement);
-
-			}
 		} break;
 		case VICUS::NetworkComponent::CC_Other: {
 			m_tables[category]->addElement(modelType);
-			for(VICUS::NetworkComponent &availableElement : availableDataBaseElements(modelType)){
-				m_tables[category]->addElement(availableElement);
-
-			}
 		} break;
 		default:
 			qDebug() << "no entry for VICUS::NetworkComponent::ModelType " << modelType;
@@ -1476,16 +1455,13 @@ void SVSubNetworkEditDialog::on_componentSelected()
 	int row = m_senderTable->currentRow();
 
 	if(row == -1){
-		m_ui->removeFromUserDBButton->setEnabled(false);
 		m_ui->toolButtonRename->setEnabled(false);
 		return;
 	}
 	SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry entry = SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry(m_senderTable->m_elementList[(unsigned int)row]);
 	if(entry.m_id != VICUS::INVALID_ID){
-		m_ui->removeFromUserDBButton->setEnabled(!m_db->m_networkComponents[entry.m_id]->m_builtIn);
 		m_ui->toolButtonRename->setEnabled(!m_db->m_networkComponents[entry.m_id]->m_builtIn);
 	} else {
-		m_ui->removeFromUserDBButton->setEnabled(false);
 		m_ui->toolButtonRename->setEnabled(false);
 	}
 }
@@ -1508,20 +1484,6 @@ void SVSubNetworkEditDialog::on_addToUserDBButton_clicked()
 	updateToolBoxPages();
 }
 
-
-void SVSubNetworkEditDialog::on_removeFromUserDBButton_clicked()
-{
-	if(m_senderTable == nullptr)
-		return;
-	int row = m_senderTable->currentRow();
-	if(row == -1)
-		return;
-
-	SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry entry = SVSubNetworkEditDialogTable::SubNetworkEditDialogTableEntry(m_senderTable->m_elementList[(unsigned int)row]);
-	m_senderTable->clearSelection();
-	m_db->m_networkComponents.remove(entry.m_id);
-	updateToolBoxPages();
-}
 
 void SVSubNetworkEditDialog::on_toolButtonRename_clicked()
 {
@@ -1580,8 +1542,6 @@ void SVSubNetworkEditDialog::on_projectSaved()
 void SVSubNetworkEditDialog::on_styleChanged()
 {
 	qDebug() << "SVSubNetworkEditDialog::on_styleChanged()";
-	m_ui->frameBuiltIn->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_alternativeBackgroundDark.name()));
-	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundDark.name()));
 	m_ui->tbox->layout()->setMargin(0);
 	m_ui->tbox->layout()->setSpacing(0);
 }
@@ -1593,6 +1553,32 @@ void SVSubNetworkEditDialog::on_controllerChanged(QString controllerName)
 	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().first());
 	m_sceneManager->setController(selectedBlock, controllerName);
 	m_sceneManager->update();
+}
+
+void SVSubNetworkEditDialog::on_componentParametrizationChanged(unsigned int id)
+{
+	if(id == VICUS::INVALID_ID || id == 0) return;
+	VICUS::NetworkComponent* newComponent = m_db->m_networkComponents[id];
+
+	VICUS::BMBlock  *blockToDisplay = nullptr;
+	// retrieve list of selected Blocks
+	QList<const VICUS::BMBlock*> blocks = m_sceneManager->selectedBlocks();
+
+	if (blocks.size() != 1) {
+		selectionClearedEvent();
+		return;
+	}
+	blockToDisplay = const_cast<VICUS::BMBlock*>(blocks.first());
+	if(blockToDisplay->m_mode != VICUS::BMBlockType::NetworkComponentBlock) return;
+
+	VICUS::NetworkComponent* component = &m_networkComponents[componentIndex(blockToDisplay->m_componentId)];
+	if(component->m_modelType != newComponent->m_modelType) return;
+	*component = *newComponent;
+	component->m_id = blockToDisplay->m_componentId;
+	component->m_builtIn = false;
+
+	m_ui->networkComponentEditWidget->updateInput(component);
+
 }
 
 void SVSubNetworkEditDialog::on_heatExchangeChanged(VICUS::NetworkHeatExchange::ModelType modelType)

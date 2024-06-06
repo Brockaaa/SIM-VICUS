@@ -61,9 +61,6 @@ private slots:
 	/*! gets called when addToDBButton is clicked,
 	 *  adds component of Block to DB */
 	void on_addToUserDBButton_clicked();
-	/*! gets called when removeFromDBButton is clicked,
-	 *  removes selected Component from DB if it is not builtIn */
-	void on_removeFromUserDBButton_clicked();
 	/*! get called when changeDBElementNameButton is cliclked
 	 * calls small dialog to change name */
 	void on_toolButtonRename_clicked();
@@ -76,6 +73,8 @@ private slots:
 	void on_styleChanged();
 	/*! Connected to signal controllerUpdated() from SVNetworkComponentEditWidget */
 	void on_controllerChanged(QString controllerName);
+	/*! Connected to signal ccomponentParametrizationChanged(unsigned int id) from SVNetworkComponentEditWidget */
+	void on_componentParametrizationChanged(unsigned int id);
 	/*! Connected to singal heatExchangeChanged()from SVNetworkComponentEditWidget */
 	void on_heatExchangeChanged(VICUS::NetworkHeatExchange::ModelType modelType);
 	/*! Connected to singal externallyDefinedStateChanged()from SVNetworkComponentEditWidget */

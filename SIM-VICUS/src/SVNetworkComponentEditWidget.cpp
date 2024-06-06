@@ -107,7 +107,6 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent, bool
 		m_ui->toolButtonControllerRemove->setVisible(false);
 		m_ui->toolButtonSchedule1->setVisible(false);
 		m_ui->toolButtonSchedule2->setVisible(false);
-		m_ui->toolButtonControllerSet->setVisible(false);
 		m_ui->toolButtonPipeProperties->setVisible(false);
 
 		return;
@@ -307,13 +306,13 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 			else
 				item = new QTableWidgetItem(QString("%L1").arg(m_current->m_para[para].get_value(ioUnit)));
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
-			if(m_readOnly)
-				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			if ((unsigned int)rowCounter < paraVecStd.size())
 				item->setData(Qt::UserRole, DT_DoubleStd);
 			else
 				item->setData(Qt::UserRole, DT_DoubleAdditional);
 			item->setData(Qt::UserRole+1, para);
+			if(m_readOnly)
+				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			m_ui->tableWidgetParameters->setItem(rowCounter, 1, item);
 
 			++rowCounter;
@@ -925,7 +924,7 @@ void SVNetworkComponentEditWidget::on_tableWidgetPolynomCoefficients_cellChanged
 void SVNetworkComponentEditWidget::on_toolButtonControllerSet_clicked()
 {
 	if(m_controllerEditDialog == nullptr){
-		m_controllerEditDialog = new SVNetworkControllerEditDialog(this);
+		m_controllerEditDialog = new SVNetworkControllerEditDialog(this, m_readOnly);
 	}
 
 	m_controllerEditDialog->setup(m_current->m_networkController, m_current->m_modelType);
@@ -980,5 +979,7 @@ void SVNetworkComponentEditWidget::on_toolButtonComponentDBDialogOpen_clicked()
 														 );
 	}
 
-	m_componentDBEditDialog->exec();
+	unsigned int selectedId = m_componentDBEditDialog->select(0, true, VICUS::KeywordList::Keyword("NetworkComponent::ModelType",
+																								   m_current->m_modelType), SVSubNetworkComponentDBTableModel::ColType);
+	emit componentParametrizationChanged(selectedId);
 }
