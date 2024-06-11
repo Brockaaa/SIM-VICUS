@@ -69,13 +69,9 @@ private slots:
 
 	void on_comboBoxHeatExchange_activated(int index);
 
-	void on_checkBoxHeatLossConstantExternal_stateChanged(int arg1);
-
 	void on_lineEditHeatLossConstantUser_editingFinishedSuccessfully();
 
 	void on_lineEditTemperatureConstantTemperature_editingFinishedSuccessfully();
-
-	void on_checkBoxHeatLossSplineExternal_clicked(bool checked);
 
 	void on_lineEditHeatLossSplineFloorArea_editingFinishedSuccessfully();
 
@@ -121,6 +117,8 @@ private slots:
 	void on_lineEditTemperatureSplineHeatTransferCoefficient_editingFinishedSuccessfully();
 
 	void on_lineEditTemperatureConstantHeatTransferCoefficient_editingFinishedSuccessfully();
+
+	void on_checkBoxExternallyDefined_stateChanged(int arg1);
 
 private:
 	/*! updates pages */

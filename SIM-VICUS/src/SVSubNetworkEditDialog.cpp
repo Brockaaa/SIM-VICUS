@@ -1607,6 +1607,6 @@ void SVSubNetworkEditDialog::on_externallyDefinedStateChanged(bool checked)
 	}
 
 	if(anotherChecked)
-		QMessageBox::warning(this, tr("HeatExchange Conflict"), tr("Another Heat Exchanged is externally defined. Only one externally defined Heat Exchanger is allowed. Please make sure to choose only one."));
+		QMessageBox::warning(this, "", tr("There is another element with externally defined heat exchange. However, only one element is allowed to have an externally defined heat exchange."));
 
 }

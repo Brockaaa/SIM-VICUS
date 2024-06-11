@@ -84,31 +84,31 @@ public:
 	/*! Parameters for the component. */
 	enum para_t {
 		// from NANDRAD::HydraulicNetworkComponent
-		P_HydraulicDiameter,					// Keyword: HydraulicDiameter					[mm]	'Only used for pressure loss calculation with PressureLossCoefficient (NOT for pipes)'
-		P_PressureLossCoefficient,				// Keyword: PressureLossCoefficient				[---]	'Pressure loss coefficient for the component (zeta-value)'
-		P_PressureHead,							// Keyword: PressureHead						[Bar]	'Pump predefined pressure head'
-		P_MassFlux,								// Keyword: MassFlux							[kg/s]	'Pump predefined mass flux'
-		P_PumpMaximumEfficiency,				// Keyword: PumpMaximumEfficiency				[---]	'Pump efficiency in optimal operation point'
-		P_FractionOfMotorInefficienciesToFluidStream,	// Keyword: FractionOfMotorInefficienciesToFluidStream	[---]	'Fraction of pump heat loss due to inefficiency that heats up the fluid'
-		P_MaximumPressureHead,					// Keyword: MaximumPressureHead					[Bar]	'Pump maximum pressure head at point of minimal mass flow of pump'
-		P_PumpMaximumElectricalPower,			// Keyword: PumpMaximumElectricalPower			[W]		'Pump maximum electrical power at point of optimal operation'
-		P_DesignPressureHead,					// Keyword: DesignPressureHead					[Bar]	'Design pressure head of VariablePressureHeadPump'
-		P_DesignMassFlux,						// Keyword: DesignMassFlux						[kg/s]	'Design mass flux of VariablePressureHeadPump'
-		P_PressureHeadReductionFactor,			// Keyword: PressureHeadReductionFactor			[---]	'Factor to reduce pressure head of VariablePressureHeadPump'
-		P_Volume,								// Keyword: Volume								[m3]	'Water or air volume of the component'
-		P_PipeMaxDiscretizationWidth,			// Keyword: PipeMaxDiscretizationWidth			[m]		'Maximum width/length of discretized volumes in pipe'
-		P_CarnotEfficiency,						// Keyword: CarnotEfficiency					[---]	'Carnot efficiency eta'
-		P_MaximumHeatingPower,					// Keyword: MaximumHeatingPower					[W]		'Maximum heating power'
-		P_MaximumCoolingPower,					// Keyword: MaximumCoolingPower					[W]		'Maximum cooling power'
-		P_PressureLoss,							// Keyword: PressureLoss						[Bar]	'Pressure loss for valve'
-		P_MinimumOutletTemperature,				// Keyword: MinimumOutletTemperature			[C]		'Minimum outlet temperature of heat exchanger, used for clipping of heat extraction'
-		P_HeatingPowerB0W35,					// Keyword: HeatingPowerB0W35					[W]		'Heat pump heating power at B0/W35
+		P_HydraulicDiameter,					// Keyword: HydraulicDiameter					[mm]	'Hydraulic diameter'
+		P_PressureLossCoefficient,				// Keyword: PressureLossCoefficient				[---]	'Pressure loss coefficient (zeta)'
+		P_PressureHead,							// Keyword: PressureHead						[Bar]	'Predefined pressure head'
+		P_MassFlux,								// Keyword: MassFlux							[kg/s]	'Predefined mass flux'
+		P_PumpMaximumEfficiency,				// Keyword: PumpMaximumEfficiency				[---]	'Efficiency in optimal operation'
+		P_FractionOfMotorInefficienciesToFluidStream,	// Keyword: FractionOfMotorInefficienciesToFluidStream	[---]	'Fraction of losses that heats up fluid'
+		P_MaximumPressureHead,					// Keyword: MaximumPressureHead					[Bar]	'Maximum pressure head at minimal mass flow'
+		P_PumpMaximumElectricalPower,			// Keyword: PumpMaximumElectricalPower			[kW]	'Maximum electrical power at optimal operation'
+		P_DesignPressureHead,					// Keyword: DesignPressureHead					[Bar]	'Design pressure head'
+		P_DesignMassFlux,						// Keyword: DesignMassFlux						[kg/s]	'Design mass flux'
+		P_PressureHeadReductionFactor,			// Keyword: PressureHeadReductionFactor			[---]	'Pressure head reduction at zero mass flux'
+		P_Volume,								// Keyword: Volume								[m3]	'Volume'
+		P_PipeMaxDiscretizationWidth,			// Keyword: PipeMaxDiscretizationWidth			[m]		'Discretization length'
+		P_CarnotEfficiency,						// Keyword: CarnotEfficiency					[---]	'Carnot effectiveness'
+		P_MaximumHeatingPower,					// Keyword: MaximumHeatingPower					[kW]	'Maximum heating power'
+		P_MaximumCoolingPower,					// Keyword: MaximumCoolingPower					[kW]	'Maximum cooling power'
+		P_PressureLoss,							// Keyword: PressureLoss						[Bar]	'Pressure loss'
+		P_MinimumOutletTemperature,				// Keyword: MinimumOutletTemperature			[C]		'Minimum outlet temperature'
+		P_HeatingPowerB0W35,					// Keyword: HeatingPowerB0W35					[kW]	'Heat pump heating power at B0/W35
 		P_HeatingBufferSupplyTemperature,		// Keyword: HeatingBufferSupplyTemperature		[C]		'Heat pump supply temperature for heating buffer storage'
 		P_HeatingBufferReturnTemperature,		// Keyword: HeatingBufferReturnTemperature		[C]		'Heat pump return temperature for heating buffer storage'
 		P_DHWBufferSupplyTemperature,			// Keyword: DHWBufferSupplyTemperature			[C]		'Heat pump supply temperature for DHW buffer storage'
 		P_DHWBufferReturnTemperature,			// Keyword: DHWBufferReturnTemperature			[C]		'Heat pump return temperature for DHW buffer storage'
-		P_HeatingBufferVolume,					// Keyword: HeatingBufferVolume					[m3]	'Heat pump heating buffer storage volume'
-		P_DHWBufferVolume,						// Keyword: DHWBufferVolume						[m3]	'Heat pump DHW buffer storage volume'		'
+		P_HeatingBufferVolume,					// Keyword: HeatingBufferVolume					[l]		'Heat pump heating buffer storage volume'
+		P_DHWBufferVolume,						// Keyword: DHWBufferVolume						[l]		'Heat pump DHW buffer storage volume'
 		// additional parameters
 		P_PipeLength,							// Keyword: PipeLength							[m]		'Length of pipe'
 		NUM_P
@@ -116,7 +116,7 @@ public:
 
 	/*! Whole number parameters. */
 	enum intPara_t {
-		IP_NumberParallelPipes,					// Keyword: NumberParallelPipes				[---]	'Number of parallel pipes in ground heat exchanger'
+		IP_NumberParallelPipes,					// Keyword: NumberParallelPipes				[---]	'Number of parallel pipes'
 		IP_NumberParallelElements,				// Keyword: NumberParallelElements			[---]	'Number of parallel elements'
 		NUM_IP
 	};

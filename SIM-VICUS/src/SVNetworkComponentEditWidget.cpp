@@ -103,7 +103,7 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent, bool
 
 	if(m_readOnly){
 		m_ui->tabWidget->removeTab(1);
-		m_ui->toolButtonComponentDBDialogOpen->setVisible(false);
+		m_ui->pushButtonComponentDBDialogOpen->setVisible(false);
 		m_ui->toolButtonControllerRemove->setVisible(false);
 		m_ui->toolButtonSchedule1->setVisible(false);
 		m_ui->toolButtonSchedule2->setVisible(false);
@@ -111,6 +111,8 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent, bool
 
 		return;
 	}
+
+	m_ui->pushButtonComponentDBDialogOpen->setIcon(QIcon::fromTheme("assign_db_element"));
 
 	m_widgetNetworkComponentHeatExchangeEditWidget = new SVNetworkComponentHeatExchangeEditWidget(this);
 	m_ui->verticalLayoutTabHeatExchange->addWidget(m_widgetNetworkComponentHeatExchangeEditWidget);
@@ -135,7 +137,8 @@ void SVNetworkComponentEditWidget::updateInput(VICUS::NetworkComponent* componen
 
 
 	// set invisible everything in the polynom group box
-	m_ui->groupBoxPolynom->setVisible(false);
+	m_ui->tableWidgetPolynomCoefficients->setVisible(false);
+	m_ui->tabWidgetPlots->setVisible(false);
 
 	// set invisible everything in the controller group box
 	m_ui->groupBoxController->setVisible(false);
@@ -173,9 +176,9 @@ void SVNetworkComponentEditWidget::update()
 	m_ui->labelSchedule1->clear();
 	m_ui->labelSchedule2->clear();
 	if (reqScheduleNames.size()>0)
-		m_ui->labelSchedule1->setText(VICUS::camelCase2ReadableString(reqScheduleNames[0]));
+		m_ui->labelSchedule1->setText(scheduleNameClear(reqScheduleNames[0]));
 	if (reqScheduleNames.size()>1)
-		m_ui->labelSchedule2->setText(VICUS::camelCase2ReadableString(reqScheduleNames[1]));
+		m_ui->labelSchedule2->setText(scheduleNameClear(reqScheduleNames[1]));
 
 	// update Schedule names (based on existing schedules)
 	if (m_current->m_scheduleIds.size()>0){
@@ -270,12 +273,13 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 	std::vector<unsigned int> paraVecOpt = m_current->optionalParameter(m_current->m_modelType);
 
 	int rowCount = paraVec.size() + paraVecInt.size() + paraVecOpt.size();
+
 	// populate table widget with parameters
 	m_ui->tableWidgetParameters->setRowCount(rowCount);
 	if (paraVec.empty() && paraVecInt.empty() && paraVecOpt.empty())
-		m_ui->groupBoxModelParameters->setVisible(false);
+		m_ui->tableWidgetParameters->setVisible(false);
 	else
-		m_ui->groupBoxModelParameters->setVisible(true);
+		m_ui->tableWidgetParameters->setVisible(true);
 
 	if(SVSettings::instance().m_theme == SVSettings::TT_Dark)
 		m_ui->tableWidgetParameters->setMaximumHeight(rowCount * m_ui->tableWidgetParameters->rowHeight(0)+6);
@@ -285,7 +289,7 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 
 	int rowCounter = 0;
 	for (unsigned int para: paraVec) {
-		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Keyword("NetworkComponent::para_t", (int)para));
+		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Description("NetworkComponent::para_t", (int)para));
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		if(m_readOnly)
 			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
@@ -324,7 +328,7 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 
 	for (unsigned int paraInt: paraVecInt) {
 		// parameter name
-		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Keyword("NetworkComponent::intPara_t", (int)paraInt));
+		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Description("NetworkComponent::intPara_t", (int)paraInt));
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		if(m_readOnly)
 			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
@@ -360,7 +364,7 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 	fnt.setItalic(true);
 	for (unsigned int paraOpt: paraVecOpt) {
 		// parameter name
-		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Keyword("NetworkComponent::para_t", (int)paraOpt));
+		QTableWidgetItem * item = new QTableWidgetItem(VICUS::KeywordListQt::Description("NetworkComponent::para_t", (int)paraOpt));
 		item->setFont(fnt);
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		if(m_readOnly)
@@ -441,7 +445,8 @@ void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget() const {
 	m_ui->tableWidgetPolynomCoefficients->setColumnCount((int)columnCount);
 
 	if (columnCount > 0 || rowCount > 0) {
-		m_ui->groupBoxPolynom->setVisible(true);
+		m_ui->tableWidgetPolynomCoefficients->setVisible(true);
+		m_ui->tabWidgetPlots->setVisible(true);
 	}
 
 	// better to read reference
@@ -966,7 +971,7 @@ SVNetworkComponentEditWidget::HeatLossSplineEnergyDemandDialog::HeatLossSplineEn
 }
 
 
-void SVNetworkComponentEditWidget::on_toolButtonComponentDBDialogOpen_clicked()
+void SVNetworkComponentEditWidget::on_pushButtonComponentDBDialogOpen_clicked()
 {
 	if (m_componentDBEditDialog == nullptr){
 		m_componentDBEditDialog = new SVDatabaseEditDialog(window(),
@@ -980,3 +985,17 @@ void SVNetworkComponentEditWidget::on_toolButtonComponentDBDialogOpen_clicked()
 																								   m_current->m_modelType), SVSubNetworkComponentDBTableModel::ColType);
 	emit componentParametrizationChanged(selectedId);
 }
+
+
+QString SVNetworkComponentEditWidget::scheduleNameClear(const std::string & scheduleName) {
+	if (scheduleName == "CondenserOutletSetpointSchedule [C]")
+		return tr("Supply temperature [C]:");
+	else if (scheduleName == "SupplyTemperatureSchedule [C]")
+		return tr("Supply temperature [C]:");
+	else if (scheduleName == "MassFluxSchedule [kg/s]")
+		return tr("Mass flux [kg/s]:");
+	else
+		return QString::fromStdString(scheduleName);
+}
+
+

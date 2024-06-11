@@ -106,7 +106,7 @@ private slots:
 
 	void on_toolButtonControllerRemove_clicked();
 
-	void on_toolButtonComponentDBDialogOpen_clicked();
+	void on_pushButtonComponentDBDialogOpen_clicked();
 
 private:
 	void updateParameterTableWidget() const;
@@ -114,6 +114,8 @@ private:
 	void updatePolynomCoeffTableWidget() const;
 
 	void updatePolynomPlot();
+
+	static QString scheduleNameClear(const std::string & scheduleName);
 
 	Ui::SVNetworkComponentEditWidget		*m_ui;
 

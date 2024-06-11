@@ -219,21 +219,17 @@ void SVNetworkComponentHeatExchangeEditWidget::updateInput(VICUS::NetworkCompone
 		idx = 0;
 	m_ui->comboBoxHeatExchange->setCurrentIndex(idx);
 
+	// this also enables / disables the remaining widget. We still continue to update everything
+	m_ui->checkBoxExternallyDefined->setChecked(m_hx->m_individualHeatExchange);
+
 	// update of relevant page
 	on_comboBoxHeatExchange_activated(idx);
 }
 
 
-void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossConstant()
-{
-	m_ui->checkBoxHeatLossConstantExternal->setChecked(m_hx->m_individualHeatExchange);
-	m_ui->lineEditHeatLossConstantUser->setValue(m_hx->m_para[VICUS::NetworkHeatExchange::P_HeatLoss].get_value("kW"));
+void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossConstant() {
 
-	bool checked = m_hx->m_individualHeatExchange;
-	m_ui->labelHeatLossConstantUserHeatFlux->setEnabled(!checked);
-	m_ui->labelHeatLossConstantUserUnit->setEnabled(!checked);
-	m_ui->lineEditHeatLossConstantUser->setEnabled(!checked);
-	m_ui->toolButtonSetDefaultValues->setEnabled(!checked);
+	m_ui->lineEditHeatLossConstantUser->setValue(m_hx->m_para[VICUS::NetworkHeatExchange::P_HeatLoss].get_value("kW"));
 
 	bool showTemperatureEdit = false;
 	if (m_hx->m_modelType == VICUS::NetworkHeatExchange::T_HeatLossConstantCondenser) {
@@ -255,7 +251,6 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossSpline(VICUS::N
 	m_ui->filepathDataFile->setFilename("");
 
 	on_comboBoxHeatLossSplineBuildingType_activated(m_hx->m_buildingType);
-	m_ui->checkBoxHeatLossSplineExternal->setChecked(m_hx->m_individualHeatExchange);
 
 	// show temperature input only for heat pump
 	bool modellingHeatPump= m_hx->m_modelType == VICUS::NetworkHeatExchange::T_HeatLossSplineCondenser;
@@ -265,24 +260,6 @@ void SVNetworkComponentHeatExchangeEditWidget::updatePageHeatLossSpline(VICUS::N
 	m_ui->lineEditHeatLossSplineDHWSupplyTemperature->setVisible(modellingHeatPump);
 	m_ui->labelHeatLossSplineDHWSupplyTemp->setVisible(modellingHeatPump);
 	m_ui->labelHeatLossSplineDHWSupplyTempUnit->setVisible(modellingHeatPump);
-
-	// remove curves
-	if (m_hx->m_individualHeatExchange){
-		if (m_heatLossSplineCoolingCurve != nullptr){
-			m_heatLossSplineCoolingCurve->detach();
-		}
-		if(m_heatLossSplineHeatingCurve != nullptr){
-			m_heatLossSplineHeatingCurve->detach();
-		}
-		m_ui->widgetPlotHeatLossSpline->replot();
-	}
-	// if unchecked: re-plot
-	else {
-		if (m_hx->m_buildingType == VICUS::NetworkHeatExchange::BT_UserDefineBuilding)
-			updateHeatLossSplineUserPlot();
-		else
-			updateHeatLossSplinePredefPlot();
-	}
 }
 
 
@@ -347,17 +324,6 @@ void SVNetworkComponentHeatExchangeEditWidget::on_comboBoxHeatExchange_activated
 	}
 
 	emit heatExchangeChanged(m_hx->m_modelType);
-}
-
-
-void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossConstantExternal_stateChanged(int arg1)
-{
-	bool checked = static_cast<bool>(arg1);
-	emit externallyDefinedStateChanged(checked);
-	m_ui->labelHeatLossConstantUserHeatFlux->setEnabled(!checked);
-	m_ui->labelHeatLossConstantUserUnit->setEnabled(!checked);
-	m_ui->lineEditHeatLossConstantUser->setEnabled(!checked);
-	m_ui->toolButtonSetDefaultValues->setEnabled(!checked);
 }
 
 
@@ -436,32 +402,6 @@ void SVNetworkComponentHeatExchangeEditWidget::updateEnergyDemandValues() {
 		m_ui->labelHeatLossSplineHeatingEnergyDemandUnit->setText("kWh");
 		m_ui->labelHeatLossSplineCoolingEnergyDemandUnit->setText("kWh");
 		m_ui->labelHeatLossSplineDomesticHotWaterDemandUnit->setText("kWh");
-	}
-}
-
-
-void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxHeatLossSplineExternal_clicked(bool checked) {
-
-	emit externallyDefinedStateChanged(checked);
-
-	// enable / disable widgets
-	m_ui->widgetDefineHeatExchangeSpline->setEnabled(!checked);
-	m_ui->widgetPlotHeatLossSpline->setEnabled(!checked);
-	if (checked){
-		if (m_heatLossSplineCoolingCurve != nullptr){
-			m_heatLossSplineCoolingCurve->detach();
-		}
-		if(m_heatLossSplineHeatingCurve != nullptr){
-			m_heatLossSplineHeatingCurve->detach();
-		}
-		m_ui->widgetPlotHeatLossSpline->replot();
-	}
-	// if unchecked: re-plot
-	else {
-		if (m_hx->m_buildingType == VICUS::NetworkHeatExchange::BT_UserDefineBuilding)
-			updateHeatLossSplineUserPlot();
-		else
-			updateHeatLossSplinePredefPlot();
 	}
 }
 
@@ -1241,5 +1181,12 @@ void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxTemperatureSplineHeatT
 }
 
 
+void SVNetworkComponentHeatExchangeEditWidget::on_checkBoxExternallyDefined_stateChanged(int arg1) {
 
+	emit externallyDefinedStateChanged(arg1);
+
+	// enable / disable widgets
+	m_ui->stackedWidgetHeatExchange->setEnabled(!arg1);
+	m_ui->comboBoxHeatExchange->setEnabled(!arg1);
+}
 
