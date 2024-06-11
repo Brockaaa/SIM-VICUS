@@ -48,7 +48,8 @@ public:
 	enum ModelType {
 		T_TemperatureConstant,				// Keyword: TemperatureConstant			'Constant temperature'
 		T_TemperatureSpline,				// Keyword: TemperatureSpline			'Time-dependent temperature from spline'
-		T_TemperatureSplineEvaporator,		// Keyword: TemperatureSplineEvaporator	'Evaporator medium temperature for heat pump'
+		T_TemperatureConstantEvaporator,	// Keyword: TemperatureConstantEvaporator 'Constant source temperature'
+		T_TemperatureSplineEvaporator,		// Keyword: TemperatureSplineEvaporator	'Time-dependent source temperature'
 		T_TemperatureZone,					// Keyword: TemperatureZone				'Zone air temperature'
 		T_TemperatureConstructionLayer,		// Keyword: TemperatureConstructionLayer 'Active construction layer (floor heating)'
 		T_HeatLossConstant,					// Keyword: HeatLossConstant			'Constant heat loss'

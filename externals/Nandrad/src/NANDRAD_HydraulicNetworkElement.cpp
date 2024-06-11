@@ -254,6 +254,7 @@ void HydraulicNetworkElement::checkParameters(const HydraulicNetwork & nw, const
 			// wrong heat exchange type
 			switch(m_heatExchange.m_modelType ) {
 				case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureConstant:
+				case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureConstantEvaporator:
 				case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureConstructionLayer:
 				case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureSpline:
 				case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureZone:

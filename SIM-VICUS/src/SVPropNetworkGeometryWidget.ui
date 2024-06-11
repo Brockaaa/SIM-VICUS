@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>349</width>
+    <width>351</width>
     <height>830</height>
    </rect>
   </property>
@@ -427,6 +427,24 @@
    </slots>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>lineEditFluidName</tabstop>
+  <tabstop>pushButtonSelectFluid</tabstop>
+  <tabstop>pushButtonGenerateIntersections</tabstop>
+  <tabstop>pushButtonConnectBuildings</tabstop>
+  <tabstop>pushButtonReduceRedundantNodes</tabstop>
+  <tabstop>pushButtonReduceDeadEnds</tabstop>
+  <tabstop>lineEditThresholdSmallEdge</tabstop>
+  <tabstop>pushButtonRemoveSmallEdge</tabstop>
+  <tabstop>pushButtonEditSimultaneity</tabstop>
+  <tabstop>pushButtonSelectPipes</tabstop>
+  <tabstop>lineEditMaxPressureDrop</tabstop>
+  <tabstop>lineEditTemperatureSetpoint</tabstop>
+  <tabstop>lineEditTemperatureDifference</tabstop>
+  <tabstop>pushButtonSizePipeDimensions</tabstop>
+  <tabstop>horizontalSliderScaleNodes</tabstop>
+  <tabstop>horizontalSliderScaleEdges</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

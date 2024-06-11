@@ -3444,8 +3444,7 @@ void SupplySystemNetworkModelGenerator::generate(const SupplySystem & supplySyst
 			// get component and required schedule names
 			const NetworkComponent *comp = dbNetworkComps[it->first];
 			Q_ASSERT(comp!=nullptr);
-			NANDRAD::HydraulicNetworkComponent::ModelType modelType = NetworkComponent::nandradNetworkComponentModelType(comp->m_modelType);
-			std::vector<std::string> schedNames = NANDRAD::HydraulicNetworkComponent::requiredScheduleNames(modelType);
+			std::vector<std::string> schedNames = NetworkComponent::requiredScheduleNames(comp->m_modelType);
 			Q_ASSERT(schedNames.size() == comp->m_scheduleIds.size()); // this has been checked in isValid() above
 
 			// for each schedule we create an object list and schedule group
@@ -4195,7 +4194,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 	// stores the created nandrad controller id for each pair of vicus subnetwork and component id
 	std::map<std::pair<unsigned int, unsigned int>, unsigned int> mapVicusComp2NandradController;
 	// stores the schedule ids for each NANDRAD component id
-	std::map<unsigned int, std::vector<unsigned int>> mapNandradComp2Schedules;
+	std::map<unsigned int, std::vector<Schedule>> mapNandradComp2Schedules;
 	std::set<unsigned int> pipeIds; // collect pipe ids
 
 	// collect sub networks
@@ -4243,8 +4242,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 			mapVicusComp2NandradComp[std::make_pair(sub->m_id, comp.m_id)] = nandradComp.m_id;
 
 			// check schedules of component and add them to map
-			std::vector<std::string> requiredScheduleNames= NANDRAD::HydraulicNetworkComponent::requiredScheduleNames(
-						NetworkComponent::nandradNetworkComponentModelType(comp.m_modelType));
+			std::vector<std::string> requiredScheduleNames = NetworkComponent::requiredScheduleNames(comp.m_modelType);
 			if (requiredScheduleNames.size() > 0 && requiredScheduleNames.size() != comp.m_scheduleIds.size()){
 				std::string names;
 				for (const std::string & name: requiredScheduleNames)
@@ -4252,8 +4250,23 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 				errorStack.append(tr("Component with #%1 requires schedules '%2' but only %3 is given")
 								  .arg(comp.m_id).arg(names.c_str()).arg(comp.m_scheduleIds.size()));
 			}
-			else
-				mapNandradComp2Schedules[nandradComp.m_id] = comp.m_scheduleIds;
+			else {
+				// add schedules to map
+				for (unsigned int schedId: comp.m_scheduleIds) {
+					const VICUS::Schedule *sched = VICUS::element(m_embeddedDB.m_schedules, schedId);
+					Q_ASSERT(sched != nullptr);
+					mapNandradComp2Schedules[nandradComp.m_id].push_back(*sched);
+				}
+				// special treatment of schedules that belong to the NetworkHeatExchange in VICUS but to the Component in NANDRAD
+				if (comp.m_heatExchange.m_modelType == NetworkHeatExchange::T_HeatLossConstantCondenser ||
+					comp.m_heatExchange.m_modelType == NetworkHeatExchange::T_HeatLossSplineCondenser) {
+					Schedule sched = comp.m_heatExchange.condenserTemperatureSchedule();
+					mapNandradComp2Schedules[nandradComp.m_id].push_back(sched);
+				} else if (comp.m_heatExchange.m_modelType == NetworkHeatExchange::T_HeatLossConstantCondenser ||
+						   comp.m_heatExchange.m_modelType == NetworkHeatExchange::T_HeatLossSplineCondenser) {
+					// ...
+				}
+			}
 
 			// ** transfer CONTROLLER
 			if (comp.m_networkController.m_controlledProperty != NetworkController::NUM_CP) {
@@ -4869,32 +4882,30 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 	for (auto it=mapNandradComp2Schedules.begin(); it!=mapNandradComp2Schedules.end(); ++it){
 
 		unsigned int compId = it->first;
-		std::vector<unsigned int> scheduleIds = it->second;
+		const std::vector<Schedule> &schedules = it->second;
 		const NANDRAD::ObjectList &objList = objectListMap[compId];
 
 		const NANDRAD::HydraulicNetworkComponent *comp = VICUS::element(nandradNetwork.m_components, compId);
 		Q_ASSERT(comp != nullptr);
 		std::vector<std::string> requiredScheduleNames = NANDRAD::HydraulicNetworkComponent::requiredScheduleNames(comp->m_modelType);
-		Q_ASSERT(requiredScheduleNames.size() == scheduleIds.size()); // this has been checked above as well
+		Q_ASSERT(requiredScheduleNames.size() == schedules.size()); // this has been checked above as well
 
 		// add schedules of component to nandrad
-		for (unsigned int i = 0; i<scheduleIds.size(); ++i){
-			const VICUS::Schedule *sched = VICUS::element(m_embeddedDB.m_schedules, scheduleIds[i]);
-			if (sched == nullptr){
-				errorStack.append(tr("Schedule with id #%1, referenced in network component does not exist").arg(scheduleIds[i]));
-				continue;
-			}
+		unsigned int i=0;
+		for (const VICUS::Schedule &sched: schedules){
 			std::string err;
-			if (!sched->isValid(err, true, p.m_placeholders)){
-				errorStack.append(tr("Schedule with id #%1 has invalid parameters").arg(sched->m_id));
+			if (!sched.isValid(err, true, p.m_placeholders)){
+				errorStack.append(tr("Schedule with id #%1 has invalid parameters").arg(sched.m_id));
 				continue;
 			}
-			if (sched->m_haveAnnualSchedule){
-				p.m_schedules.m_annualSchedules[objList.m_name].push_back(sched->m_annualSchedule);
+			if (sched.m_haveAnnualSchedule){
+				p.m_schedules.m_annualSchedules[objList.m_name].push_back(sched.m_annualSchedule);
 			}
 			else
-				addVicusScheduleToNandradProject(*sched, requiredScheduleNames[i], p.m_schedules, objList.m_name);
+				addVicusScheduleToNandradProject(sched, requiredScheduleNames[i], p.m_schedules, objList.m_name);
+			++i;
 		}
+
 	}
 	if(!errorStack.empty())
 		return;

@@ -26,6 +26,7 @@
 #include "VICUS_NetworkHeatExchange.h"
 
 #include "VICUS_KeywordList.h"
+#include "VICUS_Schedule.h"
 
 #include <IBK_CSVReader.h>
 
@@ -47,45 +48,54 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 			if (m_buildingType == BT_ResidentialBuildingSingleFamily) {
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 10);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 7500);
-				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 1875);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 5);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 1200);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingSupplyTemperature, 35);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterSupplyTemperature, 50);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 150);
+				m_withCoolingDemand = false;
+				m_withDomesticHotWaterDemand = true;
 			} else if (m_buildingType == BT_ResidentialBuildingMultiFamily) {
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 100);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 50000);
-				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 12500);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 25);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 25000);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingSupplyTemperature, 35);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterSupplyTemperature, 50);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1000);
+				m_withCoolingDemand = false;
+				m_withDomesticHotWaterDemand = true;
 			} else if (m_buildingType == BT_ResidentialBuildingLarge) {
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 100);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 50000);
-				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 12500);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 25);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 25000);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingSupplyTemperature, 35);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterSupplyTemperature, 50);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1000);
+				m_withCoolingDemand = false;
+				m_withDomesticHotWaterDemand = true;
 			} else if (m_buildingType == BT_OfficeBuilding) {
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumHeatingLoad, 100);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingEnergyDemand, 50000);
-				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 0);
+				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterDemand, 6250);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_MaximumCoolingLoad, 25);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_CoolingEnergyDemand, 25000);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingSupplyTemperature, 35);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_DomesticHotWaterSupplyTemperature, 50);
 				KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_FloorArea, 1000);
+				m_withCoolingDemand = true;
+				m_withDomesticHotWaterDemand = false;
 			}
 			break;
 		}
 		case T_HeatLossConstant:
 		case T_HeatLossConstantCondenser: {
 			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatLoss, 5000);
+			KeywordList::setParameter(m_para, "NetworkHeatExchange::para_t", P_HeatingSupplyTemperature, 35);
 			break;
 		}
 		case T_TemperatureSpline:
@@ -111,7 +121,7 @@ void NetworkHeatExchange::setDefaultValues(NetworkHeatExchange::ModelType modelT
 void NetworkHeatExchange::readPredefinedTSVFiles() const{
 
 	if (m_modelType == T_HeatLossSpline ||
-		m_modelType == T_HeatLossConstantCondenser) {
+		m_modelType == T_HeatLossSplineCondenser) {
 
 		QString fileHeatingDemand, fileCoolingDemand, fileDHWDemand;
 		bool readHeatingCoolingFiles = true;
@@ -119,7 +129,6 @@ void NetworkHeatExchange::readPredefinedTSVFiles() const{
 			case BT_ResidentialBuildingSingleFamily: {
 				fileHeatingDemand = ":/predefinedSplines/heatFluxes/Residential_SingleFamily_HeatingLoad.tsv";
 				fileCoolingDemand = ":/predefinedSplines/heatFluxes/Residential_SingleFamily_CoolingLoad.tsv";
-	//			fileDHWDemand = ("/demandProfiles/Residential_CoolingLoad.tsv");
 			}
 			break;
 			case BT_ResidentialBuildingMultiFamily: {
@@ -146,7 +155,6 @@ void NetworkHeatExchange::readPredefinedTSVFiles() const{
 		}
 
 	}
-
 	else if (m_modelType == T_TemperatureSpline ||
 			 m_modelType == T_TemperatureSplineEvaporator) {
 
@@ -169,6 +177,8 @@ void NetworkHeatExchange::readPredefinedTSVFiles() const{
 			readSingleTSVFile(fileTemperature, m_temperatureSplineY);
 		}
 	}
+	else
+		Q_ASSERT(false);
 }
 
 
@@ -205,11 +215,14 @@ void NetworkHeatExchange::readSingleTSVFile(QString filename, std::vector<double
 
 
 void NetworkHeatExchange::calculateHeatLossSplineFromKValue(double k, const std::vector<double> & original, std::vector<double> & result,
-															double maxValueRequired, double maxValueExisting) const{
+															double maxValueRequired, double maxValueExisting) const {
 
-	if (maxValueExisting < 0)
-		maxValueExisting = *std::max_element(original.begin(), original.end());
+	// copy the original function and set time points with DHW preparation to 0
+	std::vector<double> originalWithDHWOperation = original;
+	for (unsigned int i: m_timePointsDHWPreparation)
+		originalWithDHWOperation[i] = 0;
 
+	maxValueExisting = *std::max_element(originalWithDHWOperation.begin(), originalWithDHWOperation.end());
 	double ratio =  maxValueRequired / maxValueExisting;
 
 	auto scaling = [k, maxValueRequired, ratio](double y){
@@ -220,8 +233,8 @@ void NetworkHeatExchange::calculateHeatLossSplineFromKValue(double k, const std:
 		return adjustedAbsoluteValue;
 	};
 
-	result.resize(original.size());
-	std::transform(original.begin(), original.end(), result.begin(), scaling);
+	result.resize(originalWithDHWOperation.size());
+	std::transform(originalWithDHWOperation.begin(), originalWithDHWOperation.end(), result.begin(), scaling);
 }
 
 
@@ -233,7 +246,12 @@ bool NetworkHeatExchange::calculateNewKValue(const std::vector<double> & origina
 
 	Q_ASSERT(!original.empty());
 
-	double maxValueExisting = *std::max_element(original.begin(), original.end());
+	// copy the original function and set time points with DHW preparation to 0
+	std::vector<double> originalWithDHWOperation = original;
+	for (unsigned int i: m_timePointsDHWPreparation)
+		originalWithDHWOperation[i] = 0;
+
+	double maxValueExisting = *std::max_element(originalWithDHWOperation.begin(), originalWithDHWOperation.end());
 
 	// if maxValueRequired is too large, scale both maxValueRequired and integral down to avoid double imprecision //
 	int power = 0;
@@ -254,7 +272,7 @@ bool NetworkHeatExchange::calculateNewKValue(const std::vector<double> & origina
 
 	KResult = 1;
 	for (int i = 0 ; i < maxLoopIterations; i++){
-		calculateHeatLossSplineFromKValue(KResult, original, newlyCalculatedYPlotValues, maxValueRequired, maxValueExisting);
+		calculateHeatLossSplineFromKValue(KResult, originalWithDHWOperation, newlyCalculatedYPlotValues, maxValueRequired, maxValueExisting);
 		integralResult = std::accumulate(newlyCalculatedYPlotValues.begin(), newlyCalculatedYPlotValues.end(), 0.0);
 		if (nearEqual(integralRequired, integralResult)){
 			integralResult = integralResult * pow(10, power);
@@ -276,7 +294,7 @@ bool NetworkHeatExchange::calculateNewKValue(const std::vector<double> & origina
 }
 
 
-bool NetworkHeatExchange::generateheatingDemandSpline(std::vector<double> & spline, double k) const{
+bool NetworkHeatExchange::generateHeatingDemandSpline(std::vector<double> & spline, double k) const{
 	if (k<0) {
 		double finalHeatingDemand;
 		if ( !calculateNewKValue(m_heatingDemandSplineOrig, m_para[P_HeatingEnergyDemand].get_value("Wh"), m_para[P_MaximumHeatingLoad].value, finalHeatingDemand, k) )
@@ -297,6 +315,54 @@ bool NetworkHeatExchange::generateCoolingDemandSpline(std::vector<double> & spli
 	}
 	calculateHeatLossSplineFromKValue(k, m_coolingDemandSplineOrig, spline, m_para[P_MaximumCoolingLoad].value);
 	return true;
+}
+
+
+void NetworkHeatExchange::generateDHWDemandSpline(std::vector<double> & spline) const {
+
+	m_timePointsDHWPreparation.clear();
+
+	if (!m_withDomesticHotWaterDemand)
+		return;
+
+	double dhwDemandPerDay = m_para[VICUS::NetworkHeatExchange::P_DomesticHotWaterDemand].get_value("Wh") / 365.0;
+	if (dhwDemandPerDay <= 0)
+		return;
+	double dhwMaxLoad = 0.7 * m_para[VICUS::NetworkHeatExchange::P_MaximumHeatingLoad].get_value("W");
+
+	// hours for DHW preparation per day should be an integer
+	unsigned int hoursPerDay = (unsigned int)std::ceil(dhwDemandPerDay / dhwMaxLoad);
+
+	// it it would be less than one hour, reduce the max load
+	if (hoursPerDay < 1) {
+		dhwMaxLoad = dhwDemandPerDay;
+		hoursPerDay = 1.0;
+	}
+	// it it would be more than 4 hours, increase the max load
+	else if (hoursPerDay > 4) {
+		hoursPerDay = 4;
+		dhwMaxLoad = dhwDemandPerDay / hoursPerDay;
+	// adapat max load to meet the correct demand
+	} else {
+		dhwMaxLoad = dhwDemandPerDay / hoursPerDay;
+	}
+
+	// set according time points in yearly profile to dhwMaxLoad
+	std::vector<unsigned int> possibleHours = {2,3,15,16}; // must not be 0 or 24
+	spline = std::vector<double>(8760, 0.0);
+	for (unsigned int i=0; i<365; ++i) {
+		for (unsigned int j=0; j<hoursPerDay; ++j )
+			spline[i*24 + possibleHours[j]] = dhwMaxLoad;
+	}
+
+	// store time points where there is DHW preparation. At those time points (and 1 hour before, after) there must be not heating/cooling operation
+	for (unsigned int i=0; i<spline.size(); ++i) {
+		if (spline[i] > 0) {
+			m_timePointsDHWPreparation.push_back(i-1);
+			m_timePointsDHWPreparation.push_back(i);
+			m_timePointsDHWPreparation.push_back(i+1);
+		}
+	}
 }
 
 
@@ -341,9 +407,15 @@ void NetworkHeatExchange::checkAndInitializeSpline() const {
 
 				readPredefinedTSVFiles();
 
+				// first generate DHW spline, this changes the original functions for heating/cooling!
+				std::vector<double> DHWSpline;
+				if (m_withDomesticHotWaterDemand) {
+					generateDHWDemandSpline(DHWSpline);
+				}
+
 				// generate heating spline
 				std::vector<double> heatingSpline;
-				bool success = generateheatingDemandSpline(heatingSpline);
+				bool success = generateHeatingDemandSpline(heatingSpline);
 				if (!success)
 					throw IBK::Exception("Could not generate heating demand spline from given parameters.", FUNC_ID);
 
@@ -361,7 +433,9 @@ void NetworkHeatExchange::checkAndInitializeSpline() const {
 				std::vector<double> heatFlux(heatingSpline.size());
 				for (unsigned int i=0; i<heatingSpline.size(); ++i) {
 					time[i] = i; // we assume spline in hourly values
-					if (heatingSpline[i] > 0)
+					if (DHWSpline[i] > 0)
+						heatFlux[i] = DHWSpline[i];
+					else if (heatingSpline[i] > 0)
 						heatFlux[i] = heatingSpline[i];
 					else if (coolingSpline.size() > 0 && coolingSpline[i] > 0)
 						heatFlux[i] = -coolingSpline[i];
@@ -382,39 +456,28 @@ void NetworkHeatExchange::checkAndInitializeSpline() const {
 }
 
 
-void NetworkHeatExchange::generateHeatFluxSplines()const{
-
-	Q_ASSERT(m_buildingType < BT_UserDefineBuilding);
-
-	// read tsv files and generate splines
-	readPredefinedTSVFiles();
-	std::vector<double> heatingSpline;
-	generateheatingDemandSpline(heatingSpline);
-
-	if (m_withCoolingDemand) {
-		std::vector<double> coolingSpline;
-		generateheatingDemandSpline(coolingSpline);
-	}
-
-	NANDRAD::LinearSplineParameter spl;
-}
-
-
 NANDRAD::HydraulicNetworkHeatExchange NetworkHeatExchange::toNandradHeatExchange() const {
 
 	NANDRAD::HydraulicNetworkHeatExchange hx = NANDRAD::HydraulicNetworkHeatExchange();
 	hx.m_modelType = NANDRAD::HydraulicNetworkHeatExchange::ModelType(m_modelType);
 	switch(m_modelType){
-		case T_TemperatureConstant: {
+		case T_TemperatureConstant:
+		case T_TemperatureConstantEvaporator: {
 			hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_Temperature] = m_para[P_Temperature];
-			hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_ExternalHeatTransferCoefficient] = m_para[P_ExternalHeatTransferCoefficient];
+			if (m_useHeatTransferCoefficient)
+				hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_ExternalHeatTransferCoefficient] = m_para[P_ExternalHeatTransferCoefficient];
+			else
+				hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_ExternalHeatTransferCoefficient].set(1e10, IBK::Unit("W/m2K"));
 			break;
 		}
 		case T_TemperatureSpline:
 		case T_TemperatureSplineEvaporator: {
 			checkAndInitializeSpline(); // we need to execute initialization to generate spline!
 			hx.m_splPara[NANDRAD::HydraulicNetworkHeatExchange::SPL_Temperature] = m_exportSpline;
-			hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_ExternalHeatTransferCoefficient] = m_para[P_ExternalHeatTransferCoefficient];
+			if (m_useHeatTransferCoefficient)
+				hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_ExternalHeatTransferCoefficient] = m_para[P_ExternalHeatTransferCoefficient];
+			else
+				hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_ExternalHeatTransferCoefficient].set(1e10, IBK::Unit("W/m2K"));
 			break;
 		}
 		case T_HeatLossConstant:
@@ -435,6 +498,39 @@ NANDRAD::HydraulicNetworkHeatExchange NetworkHeatExchange::toNandradHeatExchange
 		break;
 	}
 	return hx;
+}
+
+
+Schedule NetworkHeatExchange::condenserTemperatureSchedule() const{
+
+	VICUS::Schedule sched;
+	sched.m_haveAnnualSchedule = true;
+	std::vector<double> x, y;
+
+	if (m_modelType == VICUS::NetworkHeatExchange::T_HeatLossSplineCondenser) {
+		Q_ASSERT(!m_timePointsDHWPreparation.empty());
+		// time vec
+		x.resize(8760);
+		for (unsigned int i=0; i<8760; ++i)
+			x[i] = i;
+		// temperature vec
+		y = std::vector<double>(8760, m_para[P_HeatingSupplyTemperature].get_value("C"));
+		for (unsigned int i: m_timePointsDHWPreparation)
+			y[i] = m_para[P_DomesticHotWaterSupplyTemperature].get_value("C");
+
+	}
+	else if (m_modelType == VICUS::NetworkHeatExchange::T_HeatLossConstantCondenser) {
+		x = {0, 8759};
+		y = std::vector<double>(2, m_para[P_HeatingSupplyTemperature].get_value("C"));
+	}
+	else {
+		Q_ASSERT(false);
+	}
+
+	sched.m_annualSchedule = NANDRAD::LinearSplineParameter("CondenserMeanTemperatureSchedule",
+															NANDRAD::LinearSplineParameter::I_CONSTANT, x, y,
+															IBK::Unit("h"), IBK::Unit("C"));
+	return sched;
 }
 
 } //namespace VICUS

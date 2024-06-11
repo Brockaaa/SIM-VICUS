@@ -70,7 +70,7 @@ bool NetworkComponent::isValid(const Database<Schedule> &scheduleDB) const {
 	}
 
 	// check if there is the correct number of schedules and given schedules really exist
-	std::vector<std::string> reqSchedules = NANDRAD::HydraulicNetworkComponent::requiredScheduleNames(nandradModelType);
+	std::vector<std::string> reqSchedules = requiredScheduleNames(m_modelType);
 	if (reqSchedules.size() != m_scheduleIds.size())
 		return false;
 	for (unsigned int id: m_scheduleIds){
@@ -195,6 +195,36 @@ AbstractDBElement::ComparisonResult NetworkComponent::equal(const AbstractDBElem
 		return OnlyMetaDataDiffers;
 
 	return Equal;
+}
+
+
+std::vector<std::string> NetworkComponent::requiredScheduleNames(const NetworkComponent::ModelType modelType) {
+	switch (modelType)	{
+		case MT_HeatPumpVariableIdealCarnotSourceSide:
+		case MT_HeatPumpVariableSourceSide:
+			return {};
+		case MT_HeatPumpVariableIdealCarnotSupplySide:
+			return {"CondenserOutletSetpointSchedule [C]"};
+		case MT_HeatPumpOnOffSourceSide:
+			return {"CondenserOutletSetpointSchedule [C]", "HeatPumpOnOffSignalSchedule [---]"};
+		case MT_IdealHeaterCooler:
+			return {"SupplyTemperatureSchedule [C]"};
+		case MT_ConstantMassFluxPump :
+			 return {"MassFluxSchedule [kg/s]"};
+//		case HydraulicNetworkComponent::MT_HeatPumpOnOffSourceSideWithBuffer:
+//			return {"DomesticHotWaterDemandSchedule [W]"};
+		case MT_ConstantPressurePump:
+		case MT_ControlledPump:
+		case MT_VariablePressurePump:
+		case MT_HeatExchanger:
+		case MT_DynamicPipe:
+		case MT_SimplePipe:
+		case MT_ControlledValve:
+		case MT_ConstantPressureLossValve:
+		case MT_PressureLossElement:
+		case NUM_MT: ;
+	}
+	return {};
 }
 
 
@@ -389,6 +419,7 @@ NetworkComponent::ComponentCategory NetworkComponent::componentCategoryFromModel
 	}
 }
 
+
 std::vector<NetworkHeatExchange::ModelType> NetworkComponent::availableHeatExchangeTypes(const NetworkComponent::ModelType modelType)
 {
 	// some models may be adiabatic, hence we also return NUM_T as available heat exchange type
@@ -404,7 +435,9 @@ std::vector<NetworkHeatExchange::ModelType> NetworkComponent::availableHeatExcha
 			//			return {T_HeatingDemandSpaceHeating};  // must not be adiabatic
 		case NetworkComponent::MT_HeatExchanger:
 			return {NetworkHeatExchange::T_HeatLossConstant, NetworkHeatExchange::T_HeatLossSpline}; // must not be adiabatic
-		case NetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
+		case NetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide: {
+			return {NetworkHeatExchange::T_TemperatureConstantEvaporator, NetworkHeatExchange::T_TemperatureSplineEvaporator};
+		}
 		case NetworkComponent::MT_ConstantPressurePump:
 		case NetworkComponent::MT_ConstantMassFluxPump:
 		case NetworkComponent::MT_VariablePressurePump:
@@ -419,6 +452,7 @@ std::vector<NetworkHeatExchange::ModelType> NetworkComponent::availableHeatExcha
 	}
 	return {};
 }
+
 
 QString NetworkComponent::detailledModelName(ModelType modelType) {
 	switch (modelType) {

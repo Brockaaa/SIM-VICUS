@@ -297,14 +297,15 @@ namespace NANDRAD {
 			switch (t) {
 				case 0 : return "TemperatureConstant";
 				case 1 : return "TemperatureSpline";
-				case 2 : return "TemperatureSplineEvaporator";
-				case 3 : return "TemperatureZone";
-				case 4 : return "TemperatureConstructionLayer";
-				case 5 : return "HeatLossConstant";
-				case 6 : return "HeatLossSpline";
-				case 7 : return "HeatLossConstantCondenser";
-				case 8 : return "HeatLossSplineCondenser";
-				case 9 : return "HeatingDemandSpaceHeating";
+				case 2 : return "TemperatureConstantEvaporator";
+				case 3 : return "TemperatureSplineEvaporator";
+				case 4 : return "TemperatureZone";
+				case 5 : return "TemperatureConstructionLayer";
+				case 6 : return "HeatLossConstant";
+				case 7 : return "HeatLossSpline";
+				case 8 : return "HeatLossConstantCondenser";
+				case 9 : return "HeatLossSplineCondenser";
+				case 10 : return "HeatingDemandSpaceHeating";
 			} break;
 			// HydraulicNetworkHeatExchange::para_t
 			case 19 :
@@ -958,14 +959,15 @@ namespace NANDRAD {
 			switch (t) {
 				case 0 : return "TemperatureConstant";
 				case 1 : return "TemperatureSpline";
-				case 2 : return "TemperatureSplineEvaporator";
-				case 3 : return "TemperatureZone";
-				case 4 : return "TemperatureConstructionLayer";
-				case 5 : return "HeatLossConstant";
-				case 6 : return "HeatLossSpline";
-				case 7 : return "HeatLossConstantCondenser";
-				case 8 : return "HeatLossSplineCondenser";
-				case 9 : return "HeatingDemandSpaceHeating";
+				case 2 : return "TemperatureConstantEvaporator";
+				case 3 : return "TemperatureSplineEvaporator";
+				case 4 : return "TemperatureZone";
+				case 5 : return "TemperatureConstructionLayer";
+				case 6 : return "HeatLossConstant";
+				case 7 : return "HeatLossSpline";
+				case 8 : return "HeatLossConstantCondenser";
+				case 9 : return "HeatLossSplineCondenser";
+				case 10 : return "HeatingDemandSpaceHeating";
 			} break;
 			// HydraulicNetworkHeatExchange::para_t
 			case 19 :
@@ -1620,14 +1622,15 @@ namespace NANDRAD {
 			switch (t) {
 				case 0 : return "Constant temperature";
 				case 1 : return "Time-dependent temperature from spline";
-				case 2 : return "Evaporator medium temperature for heat pump";
-				case 3 : return "Zone air temperature";
-				case 4 : return "Active construction layer (floor heating)";
-				case 5 : return "Constant heat loss";
-				case 6 : return "Heat loss from spline";
-				case 7 : return "Constant heating demand";
-				case 8 : return "Heat loss of condenser in heat pump model";
-				case 9 : return "Heating demand for space heating";
+				case 2 : return "Constant source temperature";
+				case 3 : return "Time-dependent source temperature";
+				case 4 : return "Zone air temperature";
+				case 5 : return "Active construction layer (floor heating)";
+				case 6 : return "Constant heat loss";
+				case 7 : return "Heat loss from spline";
+				case 8 : return "Constant heating demand";
+				case 9 : return "Heat loss of condenser in heat pump model";
+				case 10 : return "Heating demand for space heating";
 			} break;
 			// HydraulicNetworkHeatExchange::para_t
 			case 19 :
@@ -2289,6 +2292,7 @@ namespace NANDRAD {
 				case 7 : return "";
 				case 8 : return "";
 				case 9 : return "";
+				case 10 : return "";
 			} break;
 			// HydraulicNetworkHeatExchange::para_t
 			case 19 :
@@ -2950,6 +2954,7 @@ namespace NANDRAD {
 				case 7 : return "#FFFFFF";
 				case 8 : return "#FFFFFF";
 				case 9 : return "#FFFFFF";
+				case 10 : return "#FFFFFF";
 			} break;
 			// HydraulicNetworkHeatExchange::para_t
 			case 19 :
@@ -3611,6 +3616,7 @@ namespace NANDRAD {
 				case 7 : return std::numeric_limits<double>::quiet_NaN();
 				case 8 : return std::numeric_limits<double>::quiet_NaN();
 				case 9 : return std::numeric_limits<double>::quiet_NaN();
+				case 10 : return std::numeric_limits<double>::quiet_NaN();
 			} break;
 			// HydraulicNetworkHeatExchange::para_t
 			case 19 :
@@ -4141,7 +4147,7 @@ namespace NANDRAD {
 			// HydraulicNetworkElement::intPara_t
 			case 17 : return 2;
 			// HydraulicNetworkHeatExchange::ModelType
-			case 18 : return 10;
+			case 18 : return 11;
 			// HydraulicNetworkHeatExchange::para_t
 			case 19 : return 3;
 			// HydraulicNetworkHeatExchange::splinePara_t
@@ -4321,7 +4327,7 @@ namespace NANDRAD {
 			// HydraulicNetworkElement::intPara_t
 			case 17 : return 1;
 			// HydraulicNetworkHeatExchange::ModelType
-			case 18 : return 9;
+			case 18 : return 10;
 			// HydraulicNetworkHeatExchange::para_t
 			case 19 : return 2;
 			// HydraulicNetworkHeatExchange::splinePara_t

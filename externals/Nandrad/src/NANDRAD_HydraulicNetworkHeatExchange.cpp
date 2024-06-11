@@ -44,7 +44,8 @@ void HydraulicNetworkHeatExchange::checkParameters(const std::map<std::string, I
 	try {
 		// decide which heat exchange is chosen
 		switch (m_modelType) {
-			case T_TemperatureConstant: {
+			case T_TemperatureConstant:
+			case T_TemperatureConstantEvaporator: {
 				// check temperature
 				m_para[P_Temperature].checkedValue("Temperature", "C", "C", -200.0, true, std::numeric_limits<double>::max(), true,
 												   "Temperature must be >= -200 C.");

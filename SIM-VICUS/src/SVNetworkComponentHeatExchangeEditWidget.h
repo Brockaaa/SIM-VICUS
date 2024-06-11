@@ -89,35 +89,38 @@ private slots:
 
 	void on_lineEditHeatLossSplineCoolingEnergyDemand_editingFinishedSuccessfully();
 
-	void on_groupBoxHeatLossSplineCooling_clicked(bool checked);
-
 	void on_lineEditHeatLossSplineMaximumCoolingLoad_editingFinishedSuccessfully();
 
 	void on_filepathDataFile_editingFinished();
 
 	void on_widgetTemperatureSplineFilePathDataFile_editingFinished();
 
-	void on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+	void on_listWidgetHeatLossSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *);
 
-	void on_listWidgetTemperatureSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+	void on_listWidgetTemperatureSplineSelectColumn_currentItemChanged(QListWidgetItem *current, QListWidgetItem *);
 
 	void on_comboBoxTemperatureSpline_activated(int index);
 
 	void on_toolButtonSetDefaultValues_clicked();
-
-	void on_groupBoxDomesticHotWaterDemand_clicked(bool checked);
-
-	void on_lineEditHeatTransferCoefficientConstant_editingFinishedSuccessfully();
-
-	void on_lineEditHeatTransferCoefficientSpline_editingFinishedSuccessfully();
 
 	void on_comboBoxHeatLossSplineBuildingType_activated(int index);
 
 	void on_checkBoxDHW_stateChanged(int arg1);
 
 	void on_checkBoxCooling_stateChanged(int arg1);
+	void on_radioButtonShowYear_clicked();
 
-	void on_checkBoxHeating_stateChanged(int arg1);
+	void on_radioButtonShowDay_clicked();
+
+	void on_lineEditHeatLossConstantSupplyTemperature_editingFinishedSuccessfully();
+
+	void on_checkBoxTemperatureConstantHeatTransferCoeff_stateChanged(int arg1);
+
+	void on_checkBoxTemperatureSplineHeatTransferCoefficient_stateChanged(int arg1);
+
+	void on_lineEditTemperatureSplineHeatTransferCoefficient_editingFinishedSuccessfully();
+
+	void on_lineEditTemperatureConstantHeatTransferCoefficient_editingFinishedSuccessfully();
 
 private:
 	/*! updates pages */
@@ -133,7 +136,7 @@ private:
 
 	void calculateCurrentHeatLossSplines();
 
-	void updateEnergyDemandValuesAreaSpecific();
+	void updateEnergyDemandValues();
 
 	void modifyEnergyDemandValue(bool heating);
 
@@ -147,9 +150,6 @@ private:
 
 	void updateUserTemperatureSplinePlotData();
 
-	void calculateNewHeatLossSplineHotWaterYData(double floorArea);
-
-	void setHotWaterCurve(bool set);
 
 	Ui::SVNetworkComponentHeatExchangeEditWidget *m_ui;
 
@@ -171,7 +171,7 @@ private:
 	/*! Curve visible in HeatLossSpline plot */
 	QwtPlotCurve							*m_heatLossSplineHeatingCurve = nullptr;
 	QwtPlotCurve							*m_heatLossSplineCoolingCurve = nullptr;
-	QwtPlotCurve							*m_heatLossSplineHotWaterCurve = nullptr;
+	QwtPlotCurve							*m_heatLossSplineDHWCurve = nullptr;
 	QwtPlotZoomer							*m_heatLossSplineZoomer = nullptr;
 
 	/*! Curve visible in TemperatureSpline plot */
@@ -181,11 +181,6 @@ private:
 	/*! Data vector to be displayed in TemperatureSplinePlot */
 	std::vector<double>						m_temperatureSplineY;
 	std::vector<double>						m_temperatureSplineTime;
-
-	/*! Data vectors to store values to be displayed in HeatLossSpline Plot */
-	std::vector<double>						m_heatLossSplineHeatingY;
-	std::vector<double>						m_heatLossSplineCoolingY;
-	std::vector<double>						m_heatLossSplineHotWaterY;
 
 	/*! Parameter to adjust curves to reach desired energy demand */
 	double									m_kHeating = -1;

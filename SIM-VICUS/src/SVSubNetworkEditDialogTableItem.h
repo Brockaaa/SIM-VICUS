@@ -18,12 +18,6 @@ public:
 	// true if the item related to this Table Item is an builtIn database element
 	bool m_builtIn = false;
 
-	// TODO Maik: implement local
-	// DB Elemente können 1 aus 3 Zuständen haben: local, userDB, builtIn. Diese sind durch die Flags local und builtIn definiert.
-	// Ich weiß, ist nicht optimal das durch 2 bools zu machen aber historisch so gewachsen. Das müsstest du so durchziehen. local elemente haben schwarzen Hintergrund, userDB elemente blauen Hintergrund (userDBBackground)
-	// und builtIn elemente haben grünen Background (alternativeBackgroundColor)
-	// Die selection color sollte immer gelb sein, das ist die default color für selections im gesamten Programm, muss normalerweise nicht explizit gesetzt werden.
-	// Als Beispiel kannst du einen anderen DB Dialog z.b. Pipes anschauen.
 	bool m_local = false;
 
 private:

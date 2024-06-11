@@ -159,11 +159,8 @@ void SVNetworkComponentEditWidget::update()
 
 	// now update the GUI controls
 
-	NANDRAD::HydraulicNetworkComponent::ModelType nandradModelType =
-		VICUS::NetworkComponent::nandradNetworkComponentModelType(m_current->m_modelType);
-
 	// enable schedules tool buttons (based on required schedules)
-	std::vector<std::string> reqScheduleNames = NANDRAD::HydraulicNetworkComponent::requiredScheduleNames(nandradModelType);
+	std::vector<std::string> reqScheduleNames = VICUS::NetworkComponent::requiredScheduleNames(m_current->m_modelType);
 	m_ui->groupBoxSchedules->setVisible(!reqScheduleNames.empty());
 	bool schedule1Visible = reqScheduleNames.size()==1 || reqScheduleNames.size()==2;
 	bool schedule2Visible = reqScheduleNames.size()==2;

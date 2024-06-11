@@ -306,7 +306,8 @@ KeywordListQt::KeywordListQt() {
 	tr("Thermal conductivity of the dry material.");
 	tr("Constant temperature");
 	tr("Time-dependent temperature");
-	tr("Heat pump evaporator mean temperature");
+	tr("Constant source temperature");
+	tr("Time-dependent source temperature");
 	tr("Zone air temperature");
 	tr("Active construction layer (floor heating)");
 	tr("Constant heat loss");

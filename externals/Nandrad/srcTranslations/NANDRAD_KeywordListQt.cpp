@@ -110,7 +110,8 @@ KeywordListQt::KeywordListQt() {
 	tr("Number of parallel elements");
 	tr("Constant temperature");
 	tr("Time-dependent temperature from spline");
-	tr("Evaporator medium temperature for heat pump");
+	tr("Constant source temperature");
+	tr("Time-dependent source temperature");
 	tr("Zone air temperature");
 	tr("Active construction layer (floor heating)");
 	tr("Constant heat loss");

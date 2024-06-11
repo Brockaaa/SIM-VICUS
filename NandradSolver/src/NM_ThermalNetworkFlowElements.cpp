@@ -1221,7 +1221,7 @@ void TNHeatPumpVariable::inputReferences(std::vector<InputReference> & inputRefs
 			ref.m_id = m_flowElement->m_id;
 			ref.m_referenceType = NANDRAD::ModelInputReference::MRT_NETWORKELEMENT;
 			ref.m_required = true;
-			ref.m_name.m_name = "EvaporatorMeanTemperatureSchedule";
+			ref.m_name.m_name = "HeatExchangeTemperatureEvaporator";
 			inputRefs.push_back(ref);
 			ref.m_name.m_name = "CondenserOutletSetpointSchedule";
 			inputRefs.push_back(ref);

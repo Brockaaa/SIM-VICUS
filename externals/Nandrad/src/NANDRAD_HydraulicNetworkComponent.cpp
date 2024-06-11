@@ -242,7 +242,7 @@ std::vector<std::string> HydraulicNetworkComponent::requiredScheduleNames(const 
 		case MT_HeatPumpVariableSourceSide:
 			return {"CondenserMeanTemperatureSchedule [C]"};
 		case MT_HeatPumpVariableIdealCarnotSupplySide:
-			return {"CondenserOutletSetpointSchedule [C]", "EvaporatorMeanTemperatureSchedule [C]"};
+			return {"CondenserOutletSetpointSchedule [C]"};
 		case MT_HeatPumpOnOffSourceSide:
 			return {"CondenserOutletSetpointSchedule [C]", "HeatPumpOnOffSignalSchedule [---]"};
 		case MT_IdealHeaterCooler:
@@ -340,6 +340,7 @@ std::vector<HydraulicNetworkHeatExchange::ModelType> NANDRAD::HydraulicNetworkCo
 		case HydraulicNetworkComponent::MT_HeatExchanger:
 			return {HydraulicNetworkHeatExchange::T_HeatLossConstant, HydraulicNetworkHeatExchange::T_HeatLossSpline}; // must not be adiabatic
 		case HydraulicNetworkComponent::MT_HeatPumpVariableIdealCarnotSupplySide:
+			return {NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureConstantEvaporator, NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureSplineEvaporator};
 		case HydraulicNetworkComponent::MT_ConstantPressurePump:
 		case HydraulicNetworkComponent::MT_ConstantMassFluxPump:
 		case HydraulicNetworkComponent::MT_VariablePressurePump:

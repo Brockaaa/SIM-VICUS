@@ -127,12 +127,12 @@ void SVPropNetworkHeatExchangeWidget::updateUi() {
 
 	// enable widgets based on current heat exchange type
 	switch (hx.m_modelType) {
-		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant:
-		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser:{
-			m_ui->labelHeatFlux->setEnabled(true);
-			m_ui->lineEditHeatFlux->setEnabled(true);
-			break;
-		}
+//		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant:
+//		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser:{
+//			m_ui->labelHeatFlux->setEnabled(true);
+//			m_ui->lineEditHeatFlux->setEnabled(true);
+//			break;
+//		}
 		case NANDRAD::HydraulicNetworkHeatExchange ::T_TemperatureConstant:{
 			m_ui->labelTemperature->setEnabled(true);
 			m_ui->lineEditTemperature->setEnabled(true);
@@ -273,16 +273,16 @@ void SVPropNetworkHeatExchangeWidget::modifyHeatExchangeParameters() {
 
 	// set parameters depending on model type
 	switch (hx.m_modelType) {
-		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant:
-		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser: {
-			// set heat loss
-			if (m_ui->lineEditHeatFlux->isValid())
-				NANDRAD::KeywordList::setParameter(hx.m_para, "HydraulicNetworkHeatExchange::para_t",
-												 NANDRAD::HydraulicNetworkHeatExchange::P_HeatLoss,
-												 m_ui->lineEditHeatFlux->value());
-			else
-				hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_HeatLoss].clear();
-		} break;
+//		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstant:
+//		case NANDRAD::HydraulicNetworkHeatExchange::T_HeatLossConstantCondenser: {
+//			// set heat loss
+//			if (m_ui->lineEditHeatFlux->isValid())
+//				NANDRAD::KeywordList::setParameter(hx.m_para, "HydraulicNetworkHeatExchange::para_t",
+//												 NANDRAD::HydraulicNetworkHeatExchange::P_HeatLoss,
+//												 m_ui->lineEditHeatFlux->value());
+//			else
+//				hx.m_para[NANDRAD::HydraulicNetworkHeatExchange::P_HeatLoss].clear();
+//		} break;
 
 		case NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureConstant: {
 			// set temperature

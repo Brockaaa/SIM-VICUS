@@ -29,6 +29,7 @@
 #include "VICUS_CodeGenMacros.h"
 #include "VICUS_Constants.h"
 #include "VICUS_AbstractDBElement.h"
+#include "VICUS_Schedule.h"
 
 #include <NANDRAD_HydraulicNetworkHeatExchange.h>
 
@@ -51,7 +52,8 @@ public:
 	enum ModelType {
 		T_TemperatureConstant,				// Keyword: TemperatureConstant			'Constant temperature'
 		T_TemperatureSpline,				// Keyword: TemperatureSpline			'Time-dependent temperature'
-		T_TemperatureSplineEvaporator,		// Keyword: TemperatureSplineEvaporator	'Heat pump evaporator mean temperature'
+		T_TemperatureConstantEvaporator,	// Keyword: TemperatureConstantEvaporator 'Constant source temperature'
+		T_TemperatureSplineEvaporator,		// Keyword: TemperatureSplineEvaporator	'Time-dependent source temperature'
 		T_TemperatureZone,					// Keyword: TemperatureZone				'Zone air temperature'
 		T_TemperatureConstructionLayer,		// Keyword: TemperatureConstructionLayer 'Active construction layer (floor heating)'
 		T_HeatLossConstant,					// Keyword: HeatLossConstant			'Constant heat loss'
@@ -113,14 +115,19 @@ public:
 
 	void checkAndInitializeSpline() const;
 
-	void generateHeatFluxSplines() const;
+	bool generateHeatingDemandSpline(std::vector<double> &spline, double k=-1) const;
 
-	bool generateheatingDemandSpline(std::vector<double> &spline, double k=-1) const;
 	bool generateCoolingDemandSpline(std::vector<double> &spline, double k=-1) const;
+
+	void generateDHWDemandSpline(std::vector<double> &spline) const;
 
 	void calculateHeatLossSplineFromKValue(double k, const std::vector<double> & original, std::vector<double> & result, double maxValueRequired, double maxValueExisting=-1) const;
 
 	bool calculateNewKValue(const std::vector<double> & original, double integralRequired, double maxValueRequired, double & integralResult, double & KResult) const;
+
+	Schedule condenserTemperatureSchedule() const;
+
+	Schedule evaporatorTemperatureSchedule() const;
 
 	NANDRAD::HydraulicNetworkHeatExchange toNandradHeatExchange() const;
 
@@ -133,11 +140,11 @@ public:
 
 	bool								m_areaRelatedValues = false;				// XML:A
 
-	bool								m_withHeatingDemand = true;					// XML:A
-
 	bool								m_withCoolingDemand = true;					// XML:A
 
 	bool								m_withDomesticHotWaterDemand = false;		// XML:A
+
+	bool								m_useHeatTransferCoefficient = false; 		// XML:A
 
 	BuildingType						m_buildingType = BT_ResidentialBuildingSingleFamily; // XML:A
 
@@ -154,6 +161,8 @@ public:
 	// *** Run time variables
 	mutable std::vector<double>					m_heatingDemandSplineOrig;
 	mutable std::vector<double>					m_coolingDemandSplineOrig;
+	mutable std::vector<unsigned int>			m_timePointsDHWPreparation;
+
 	mutable std::vector<double>					m_temperatureSplineY;
 	mutable NANDRAD::LinearSplineParameter		m_exportSpline;
 
