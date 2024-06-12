@@ -87,6 +87,13 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent, bool
 	m_ui->tableWidgetParameters->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
 	m_ui->tableWidgetParameters->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
 	SVStyle::formatDatabaseTableView(m_ui->tableWidgetParameters);
+
+	int pointSize = 10;
+	QString headerStyleSheet = QString("QHeaderView::section:horizontal {font-size:%1pt; font-weight:bold;}").arg(pointSize);
+	m_ui->tableWidgetParameters->horizontalHeader()->setStyleSheet(headerStyleSheet);
+	QString viewStyleSheet = QString("QTableView {font-size:%1pt;}").arg(pointSize);
+	m_ui->tableWidgetParameters->setStyleSheet(viewStyleSheet);
+
 	m_ui->tableWidgetParameters->setSortingEnabled(false);
 
 	m_ui->tableWidgetPolynomCoefficients->horizontalHeader()->setVisible(false);
@@ -135,13 +142,11 @@ void SVNetworkComponentEditWidget::updateInput(VICUS::NetworkComponent* componen
 	m_ui->lineEditSchedule2->clear();
 	m_ui->lineEditSchedule2->setVisible(false);
 
-
 	// set invisible everything in the polynom group box
-	m_ui->tableWidgetPolynomCoefficients->setVisible(false);
-	m_ui->tabWidgetPlots->setVisible(false);
+	m_ui->widgetPolynom->setVisible(false);
 
 	// set invisible everything in the controller group box
-	m_ui->groupBoxController->setVisible(false);
+	m_ui->widgetController->setVisible(false);
 
 	if (component == nullptr) {
 		// disable all controls - note: this does not disable signals of the components below
@@ -164,7 +169,7 @@ void SVNetworkComponentEditWidget::update()
 
 	// enable schedules tool buttons (based on required schedules)
 	std::vector<std::string> reqScheduleNames = VICUS::NetworkComponent::requiredScheduleNames(m_current->m_modelType);
-	m_ui->groupBoxSchedules->setVisible(!reqScheduleNames.empty());
+	m_ui->widgetSchedules->setVisible(!reqScheduleNames.empty());
 	bool schedule1Visible = reqScheduleNames.size()==1 || reqScheduleNames.size()==2;
 	bool schedule2Visible = reqScheduleNames.size()==2;
 	m_ui->toolButtonSchedule1->setVisible(schedule1Visible && !m_readOnly);
@@ -200,9 +205,9 @@ void SVNetworkComponentEditWidget::update()
 
 	// update pipe properties
 	m_ui->lineEditPipeProperties->clear();
-	m_ui->groupBoxPipeProperties->setVisible(false);
+	m_ui->widgetPipeProperties->setVisible(false);
 	if (VICUS::NetworkComponent::hasPipeProperties(m_current->m_modelType)){
-		m_ui->groupBoxPipeProperties->setVisible(true);
+		m_ui->widgetPipeProperties->setVisible(true);
 		const VICUS::NetworkPipe *pipe = m_db.m_pipes[m_current->m_pipePropertiesId];
 		if(pipe != nullptr)
 			m_ui->lineEditPipeProperties->setText(QtExt::MultiLangString2QString(pipe->m_displayName));
@@ -212,7 +217,7 @@ void SVNetworkComponentEditWidget::update()
 	std::vector<VICUS::NetworkController::ControlledProperty> availableCtrProps;
 	availableCtrProps = VICUS::NetworkComponent::availableControlledProperties(m_current->m_modelType);
 	if(availableCtrProps.size() > 0){
-		m_ui->groupBoxController->setVisible(true);
+		m_ui->widgetController->setVisible(true);
 	}
 
 	if(m_current->m_networkController.m_controlledProperty != VICUS::NetworkController::NUM_CP){
@@ -444,10 +449,8 @@ void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget() const {
 	m_ui->tableWidgetPolynomCoefficients->setRowCount((int)rowCount);
 	m_ui->tableWidgetPolynomCoefficients->setColumnCount((int)columnCount);
 
-	if (columnCount > 0 || rowCount > 0) {
-		m_ui->tableWidgetPolynomCoefficients->setVisible(true);
-		m_ui->tabWidgetPlots->setVisible(true);
-	}
+	if (columnCount > 0 || rowCount > 0)
+		m_ui->widgetPolynom->setVisible(true);
 
 	// better to read reference
 	const std::map<std::string, std::vector<double> > &values = m_current->m_polynomCoefficients.m_values;

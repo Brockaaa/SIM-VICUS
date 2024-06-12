@@ -2065,7 +2065,7 @@ namespace VICUS {
 			// NetworkComponent::intPara_t
 			case 47 :
 			switch (t) {
-				case 0 : return "Number of parallel pipes in ground heat exchanger";
+				case 0 : return "Number of parallel pipes";
 				case 1 : return "Number of parallel elements";
 			} break;
 			// NetworkComponent::ComponentCategory
@@ -2790,7 +2790,7 @@ namespace VICUS {
 				case 8 : return "Bar";
 				case 9 : return "kg/s";
 				case 10 : return "---";
-				case 11 : return "l";
+				case 11 : return "m3";
 				case 12 : return "m";
 				case 13 : return "---";
 				case 14 : return "kW";

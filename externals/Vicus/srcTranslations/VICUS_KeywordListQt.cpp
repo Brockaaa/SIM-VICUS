@@ -273,7 +273,7 @@ KeywordListQt::KeywordListQt() {
 	tr("Heat pump heating buffer storage volume");
 	tr("Heat pump DHW buffer storage volume");
 	tr("Length of pipe");
-	tr("Number of parallel pipes in ground heat exchanger");
+	tr("Number of parallel pipes");
 	tr("Number of parallel elements");
 	tr("Pipes");
 	tr("Pumps");
