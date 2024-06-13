@@ -49,16 +49,16 @@ namespace IBK {
 
 
 /*! Mask for the major version number. */
-unsigned majorMaskBinary = 0x000000ff;
+static unsigned majorMaskBinary = 0x000000ff;
 
 /*! Mask for the minor version number. */
-unsigned int minorMaskBinary = 0x0000ff00;
+static unsigned int minorMaskBinary = 0x0000ff00;
 
 /*! Mask for the major version number. */
-unsigned int majorMaskASCII = 0x0000ff00;
+static unsigned int majorMaskASCII = 0x0000ff00;
 
 /*! Mask for the minor version number. */
-unsigned int minorMaskASCII = 0x000000ff;
+static unsigned int minorMaskASCII = 0x000000ff;
 
 
 /*! Returns the complete version number as unsigned int formated for a binary output little endian. */
@@ -128,6 +128,16 @@ bool Version::operator<(const Version & other) const {
 	if (m_minor > other.m_minor) return false;
 	return m_patch < other.m_patch;
 }
+
+
+std::string Version::toString(bool includePathVersion) const {
+	std::stringstream strm;
+	strm << m_major << '.' << m_minor;
+	if (includePathVersion)
+		strm << '.' << m_patch;
+	return strm.str();
+}
+
 
 void Version::read(std::istream & in, unsigned int magicNumberFirstBinary, unsigned int magicNumberSecondBinary,
 				 unsigned int magicNumberFirstASCII, unsigned int magicNumberSecondASCII,

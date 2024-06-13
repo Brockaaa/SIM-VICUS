@@ -61,6 +61,7 @@
 
 namespace IBK {
 	class NotificationHandler;
+	class Version;
 }
 
 namespace VICUS {
@@ -110,8 +111,9 @@ public:
 
 	/*! Reads the project data from an XML file.
 		\param filename  The full path to the project file.
+		\param srcVersion The project version before migration. Can be used to show info-dialog for user.
 	*/
-	void readXML(const IBK::Path & filename);
+	void readXML(const IBK::Path & filename, IBK::Version & srcVersion);
 
 	/*! Reads the additional drawing data from an XML file.
 		\param filename  The full path to the drawing file.
@@ -125,9 +127,6 @@ public:
 
 	/*! Actual read function, called from both variants of readXML(). */
 	void readXMLDocument(TiXmlElement * rootElement);
-
-	/*! Converts old project version to new ones. Implement any required fixes here. */
-	void convertProject();
 
 	/*! Writes the project file to an XML file.
 		\param filename  The full path to the project file.

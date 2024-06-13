@@ -46,6 +46,7 @@
 #include <IBK_FileUtils.h>
 #include <IBK_Path.h>
 #include <IBK_assert.h>
+#include <IBK_Version.h>
 
 #include <QtExt_Directories.h>
 
@@ -1134,7 +1135,8 @@ bool SVProjectHandler::read(QWidget * parent, const QString & fname) {
 	try {
 
 		// filename is converted to utf8 before calling readXML
-		m_project->readXML(IBK::Path(fname.toStdString()) );
+		IBK::Version srcVersion;
+		m_project->readXML(IBK::Path(fname.toStdString()), srcVersion );
 		m_projectFile = fname;
 
 		m_lastReadTime = QFileInfo(fname).lastModified();
@@ -1181,6 +1183,12 @@ bool SVProjectHandler::read(QWidget * parent, const QString & fname) {
 				for (VICUS::Drawing &dr: m_project->m_drawings)
 					dr.generateInsertGeometries(m_project->nextUnusedID());
 			}
+		}
+
+		// inform user about migration
+		if (srcVersion != IBK::Version(VICUS::VERSION)) {
+			QMessageBox::information(parent, tr("Project Migration"), tr("The project was migrated from version %1 to the current version %2.")
+									 .arg(QString::fromStdString(srcVersion.toString(false))).arg(VICUS::VERSION));
 		}
 
 		// clear placeholders - this avoids confusion with outdates placeholders (ie when a different user has saved the

@@ -73,8 +73,9 @@
 
 SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent, bool readOnly) :
 	QWidget(parent),
-	m_readOnly(readOnly),
-	m_ui(new Ui::SVNetworkComponentEditWidget)
+	m_ui(new Ui::SVNetworkComponentEditWidget),
+	m_readOnly(readOnly)
+
 {
 	m_ui->setupUi(this);
 	m_db = SVSettings::instance().m_db;

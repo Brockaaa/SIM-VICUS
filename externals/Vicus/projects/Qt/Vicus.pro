@@ -74,6 +74,7 @@ HEADERS += \
 	../../src/VICUS_LccSettings.h \
 	../../src/VICUS_Material.h \
 	../../src/VICUS_MaterialLayer.h \
+	../../src/VICUS_Migration.h \
 	../../src/VICUS_Network.h \
 	../../src/VICUS_NetworkBuriedPipeProperties.h \
 	../../src/VICUS_NetworkComponent.h \
@@ -156,6 +157,7 @@ SOURCES += \
 	../../src/VICUS_LccSettings.cpp \
 	../../src/VICUS_Material.cpp \
 	../../src/VICUS_MaterialLayer.cpp \
+	../../src/VICUS_Migration.cpp \
 	../../src/VICUS_Network.cpp \
 	../../src/VICUS_NetworkBuriedPipeProperties.cpp \
 	../../src/VICUS_NetworkComponent.cpp \

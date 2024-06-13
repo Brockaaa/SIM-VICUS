@@ -36,6 +36,8 @@
 #include <IBK_Exception.h>
 #include <IBK_FileUtils.h>
 #include <IBK_NotificationHandler.h>
+#include <IBK_math.h>
+#include <IBK_Version.h>
 
 #include <IBKMK_3DCalculations.h>
 
@@ -47,9 +49,7 @@
 #include "VICUS_Constants.h"
 #include "VICUS_utilities.h"
 #include "VICUS_Drawing.h"
-
-
-#define PI				3.141592653589793238
+#include "VICUS_Migration.h"
 
 
 namespace VICUS {
@@ -257,13 +257,21 @@ void Project::parseHeader(const IBK::Path & filename) {
 }
 
 
-void Project::readXML(const IBK::Path & filename) {
+void Project::readXML(const IBK::Path & filename, IBK::Version & srcVersion) {
 	TiXmlDocument doc;
 	IBK::Path filenamePath(filename);
 	std::map<std::string,IBK::Path> pathPlaceHolders; // only dummy for now, filenamePath does not contain placeholders
 	TiXmlElement * xmlElem = NANDRAD::openXMLFile(pathPlaceHolders, filenamePath, "VicusProject", doc); // NOTE: Throws exception in case of error
 	if (!xmlElem)
 		return; // empty project, this means we are using only defaults
+
+	std::string srcVersionSuffix;
+	bool migrated = Migration::migrateProject(xmlElem, srcVersion);
+	if (migrated) {
+		// create a copy of the original file
+		IBK::Path copyFileName = filenamePath + IBK::FormatString(".%1-%2").arg(srcVersion.m_major).arg(srcVersion.m_minor).str();
+		IBK::Path::copy(filenamePath, copyFileName); // may fail if write protected
+	}
 
 	readXMLDocument(xmlElem);
 }
@@ -325,14 +333,16 @@ void Project::readImportedXML(const QString & projectText, IBK::NotificationHand
 	if (!xmlElem)
 		return; // empty project, this means we are using only defaults
 
+	// TODO : Clarify if migration is needed here as well, or if we expect our plugins to always
+	//        provide up-to-date xml data.
+
 	readXMLDocument(xmlElem);
 
 	notifyer->notify(0.3, "Read imported project");
 
-	/*! Read the drawings from vicus project xml
-	   NOTE: This is only necessary here, during project import when the import contains a drawing.
-	   For normal project reading, drawings are stored in a separate xml drawing file.
-	 */
+//	Read the drawings from vicus project xml
+//	NOTE: This is only necessary here, during project import when the import contains a drawing.
+//	For normal project reading, drawings are stored in a separate xml drawing file.
 	const TiXmlElement * cdraw = nullptr;
 	try {
 		// check if there is a drawings child
@@ -379,11 +389,6 @@ void Project::readXMLDocument(TiXmlElement * rootElement) {
 
 	// we read our subsections from this handle
 	TiXmlHandle xmlRoot = TiXmlHandle(rootElement);
-
-	// read file version and current SIM-VICUS version
-	std::string fileVersion;
-	std::string valueStr;
-	TiXmlElement::readSingleAttributeElement(xmlRoot.ToElement(), "fileVersion", fileVersion, valueStr);
 
 	// clear existing grid planes
 	m_viewSettings.m_gridPlanes.clear();
@@ -452,17 +457,8 @@ void Project::readXMLDocument(TiXmlElement * rootElement) {
 	catch (IBK::Exception & ex) {
 		throw IBK::Exception(ex, IBK::FormatString("Error reading project from text."), FUNC_ID);
 	}
+
 }
-
-
-//void Project::convertProject() {
-//	unsigned int majorRequired, majorFile, minorRequired, minorFile , patch;
-//	IBK::decode_version_number(VICUS::VERSION, majorRequired, minorRequired, patch);
-//	IBK::decode_version_number(fileVersion, majorFile, minorFile, patch);
-
-//	//
-//	if (majorRequired == 1 && majorFile == 1 && minorRequired > 1 && minorFile <=1)
-//}
 
 
 void Project::writeXML(const IBK::Path & filename) const {
@@ -833,7 +829,7 @@ void Project::updatePointers() {
 	// finally add edge ids
 	for (VICUS::Network & n : m_geometricNetworks) {
 
-		// create note-edge-pointer links
+		// create node-edge-pointer links
 		try {
 			n.updateNodeEdgeConnectionPointers();
 		} catch (IBK::Exception & ex) {
