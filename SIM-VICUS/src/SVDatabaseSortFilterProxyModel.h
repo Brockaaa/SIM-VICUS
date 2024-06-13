@@ -34,9 +34,10 @@
 class SVDatabaseSortFilterProxyModel : public QSortFilterProxyModel  {
 public:
 	SVDatabaseSortFilterProxyModel(QObject *parent = nullptr);
-	virtual ~SVDatabaseSortFilterProxyModel();
 
-	void setFilterText(const QString & filterText);
+	void setFilterText(const QString & filterText, const int persistentFilterColumn);
+	/* filter that is always applied */
+	void setPersistentFilter(const QString & persistentFilterText, const int persistentFilterColumn);
 
 	// QSortFilterProxyModel interface
 protected:
@@ -44,7 +45,10 @@ protected:
 	bool lessThan(const QModelIndex & source_left, const QModelIndex & source_right) const;
 
 private:
-	QString m_filterText;
+	QString			m_filterText = "";
+	int				m_filterColumn = -1;
+	QString			m_persistentFilterText = "";
+	int				m_persistentFilterColumn = -1;
 };
 
 #endif // SVDATABASESORTFILTERPROXYMODEL_H

@@ -16,7 +16,15 @@ SVSubNetworkComponentDBTableModel::SVSubNetworkComponentDBTableModel(QObject *pa
 
 int SVSubNetworkComponentDBTableModel::rowCount(const QModelIndex & parent) const
 {
-	return (int)m_db->m_networkComponents.size();
+	if(m_modelType == VICUS::NetworkComponent::NUM_MT)
+		return m_db->m_networkComponents.size();
+
+	int count = 0;
+	for(auto component : m_db->m_networkComponents){
+		if(component.second.m_modelType == m_modelType)
+			count++;
+	}
+	return count;
 }
 
 int SVSubNetworkComponentDBTableModel::columnCount(const QModelIndex & parent) const
@@ -89,6 +97,11 @@ QVariant SVSubNetworkComponentDBTableModel::headerData(int section, Qt::Orientat
 		}
 	} // switch
 	return QVariant();
+}
+
+void SVSubNetworkComponentDBTableModel::setModelType(VICUS::NetworkComponent::ModelType modelType)
+{
+	m_modelType = modelType;
 }
 
 int SVSubNetworkComponentDBTableModel::columnIndexId() const

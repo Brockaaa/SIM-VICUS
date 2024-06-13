@@ -25,6 +25,8 @@ public:
 	int columnCount(const QModelIndex & parent) const;
 	QVariant data(const QModelIndex & index, int role) const;
 	QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const ;
+	/* sets ModelType for the current selection. Will filter out all other ModelTypes */
+	void setModelType(VICUS::NetworkComponent::ModelType modelType);
 
 	// SVAbstractDatabaseTableModel interface
 public:
@@ -39,6 +41,7 @@ public:
 
 private:
 	SVDatabase	*m_db;
+	VICUS::NetworkComponent::ModelType m_modelType = VICUS::NetworkComponent::NUM_MT;
 };
 
 #endif // SVSUBNETWORKCOMPONENTDBTABLEMODEL_H

@@ -29,7 +29,6 @@
 
 #include <QItemSelectionModel>
 #include <QTableView>
-#include <QSortFilterProxyModel>
 #include <QDebug>
 #include <QGroupBox>
 #include <QTimer>
@@ -45,6 +44,7 @@
 #include "SVAbstractDatabaseEditWidget.h"
 #include "SVDBDialogAddDependentElements.h"
 #include "SVSubNetworkEditDialog.h"
+#include "SVDatabaseSortFilterProxyModel.h"
 
 // includes for all the dialogs
 
@@ -139,7 +139,7 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 	SVStyle::formatDatabaseTableView(m_ui->tableView);
 	m_ui->tableView->horizontalHeader()->setVisible(true);
 
-	m_proxyModel = new QSortFilterProxyModel(this);
+	m_proxyModel = new SVDatabaseSortFilterProxyModel(this);
 	m_proxyModel->setSourceModel(dynamic_cast<QAbstractTableModel*>(m_dbModel));
 	m_ui->tableView->setModel(m_proxyModel);
 
@@ -264,6 +264,8 @@ unsigned int SVDatabaseEditDialog::select(unsigned int initialId, bool resetMode
 	onCurrentIndexChanged(m_ui->tableView->currentIndex(), QModelIndex()); // select nothing
 
 	m_ui->tableView->resizeColumnsToContents();
+
+	m_proxyModel->setPersistentFilter(filterText, filterColumn);
 
 	if(filterColumn > 1 && !filterText.isEmpty()) {
 		m_currentFilter = filterText;

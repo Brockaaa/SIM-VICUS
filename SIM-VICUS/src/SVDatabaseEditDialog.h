@@ -39,7 +39,7 @@ class SVAbstractDatabaseEditWidget;
 //class SVInternalLoadsTableModel;
 class QModelIndex;
 class QGroupBox;
-class QSortFilterProxyModel;
+class SVDatabaseSortFilterProxyModel;
 
 
 #include <VICUS_Constants.h>
@@ -150,7 +150,7 @@ private:
 	Ui::SVDatabaseEditDialog *m_ui;
 
 	/*! The sort filter model (owned). */
-	QSortFilterProxyModel			*m_proxyModel	= nullptr;
+	SVDatabaseSortFilterProxyModel	*m_proxyModel	= nullptr;
 	/*! The table model (owned). */
 	SVAbstractDatabaseTableModel	*m_dbModel		= nullptr;
 	/*! The edit widget (owned). */
