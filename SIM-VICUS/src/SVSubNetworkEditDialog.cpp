@@ -28,6 +28,7 @@
 #include <QtExt_Directories.h>
 #include <QtExt_Style.h>
 #include <QtExt_LanguageStringEditWidget1.h>
+#include <QtExt_LanguageHandler.h>
 
 #include <VICUS_BMNetwork.h>
 #include <VICUS_BMBlock.h>
@@ -861,6 +862,7 @@ void SVSubNetworkEditDialog::openDBComponentNamingDialog(VICUS::NetworkComponent
 	QLabel *label = new QLabel(tr("Please enter a name for the Component"));
 	layout->addWidget(label);
 	QtExt::LanguageStringEditWidget1 *editWidget = new QtExt::LanguageStringEditWidget1();
+	editWidget->initLanguages(QtExt::LanguageHandler::instance().langId().toStdString(), "fr", true);
 	layout->addWidget(editWidget);
 	QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 	layout->addWidget(buttonBox);
@@ -1476,11 +1478,11 @@ void SVSubNetworkEditDialog::on_addToUserDBButton_clicked()
 	if(selectedBlock->m_mode == VICUS::BMBlockType::GlobalInlet || selectedBlock->m_mode == VICUS::BMBlockType::GlobalOutlet || selectedBlock->m_mode == VICUS::BMBlockType::ConnectorBlock)
 		return;
 	VICUS::NetworkComponent component = m_networkComponents[componentIndex(selectedBlock->m_componentId)];
-	component.m_local = false;
 
 	openDBComponentNamingDialog(&component);
 
-	m_db->m_networkComponents.add(component) ;
+	unsigned int newId = m_db->m_networkComponents.add(component) ;
+	m_db->m_networkComponents[newId]->m_local = false;
 	updateToolBoxPages();
 }
 
