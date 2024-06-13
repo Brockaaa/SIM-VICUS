@@ -100,8 +100,6 @@ private slots:
 
 	void on_toolButtonPipeProperties_clicked();
 
-	void on_tableWidgetPolynomCoefficients_cellChanged(int row, int);
-
 	void on_toolButtonControllerSet_clicked();
 
 	void on_toolButtonControllerRemove_clicked();
@@ -110,8 +108,6 @@ private slots:
 
 private:
 	void updateParameterTableWidget() const;
-
-	void updatePolynomCoeffTableWidget() const;
 
 	void updatePolynomPlot();
 

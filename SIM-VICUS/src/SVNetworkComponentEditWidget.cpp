@@ -97,11 +97,6 @@ SVNetworkComponentEditWidget::SVNetworkComponentEditWidget(QWidget *parent, bool
 
 	m_ui->tableWidgetParameters->setSortingEnabled(false);
 
-	m_ui->tableWidgetPolynomCoefficients->horizontalHeader()->setVisible(false);
-	m_ui->tableWidgetPolynomCoefficients->verticalHeader()->setVisible(true);
-	SVStyle::formatDatabaseTableView(m_ui->tableWidgetPolynomCoefficients);
-	m_ui->tableWidgetPolynomCoefficients->setSortingEnabled(false);
-
 	// create chart and curve
 	configureChart(m_ui->widgetPlot1);
 	configureChart(m_ui->widgetPlot2);
@@ -236,7 +231,6 @@ void SVNetworkComponentEditWidget::update()
 	m_ui->widgetPlot2->setVisible(true);
 
 	updateParameterTableWidget();
-	updatePolynomCoeffTableWidget();
 	updatePolynomPlot();
 
 	qDebug() << "Number of available Modeltypes: " << VICUS::NetworkComponent::availableHeatExchangeTypes(m_current->m_modelType).size();
@@ -409,86 +403,6 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 }
 
 
-void SVNetworkComponentEditWidget::updatePolynomCoeffTableWidget() const {
-
-	m_ui->tableWidgetPolynomCoefficients->blockSignals(true);
-	m_ui->tableWidgetPolynomCoefficients->clearContents();
-	m_ui->tableWidgetPolynomCoefficients->setRowCount(0);
-	m_ui->tableWidgetPolynomCoefficients->setColumnCount(0);
-
-	unsigned int rowCount=0;
-	unsigned int columnCount=0;
-	bool isOptional = false;
-	std::vector<std::string> header;
-	switch (m_current->m_modelType ) {
-		case VICUS::NetworkComponent::MT_HeatPumpOnOffSourceSide: {
-			header = {"QdotCondensator", "ElectricalPower"};
-			columnCount = 6;
-			isOptional = false;
-		} break;
-		case VICUS::NetworkComponent::MT_HeatPumpVariableSourceSide: {
-			header = {"COP"};
-			columnCount = 6;
-			isOptional = false;
-		} break;
-		case VICUS::NetworkComponent::MT_ConstantPressurePump:
-		case VICUS::NetworkComponent::MT_ControlledPump:
-		case VICUS::NetworkComponent::MT_VariablePressurePump: {
-			header = {"MaximumElectricalPower", "MaximumPressureHead"};
-			columnCount = 3;
-			isOptional = true;
-		} break;
-		default: {
-			m_ui->tableWidgetPolynomCoefficients->blockSignals(false);
-			return;
-		}
-	}
-
-	// set header, row and column count
-	m_ui->tableWidgetPolynomCoefficients->verticalHeader()->setVisible(true);
-	rowCount = header.size();
-	m_ui->tableWidgetPolynomCoefficients->setRowCount((int)rowCount);
-	m_ui->tableWidgetPolynomCoefficients->setColumnCount((int)columnCount);
-
-	if (columnCount > 0 || rowCount > 0)
-		m_ui->widgetPolynom->setVisible(true);
-
-	// better to read reference
-	const std::map<std::string, std::vector<double> > &values = m_current->m_polynomCoefficients.m_values;
-
-	QFont font;
-	font.setItalic(isOptional);
-
-	// in case the value map is empty we write zeros into the table, otherwise we use the according values
-	for (unsigned int row=0; row<rowCount; ++row) {
-		// set header
-		QTableWidgetItem *headItem = new QTableWidgetItem( QString::fromStdString(header[row]));
-		headItem->setFont(font);
-		m_ui->tableWidgetPolynomCoefficients->setVerticalHeaderItem((int)row, headItem);
-		// populate values
-		for (unsigned int col=0; col<columnCount; ++col) {
-			double val = 0; // default value
-			// if we have a value in the map, use that
-			if (values.find(header[row]) != values.end() && col < values.at(header[row]).size() )
-				val = values.at(header[row])[col];
-			QTableWidgetItem *item = new QTableWidgetItem(QString("%1").arg(val));
-			item->setFont(font);
-			if(m_readOnly)
-				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-			m_ui->tableWidgetPolynomCoefficients->setItem((int)row, (int)col, item);
-		}
-	}
-
-	m_ui->tableWidgetPolynomCoefficients->resizeRowsToContents();
-
-	int tableWidgetHeight = rowCount * m_ui->tableWidgetPolynomCoefficients->rowHeight(0);
-	tableWidgetHeight += m_ui->tableWidgetPolynomCoefficients->horizontalScrollBar()->height();
-	m_ui->tableWidgetPolynomCoefficients->setMinimumHeight(tableWidgetHeight);
-	m_ui->tableWidgetPolynomCoefficients->setMaximumHeight(tableWidgetHeight);
-	m_ui->tableWidgetPolynomCoefficients->blockSignals(false);
-}
-
-
 void SVNetworkComponentEditWidget::updatePolynomPlot() {
 
 	m_ui->widgetPlot1->detachItems( QwtPlotItem::Rtti_PlotCurve );
@@ -499,6 +413,7 @@ void SVNetworkComponentEditWidget::updatePolynomPlot() {
 
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
 	m_ui->tabWidgetPlots->setTabVisible(0, false);
+	m_ui->widgetPolynom->setVisible(false);
 #else
 	m_ui->plotTab1->setEnabled(false);
 	m_ui->widgetPlot1->setVisible(false);
@@ -639,6 +554,7 @@ void SVNetworkComponentEditWidget::updatePolynomPlot() {
 	// now do all the plotting
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
 	m_ui->tabWidgetPlots->setTabVisible(0, true);
+	m_ui->widgetPolynom->setVisible(true);
 #else
 	m_ui->plotTab1->setEnabled(true);
 	m_ui->widgetPlot1->setVisible(true);
@@ -672,6 +588,7 @@ void SVNetworkComponentEditWidget::updatePolynomPlot() {
 	if (!m_yData2.empty()) {
 #if QT_VERSION >= QT_VERSION_CHECK(5,15,0)
 		m_ui->tabWidgetPlots->setTabVisible(1, true);
+		m_ui->widgetPolynom->setVisible(true);
 #else
 		m_ui->plotTab2->setEnabled(false);
 		m_ui->widgetPlot2->setVisible(true);
@@ -888,41 +805,6 @@ void SVNetworkComponentEditWidget::on_toolButtonPipeProperties_clicked()
 	if (id != newId) {
 		m_current->m_pipePropertiesId = newId;
 	}
-	update();
-}
-
-
-void SVNetworkComponentEditWidget::on_tableWidgetPolynomCoefficients_cellChanged(int row, int /*column*/) {
-	if(m_readOnly) return;
-	std::string header = m_ui->tableWidgetPolynomCoefficients->verticalHeaderItem(row)->text().toStdString();
-
-	m_current->m_polynomCoefficients.m_values[header].clear();
-	bool allZero = true;
-	for (int col=0; col<m_ui->tableWidgetPolynomCoefficients->columnCount(); ++col) {
-
-		// check number
-		QString text = m_ui->tableWidgetPolynomCoefficients->item(row, col)->text();
-		bool ok = false;
-		double val=0;
-		if (!text.isEmpty()) {
-			val = QtExt::Locale().toDouble(text, &ok);
-			if (!ok)
-				val = text.toDouble(&ok);
-		}
-		// set value back
-		if (ok)
-			m_current->m_polynomCoefficients.m_values[header].push_back(val);
-		else
-			m_current->m_polynomCoefficients.m_values[header].push_back(0);
-
-		if (m_current->m_polynomCoefficients.m_values[header][(unsigned int)col]>0 ||
-			m_current->m_polynomCoefficients.m_values[header][(unsigned int)col]<0)
-			allZero = false;
-	}
-	// if all values are zero we remove this entry (so if it is optional it would still be considered valid)
-	if (allZero)
-		m_current->m_polynomCoefficients.m_values.erase(header);
-
 	update();
 }
 
