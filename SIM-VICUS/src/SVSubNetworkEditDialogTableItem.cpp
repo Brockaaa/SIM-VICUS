@@ -11,53 +11,38 @@
 #include <QHBoxLayout>
 
 
-SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filename, QString text, QString tooltip, int height, QWidget *parent, bool modelType) :
+SVSubNetworkEditDialogTableItem::SVSubNetworkEditDialogTableItem(QString filename, QString text, QString tooltip, int height, QWidget *parent) :
 	QWidget(parent),
 	m_ui(new Ui::SVSubNetworkEditDialogTableItem)
 {
 	m_ui->setupUi(this);
-	if(modelType){
-		QLabel *iconLabel = new QLabel(this);
-		QLabel *textLabel = new QLabel(text, this);
-		QHBoxLayout *layout = new QHBoxLayout(this);
+	QLabel *iconLabel = new QLabel(this);
+	QLabel *textLabel = new QLabel(text, this);
+	QHBoxLayout *layout = new QHBoxLayout(this);
 
-		QSvgRenderer renderer(filename);
-		QPixmap pixmap(height, height);
-		pixmap.fill(Qt::transparent);
+	QSvgRenderer renderer(filename);
+	QPixmap pixmap(height, height);
+	pixmap.fill(Qt::transparent);
 
-		QPainter painter(&pixmap);
-		renderer.render(&painter);
-		painter.end();
+	QPainter painter(&pixmap);
+	renderer.render(&painter);
+	painter.end();
 
-		iconLabel->setPixmap(pixmap);
-		iconLabel->setMinimumSize(height, height);
-		iconLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-		textLabel->setMinimumSize(0, 0);
-		textLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-		textLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-		textLabel->setStyleSheet(QString("QLabel { padding-left: %1px; }").arg(10));
-		layout->addWidget(iconLabel);
-		layout->addWidget(textLabel);
-		layout->setContentsMargins(0,0,0,0);
-		layout->setSpacing(0);
-		layout->setStretchFactor(iconLabel, 0);
-		layout->setStretchFactor(textLabel, 1);
-		setToolTip(tooltip);
-		setLayout(layout);
-		m_local = true;
-	} else {
-		QLabel *textLabel = new QLabel(text, this);
-		textLabel->setMinimumSize(0, 0);
-		textLabel->setAlignment(Qt::AlignLeft| Qt::AlignVCenter); // This will center the text both horizontally and vertically
-		textLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-		textLabel->setStyleSheet(QString("QLabel { padding-left: %1px; }").arg(height + 20));
-		QHBoxLayout *layout = new QHBoxLayout(this);
-		layout->addWidget(textLabel);
-		layout->setContentsMargins(0,0,0,0);
-		layout->setStretchFactor(textLabel, 0);
-		setToolTip(tooltip);
-		setLayout(layout);
-	}
+	iconLabel->setPixmap(pixmap);
+	iconLabel->setMinimumSize(height, height);
+	iconLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	textLabel->setMinimumSize(0, 0);
+	textLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+	textLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+	textLabel->setStyleSheet(QString("QLabel { padding-left: %1px; }").arg(10));
+	layout->addWidget(iconLabel);
+	layout->addWidget(textLabel);
+	layout->setContentsMargins(0,0,0,0);
+	layout->setSpacing(0);
+	layout->setStretchFactor(iconLabel, 0);
+	layout->setStretchFactor(textLabel, 1);
+	setToolTip(tooltip);
+	setLayout(layout);
 
 	setToolTip(QString("<p style='color: #000000; background-color: #ffffff; border: 1px solid black;'>%1</p>").arg(tooltip));
 
