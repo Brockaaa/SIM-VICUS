@@ -40,8 +40,6 @@ public:
 	*/
 	VICUS::SubNetwork						*m_currentSubNet;
 
-	void on_ItemDoubleClicked(const QModelIndex & index);
-
 private slots:
 
 	void on_pushButtonColor_clicked();

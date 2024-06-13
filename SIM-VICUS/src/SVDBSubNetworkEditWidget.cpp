@@ -162,12 +162,6 @@ void SVDBSubNetworkEditWidget::on_subNetworkEditDialog_closed()
 	updateTableWidget();
 }
 
-void SVDBSubNetworkEditWidget::on_ItemDoubleClicked(const QModelIndex &index)
-{
-	on_editSubNetworkButton_clicked();
-}
-
-
 void SVDBSubNetworkEditWidget::on_ThumbNailClicked()
 {
 	on_editSubNetworkButton_clicked();
