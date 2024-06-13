@@ -348,6 +348,8 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 				item = new QTableWidgetItem(QString("%L1").arg(m_current->m_intPara[paraInt].value));
 			item->setData(Qt::UserRole, DT_Integer);
 			item->setData(Qt::UserRole+1, paraInt);
+			if(m_readOnly)
+				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			m_ui->tableWidgetParameters->setItem(rowCounter, 1, item);
 
 			++rowCounter;
