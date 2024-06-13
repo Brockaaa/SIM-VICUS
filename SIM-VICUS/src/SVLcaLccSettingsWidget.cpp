@@ -227,7 +227,7 @@ void SVLcaLccSettingsWidget::importOkoebauDat(const IBK::Path & csvPath) {
 
 
 	QProgressDialog *dlg = new QProgressDialog(tr("Importing ÖKOBAUDAT-Database"), tr("Stop"), 0, (int)dataLines.size(), this);
-	dlg->setMinimumDuration(0);
+	dlg->setMinimumDuration(2000);
 
 	try {
 		// SVSettings::instance().m_db.m_epdDatasets.
@@ -271,6 +271,7 @@ void SVLcaLccSettingsWidget::importOkoebauDat(const IBK::Path & csvPath) {
 			//		IBK::trim(line, "MULTILINESTRING ((");
 			//		IBK::trim(line, "))");
 			IBK::explode(line, tokens, ";", IBK::EF_KeepEmptyTokens);
+			tokens.pop_back();
 			if (tokens.size() != NumColEpds)
 				IBK::explode(line, tokens, "\t", IBK::EF_KeepEmptyTokens);
 
@@ -995,22 +996,24 @@ void SVLcaLccSettingsWidget::on_pushButtonImportOkoebaudat_clicked() {
 		return;
 	}
 	QMessageBox msgBox;
-
+	// msgBox.setParent(this);
 	try {
 		importOkoebauDat(path);
-		QMessageBox::information(this, tr("ÖKOBAUDAT Import"), tr("ÖKOBAUDAT has been imported successfully!"));
+		msgBox.setWindowTitle(tr("ÖKOBAUDAT Import"));
+		msgBox.setText(tr("ÖKOBAUDAT has been imported successfully!"));
+		msgBox.exec();
 	}
 	catch (IBK::Exception &ex) {
 		ex.writeMsgStackToError();
 		ex.msgStack();
-		msgBox.setParent(this);
+
 		msgBox.setIcon(QMessageBox::Critical);
 		msgBox.setWindowTitle(tr("Error during ÖKOBAUDAT Import"));
 		msgBox.setText(tr("Could not import ÖKOBAUDAT. See Error below."));
 		msgBox.setDetailedText(QString::fromStdString(ex.msgStack()));
 		msgBox.exec();
-		return;
 	}
+	return;
 }
 
 
