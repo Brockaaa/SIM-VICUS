@@ -302,8 +302,10 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			m_ui->tableWidgetParameters->setItem(rowCounter, 2, item);
 
-			if (m_current->m_para[para].name.empty())
+			if (m_current->m_para[para].name.empty()){
 				item = new QTableWidgetItem(); // TODO : Hauke, set some meaningful initial value?
+				item->setBackground(QBrush(QColor(240, 200, 200)));
+			}
 			else
 				item = new QTableWidgetItem(QString("%L1").arg(m_current->m_para[para].get_value(ioUnit)));
 			item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
@@ -342,8 +344,10 @@ void SVNetworkComponentEditWidget::updateParameterTableWidget() const{
 				item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			m_ui->tableWidgetParameters->setItem(rowCounter, 2, item);
 			// parameter value
-			if (m_current->m_intPara[paraInt].name.empty())
+			if (m_current->m_intPara[paraInt].name.empty()){
 				item = new QTableWidgetItem(); // TODO : Hauke, set some meaningful initial value?
+				item->setBackground(QBrush(QColor(240, 200, 200)));
+			}
 			else
 				item = new QTableWidgetItem(QString("%L1").arg(m_current->m_intPara[paraInt].value));
 			item->setData(Qt::UserRole, DT_Integer);
