@@ -96,6 +96,7 @@ $$PWD/../../../externals/lib$${DIR_PREFIX}/IBKMK.lib
 SOURCES += \
 ../../../externals/Nandrad/srcTranslations/NANDRAD_KeywordListQt.cpp \
 ../../../externals/Vicus/srcTranslations/VICUS_KeywordListQt.cpp \
+../../src/SVAbstractDatabaseEditDialog.cpp \
 ../../src/SVAcousticConstraintsCheckWidget.cpp \
 ../../src/SVCoSimCO2VentilationDialog.cpp \
 ../../src/SVCoSimSupplySystemDialog.cpp \
@@ -339,6 +340,7 @@ SOURCES += \
 	../../src/actions/SVUndoCopySubSurfaces.cpp
 
 HEADERS  += \
+../../src/SVAbstractDatabaseEditDialog.h \
 ../../src/SVAcousticConstraintsCheckWidget.h \
 ../../src/SVCoSimCO2VentilationDialog.h \
 ../../src/SVCoSimSupplySystemDialog.h \
@@ -592,6 +594,7 @@ HEADERS  += \
 
 FORMS    += \
 ../../src/SVAboutDialog.ui \
+../../src/SVAbstractDatabaseEditDialog.ui \
 ../../src/SVAcousticConstraintsCheckWidget.ui \
 ../../src/SVCoSimCO2VentilationDialog.ui \
 ../../src/SVCoSimSupplySystemDialog.ui \
