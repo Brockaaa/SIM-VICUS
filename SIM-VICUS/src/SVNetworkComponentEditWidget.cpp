@@ -795,6 +795,9 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 	if (!ok){
 		QMessageBox msgBox(QMessageBox::Critical, "Invalid Value", errMsg, QMessageBox::Ok, this);
 		msgBox.exec();
+		m_ui->tableWidgetParameters->blockSignals(true);
+		item->setBackground(QBrush(QColor(240, 200, 200)));
+		m_ui->tableWidgetParameters->blockSignals(false);
 	}
 }
 
