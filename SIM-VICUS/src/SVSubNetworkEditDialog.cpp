@@ -1481,6 +1481,7 @@ void SVSubNetworkEditDialog::on_addToUserDBButton_clicked()
 
 	openDBComponentNamingDialog(&component);
 
+	// add to DB, get new Id and then set as user DB
 	unsigned int newId = m_db->m_networkComponents.add(component) ;
 	m_db->m_networkComponents[newId]->m_local = false;
 	updateToolBoxPages();
