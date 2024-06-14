@@ -703,6 +703,7 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 		// empty parameters are allowed
 		if (text.isEmpty()){
 			m_current->m_para[paraNum] = IBK::Parameter();
+			item->setBackground(QBrush(QColor(240, 200, 200)));
 			return;
 		}
 
@@ -729,6 +730,7 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 			}
 			// finally set value
 			VICUS::KeywordList::setParameter(m_current->m_para, "NetworkComponent::para_t", paraNum, val);
+			item->setBackground(QBrush());
 		}
 		else {
 			m_ui->tableWidgetParameters->blockSignals(true);
@@ -736,6 +738,7 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 				item->setText("");
 			else
 				item->setText(QString("%1").arg(m_current->m_para[paraNum].value));
+			item->setBackground(QBrush(QColor(240, 200, 200)));
 			m_ui->tableWidgetParameters->blockSignals(false);
 		}
 
@@ -751,6 +754,7 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 		// empty parameters are allowed
 		if (text.isEmpty()){
 			m_current->m_intPara[paraNum] = IBK::IntPara();
+			item->setBackground(QBrush(QColor(240, 200, 200)));
 			return;
 		}
 
@@ -774,6 +778,7 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 			}
 			// finally set value
 			m_current->m_intPara[paraNum] = IBK::IntPara(paraName, val);
+			item->setBackground(QBrush());
 		}
 		else {
 			m_ui->tableWidgetParameters->blockSignals(true);
@@ -781,7 +786,9 @@ void SVNetworkComponentEditWidget::on_tableWidgetParameters_cellChanged(int row,
 				item->setText("");
 			else
 				item->setText(QString("%1").arg(m_current->m_intPara[paraNum].value));
+			item->setBackground(QBrush(QColor(240, 200, 200)));
 			m_ui->tableWidgetParameters->blockSignals(false);
+
 		}
 	}
 
