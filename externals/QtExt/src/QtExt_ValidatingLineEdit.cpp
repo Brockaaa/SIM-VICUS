@@ -104,6 +104,10 @@ void ValidatingLineEdit::setValue(double value) {
 	// of value and color the line appropriately
 	setText(textTemp);
 
+	// applies ElideMode if applicable
+	m_storedText = QLineEdit::text();
+	applyElideMode();
+
 	// Note: when line edit is read-only or disabled, validator is not called and value
 	// is not set -> do that manually since setting a value in
 	// a read-only line edit can only be done by code and thus is expected
@@ -112,12 +116,27 @@ void ValidatingLineEdit::setValue(double value) {
 		m_value = value;
 }
 
+void ValidatingLineEdit::setElideMode(Qt::TextElideMode elideMode)
+{
+	m_elideMode = elideMode;
+	m_storedText = text();
+	applyElideMode();
+}
+
 
 void ValidatingLineEdit::setText(const QString& str) {
 	blockSignals(true);
 	QLineEdit::setText(str.trimmed());
 	blockSignals(false);
 	onTextChanged(text()); // this will update the value and state of the line edit
+}
+
+QString ValidatingLineEdit::text() const
+{
+	if(hasFocus())
+		return QLineEdit::text();
+	else
+		return m_storedText;
 }
 
 
@@ -215,11 +234,46 @@ void ValidatingLineEdit::onTextChanged ( const QString& ) {
 	}
 }
 
+void ValidatingLineEdit::applyElideMode()
+{
+	if(m_elideMode != Qt::ElideNone){
+		const QFontMetrics fm(this->font());
+		// Adjust the width to consider text margins or any other styling
+		int textWidth = fm.width(this->text());
+		int lineWidth = this->width();
+		if(textWidth > lineWidth){
+			QString elided = fm.elidedText(m_storedText, m_elideMode, lineWidth);
+			blockSignals(true);
+			QLineEdit::setText(fm.elidedText(m_storedText, m_elideMode, lineWidth));
+			blockSignals(false);
+		}
+	}
+}
+
 
 void ValidatingLineEdit::changeEvent(QEvent *event) {
 	if (event->type() == QEvent::EnabledChange) {
 		onTextChanged(QString());
 	}
+}
+
+void ValidatingLineEdit::focusInEvent(QFocusEvent * e)
+{
+	QLineEdit::focusInEvent(e);
+	blockSignals(true);
+
+	// if text was set during initialisation, it is not stored in m_storedText
+	if(m_storedText.isEmpty())
+		m_storedText = QLineEdit::text();
+	QLineEdit::setText(m_storedText);
+	blockSignals(false);
+}
+
+void ValidatingLineEdit::focusOutEvent(QFocusEvent * e)
+{
+	QLineEdit::focusOutEvent(e);
+	m_storedText = QLineEdit::text();
+	applyElideMode();
 }
 
 

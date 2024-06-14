@@ -41,6 +41,7 @@
 #include <QLineEdit>
 #include <QString>
 #include <QLocale>
+#include <QFontMetrics>
 
 #include "QtExt_ValidatingInputBase.h"
 
@@ -159,6 +160,13 @@ public:
 	*/
 	void setValue(double value);
 
+	/*! Sets an ElideMode, either left, right, middle or none.
+	 *  will be applied to the text that is in the ValidatingLineEdit when focusOutEvent is called */
+	void setElideMode(Qt::TextElideMode elideMode);
+
+	/*! Helper function to apply Elision to the string in the LineEdit */
+	void applyElideMode();
+
 	/*! Returns the current value of the line edit.
 		Returns the last valid number that was entered in the line edit. If the line edit currently contains
 		an invalid number, the last number that was accepted is returned.
@@ -168,6 +176,9 @@ public:
 
 	/*! Overloaded to ensure validation is applied when setting text. */
 	void setText(const QString& text);
+
+	/*! Overloaded to ensure the correct string is returned in case an ElideMode is set */
+	QString text() const;
 
 	/*! Performs a new validating check without changing the entry.
 		Useful for special validators with dependent edits.
@@ -183,6 +194,12 @@ protected:
 	/*! Overloaded to react on enabled change events. */
 	virtual void changeEvent(QEvent *event) override;
 
+	/*! Overloaded focusInEvent to apply Elision if set */
+	void focusInEvent(QFocusEvent *e) override;
+
+	/*! Overloaded focusInEvent to apply Elision if set */
+	void focusOutEvent(QFocusEvent *e) override;
+
 signals:
 	/*! Emits the result of the editing, but only if a result was entered correctly. */
 	void editingFinishedSuccessfully();
@@ -193,6 +210,13 @@ private slots:
 
 	/*! Evaluates input and colors line edit accordingly. */
 	void onTextChanged ( const QString & text );
+
+private:
+	/*! Elision to be applied to the string in the LineEdit after focusOutEvent */
+	Qt::TextElideMode				m_elideMode = Qt::ElideNone;
+
+	/*! Needed for storing the original string to chage the ElideMode */
+	QString							m_storedText;
 
 };
 
