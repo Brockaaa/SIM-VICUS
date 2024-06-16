@@ -12,6 +12,7 @@
 #include "SVMainWindow.h"
 #include "SVDatabaseSortFilterProxyModel.h"
 #include "SVAbstractDatabaseEditWidget.h"
+#include "SVViewStateHandler.h"
 
 SVAbstractDatabaseEditDialog::SVAbstractDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTableModel * tableModel,
 														   SVAbstractDatabaseEditWidget * editWidget,
@@ -101,6 +102,29 @@ SVAbstractDatabaseEditDialog::~SVAbstractDatabaseEditDialog()
 	delete m_ui;
 }
 
+void SVAbstractDatabaseEditDialog::edit(unsigned int initialId)
+{
+	// hide select/cancel buttons, and show "close" button
+	m_ui->pushButtonClose->setVisible(true);
+	m_ui->pushButtonSelect->setVisible(false);
+	m_ui->pushButtonCancel->setVisible(false);
+
+	// ask database model to update its content
+	m_dbModel->resetModel(); // ensure we use up-to-date data (in case the database data has changed elsewhere)
+	selectItemById(initialId);
+	onCurrentIndexChanged(m_ui->tableView->currentIndex(), QModelIndex()); // select nothing
+
+	m_ui->tableView->resizeColumnsToContents();
+
+	// update "isRferenced" property of all elements
+	if (SVProjectHandler::instance().isValid()){
+		SVSettings::instance().m_db.updateReferencedElements(project());
+	}
+
+	exec();
+	QTimer::singleShot(0, &SVViewStateHandler::instance(), &SVViewStateHandler::refreshColors);
+}
+
 unsigned int SVAbstractDatabaseEditDialog::select(unsigned int initialId, bool resetModel, QString filterText, int filterColumn)
 {
 	m_ui->pushButtonClose->setVisible(false);
@@ -110,7 +134,7 @@ unsigned int SVAbstractDatabaseEditDialog::select(unsigned int initialId, bool r
 	if(resetModel)
 		m_dbModel->resetModel(); // ensure we use up-to-date data (in case the database data has changed elsewhere)
 	selectItemById(initialId);
-	//onCurrentIndexChanged(m_ui->tableView->currentIndex(), QModelIndex()); // select nothing
+	onCurrentIndexChanged(m_ui->tableView->currentIndex(), QModelIndex()); // select nothing
 
 	m_ui->tableView->resizeColumnsToContents();
 
@@ -147,9 +171,59 @@ unsigned int SVAbstractDatabaseEditDialog::select(unsigned int initialId, bool r
 	return initialId;
 }
 
+void SVAbstractDatabaseEditDialog::on_pushButtonSelect_clicked()
+{
+	accept();
+}
+
+void SVAbstractDatabaseEditDialog::on_pushButtonCancel_clicked()
+{
+	reject();
+}
+
+void SVAbstractDatabaseEditDialog::on_pushButtonClose_clicked()
+{
+	accept();
+}
+
+void SVAbstractDatabaseEditDialog::onCurrentIndexChanged(const QModelIndex & current, const QModelIndex &)
+{
+	// retrieve current ID
+	int id = current.data(Role_Id).toInt();
+	m_editWidget->updateInput(id);
+}
+
 void SVAbstractDatabaseEditDialog::onStyleChanged() {
 	m_ui->frameBuildInDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_alternativeBackgroundBright.name()));
 	m_ui->frameUserDB->setStyleSheet(QString(".QFrame { background-color: %1; }").arg(SVStyle::instance().m_userDBBackgroundBright.name()));
+}
+
+void SVAbstractDatabaseEditDialog::on_toolButtonApplyFilter_clicked()
+{
+	QString filter = m_ui->lineEditFilter->text();
+
+	// Filter Column
+	int filterCol = m_ui->comboBoxColumn->currentData().toInt();
+
+	// Set filter
+	m_proxyModel->setFilterWildcard(filter);
+	m_proxyModel->setFilterKeyColumn(filterCol);
+	m_proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+}
+
+void SVAbstractDatabaseEditDialog::on_comboBoxColumn_currentIndexChanged(int)
+{
+	m_proxyModel->setFilterWildcard("");
+}
+
+void SVAbstractDatabaseEditDialog::on_lineEditFilter_returnPressed()
+{
+	on_toolButtonApplyFilter_clicked();
+}
+
+void SVAbstractDatabaseEditDialog::onScreenChanged(const QScreen * screen)
+{
+	m_screenSize = screen->size();
 }
 
 void SVAbstractDatabaseEditDialog::selectItemById(unsigned int id) {
