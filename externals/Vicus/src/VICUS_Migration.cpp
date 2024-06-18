@@ -39,8 +39,8 @@ bool Migration::migrateProject(TiXmlElement * rootElement, IBK::Version & srcVer
 	// now process the cascade
 	try {
 
-		if (newVersion == IBK::Version(1,0)) 			migrateVersion_1_0(rootElement, newVersion);
-		if (newVersion == IBK::Version(1,1)) 			migrateVersion_1_1(rootElement, newVersion);
+//		if (newVersion <= IBK::Version(1,0)) 			migrateVersion_1_0(rootElement, newVersion);
+		if (newVersion <= IBK::Version(1,1)) 			migrateVersion_1_1(rootElement, newVersion);
 
 	} catch (IBK::Exception & ex) {
 		throw IBK::Exception(ex, "Error migrating project.", FUNC_ID);
@@ -77,87 +77,86 @@ void Migration::migrateVersion_1_1(TiXmlElement * rootElement, IBK::Version & ne
 	 *  For heat exchange definitions ....
 	 */
 
-	std::vector<NetworkComponent> networkComponents;
-	std::vector<NetworkController> networkConotrollers;
+	std::map<unsigned int, std::unique_ptr<TiXmlNode>> componentNodes;
+	std::map<unsigned int, std::unique_ptr<TiXmlNode>> controllerNodes;
 
 	// read components and controllers
-	TiXmlElement *projectElement = accessChildSave(rootElement, "Project");
-	TiXmlElement *dbElement = accessChildSave(projectElement, "EmbeddedDatabase");
-	TiXmlElement *netCompsElement = accessChildSave(dbElement, "NetworkComponents");
-	for (const TiXmlElement *e = netCompsElement->FirstChildElement("NetworkComponent"); e != nullptr; e = e->NextSiblingElement("NetworkComponent")) {
-		// read component with existing function
-		VICUS::NetworkComponent obj;
-		obj.readXML(e);
-		networkComponents.push_back(obj);
+	TiXmlElement *projectElement = firstChildSave(rootElement, "Project");
+	TiXmlElement *dbElement = firstChildSave(projectElement, "EmbeddedDatabase");
+	TiXmlElement *netComps = firstChildSave(dbElement, "NetworkComponents");
+	for (TiXmlElement *e = netComps->FirstChildElement("NetworkComponent"); e != nullptr; ) {
+		std::unique_ptr<TiXmlNode> compCopy(e->Clone());
+		unsigned int id = IBK::string2val<unsigned int>(e->Attribute("id"));
+		componentNodes[id] = std::move(compCopy);
+		// get next element and remove current
+		TiXmlElement *next = e->NextSiblingElement("NetworkComponent");
+		netComps->RemoveChild(e);
+		e = next;
 	}
-	const TiXmlElement *netCtrsElement = accessChildSave(dbElement, "NetworkControllers");
-	for (const TiXmlElement *e = netCtrsElement->FirstChildElement("NetworkController"); e != nullptr; e = e->NextSiblingElement("NetworkController")) {
-		// read controller with existing function
-		VICUS::NetworkController obj;
-		obj.readXML(e);
-		networkConotrollers.push_back(obj);
+
+	TiXmlElement *netCtrs = firstChildSave(dbElement, "NetworkControllers");
+	for (TiXmlElement *e = netCtrs->FirstChildElement("NetworkController"); e != nullptr; ) {
+		std::unique_ptr<TiXmlNode> ctrCopy(e->Clone());
+		unsigned int id = IBK::string2val<unsigned int>(e->Attribute("id"));
+		controllerNodes[id] = std::move(ctrCopy);
+		// get next element and remove current
+		TiXmlElement *next = e->NextSiblingElement("NetworkController");
+		netCtrs->RemoveChild(e);
+		e = next;
 	}
 
 	// read subnetworks
-	TiXmlElement *subNetsElem = accessChildSave(dbElement, "SubNetworks");
-	for (TiXmlElement *eSub = subNetsElem->FirstChildElement("SubNetwork"); eSub != nullptr; eSub = eSub->NextSiblingElement("SubNetwork")) {
+	TiXmlElement *subNetsElem = firstChildSave(dbElement, "SubNetworks");
+	for (TiXmlElement *subNetNode = subNetsElem->FirstChildElement("SubNetwork"); subNetNode != nullptr;
+			subNetNode = subNetNode->NextSiblingElement("SubNetwork")) {
 
-		// collect component ids
+		int hxElemId = 0;
+		int hxCompId = 0;
+		readAttributeSave(subNetNode, "idHeatExchangeElement", &hxElemId, false);
+
+		// collect component and controller ids
 		std::set<unsigned int> compIds;
-		const TiXmlElement *netElems = accessChildSave(eSub, "NetworkElements");
-		for (const TiXmlElement *eElem = netElems->FirstChildElement("NetworkElement"); eElem != nullptr; eElem = eElem->NextSiblingElement("NetworkElement")) {
+		std::map<unsigned int, int> comp2ctrIds;
+		TiXmlElement *netElems = firstChildSave(subNetNode, "Elements");
+		for (TiXmlElement *eElem = netElems->FirstChildElement("NetworkElement"); eElem != nullptr; eElem = eElem->NextSiblingElement("NetworkElement")) {
+			// find the element with heat exchange and store the respective component id
+			int elemId = 0;
+			readAttributeSave(eElem, "id", &elemId, false);
 			int compId = 0;
-			readAttributeSave(eElem, "componentId", &compId);
+			readAttributeSave(eElem, "componentId", &compId, true);
+			if (elemId == hxElemId)
+				hxCompId = compId;
 			compIds.insert((unsigned int)compId);
+			int ctrId = 0;
+			readAttributeSave(eElem, "controlElementId", &ctrId, false);
+			if (ctrId != 0)
+				comp2ctrIds[(unsigned int)compId] = ctrId;
 		}
 
 		// create new components
-		TiXmlElement* eComps = new TiXmlElement("NetworkComponents");
+		TiXmlElement* componentsElem = new TiXmlElement("Components");
 		for (unsigned int compId: compIds) {
-			VICUS::NetworkComponent *comp = VICUS::element(networkComponents, compId);
-			Q_ASSERT(comp!=nullptr);
-			comp->writeXML(eComps);
+			if (componentNodes.find(compId) != componentNodes.end()) {
+				TiXmlElement *eComp = dynamic_cast<TiXmlElement*>(componentNodes.at(compId).get());
+				// controller is now child of component
+				if (comp2ctrIds.find(compId) != comp2ctrIds.end())
+					eComp->InsertEndChild( *controllerNodes.at((unsigned int)comp2ctrIds.at(compId)) );
+
+				// add also heat exchange
+				if (compId == (unsigned int)hxCompId) {
+					NetworkHeatExchange hx;
+					hx.m_individualHeatExchange = true;
+					hx.writeXML(eComp);
+				}
+
+				componentsElem->InsertEndChild( *eComp );
+			}
+			else
+				throw IBK::Exception(IBK::FormatString("Error transfering network component #%1").arg(compId), FUNC_ID);
+
 		}
-		eSub->LinkEndChild(eComps);
-
+		subNetNode->LinkEndChild(componentsElem);
 	}
-
-
-
-
-//	// iterates over every element and copies component into Subnetwork and create new IDs
-//	for(VICUS::NetworkElement &element : m_subNetwork->m_elements){
-//		if(element.m_componentId != VICUS::INVALID_ID){
-//			VICUS::NetworkComponent *componentPtr = m_db->m_networkComponents[element.m_componentId];
-//			if (componentPtr == nullptr)
-//				throw IBK::Exception(tr("Could not find network component #%1.")
-//										 .arg(element.m_componentId).toStdString(), FUNC_ID);
-//			VICUS::NetworkComponent component = *componentPtr;
-//			component.m_id = VICUS::largestUniqueId(m_subNetwork->m_components);
-//			element.m_componentId = component.m_id;
-
-//			// copies controller from database and to the component
-//			if(element.m_controlElementId != VICUS::INVALID_ID){
-//				VICUS::NetworkController *controllerPtr = m_db->m_networkControllers[element.m_controlElementId];
-//				if (controllerPtr == nullptr)
-//					throw IBK::Exception(tr("Could not find network controller #%1.")
-//											 .arg(element.m_controlElementId).toStdString(), FUNC_ID);
-//				VICUS::NetworkController controller = *controllerPtr;
-//				controller.m_id = VICUS::INVALID_ID;
-//				component.m_networkController = controller;
-//			}
-
-//			m_subNetwork->m_components.push_back(component);
-//		} else {
-//			throw IBK::Exception(tr("Invalid network component #%1.")
-//									 .arg(element.m_componentId).toStdString(), FUNC_ID);
-//		}
-//	}
-
-//	m_db->removeNotReferencedLocalElements(SVDatabase::DT_NetworkComponents, SVProjectHandler::instance().project());
-//	m_db->removeNotReferencedLocalElements(SVDatabase::DT_NetworkControllers, SVProjectHandler::instance().project());
-
-
 
 	// done with conversion, we are now at version 1.2
 	TiXmlAttribute * versionAttrib = const_cast<TiXmlAttribute *>(TiXmlAttribute::attributeByName(rootElement, "fileVersion"));
@@ -166,8 +165,8 @@ void Migration::migrateVersion_1_1(TiXmlElement * rootElement, IBK::Version & ne
 }
 
 
-TiXmlElement * Migration::accessChildSave(TiXmlElement * parent, const std::string & childName) {
-	FUNCID(Migration::accessChildSave);
+TiXmlElement * Migration::firstChildSave(TiXmlElement * parent, const std::string & childName) {
+	FUNCID(Migration::firstChildSave);
 	TiXmlElement *child = parent->FirstChildElement(childName);
 	std::string b = "";
 	if (!child)
@@ -176,11 +175,11 @@ TiXmlElement * Migration::accessChildSave(TiXmlElement * parent, const std::stri
 }
 
 
-void Migration::readAttributeSave(const TiXmlElement * elem, std::string name, int *value) {
+void Migration::readAttributeSave(const TiXmlElement * elem, std::string name, int *value, bool required) {
 	FUNCID(Migration::readAttributeSave);
 	elem->Attribute(name, value);
-	if (value == nullptr)
-		throw IBK::Exception(IBK::FormatString("Could not find attribute '%1' in '%2'").arg(name).arg(elem->ValueStr()), FUNC_ID);
+	if (required && value == nullptr)
+		throw IBK::Exception(IBK::FormatString("Could not find required attribute '%1' in '%2'").arg(name).arg(elem->ValueStr()), FUNC_ID);
 }
 
 

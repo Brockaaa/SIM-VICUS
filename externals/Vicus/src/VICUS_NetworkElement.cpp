@@ -8,7 +8,6 @@ bool NetworkElement::operator!=(const NetworkElement &other) const {
 		m_inletNodeId != other.m_inletNodeId ||
 		m_outletNodeId != other.m_outletNodeId ||
 		m_componentId != other.m_componentId ||
-		m_controlElementId != other.m_controlElementId ||
 		m_displayName != other.m_displayName)
 
 		return true;

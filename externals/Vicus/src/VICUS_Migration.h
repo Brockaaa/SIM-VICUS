@@ -38,9 +38,9 @@ private:
 	/*! Migrates project version from 1.0 to 1.2 */
 	static void migrateVersion_1_1(TiXmlElement * rootElement, IBK::Version & newVersion);
 
-	static TiXmlElement * accessChildSave(TiXmlElement * parent, const std::string &childName);
+	static TiXmlElement * firstChildSave(TiXmlElement * parent, const std::string &childName);
 
-	static void readAttributeSave(const TiXmlElement * elem, std::string name, int * value);
+	static void readAttributeSave(const TiXmlElement * elem, std::string name, int * value, bool required);
 };
 
 } // namespace VICUS

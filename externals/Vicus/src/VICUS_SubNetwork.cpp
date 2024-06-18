@@ -42,18 +42,19 @@ bool SubNetwork::isValid(const Database<Schedule> &scheduleDB) const
 
 void SubNetwork::readXML(const TiXmlElement *element){
 	readXMLPrivate(element);
-	init();
+	initialize();
 }
 
 TiXmlElement* SubNetwork::writeXML(TiXmlElement *parent) const {
 	return writeXMLPrivate(parent);
 }
 
-void SubNetwork::init()
+
+void SubNetwork::initialize()
 {
 	for(auto &block : m_graphicalNetwork.m_blocks){
 		bool ok;
-		unsigned int number = block.m_name.toInt(&ok);
+		unsigned int number = block.m_name.toUInt(&ok);
 		// If we can convert the name to integer we have a "normal" component model block
 		if(ok){
 			NetworkElement element;
@@ -93,7 +94,7 @@ void SubNetwork::init()
 
 			inlet.m_name = INLET_NAME;
 			inlet.m_isInlet = true;
-			inlet.m_id = block.m_name.split(CONNECTORBLOCK_NAME)[1].toInt();
+			inlet.m_id = block.m_name.split(CONNECTORBLOCK_NAME)[1].toUInt();
 			inlet.m_orientation = Qt::Horizontal;
 			inlet.m_pos = QPointF(0, CONNECTORBLOCK_HEIGHT / 2);
 			block.m_sockets.append(inlet);

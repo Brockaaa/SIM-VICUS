@@ -164,7 +164,7 @@ void SVNetworkComponentEditWidget::update()
 	// now update the GUI controls
 
 	// enable schedules tool buttons (based on required schedules)
-	std::vector<std::string> reqScheduleNames = VICUS::NetworkComponent::requiredScheduleNames(m_current->m_modelType);
+	std::vector<std::string> reqScheduleNames = VICUS::NetworkComponent::requiredScheduleNames(m_current->m_modelType, m_current->m_heatExchange.m_individualHeatExchange);
 	m_ui->widgetSchedules->setVisible(!reqScheduleNames.empty());
 	bool schedule1Visible = reqScheduleNames.size()==1 || reqScheduleNames.size()==2;
 	bool schedule2Visible = reqScheduleNames.size()==2;

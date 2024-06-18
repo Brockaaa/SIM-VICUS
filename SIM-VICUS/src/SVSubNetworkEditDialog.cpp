@@ -632,8 +632,7 @@ void SVSubNetworkEditDialog::on_buttonBox_accepted()
 		unsigned int idx = componentIndex(id);
 		if (m_networkComponents[idx].m_heatExchange.m_individualHeatExchange){
 			heatExchangeExternallyDefined = true;
-			for (const VICUS::NetworkElement& element : m_subNetwork->m_elements )
-			{
+			for (const VICUS::NetworkElement& element : m_subNetwork->m_elements ) {
 				if (element.m_componentId == m_networkComponents[idx].m_id)
 					m_subNetwork->m_idHeatExchangeElement = element.m_id;
 			}
@@ -816,45 +815,9 @@ unsigned int SVSubNetworkEditDialog::newComponentID()
 	return id;
 }
 
-void SVSubNetworkEditDialog::convertSubnetwork() {
-	FUNCID(SVSubNetworkEditDialog::convertSubnetwork);
-	// iterates over every element and copies component into Subnetwork and create new IDs
-	for(VICUS::NetworkElement &element : m_subNetwork->m_elements){
-		if(element.m_componentId != VICUS::INVALID_ID){
-			VICUS::NetworkComponent *componentPtr = m_db->m_networkComponents[element.m_componentId];
-			if (componentPtr == nullptr)
-				throw IBK::Exception(tr("Could not find network component #%1.")
-										 .arg(element.m_componentId).toStdString(), FUNC_ID);
-			VICUS::NetworkComponent component = *componentPtr;
-			component.m_id = VICUS::largestUniqueId(m_subNetwork->m_components);
-			element.m_componentId = component.m_id;
-
-			// copies controller from database and to the component
-			if(element.m_controlElementId != VICUS::INVALID_ID){
-				VICUS::NetworkController *controllerPtr = m_db->m_networkControllers[element.m_controlElementId];
-				if (controllerPtr == nullptr)
-					throw IBK::Exception(tr("Could not find network controller #%1.")
-											 .arg(element.m_controlElementId).toStdString(), FUNC_ID);
-				VICUS::NetworkController controller = *controllerPtr;
-				controller.m_id = VICUS::INVALID_ID;
-				component.m_networkController = controller;
-			}
-
-			m_subNetwork->m_components.push_back(component);
-		} else {
-			throw IBK::Exception(tr("Invalid network component #%1.")
-									 .arg(element.m_componentId).toStdString(), FUNC_ID);
-		}
-	}
-
-	m_db->removeNotReferencedLocalElements(SVDatabase::DT_NetworkComponents, SVProjectHandler::instance().project());
-	m_db->removeNotReferencedLocalElements(SVDatabase::DT_NetworkControllers, SVProjectHandler::instance().project());
-}
 
 void SVSubNetworkEditDialog::openDBComponentNamingDialog(VICUS::NetworkComponent* component)
 {
-	FUNCID(SVSubNetworkEditDialog::openDBComponentNamingDialog);
-
 	// open dialog
 	QDialog *namingDialog = new QDialog(this);
 	namingDialog->setWindowTitle(tr("Set Component Name"));

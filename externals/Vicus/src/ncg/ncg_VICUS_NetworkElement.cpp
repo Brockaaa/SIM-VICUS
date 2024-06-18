@@ -61,8 +61,6 @@ void NetworkElement::readXML(const TiXmlElement * element) {
 				m_outletNodeId = (IDType)NANDRAD::readPODAttributeValue<unsigned int>(element, attrib);
 			else if (attribName == "componentId")
 				m_componentId = (IDType)NANDRAD::readPODAttributeValue<unsigned int>(element, attrib);
-			else if (attribName == "controlElementId")
-				m_controlElementId = (IDType)NANDRAD::readPODAttributeValue<unsigned int>(element, attrib);
 			else if (attribName == "displayName")
 				m_displayName = QString::fromStdString(attrib->ValueStr());
 			else {
@@ -92,8 +90,6 @@ TiXmlElement * NetworkElement::writeXML(TiXmlElement * parent) const {
 		e->SetAttribute("outletNodeId", IBK::val2string<IDType>(m_outletNodeId));
 	if (m_componentId != VICUS::INVALID_ID)
 		e->SetAttribute("componentId", IBK::val2string<IDType>(m_componentId));
-	if (m_controlElementId != VICUS::INVALID_ID)
-		e->SetAttribute("controlElementId", IBK::val2string<IDType>(m_controlElementId));
 	if (!m_displayName.isEmpty())
 		e->SetAttribute("displayName", m_displayName.toStdString());
 	return e;

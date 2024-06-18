@@ -113,8 +113,6 @@ private:
 	unsigned int componentIndex(unsigned int componentID);
 	/*! Generates new unique ComponentID */
 	unsigned int newComponentID();
-	/*! Convert old Subnetwork (SIM-VICUS version < 1.1) to new Subnetwork by copying components out of Database into Subnetwork */
-	void convertSubnetwork();
 	/*! Opens a dialog to change or assign the name of a component */
 	void openDBComponentNamingDialog(VICUS::NetworkComponent* component);
 	/*! Checks for validity of NetworkElements */

@@ -434,7 +434,6 @@ void SVDatabaseEditDialog::on_pushButtonReloadUserDB_clicked() {
 			case SVDatabase::DT_Pipes:					SVSettings::instance().m_db.m_pipes.removeUserElements(); break;
 			case SVDatabase::DT_Fluids:					SVSettings::instance().m_db.m_fluids.removeUserElements(); break;
 			case SVDatabase::DT_NetworkComponents:		SVSettings::instance().m_db.m_networkComponents.removeUserElements(); break;
-			case SVDatabase::DT_NetworkControllers:		SVSettings::instance().m_db.m_networkControllers.removeUserElements(); break;
 			case SVDatabase::DT_SubNetworks:			SVSettings::instance().m_db.m_subNetworks.removeUserElements(); break;
 			case SVDatabase::DT_SupplySystems:			SVSettings::instance().m_db.m_supplySystems.removeUserElements(); break;
 			case SVDatabase::DT_Schedules:				SVSettings::instance().m_db.m_schedules.removeUserElements(); break;
@@ -563,7 +562,6 @@ void SVDatabaseEditDialog::writeUserDB() {
 		(m_dbModel->databaseType() == SVDatabase::DT_Pipes && db.m_pipes.m_modified) ||
 		(m_dbModel->databaseType() == SVDatabase::DT_Fluids && db.m_fluids.m_modified) ||
 		(m_dbModel->databaseType() == SVDatabase::DT_NetworkComponents && db.m_networkComponents.m_modified) ||
-		(m_dbModel->databaseType() == SVDatabase::DT_NetworkControllers && db.m_networkControllers.m_modified) ||
 		(m_dbModel->databaseType() == SVDatabase::DT_SubNetworks && db.m_subNetworks.m_modified) ||
 		(m_dbModel->databaseType() == SVDatabase::DT_SupplySystems && db.m_supplySystems.m_modified) ||
 		(m_dbModel->databaseType() == SVDatabase::DT_Schedules && db.m_schedules.m_modified) ||

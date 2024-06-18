@@ -149,7 +149,7 @@ public:
 
 	// *** Static Functions
 
-	static std::vector<std::string> requiredScheduleNames(const ModelType modelType);
+	static std::vector<std::string> requiredScheduleNames(const ModelType modelType, bool individualHeatExchange);
 
 	/*! returns the NANDRAD::HydraulicNetworkComponent ModelType which may deviates from the VICUS one as we use the VICUS model
 	 * for GUI and preprocessing */

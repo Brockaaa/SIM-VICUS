@@ -3225,777 +3225,775 @@ void SupplySystemNetworkModelGenerator::generate(const SupplySystem & supplySyst
 												 QStringList &errorStack) {
 	FUNCID(SupplySystemNetworkModelGenerator::generate);
 
+
+	// TODO: use encapsulated functions from NetworkGenerator
+
+
 	// 1.) Create a new network
 
-	NANDRAD::HydraulicNetwork network;
-	network.m_id = VICUS::uniqueIdAdd(usedNetworkIds);
-
-
-	// 2.) Create network components
-	std::vector<unsigned int> allNetworkComponentIds;
-	std::vector<unsigned int> allNetworkControllerIds;
-	std::vector<unsigned int> allNetworkNodeIds;
-	unsigned int systemSplitterNodeId = INVALID_ID; // the node of the splitter (outlet node of supply system = splitter for pipe network)
-	unsigned int systemMixerNodeId = INVALID_ID; // the node of the mixer (outlet of the pipe network = inlet of the supply system)
-
-	// create components (only needed if no Sub Network is used)
-	NANDRAD::HydraulicNetworkComponent nandradPump;
-	NANDRAD::HydraulicNetworkComponent nandradHeater;
-
-	// remember pipe ids
-	std::set<unsigned int> allPipeIds;
-
-	// create pipe DB
-	Database<NetworkPipe> pipeDB(0);
-	pipeDB.setData(m_project->m_embeddedDB.m_pipes);
-
-	// If no Vicus SubNetwork is given: create pump and heater
-	if (supplySystem.m_supplyType != SupplySystem::ST_SubNetwork) {
-
-		// create a smass flux controlled pump
-		nandradPump.m_modelType = NANDRAD::HydraulicNetworkComponent::MT_ControlledPump;
-		nandradPump.m_displayName = "Mass flux controlled pump";
-		NANDRAD::KeywordList::setParameter(nandradPump.m_para, "HydraulicNetworkComponent::para_t",
-										   NANDRAD::HydraulicNetworkComponent::P_PumpMaximumEfficiency, 1.0);
-		NANDRAD::KeywordList::setParameter(nandradPump.m_para, "HydraulicNetworkComponent::para_t",
-										   NANDRAD::HydraulicNetworkComponent::P_Volume, 0.01);
-		NANDRAD::KeywordList::setParameter(nandradPump.m_para, "HydraulicNetworkComponent::para_t",
-										   NANDRAD::HydraulicNetworkComponent::P_MaximumPressureHead, 0.0);
-		NANDRAD::KeywordList::setParameter(nandradPump.m_para, "HydraulicNetworkComponent::para_t",
-										   NANDRAD::HydraulicNetworkComponent::P_PumpMaximumElectricalPower, 0.0);
-		// set id 1 as first element
-		nandradPump.m_id = 1;
-		// add to component vector
-		network.m_components.push_back(nandradPump);
-
-		// create an ideal heater for each network
-		nandradHeater.m_modelType = NANDRAD::HydraulicNetworkComponent::MT_IdealHeaterCooler;
-		nandradHeater.m_displayName = "Ideal heater";
-		// set id 4 as first element
-		nandradHeater.m_id = 4;
-		// add to component vector
-		network.m_components.push_back(nandradHeater);
-	}
-
-	// If Vicus SubNetwork is given: transfer it into our nandrad network
-	else {
-
-		// create Databases from embedded Databases
-		Database<NetworkComponent> dbNetworkComps = Database<NetworkComponent>(1);
-		dbNetworkComps.setData(m_project->m_embeddedDB.m_networkComponents);
-		Database<NetworkController> dbNetworkCtrl = Database<NetworkController>(1);
-		dbNetworkCtrl.setData(m_project->m_embeddedDB.m_networkControllers);
-		Database<Schedule> dbSchedules = Database<Schedule>(1); // we dont care
-		dbSchedules.setData(m_project->m_embeddedDB.m_schedules);
-
-		// checks
-		const SubNetwork *subNetwork = element(m_project->m_embeddedDB.m_subNetworks, supplySystem.m_idSubNetwork);
-		if (subNetwork == nullptr) {
-			QString msg = qApp->tr("Sub Network with id #%1 does not exist in database").arg(supplySystem.m_idSubNetwork);
-			errorStack.append(msg);
-			throw IBK::Exception(msg.toStdString(), FUNC_ID);
-		}
-		if (!subNetwork->isValid(dbSchedules)) {
-			QString msg = qApp->tr("Sub Network with id #%1 has invalid parameters").arg(supplySystem.m_idSubNetwork);
-			errorStack.append(msg);
-			throw IBK::Exception(msg.toStdString(), FUNC_ID);
-		}
-
-		// *** Transfer sub network data
-		std::set<unsigned int> subNetComponentIds;
-		std::set<unsigned int> subNetControllerIds;
-		std::set<unsigned int> subNetScheduleIds;
-		for (const NetworkElement &elem: subNetwork->m_elements) {
-
-			// check and collect components
-			const VICUS::NetworkComponent *comp = dbNetworkComps[elem.m_componentId];
-			if (comp == nullptr) {
-				QString msg = qApp->tr("Network component with id #%1 does not exist in database").arg(elem.m_componentId);
-				errorStack.append(msg);
-				throw IBK::Exception(msg.toStdString(), FUNC_ID);
-			}
-			if (!comp->isValid(dbSchedules))
-				errorStack.append(qApp->tr("Network component with id #%1 has invalid parameters").arg(elem.m_componentId));
-
-			subNetComponentIds.insert(comp->m_id);
-
-			// check and collect controller
-			if (elem.m_controlElementId != INVALID_ID) {
-				const VICUS::NetworkController *ctrl = dbNetworkCtrl[elem.m_controlElementId];
-				if (ctrl == nullptr) {
-					QString msg = qApp->tr("Network controller with id #%1 does not exist in database").arg(elem.m_controlElementId);
-					errorStack.append(msg);
-					throw IBK::Exception(msg.toStdString(), FUNC_ID);
-				}
-				if (!ctrl->isValid(dbSchedules))
-					errorStack.append(qApp->tr("Network controller with id #%1 has invalid parameters").arg(elem.m_controlElementId));
-				else
-					subNetControllerIds.insert(ctrl->m_id);
-			}
-
-			// collect schedules ids
-			for (unsigned int id: comp->m_scheduleIds)
-				subNetScheduleIds.insert(id);
-
-		}
-		if (!errorStack.empty())
-			return;
-
-		// *** Transfer components
-		for (unsigned int compId: subNetComponentIds) {
-			const VICUS::NetworkComponent *comp = dbNetworkComps[compId];
-			NANDRAD::HydraulicNetworkComponent nandradComp;
-			nandradComp.m_id = compId; // we use the same id's as in VICUS, that simplifies transfer of elements
-			allNetworkComponentIds.push_back(compId);
-			nandradComp.m_modelType = NetworkComponent::nandradNetworkComponentModelType(comp->m_modelType);
-			nandradComp.m_displayName = comp->m_displayName.string(IBK::MultiLanguageString::m_language, "en");
-			comp->nandradNetworkComponentParameter(nandradComp.m_para);
-			nandradComp.m_polynomCoefficients = comp->m_polynomCoefficients;
-			if (comp->m_pipePropertiesId != INVALID_ID)
-				allPipeIds.insert(comp->m_pipePropertiesId);
-
-			network.m_components.push_back(nandradComp);
-		}
-
-		// *** Transfer controller
-		for (unsigned int ctrId: subNetControllerIds) {
-			const VICUS::NetworkController *ctr = dbNetworkCtrl[ctrId];
-			NANDRAD::HydraulicNetworkControlElement nandradCtr;
-			nandradCtr.m_id = ctrId; // we use the same id's as in VICUS, that simplifies transfer of elements
-			allNetworkControllerIds.push_back(ctrId);
-			nandradCtr.m_modelType = NANDRAD::HydraulicNetworkControlElement::ModelType(ctr->m_modelType);
-			nandradCtr.m_controllerType = NANDRAD::HydraulicNetworkControlElement::ControllerType(ctr->m_controllerType);
-			nandradCtr.m_controlledProperty = NANDRAD::HydraulicNetworkControlElement::ControlledProperty(ctr->m_controlledProperty);
-			nandradCtr.m_maximumControllerResultValue = ctr->m_maximumControllerResultValue;
-			for (unsigned int i=0; i<NANDRAD::HydraulicNetworkControlElement::NUM_P; ++i)
-				nandradCtr.m_para[i] = ctr->m_para[i];
-			for (unsigned int i=0; i<NANDRAD::HydraulicNetworkControlElement::NUM_ID; ++i)
-				nandradCtr.m_idReferences[i] = ctr->m_idReferences[i];
-
-			network.m_controlElements.push_back(nandradCtr);
-		}
-
-		// remember all inlet / outlet node ids
-		for (const NetworkElement &elem: subNetwork->m_elements) {
-			if (elem.m_inletNodeId != ENTRANCE_ID)
-				allNetworkNodeIds.push_back(elem.m_inletNodeId);
-			if (elem.m_inletNodeId != EXIT_ID)
-				allNetworkNodeIds.push_back(elem.m_outletNodeId);
-		}
-
-
-		// *** Transfer elements
-		std::map<unsigned int, std::vector<unsigned int>> components2ElementsMap;
-		for (const NetworkElement &elem: subNetwork->m_elements) {
-
-			NANDRAD::HydraulicNetworkElement nandradElement;
-			nandradElement.m_id = uniqueIdAdd(usedNetworkElementIds);
-			nandradElement.m_displayName = elem.m_displayName.toStdString();
-			nandradElement.m_componentId = elem.m_componentId;
-			nandradElement.m_controlElementId = elem.m_controlElementId;
-
-			// replace system inlet/outlet node ids with new node ids, keep other node ids
-			if (elem.m_inletNodeId == ENTRANCE_ID) {
-				nandradElement.m_inletNodeId = uniqueIdAdd(allNetworkNodeIds);
-				systemMixerNodeId = nandradElement.m_inletNodeId; // we remember this node id for pipe connection later
-			}
-			else
-				nandradElement.m_inletNodeId = elem.m_inletNodeId;
-
-			if (elem.m_outletNodeId == EXIT_ID) {
-				nandradElement.m_outletNodeId = uniqueIdAdd(allNetworkNodeIds);
-				systemSplitterNodeId = nandradElement.m_outletNodeId; // we remember this node id for pipe connection later
-			}
-			else
-				nandradElement.m_outletNodeId = elem.m_outletNodeId;
-
-			// retrieve id from the component
-			const NetworkComponent *comp = dbNetworkComps[elem.m_componentId];
-			if (comp->m_pipePropertiesId != INVALID_ID)
-				nandradElement.m_pipePropertiesId = comp->m_pipePropertiesId;
-			// for pipes: retrieve parameters from the component
-			if (comp->m_modelType == VICUS::NetworkComponent::MT_SimplePipe ||
-					comp->m_modelType == VICUS::NetworkComponent::MT_DynamicPipe ){
-				NANDRAD::KeywordList::setParameter(nandradElement.m_para, "HydraulicNetworkElement::para_t",
-												   NANDRAD::HydraulicNetworkElement::P_Length,
-												   comp->m_para[VICUS::NetworkComponent::P_PipeLength].value);
-				nandradElement.m_intPara[NANDRAD::HydraulicNetworkElement::IP_NumberParallelPipes] = comp->m_intPara[VICUS::NetworkComponent::IP_NumberParallelPipes];
-			}
-			// some components can be multiple in parallel
-			if (!comp->m_intPara[VICUS::NetworkComponent::IP_NumberParallelElements].empty()){
-				nandradElement.m_intPara[NANDRAD::HydraulicNetworkElement::IP_NumberParallelElements] =
-						comp->m_intPara[VICUS::NetworkComponent::IP_NumberParallelElements];
-			}
-			// remember elements for each component, which has schedules (for object list)
-			if (!comp->m_scheduleIds.empty())
-				components2ElementsMap[elem.m_componentId].push_back(nandradElement.m_id);
-
-			// transfer element
-			network.m_elements.push_back(nandradElement);
-		}
-
-		// set reference element id
-		Q_ASSERT(network.m_elements.size()>0);
-		network.m_referenceElementId = network.m_elements[0].m_id;
-
-		// *** Transfer schedules and create object lists
-		for(auto it=components2ElementsMap.begin(); it!=components2ElementsMap.end(); ++it){
-
-			// get component and required schedule names
-			const NetworkComponent *comp = dbNetworkComps[it->first];
-			Q_ASSERT(comp!=nullptr);
-			std::vector<std::string> schedNames = NetworkComponent::requiredScheduleNames(comp->m_modelType);
-			Q_ASSERT(schedNames.size() == comp->m_scheduleIds.size()); // this has been checked in isValid() above
-
-			// for each schedule we create an object list and schedule group
-			for (unsigned int i=0; i<comp->m_scheduleIds.size(); ++i) {
-
-				// check schedule
-				unsigned int schedId = comp->m_scheduleIds[i];
-				const Schedule *sched = dbSchedules[schedId];
-				if (sched == nullptr) {
-					QString msg = qApp->tr("Schedule with id #%1 does not exist in database").arg(schedId);
-					errorStack.append(msg);
-					continue;
-				}
-				std::string err;
-				if (!sched->isValid(err, true, m_placeholders)){
-					errorStack.append(QString::fromStdString(err));
-					continue;
-				}
-
-				// create object list
-				NANDRAD::ObjectList objList;
-				std::string objListName = comp->m_displayName.string() + " - " + sched->m_displayName.string();
-				bool createNewObjList = true;
-				// Note: we cannot have 2 object lists with same name
-				// if we have a object list with identical name already, just add the ids to that
-				for (NANDRAD::ObjectList &objList: m_objLists) {
-					if (objList.m_name == objListName) {
-						for (unsigned int elemId: it->second)
-							objList.m_filterID.m_ids.insert(elemId);
-						createNewObjList = false;
-					}
-
-				}
-				if (createNewObjList) {
-					// if not: create new object list
-					objList.m_name = objListName;
-					objList.m_referenceType = NANDRAD::ModelInputReference::MRT_NETWORKELEMENT;
-					for (unsigned int elemId: it->second)
-						objList.m_filterID.m_ids.insert(elemId);
-					m_objLists.push_back(objList);
-				}
-
-				// transfer schedule
-				m_scheduleGroups[objListName] = std::vector<NANDRAD::Schedule>();
-				std::vector<NANDRAD::LinearSplineParameter> splines;
-				sched->insertIntoNandradSchedulegroup(schedNames[i], m_scheduleGroups[objListName], splines, m_placeholders);
-				// annual schedules handled separately
-				if (!splines.empty())
-					m_annualSchedules[objListName].push_back(splines[0]);
-			}
-		}
-
-	} // end if model type SubNetwork
-
-
-	// for now set all hydraulic node ids to a height of 0, this can be considered in the future for high buildings
-	for (unsigned int id: allNetworkNodeIds)
-		network.m_nodes.push_back(NANDRAD::HydraulicNetworkNode(id, 0));
-
-	// create a supply/return pipe for each network
-	NANDRAD::HydraulicNetworkComponent nandradSupplyPipe;
-	nandradSupplyPipe.m_modelType = NANDRAD::HydraulicNetworkComponent::MT_SimplePipe;
-	nandradSupplyPipe.m_displayName = "Supply/return pipe";
-	nandradSupplyPipe.m_id = uniqueIdAdd(allNetworkComponentIds);
-	network.m_components.push_back(nandradSupplyPipe);
-
-	// create underfloor heating pipe for each network
-	NANDRAD::HydraulicNetworkComponent nandradUnderfloorHeatingPipe;
-	nandradUnderfloorHeatingPipe.m_modelType = NANDRAD::HydraulicNetworkComponent::MT_SimplePipe;
-	nandradUnderfloorHeatingPipe.m_displayName = "Underfloor heating";
-	nandradUnderfloorHeatingPipe.m_id = uniqueIdAdd(allNetworkComponentIds);
-	network.m_components.push_back(nandradUnderfloorHeatingPipe);
-
-
-	// 3.) Create network fluid
-
-	// standard fluid model
-	NANDRAD::HydraulicFluid fluid;
-	fluid.defaultFluidWater();
-
-	network.m_fluid = fluid;
-
-
-	// 4.) Configurate network
-
-	// retrieve maximum mass flux through the supply branch
-	double maxMassFlux = 1.0; // default value in case no value is given
-
-	switch (supplySystem.m_supplyType) {
-	case VICUS::SupplySystem::ST_StandAlone:
-		maxMassFlux = supplySystem.m_para[VICUS::SupplySystem::P_MaximumMassFlux].value;
-		break;
-	case VICUS::SupplySystem::ST_UserDefinedFMU:
-		maxMassFlux = supplySystem.m_para[VICUS::SupplySystem::P_MaximumMassFluxFMU].value;
-		break;
-		// not supported, yet
-	case VICUS::SupplySystem::ST_SubNetwork:
-		maxMassFlux = 1.0; // for the dimensioning of supply pipe lengths, the exact value does not matter
-		break;
-	case VICUS::SupplySystem::ST_DatabaseFMU: break;
-	case VICUS::SupplySystem::NUM_ST: break; // just to make compiler happy
-	}
-
-	double defaultFluidTemperature = 20. + 273.15;
-	NANDRAD::KeywordList::setParameter(network.m_para, "HydraulicNetwork::para_t",
-									   NANDRAD::HydraulicNetwork::P_InitialFluidTemperature, 20.);
-
-	// pre calculations
-
-	// calculate pressure loss, number of pipes and pipe lenght for all surafce heatings
-	std::vector<double> pipeLengths(dataSurfaceHeating.size(), 0.0);
-	std::vector<double> pressureLosses(dataSurfaceHeating.size(), 0.0);
-	std::vector<int> numbersOfPipes(dataSurfaceHeating.size(), 0);
-	// store pipe id
-	std::vector<unsigned int> surfHeatingPipeIds(dataSurfaceHeating.size(), 0);
-	// store maximum pressure loss
-	double maxPressureLoss = 0.0;
-
-	for(unsigned int i=0; i<dataSurfaceHeating.size(); ++i){
-		const DataSurfaceHeating &dsh = dataSurfaceHeating[i];
-
-		const SurfaceHeating * surfHeating = element(m_project->m_embeddedDB.m_surfaceHeatings, dsh.m_heatingSystemId);
-
-		if(surfHeating == nullptr || !surfHeating->isValid(pipeDB)){
-			errorStack.append(qApp->tr("Invalid surface heating/cooling system #%1 referenced from room #%2.")
-							  .arg(dsh.m_heatingSystemId)
-							  .arg(dsh.m_controlledZoneId)
-							  /*.arg(MultiLangString2QString(zoneTemplate->m_displayName))*/);
-			continue;
-		}
-
-		//create a system for nandrad
-		Q_ASSERT(surfHeating->m_type == SurfaceHeating::T_PipeRegister);
-
-		//get area of the construction instance
-		double area= dsh.m_area;
-		double pipeSpacing = surfHeating->m_para[SurfaceHeating::P_PipeSpacing].value;
-		double length = area / pipeSpacing;
-		//set pipe length to max 120 m
-		int numberPipes=1;
-		if( length > 100){
-			numberPipes = (int)std::ceil( length / 100.);
-			length = area / pipeSpacing / (double)numberPipes;
-		}
-
-		// store pipe lenght
-		pipeLengths[i] = length;
-		// store number of pipes
-		numbersOfPipes[i] = numberPipes;
-		// store pipe id
-		surfHeatingPipeIds[i] = surfHeating->m_idPipe;
-
-		// store vicus pipe id
-		allPipeIds.insert(surfHeating->m_idPipe);
-
-		// check pipe
-		const NetworkPipe * pipe = pipeDB[surfHeating->m_idPipe];
-		if (pipe == nullptr) {
-			QString msg = qApp->tr("Pipe with id #%1 does not exist in database").arg(surfHeating->m_idPipe);
-			errorStack.append(msg);
-			continue;
-		}
-		if (!pipe->isValid()){
-			errorStack.append(qApp->tr("Pipe with id #%1 has invalid parameters").arg(surfHeating->m_idPipe));
-			continue;
-		}
-
-		// calculate pipe pressure loss
-		double density = fluid.m_para[NANDRAD::HydraulicFluid::P_Density].value;
-		double diameter = pipe->diameterInside();
-		double maxVelocity = maxMassFlux/(density * IBK::PI/4. * diameter * diameter);
-		double viscosity = fluid.m_kinematicViscosity.m_values.value(defaultFluidTemperature);
-		double reynolds = std::abs(maxVelocity) * diameter / viscosity;
-		double roughness = pipe->m_para[VICUS::NetworkPipe::P_RoughnessWall].value;
-		double zeta = length/diameter * IBK::FrictionFactorSwamee(reynolds, diameter, roughness);
-		double pressureLoss = zeta * density / 2.0 * std::abs(maxVelocity) * maxVelocity;
-
-		// store pressure loss
-		pressureLosses[i] = pressureLoss;
-		// and update maximum
-
-		maxPressureLoss = std::max(maxPressureLoss, pressureLoss);
-	}
-	if (!errorStack.empty())
-		return;
-
-
-	// 5.) Create network elements
-
-	NANDRAD::HydraulicNetworkElement pumpElem;
-	NANDRAD::HydraulicNetworkElement idealHeaterElem;
-	NANDRAD::ObjectList idealHeaterObjectList;
-	NANDRAD::ObjectList pumpObjectList;
-
-	// If there is no Vicus Subnetwork: create pump and heater
-
-	if (supplySystem.m_supplyType != SupplySystem::ST_SubNetwork) {
-
-		// create id's for system splitter / mixer
-		systemMixerNodeId = uniqueIdAdd(allNetworkNodeIds);
-		systemSplitterNodeId = uniqueIdAdd(allNetworkNodeIds);
-
-		// create pump
-		pumpElem.m_id = VICUS::uniqueIdAdd(usedNetworkElementIds);
-		pumpElem.m_componentId = nandradPump.m_id;
-		pumpElem.m_displayName = "Mass flux controlled pump";
-		pumpElem.m_inletNodeId = uniqueIdAdd(allNetworkNodeIds);
-		pumpElem.m_outletNodeId = systemSplitterNodeId;
-		// create a control element: first control element is for mass flux
-		pumpElem.m_controlElementId = uniqueIdAdd(allNetworkControllerIds);
-
-		network.m_elements.push_back(pumpElem);
-
-		// set pump as reference
-		network.m_referenceElementId = pumpElem.m_id;
-
-		// create mass flux control element
-		NANDRAD::HydraulicNetworkControlElement massFluxControl;
-		// always reserve 1 for mass flux controller
-		massFluxControl.m_id = pumpElem.m_controlElementId;
-		massFluxControl.m_modelType = NANDRAD::HydraulicNetworkControlElement::MT_Scheduled;
-		massFluxControl.m_controlledProperty = NANDRAD::HydraulicNetworkControlElement::CP_MassFlux;
-		massFluxControl.m_controllerType = NANDRAD::HydraulicNetworkControlElement::CT_PController;
-		NANDRAD::KeywordList::setParameter(massFluxControl.m_para, "HydraulicNetworkControlElement::para_t",
-										   NANDRAD::HydraulicNetworkControlElement::P_Kp, 100000000.);
-
-		network.m_controlElements.push_back(massFluxControl);
-
-		// create a pump object list
-		pumpObjectList.m_name = std::string("Pump ") + supplySystem.m_displayName.string();
-		pumpObjectList.m_referenceType = NANDRAD::ModelInputReference::MRT_NETWORKELEMENT;
-		pumpObjectList.m_filterID.m_ids.insert(pumpElem.m_id);
-
-		// connect to ideal heating
-		idealHeaterElem.m_id = VICUS::uniqueIdAdd(usedNetworkElementIds);
-		idealHeaterElem.m_displayName = "Ideal heater";
-		idealHeaterElem.m_componentId = nandradHeater.m_id;
-		idealHeaterElem.m_inletNodeId = systemMixerNodeId;
-		idealHeaterElem.m_outletNodeId = pumpElem.m_inletNodeId;
-
-		network.m_elements.push_back(idealHeaterElem);
-
-		// create a ideal heater object list
-		idealHeaterObjectList.m_name = std::string("Ideal heater ") + supplySystem.m_displayName.string();
-		idealHeaterObjectList.m_referenceType = NANDRAD::ModelInputReference::MRT_NETWORKELEMENT;
-		idealHeaterObjectList.m_filterID.m_ids.insert(idealHeaterElem.m_id);
-	}
-
-
-	// generate parallel pipe network
-	for(unsigned int i=0; i<dataSurfaceHeating.size(); ++i) {
-
-		if (dataSurfaceHeating[i].m_area < 0.5)
-			continue;
-
-		// calculate lenght of supply pipe for pressure equailzation
-		double lengthSupply = (maxPressureLoss - pressureLosses[i]) / pressureLosses[i] * pipeLengths[i];
-
-		// set initial inlet node id for the underfloor pipe
-		unsigned int underfloorPipeInletNodeId = systemSplitterNodeId;
-
-		//		if(!IBK::nearly_equal<4>(lengthSupply, 0.0 ) ) {
-		//			// craetea supply pipe and connect to pump
-		//			NANDRAD::HydraulicNetworkElement supplyPipeElem;
-		//			supplyPipeElem.m_id = VICUS::uniqueIdAdd(usedNetworkElementIds);
-		//			// meaningful display name
-		//			supplyPipeElem.m_displayName = IBK::FormatString("supply pipe zone id %1 ").arg(dataSurfaceHeating[i].m_controlledZoneId).str();
-		//			// connect to pipe properties
-		//			supplyPipeElem.m_pipePropertiesId = surfHeatingPipeIds[i];
-		//			// connect to component 'Supply pipe'
-		//			supplyPipeElem.m_componentId = nandradSupplyPipe.m_id;
-		//			supplyPipeElem.m_inletNodeId = systemSplitterNodeId;
-		//			supplyPipeElem.m_outletNodeId = uniqueIdAdd(allNetworkNodeIds);
-		//			underfloorPipeInletNodeId = supplyPipeElem.m_outletNodeId;
-
-		//			NANDRAD::KeywordList::setParameter(supplyPipeElem.m_para, "HydraulicNetworkElement::para_t",
-		//											   NANDRAD::HydraulicNetworkElement::P_Length, lengthSupply);
-		//			NANDRAD::KeywordList::setIntPara(supplyPipeElem.m_intPara, "HydraulicNetworkElement::intPara_t",
-		//											   NANDRAD::HydraulicNetworkElement::IP_NumberParallelPipes, numbersOfPipes[i]);
-
-		//			// add element to hydraulic network
-		//			network.m_elements.push_back(supplyPipeElem);
-		//		}
-
-		//get lenght and number of pipes for surface heating parametrization
-		double length = pipeLengths[i];
-		int numberOfPipes = numbersOfPipes[i];
-
-		// create and fill a new network element
-		NANDRAD::HydraulicNetworkElement underfloorPipeElem;
-		underfloorPipeElem.m_id = VICUS::uniqueIdAdd(usedNetworkElementIds);
-		// meaningful display name
-		underfloorPipeElem.m_displayName = IBK::FormatString("underfloor pipe zone id %1 ").arg(dataSurfaceHeating[i].m_controlledZoneId).str();
-		// connect to pipe properties
-		underfloorPipeElem.m_pipePropertiesId = surfHeatingPipeIds[i];
-		// connect to component 'Underfloor heating'
-		underfloorPipeElem.m_componentId = nandradUnderfloorHeatingPipe.m_id;
-		// set a control model with defined id
-		underfloorPipeElem.m_controlElementId = uniqueIdAdd(allNetworkControllerIds);
-
-		underfloorPipeElem.m_inletNodeId = underfloorPipeInletNodeId;
-		underfloorPipeElem.m_outletNodeId = systemMixerNodeId; // underfloor pipe outlet id is system mixer (=system inlet) id
-
-		NANDRAD::KeywordList::setIntPara(underfloorPipeElem.m_intPara, "HydraulicNetworkElement::intPara_t",
-										 NANDRAD::HydraulicNetworkElement::IP_NumberParallelPipes, numberOfPipes);
-		NANDRAD::KeywordList::setParameter(underfloorPipeElem.m_para, "HydraulicNetworkElement::para_t",
-										   NANDRAD::HydraulicNetworkElement::P_Length, length);
-
-		// add heat exchange type
-		NANDRAD::HydraulicNetworkHeatExchange heatExchange;
-		heatExchange.m_modelType = NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureConstructionLayer;
-		heatExchange.m_idReferences[NANDRAD::HydraulicNetworkHeatExchange::ID_ConstructionInstanceId] =
-				dataSurfaceHeating[i].m_nandradConstructionInstanceId;
-
-		underfloorPipeElem.m_heatExchange = heatExchange;
-
-		// add element to hydraulic network
-		network.m_elements.push_back(underfloorPipeElem);
-
-		// create mass flux control element
-		NANDRAD::HydraulicNetworkControlElement thermostatControl;
-		// always reserve 1 for mass flux controller
-		thermostatControl.m_id = underfloorPipeElem.m_controlElementId;
-		thermostatControl.m_modelType = NANDRAD::HydraulicNetworkControlElement::MT_Constant;
-		thermostatControl.m_controlledProperty = NANDRAD::HydraulicNetworkControlElement::CP_ThermostatValue;
-		thermostatControl.m_idReferences[NANDRAD::HydraulicNetworkControlElement::ID_ThermostatZoneId] =
-				dataSurfaceHeating[i].m_controlledZoneId;
-		thermostatControl.m_controllerType = NANDRAD::HydraulicNetworkControlElement::CT_PController;
-		NANDRAD::KeywordList::setParameter(thermostatControl.m_para, "HydraulicNetworkControlElement::para_t",
-										   NANDRAD::HydraulicNetworkControlElement::P_Kp, 1e6);
-		thermostatControl.m_maximumControllerResultValue = 0;
-
-		// add to control elements
-		network.m_controlElements.push_back(thermostatControl);
-	}
-
-
-	// 6.) Create pipe properties
-
-	for (unsigned int pipeId: allPipeIds) {
-
-		// rertieve poiter for easy access
-		const VICUS::NetworkPipe *pipe = pipeDB[pipeId];
-
-		// check
-		if (pipe == nullptr) {
-			QString msg = qApp->tr("Pipe with id #%1 does not exist in database").arg(pipeId);
-			errorStack.append(msg);
-			continue;
-		}
-		if (!pipe->isValid()){
-			errorStack.append(qApp->tr("Pipe with id #%1 has invalid parameters").arg(pipeId));
-			continue;
-		}
-
-		// fill pipe properties
-		NANDRAD::HydraulicNetworkPipeProperties nandradPipeProp;
-
-		// copy id number
-		nandradPipeProp.m_id = pipe->m_id;
-		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
-										   NANDRAD::HydraulicNetworkPipeProperties::P_PipeOuterDiameter,
-										   pipe->m_para[VICUS::NetworkPipe::P_DiameterOutside].get_value("mm"));
-		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
-										   NANDRAD::HydraulicNetworkPipeProperties::P_PipeInnerDiameter,
-										   pipe->diameterInside() * 1000); // m -> mmm
-		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
-										   NANDRAD::HydraulicNetworkPipeProperties::P_PipeRoughness,
-										   pipe->m_para[VICUS::NetworkPipe::P_RoughnessWall].get_value("mm"));
-		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
-										   NANDRAD::HydraulicNetworkPipeProperties::P_UValueWall, pipe->UValue());
-		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
-										   NANDRAD::HydraulicNetworkPipeProperties::P_DensityWall,
-										   pipe->m_para[VICUS::NetworkPipe::P_DensityWall].value);
-		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
-										   NANDRAD::HydraulicNetworkPipeProperties::P_HeatCapacityWall,
-										   pipe->m_para[VICUS::NetworkPipe::P_HeatCapacityWall].value);
-
-		// add property to hydraulic network
-		network.m_pipeProperties.push_back(nandradPipeProp);
-	}
-	if (!errorStack.empty())
-		return;
-
-	// add to network vector
-	m_hydraulicNetworks.push_back(network);
-
-
-	if (supplySystem.m_supplyType != SupplySystem::ST_SubNetwork) {
-
-		// 7.) Create interface translation models
-
-		// create summation model
-		NANDRAD::HeatLoadSummationModel summationModel;
-		summationModel.m_id = VICUS::uniqueIdAdd(usedModelIds);
-		usedModelIds.push_back(summationModel.m_id);
-		summationModel.m_displayName = std::string("Heat load summation ") + supplySystem.m_displayName.string();
-		summationModel.m_objectList = idealHeaterObjectList.m_name;
-
-		// add to model vector
-		m_summationModels.push_back(summationModel);
-
-		// create adapter model
-		NANDRAD::NetworkInterfaceAdapterModel adapterModel;
-		adapterModel.m_id = VICUS::uniqueIdAdd(usedModelIds);
-		usedModelIds.push_back(adapterModel.m_id);
-		adapterModel.m_displayName = std::string("Network adapter ") + supplySystem.m_displayName.string();
-		adapterModel.m_summationModelId = summationModel.m_id;
-		// change fluid capacity pareameter name
-		adapterModel.m_fluidHeatCapacity.set("FluidHeatCapacity", fluid.m_para[NANDRAD::HydraulicFluid::P_HeatCapacity].value,
-				fluid.m_para[NANDRAD::HydraulicFluid::P_HeatCapacity].unit());
-
-		// add to model vector
-		m_adapterModels.push_back(adapterModel);
-
-		// create a adapter object list
-		NANDRAD::ObjectList adapterObjectList;
-		adapterObjectList.m_name = adapterModel.m_displayName;
-		adapterObjectList.m_referenceType = NANDRAD::ModelInputReference::MRT_MODEL;
-		adapterObjectList.m_filterID.m_ids.insert(adapterModel.m_id);
-
-
-		// 8.) Create schedule parameter
-
-		std::vector<double> maxMassFluxVals(1, 0.0);
-		std::vector<double> supplyTempVals(1, 20.);
-
-		if(supplySystem.m_supplyType == VICUS::SupplySystem::ST_StandAlone) {
-			maxMassFluxVals[0] = supplySystem.m_para[SupplySystem::P_MaximumMassFlux].value;
-			supplyTempVals[0] = supplySystem.m_para[SupplySystem::P_SupplyTemperature].get_value("C");
-		}
-		else {
-			maxMassFluxVals[0] = supplySystem.m_para[SupplySystem::P_MaximumMassFluxFMU].value;
-		}
-
-		// fluid mass flux setpoint
-		NANDRAD::DailyCycle massFluxSetDailyCycle;
-		massFluxSetDailyCycle.m_timePoints.push_back(0);
-		massFluxSetDailyCycle.m_values.m_values["MassFluxSetpointSchedule [kg/s]"] = maxMassFluxVals;
-
-		NANDRAD::Schedule massFluxSetSchedule;
-		massFluxSetSchedule.m_type = NANDRAD::Schedule::ST_ALLDAYS;
-		massFluxSetSchedule.m_dailyCycles.push_back(massFluxSetDailyCycle);
-
-		// fluid mass flux
-		NANDRAD::DailyCycle massFluxDailyCycle;
-		massFluxDailyCycle.m_timePoints.push_back(0);
-		massFluxDailyCycle.m_values.m_values["MassFluxSchedule [kg/s]"] = maxMassFluxVals;
-
-		NANDRAD::Schedule massFluxSchedule;
-		massFluxSchedule.m_type = NANDRAD::Schedule::ST_ALLDAYS;
-		massFluxSchedule.m_dailyCycles.push_back(massFluxDailyCycle);
-
-		// fluid supply temperature
-		NANDRAD::DailyCycle supplyTempDailyCycle;
-		supplyTempDailyCycle.m_timePoints.push_back(0);
-		supplyTempDailyCycle.m_values.m_values["SupplyTemperatureSchedule [C]"] = supplyTempVals;
-
-		NANDRAD::Schedule supplyTempSchedule;
-		supplyTempSchedule.m_type = NANDRAD::Schedule::ST_ALLDAYS;
-		supplyTempSchedule.m_dailyCycles.push_back(supplyTempDailyCycle);
-
-
-		// add new schedule and object list: pump
-		m_objLists.push_back(pumpObjectList);
-		m_scheduleGroups[pumpObjectList.m_name].push_back(massFluxSetSchedule);
-		// ideal heater
-		m_objLists.push_back(idealHeaterObjectList);
-		m_scheduleGroups[idealHeaterObjectList.m_name].push_back(supplyTempSchedule);
-		// adapter model
-		m_objLists.push_back(adapterObjectList);
-		m_scheduleGroups[adapterObjectList.m_name].push_back(massFluxSchedule);
-		m_scheduleGroups[adapterObjectList.m_name].push_back(supplyTempSchedule);
-
-
-		// 9.) Create FMI description
-
-		switch(supplySystem.m_supplyType) {
-		case VICUS::SupplySystem::ST_DatabaseFMU:
-		case VICUS::SupplySystem::ST_UserDefinedFMU: {
-
-			unsigned int id = 3 * (m_hydraulicNetworks.size() - 1);
-
-			// add an fmu description for mass flux: pump
-			NANDRAD::FMIVariableDefinition inputMassFlux;
-			inputMassFlux.m_varName = "NetworkElement.MassFluxSetpointSchedule";
-			inputMassFlux.m_objectId = pumpElem.m_id;
-			inputMassFlux.m_fmiVarName = "MassFlow";
-			inputMassFlux.m_fmiVarDescription = "Demand network mass flow.";
-			inputMassFlux.m_unit = "kg/s";
-			inputMassFlux.m_fmiTypeName = "input";
-			inputMassFlux.m_fmiStartValue = 0.0;
-			inputMassFlux.m_fmiValueRef = ++id;
-
-			m_inputVariables.push_back(inputMassFlux);
-
-			// add an fmu description for mass flux: adapter model
-			inputMassFlux.m_varName = "Model.MassFluxSchedule";
-			inputMassFlux.m_objectId = adapterModel.m_id;
-			inputMassFlux.m_fmiVarName = "MassFlow";
-			inputMassFlux.m_fmiVarDescription = "Demand network mass flow.";
-			inputMassFlux.m_unit = "kg/s";
-			inputMassFlux.m_fmiTypeName = "input";
-			inputMassFlux.m_fmiStartValue = 0.0;
-			inputMassFlux.m_fmiValueRef = id;
-
-			m_inputVariables.push_back(inputMassFlux);
-
-			// add an fmu description for supply temperature: ideal heater
-			NANDRAD::FMIVariableDefinition inputSupplyTemp;
-			inputSupplyTemp.m_varName = "NetworkElement.SupplyTemperatureSchedule";
-			inputSupplyTemp.m_objectId = idealHeaterElem.m_id;
-			inputSupplyTemp.m_fmiVarName = "SupplyTemperature";
-			inputSupplyTemp.m_unit = "K";
-			inputSupplyTemp.m_fmiVarDescription = "Demand network flow temperature.";
-			inputSupplyTemp.m_fmiTypeName = "input";
-			inputSupplyTemp.m_fmiStartValue = defaultFluidTemperature;
-			inputSupplyTemp.m_fmiValueRef = ++id;
-
-			m_inputVariables.push_back(inputSupplyTemp);
-
-			// add an fmu description for supply temperature: adapter model
-			inputSupplyTemp.m_varName = "Model.SupplyTemperatureSchedule";
-			inputSupplyTemp.m_objectId = adapterModel.m_id;
-			inputSupplyTemp.m_fmiVarName = "SupplyTemperature";
-			inputSupplyTemp.m_unit = "K";
-			inputSupplyTemp.m_fmiVarDescription = "Demand network flow temperature.";
-			inputSupplyTemp.m_fmiTypeName = "input";
-			inputSupplyTemp.m_fmiStartValue = defaultFluidTemperature;
-			inputSupplyTemp.m_fmiValueRef = id;
-
-			m_inputVariables.push_back(inputSupplyTemp);
-
-			// add an fmu description for return temperature
-			NANDRAD::FMIVariableDefinition outputReturnTemp;
-			outputReturnTemp.m_varName = "Model.ReturnTemperature";
-			outputReturnTemp.m_objectId = adapterModel.m_id;
-			outputReturnTemp.m_fmiVarName = "ReturnTemperature";
-			outputReturnTemp.m_unit = "K";
-			outputReturnTemp.m_fmiVarDescription = "Demand network return temperature.";
-			outputReturnTemp.m_fmiTypeName = "output";
-			outputReturnTemp.m_fmiStartValue = defaultFluidTemperature;
-			outputReturnTemp.m_fmiValueRef = ++id;
-
-			m_outputVariables.push_back(outputReturnTemp);
-
-		} break;
-		default: break;
-		}
-
-	}
+//	NANDRAD::HydraulicNetwork network;
+//	network.m_id = VICUS::uniqueIdAdd(usedNetworkIds);
+
+
+//	// 2.) Create network components
+//	std::vector<unsigned int> allNetworkComponentIds;
+//	std::vector<unsigned int> allNetworkControllerIds;
+//	std::vector<unsigned int> allNetworkNodeIds;
+//	unsigned int systemSplitterNodeId = INVALID_ID; // the node of the splitter (outlet node of supply system = splitter for pipe network)
+//	unsigned int systemMixerNodeId = INVALID_ID; // the node of the mixer (outlet of the pipe network = inlet of the supply system)
+
+//	// create components (only needed if no Sub Network is used)
+//	NANDRAD::HydraulicNetworkComponent nandradPump;
+//	NANDRAD::HydraulicNetworkComponent nandradHeater;
+
+//	// remember pipe ids
+//	std::set<unsigned int> allPipeIds;
+
+//	// create pipe DB
+//	Database<NetworkPipe> pipeDB(0);
+//	pipeDB.setData(m_project->m_embeddedDB.m_pipes);
+
+//	// If no Vicus SubNetwork is given: create pump and heater
+//	if (supplySystem.m_supplyType != SupplySystem::ST_SubNetwork) {
+
+//		// create a smass flux controlled pump
+//		nandradPump.m_modelType = NANDRAD::HydraulicNetworkComponent::MT_ControlledPump;
+//		nandradPump.m_displayName = "Mass flux controlled pump";
+//		NANDRAD::KeywordList::setParameter(nandradPump.m_para, "HydraulicNetworkComponent::para_t",
+//										   NANDRAD::HydraulicNetworkComponent::P_PumpMaximumEfficiency, 1.0);
+//		NANDRAD::KeywordList::setParameter(nandradPump.m_para, "HydraulicNetworkComponent::para_t",
+//										   NANDRAD::HydraulicNetworkComponent::P_Volume, 0.01);
+//		NANDRAD::KeywordList::setParameter(nandradPump.m_para, "HydraulicNetworkComponent::para_t",
+//										   NANDRAD::HydraulicNetworkComponent::P_MaximumPressureHead, 0.0);
+//		NANDRAD::KeywordList::setParameter(nandradPump.m_para, "HydraulicNetworkComponent::para_t",
+//										   NANDRAD::HydraulicNetworkComponent::P_PumpMaximumElectricalPower, 0.0);
+//		// set id 1 as first element
+//		nandradPump.m_id = 1;
+//		// add to component vector
+//		network.m_components.push_back(nandradPump);
+
+//		// create an ideal heater for each network
+//		nandradHeater.m_modelType = NANDRAD::HydraulicNetworkComponent::MT_IdealHeaterCooler;
+//		nandradHeater.m_displayName = "Ideal heater";
+//		// set id 4 as first element
+//		nandradHeater.m_id = 4;
+//		// add to component vector
+//		network.m_components.push_back(nandradHeater);
+//	}
+
+//	// If Vicus SubNetwork is given: transfer it into our nandrad network
+//	else {
+
+//		// create Databases from embedded Databases
+//		Database<NetworkComponent> dbNetworkComps = Database<NetworkComponent>(1);
+//		dbNetworkComps.setData(m_project->m_embeddedDB.m_networkComponents);
+//		Database<NetworkController> dbNetworkCtrl = Database<NetworkController>(1);
+//		dbNetworkCtrl.setData(m_project->m_embeddedDB.m_networkControllers);
+//		Database<Schedule> dbSchedules = Database<Schedule>(1); // we dont care
+//		dbSchedules.setData(m_project->m_embeddedDB.m_schedules);
+
+//		// checks
+//		const SubNetwork *subNetwork = element(m_project->m_embeddedDB.m_subNetworks, supplySystem.m_idSubNetwork);
+//		if (subNetwork == nullptr) {
+//			QString msg = qApp->tr("Sub Network with id #%1 does not exist in database").arg(supplySystem.m_idSubNetwork);
+//			errorStack.append(msg);
+//			throw IBK::Exception(msg.toStdString(), FUNC_ID);
+//		}
+//		if (!subNetwork->isValid(dbSchedules)) {
+//			QString msg = qApp->tr("Sub Network with id #%1 has invalid parameters").arg(supplySystem.m_idSubNetwork);
+//			errorStack.append(msg);
+//			throw IBK::Exception(msg.toStdString(), FUNC_ID);
+//		}
+
+//		// *** Transfer sub network data
+//		std::set<unsigned int> subNetComponentIds;
+//		std::set<unsigned int> subNetControllerIds;
+//		std::set<unsigned int> subNetScheduleIds;
+//		std::map<unsigned int, NetworkController> compId2ControllerMap;
+//		for (const NetworkElement &elem: subNetwork->m_elements) {
+
+//			// check and collect components
+//			const VICUS::NetworkComponent *comp = dbNetworkComps[elem.m_componentId];
+//			if (comp == nullptr) {
+//				QString msg = qApp->tr("Network component with id #%1 does not exist in database").arg(elem.m_componentId);
+//				errorStack.append(msg);
+//				throw IBK::Exception(msg.toStdString(), FUNC_ID);
+//			}
+//			if (!comp->isValid(dbSchedules))
+//				errorStack.append(qApp->tr("Network component with id #%1 has invalid parameters").arg(elem.m_componentId));
+
+//			subNetComponentIds.insert(comp->m_id);
+
+//			// check controller
+//			if (comp->m_networkController.m_modelType != VICUS::NetworkController::NUM_MT) {
+//				if (!comp->m_networkController.isValid(dbSchedules))
+//					errorStack.append(qApp->tr("Network controller '%1' in component #%2 has invalid parameters")
+//									  .arg(MultiLangString2QString(comp->m_networkController.m_displayName)));
+//			}
+
+//			// collect schedules ids
+//			for (unsigned int id: comp->m_scheduleIds)
+//				subNetScheduleIds.insert(id);
+
+//		}
+//		if (!errorStack.empty())
+//			return;
+
+//		// *** Transfer components
+//		for (unsigned int compId: subNetComponentIds) {
+//			const VICUS::NetworkComponent *comp = dbNetworkComps[compId];
+//			NANDRAD::HydraulicNetworkComponent nandradComp;
+//			nandradComp.m_id = compId; // we use the same id's as in VICUS, that simplifies transfer of elements
+//			allNetworkComponentIds.push_back(compId);
+//			nandradComp.m_modelType = NetworkComponent::nandradNetworkComponentModelType(comp->m_modelType);
+//			nandradComp.m_displayName = comp->m_displayName.string(IBK::MultiLanguageString::m_language, "en");
+//			comp->nandradNetworkComponentParameter(nandradComp.m_para);
+//			nandradComp.m_polynomCoefficients = comp->m_polynomCoefficients;
+//			if (comp->m_pipePropertiesId != INVALID_ID)
+//				allPipeIds.insert(comp->m_pipePropertiesId);
+
+//			network.m_components.push_back(nandradComp);
+//		}
+
+//		// *** Transfer controller
+//		for (unsigned int ctrId: subNetControllerIds) {
+//			const VICUS::NetworkController *ctr = dbNetworkCtrl[ctrId];
+//			NANDRAD::HydraulicNetworkControlElement nandradCtr;
+//			nandradCtr.m_id = ctrId; // we use the same id's as in VICUS, that simplifies transfer of elements
+//			allNetworkControllerIds.push_back(ctrId);
+//			nandradCtr.m_modelType = NANDRAD::HydraulicNetworkControlElement::ModelType(ctr->m_modelType);
+//			nandradCtr.m_controllerType = NANDRAD::HydraulicNetworkControlElement::ControllerType(ctr->m_controllerType);
+//			nandradCtr.m_controlledProperty = NANDRAD::HydraulicNetworkControlElement::ControlledProperty(ctr->m_controlledProperty);
+//			nandradCtr.m_maximumControllerResultValue = ctr->m_maximumControllerResultValue;
+//			for (unsigned int i=0; i<NANDRAD::HydraulicNetworkControlElement::NUM_P; ++i)
+//				nandradCtr.m_para[i] = ctr->m_para[i];
+//			for (unsigned int i=0; i<NANDRAD::HydraulicNetworkControlElement::NUM_ID; ++i)
+//				nandradCtr.m_idReferences[i] = ctr->m_idReferences[i];
+
+//			network.m_controlElements.push_back(nandradCtr);
+//		}
+
+//		// remember all inlet / outlet node ids
+//		for (const NetworkElement &elem: subNetwork->m_elements) {
+//			if (elem.m_inletNodeId != ENTRANCE_ID)
+//				allNetworkNodeIds.push_back(elem.m_inletNodeId);
+//			if (elem.m_inletNodeId != EXIT_ID)
+//				allNetworkNodeIds.push_back(elem.m_outletNodeId);
+//		}
+
+
+//		// *** Transfer elements
+//		std::map<unsigned int, std::vector<unsigned int>> components2ElementsMap;
+//		for (const NetworkElement &elem: subNetwork->m_elements) {
+
+//			NANDRAD::HydraulicNetworkElement nandradElement;
+//			nandradElement.m_id = uniqueIdAdd(usedNetworkElementIds);
+//			nandradElement.m_displayName = elem.m_displayName.toStdString();
+//			nandradElement.m_componentId = elem.m_componentId;
+////			nandradElement.m_controlElementId = elem.m_controlElementId;
+
+//			// replace system inlet/outlet node ids with new node ids, keep other node ids
+//			if (elem.m_inletNodeId == ENTRANCE_ID) {
+//				nandradElement.m_inletNodeId = uniqueIdAdd(allNetworkNodeIds);
+//				systemMixerNodeId = nandradElement.m_inletNodeId; // we remember this node id for pipe connection later
+//			}
+//			else
+//				nandradElement.m_inletNodeId = elem.m_inletNodeId;
+
+//			if (elem.m_outletNodeId == EXIT_ID) {
+//				nandradElement.m_outletNodeId = uniqueIdAdd(allNetworkNodeIds);
+//				systemSplitterNodeId = nandradElement.m_outletNodeId; // we remember this node id for pipe connection later
+//			}
+//			else
+//				nandradElement.m_outletNodeId = elem.m_outletNodeId;
+
+//			// retrieve id from the component
+//			const NetworkComponent *comp = dbNetworkComps[elem.m_componentId];
+//			if (comp->m_pipePropertiesId != INVALID_ID)
+//				nandradElement.m_pipePropertiesId = comp->m_pipePropertiesId;
+//			// for pipes: retrieve parameters from the component
+//			if (comp->m_modelType == VICUS::NetworkComponent::MT_SimplePipe ||
+//					comp->m_modelType == VICUS::NetworkComponent::MT_DynamicPipe ){
+//				NANDRAD::KeywordList::setParameter(nandradElement.m_para, "HydraulicNetworkElement::para_t",
+//												   NANDRAD::HydraulicNetworkElement::P_Length,
+//												   comp->m_para[VICUS::NetworkComponent::P_PipeLength].value);
+//				nandradElement.m_intPara[NANDRAD::HydraulicNetworkElement::IP_NumberParallelPipes] = comp->m_intPara[VICUS::NetworkComponent::IP_NumberParallelPipes];
+//			}
+//			// some components can be multiple in parallel
+//			if (!comp->m_intPara[VICUS::NetworkComponent::IP_NumberParallelElements].empty()){
+//				nandradElement.m_intPara[NANDRAD::HydraulicNetworkElement::IP_NumberParallelElements] =
+//						comp->m_intPara[VICUS::NetworkComponent::IP_NumberParallelElements];
+//			}
+//			// remember elements for each component, which has schedules (for object list)
+//			if (!comp->m_scheduleIds.empty())
+//				components2ElementsMap[elem.m_componentId].push_back(nandradElement.m_id);
+
+//			// transfer element
+//			network.m_elements.push_back(nandradElement);
+//		}
+
+//		// set reference element id
+//		Q_ASSERT(network.m_elements.size()>0);
+//		network.m_referenceElementId = network.m_elements[0].m_id;
+
+//		// *** Transfer schedules and create object lists
+//		for(auto it=components2ElementsMap.begin(); it!=components2ElementsMap.end(); ++it){
+
+//			// get component and required schedule names
+//			const NetworkComponent *comp = dbNetworkComps[it->first];
+//			Q_ASSERT(comp!=nullptr);
+//			std::vector<std::string> schedNames = NetworkComponent::requiredScheduleNames(comp->m_modelType);
+//			Q_ASSERT(schedNames.size() == comp->m_scheduleIds.size()); // this has been checked in isValid() above
+
+//			// for each schedule we create an object list and schedule group
+//			for (unsigned int i=0; i<comp->m_scheduleIds.size(); ++i) {
+
+//				// check schedule
+//				unsigned int schedId = comp->m_scheduleIds[i];
+//				const Schedule *sched = dbSchedules[schedId];
+//				if (sched == nullptr) {
+//					QString msg = qApp->tr("Schedule with id #%1 does not exist in database").arg(schedId);
+//					errorStack.append(msg);
+//					continue;
+//				}
+//				std::string err;
+//				if (!sched->isValid(err, true, m_placeholders)){
+//					errorStack.append(QString::fromStdString(err));
+//					continue;
+//				}
+
+//				// create object list
+//				NANDRAD::ObjectList objList;
+//				std::string objListName = comp->m_displayName.string() + " - " + sched->m_displayName.string();
+//				bool createNewObjList = true;
+//				// Note: we cannot have 2 object lists with same name
+//				// if we have a object list with identical name already, just add the ids to that
+//				for (NANDRAD::ObjectList &objList: m_objLists) {
+//					if (objList.m_name == objListName) {
+//						for (unsigned int elemId: it->second)
+//							objList.m_filterID.m_ids.insert(elemId);
+//						createNewObjList = false;
+//					}
+
+//				}
+//				if (createNewObjList) {
+//					// if not: create new object list
+//					objList.m_name = objListName;
+//					objList.m_referenceType = NANDRAD::ModelInputReference::MRT_NETWORKELEMENT;
+//					for (unsigned int elemId: it->second)
+//						objList.m_filterID.m_ids.insert(elemId);
+//					m_objLists.push_back(objList);
+//				}
+
+//				// transfer schedule
+//				m_scheduleGroups[objListName] = std::vector<NANDRAD::Schedule>();
+//				std::vector<NANDRAD::LinearSplineParameter> splines;
+//				sched->insertIntoNandradSchedulegroup(schedNames[i], m_scheduleGroups[objListName], splines, m_placeholders);
+//				// annual schedules handled separately
+//				if (!splines.empty())
+//					m_annualSchedules[objListName].push_back(splines[0]);
+//			}
+//		}
+
+//	} // end if model type SubNetwork
+
+
+//	// for now set all hydraulic node ids to a height of 0, this can be considered in the future for high buildings
+//	for (unsigned int id: allNetworkNodeIds)
+//		network.m_nodes.push_back(NANDRAD::HydraulicNetworkNode(id, 0));
+
+//	// create a supply/return pipe for each network
+//	NANDRAD::HydraulicNetworkComponent nandradSupplyPipe;
+//	nandradSupplyPipe.m_modelType = NANDRAD::HydraulicNetworkComponent::MT_SimplePipe;
+//	nandradSupplyPipe.m_displayName = "Supply/return pipe";
+//	nandradSupplyPipe.m_id = uniqueIdAdd(allNetworkComponentIds);
+//	network.m_components.push_back(nandradSupplyPipe);
+
+//	// create underfloor heating pipe for each network
+//	NANDRAD::HydraulicNetworkComponent nandradUnderfloorHeatingPipe;
+//	nandradUnderfloorHeatingPipe.m_modelType = NANDRAD::HydraulicNetworkComponent::MT_SimplePipe;
+//	nandradUnderfloorHeatingPipe.m_displayName = "Underfloor heating";
+//	nandradUnderfloorHeatingPipe.m_id = uniqueIdAdd(allNetworkComponentIds);
+//	network.m_components.push_back(nandradUnderfloorHeatingPipe);
+
+
+//	// 3.) Create network fluid
+
+//	// standard fluid model
+//	NANDRAD::HydraulicFluid fluid;
+//	fluid.defaultFluidWater();
+
+//	network.m_fluid = fluid;
+
+
+//	// 4.) Configurate network
+
+//	// retrieve maximum mass flux through the supply branch
+//	double maxMassFlux = 1.0; // default value in case no value is given
+
+//	switch (supplySystem.m_supplyType) {
+//	case VICUS::SupplySystem::ST_StandAlone:
+//		maxMassFlux = supplySystem.m_para[VICUS::SupplySystem::P_MaximumMassFlux].value;
+//		break;
+//	case VICUS::SupplySystem::ST_UserDefinedFMU:
+//		maxMassFlux = supplySystem.m_para[VICUS::SupplySystem::P_MaximumMassFluxFMU].value;
+//		break;
+//		// not supported, yet
+//	case VICUS::SupplySystem::ST_SubNetwork:
+//		maxMassFlux = 1.0; // for the dimensioning of supply pipe lengths, the exact value does not matter
+//		break;
+//	case VICUS::SupplySystem::ST_DatabaseFMU: break;
+//	case VICUS::SupplySystem::NUM_ST: break; // just to make compiler happy
+//	}
+
+//	double defaultFluidTemperature = 20. + 273.15;
+//	NANDRAD::KeywordList::setParameter(network.m_para, "HydraulicNetwork::para_t",
+//									   NANDRAD::HydraulicNetwork::P_InitialFluidTemperature, 20.);
+
+//	// pre calculations
+
+//	// calculate pressure loss, number of pipes and pipe lenght for all surafce heatings
+//	std::vector<double> pipeLengths(dataSurfaceHeating.size(), 0.0);
+//	std::vector<double> pressureLosses(dataSurfaceHeating.size(), 0.0);
+//	std::vector<int> numbersOfPipes(dataSurfaceHeating.size(), 0);
+//	// store pipe id
+//	std::vector<unsigned int> surfHeatingPipeIds(dataSurfaceHeating.size(), 0);
+//	// store maximum pressure loss
+//	double maxPressureLoss = 0.0;
+
+//	for(unsigned int i=0; i<dataSurfaceHeating.size(); ++i){
+//		const DataSurfaceHeating &dsh = dataSurfaceHeating[i];
+
+//		const SurfaceHeating * surfHeating = element(m_project->m_embeddedDB.m_surfaceHeatings, dsh.m_heatingSystemId);
+
+//		if(surfHeating == nullptr || !surfHeating->isValid(pipeDB)){
+//			errorStack.append(qApp->tr("Invalid surface heating/cooling system #%1 referenced from room #%2.")
+//							  .arg(dsh.m_heatingSystemId)
+//							  .arg(dsh.m_controlledZoneId)
+//							  /*.arg(MultiLangString2QString(zoneTemplate->m_displayName))*/);
+//			continue;
+//		}
+
+//		//create a system for nandrad
+//		Q_ASSERT(surfHeating->m_type == SurfaceHeating::T_PipeRegister);
+
+//		//get area of the construction instance
+//		double area= dsh.m_area;
+//		double pipeSpacing = surfHeating->m_para[SurfaceHeating::P_PipeSpacing].value;
+//		double length = area / pipeSpacing;
+//		//set pipe length to max 120 m
+//		int numberPipes=1;
+//		if( length > 100){
+//			numberPipes = (int)std::ceil( length / 100.);
+//			length = area / pipeSpacing / (double)numberPipes;
+//		}
+
+//		// store pipe lenght
+//		pipeLengths[i] = length;
+//		// store number of pipes
+//		numbersOfPipes[i] = numberPipes;
+//		// store pipe id
+//		surfHeatingPipeIds[i] = surfHeating->m_idPipe;
+
+//		// store vicus pipe id
+//		allPipeIds.insert(surfHeating->m_idPipe);
+
+//		// check pipe
+//		const NetworkPipe * pipe = pipeDB[surfHeating->m_idPipe];
+//		if (pipe == nullptr) {
+//			QString msg = qApp->tr("Pipe with id #%1 does not exist in database").arg(surfHeating->m_idPipe);
+//			errorStack.append(msg);
+//			continue;
+//		}
+//		if (!pipe->isValid()){
+//			errorStack.append(qApp->tr("Pipe with id #%1 has invalid parameters").arg(surfHeating->m_idPipe));
+//			continue;
+//		}
+
+//		// calculate pipe pressure loss
+//		double density = fluid.m_para[NANDRAD::HydraulicFluid::P_Density].value;
+//		double diameter = pipe->diameterInside();
+//		double maxVelocity = maxMassFlux/(density * IBK::PI/4. * diameter * diameter);
+//		double viscosity = fluid.m_kinematicViscosity.m_values.value(defaultFluidTemperature);
+//		double reynolds = std::abs(maxVelocity) * diameter / viscosity;
+//		double roughness = pipe->m_para[VICUS::NetworkPipe::P_RoughnessWall].value;
+//		double zeta = length/diameter * IBK::FrictionFactorSwamee(reynolds, diameter, roughness);
+//		double pressureLoss = zeta * density / 2.0 * std::abs(maxVelocity) * maxVelocity;
+
+//		// store pressure loss
+//		pressureLosses[i] = pressureLoss;
+//		// and update maximum
+
+//		maxPressureLoss = std::max(maxPressureLoss, pressureLoss);
+//	}
+//	if (!errorStack.empty())
+//		return;
+
+
+//	// 5.) Create network elements
+
+//	NANDRAD::HydraulicNetworkElement pumpElem;
+//	NANDRAD::HydraulicNetworkElement idealHeaterElem;
+//	NANDRAD::ObjectList idealHeaterObjectList;
+//	NANDRAD::ObjectList pumpObjectList;
+
+//	// If there is no Vicus Subnetwork: create pump and heater
+
+//	if (supplySystem.m_supplyType != SupplySystem::ST_SubNetwork) {
+
+//		// create id's for system splitter / mixer
+//		systemMixerNodeId = uniqueIdAdd(allNetworkNodeIds);
+//		systemSplitterNodeId = uniqueIdAdd(allNetworkNodeIds);
+
+//		// create pump
+//		pumpElem.m_id = VICUS::uniqueIdAdd(usedNetworkElementIds);
+//		pumpElem.m_componentId = nandradPump.m_id;
+//		pumpElem.m_displayName = "Mass flux controlled pump";
+//		pumpElem.m_inletNodeId = uniqueIdAdd(allNetworkNodeIds);
+//		pumpElem.m_outletNodeId = systemSplitterNodeId;
+//		// create a control element: first control element is for mass flux
+//		pumpElem.m_controlElementId = uniqueIdAdd(allNetworkControllerIds);
+
+//		network.m_elements.push_back(pumpElem);
+
+//		// set pump as reference
+//		network.m_referenceElementId = pumpElem.m_id;
+
+//		// create mass flux control element
+//		NANDRAD::HydraulicNetworkControlElement massFluxControl;
+//		// always reserve 1 for mass flux controller
+//		massFluxControl.m_id = pumpElem.m_controlElementId;
+//		massFluxControl.m_modelType = NANDRAD::HydraulicNetworkControlElement::MT_Scheduled;
+//		massFluxControl.m_controlledProperty = NANDRAD::HydraulicNetworkControlElement::CP_MassFlux;
+//		massFluxControl.m_controllerType = NANDRAD::HydraulicNetworkControlElement::CT_PController;
+//		NANDRAD::KeywordList::setParameter(massFluxControl.m_para, "HydraulicNetworkControlElement::para_t",
+//										   NANDRAD::HydraulicNetworkControlElement::P_Kp, 100000000.);
+
+//		network.m_controlElements.push_back(massFluxControl);
+
+//		// create a pump object list
+//		pumpObjectList.m_name = std::string("Pump ") + supplySystem.m_displayName.string();
+//		pumpObjectList.m_referenceType = NANDRAD::ModelInputReference::MRT_NETWORKELEMENT;
+//		pumpObjectList.m_filterID.m_ids.insert(pumpElem.m_id);
+
+//		// connect to ideal heating
+//		idealHeaterElem.m_id = VICUS::uniqueIdAdd(usedNetworkElementIds);
+//		idealHeaterElem.m_displayName = "Ideal heater";
+//		idealHeaterElem.m_componentId = nandradHeater.m_id;
+//		idealHeaterElem.m_inletNodeId = systemMixerNodeId;
+//		idealHeaterElem.m_outletNodeId = pumpElem.m_inletNodeId;
+
+//		network.m_elements.push_back(idealHeaterElem);
+
+//		// create a ideal heater object list
+//		idealHeaterObjectList.m_name = std::string("Ideal heater ") + supplySystem.m_displayName.string();
+//		idealHeaterObjectList.m_referenceType = NANDRAD::ModelInputReference::MRT_NETWORKELEMENT;
+//		idealHeaterObjectList.m_filterID.m_ids.insert(idealHeaterElem.m_id);
+//	}
+
+
+//	// generate parallel pipe network
+//	for(unsigned int i=0; i<dataSurfaceHeating.size(); ++i) {
+
+//		if (dataSurfaceHeating[i].m_area < 0.5)
+//			continue;
+
+//		// calculate lenght of supply pipe for pressure equailzation
+//		double lengthSupply = (maxPressureLoss - pressureLosses[i]) / pressureLosses[i] * pipeLengths[i];
+
+//		// set initial inlet node id for the underfloor pipe
+//		unsigned int underfloorPipeInletNodeId = systemSplitterNodeId;
+
+//		//		if(!IBK::nearly_equal<4>(lengthSupply, 0.0 ) ) {
+//		//			// craetea supply pipe and connect to pump
+//		//			NANDRAD::HydraulicNetworkElement supplyPipeElem;
+//		//			supplyPipeElem.m_id = VICUS::uniqueIdAdd(usedNetworkElementIds);
+//		//			// meaningful display name
+//		//			supplyPipeElem.m_displayName = IBK::FormatString("supply pipe zone id %1 ").arg(dataSurfaceHeating[i].m_controlledZoneId).str();
+//		//			// connect to pipe properties
+//		//			supplyPipeElem.m_pipePropertiesId = surfHeatingPipeIds[i];
+//		//			// connect to component 'Supply pipe'
+//		//			supplyPipeElem.m_componentId = nandradSupplyPipe.m_id;
+//		//			supplyPipeElem.m_inletNodeId = systemSplitterNodeId;
+//		//			supplyPipeElem.m_outletNodeId = uniqueIdAdd(allNetworkNodeIds);
+//		//			underfloorPipeInletNodeId = supplyPipeElem.m_outletNodeId;
+
+//		//			NANDRAD::KeywordList::setParameter(supplyPipeElem.m_para, "HydraulicNetworkElement::para_t",
+//		//											   NANDRAD::HydraulicNetworkElement::P_Length, lengthSupply);
+//		//			NANDRAD::KeywordList::setIntPara(supplyPipeElem.m_intPara, "HydraulicNetworkElement::intPara_t",
+//		//											   NANDRAD::HydraulicNetworkElement::IP_NumberParallelPipes, numbersOfPipes[i]);
+
+//		//			// add element to hydraulic network
+//		//			network.m_elements.push_back(supplyPipeElem);
+//		//		}
+
+//		//get lenght and number of pipes for surface heating parametrization
+//		double length = pipeLengths[i];
+//		int numberOfPipes = numbersOfPipes[i];
+
+//		// create and fill a new network element
+//		NANDRAD::HydraulicNetworkElement underfloorPipeElem;
+//		underfloorPipeElem.m_id = VICUS::uniqueIdAdd(usedNetworkElementIds);
+//		// meaningful display name
+//		underfloorPipeElem.m_displayName = IBK::FormatString("underfloor pipe zone id %1 ").arg(dataSurfaceHeating[i].m_controlledZoneId).str();
+//		// connect to pipe properties
+//		underfloorPipeElem.m_pipePropertiesId = surfHeatingPipeIds[i];
+//		// connect to component 'Underfloor heating'
+//		underfloorPipeElem.m_componentId = nandradUnderfloorHeatingPipe.m_id;
+//		// set a control model with defined id
+//		underfloorPipeElem.m_controlElementId = uniqueIdAdd(allNetworkControllerIds);
+
+//		underfloorPipeElem.m_inletNodeId = underfloorPipeInletNodeId;
+//		underfloorPipeElem.m_outletNodeId = systemMixerNodeId; // underfloor pipe outlet id is system mixer (=system inlet) id
+
+//		NANDRAD::KeywordList::setIntPara(underfloorPipeElem.m_intPara, "HydraulicNetworkElement::intPara_t",
+//										 NANDRAD::HydraulicNetworkElement::IP_NumberParallelPipes, numberOfPipes);
+//		NANDRAD::KeywordList::setParameter(underfloorPipeElem.m_para, "HydraulicNetworkElement::para_t",
+//										   NANDRAD::HydraulicNetworkElement::P_Length, length);
+
+//		// add heat exchange type
+//		NANDRAD::HydraulicNetworkHeatExchange heatExchange;
+//		heatExchange.m_modelType = NANDRAD::HydraulicNetworkHeatExchange::T_TemperatureConstructionLayer;
+//		heatExchange.m_idReferences[NANDRAD::HydraulicNetworkHeatExchange::ID_ConstructionInstanceId] =
+//				dataSurfaceHeating[i].m_nandradConstructionInstanceId;
+
+//		underfloorPipeElem.m_heatExchange = heatExchange;
+
+//		// add element to hydraulic network
+//		network.m_elements.push_back(underfloorPipeElem);
+
+//		// create mass flux control element
+//		NANDRAD::HydraulicNetworkControlElement thermostatControl;
+//		// always reserve 1 for mass flux controller
+//		thermostatControl.m_id = underfloorPipeElem.m_controlElementId;
+//		thermostatControl.m_modelType = NANDRAD::HydraulicNetworkControlElement::MT_Constant;
+//		thermostatControl.m_controlledProperty = NANDRAD::HydraulicNetworkControlElement::CP_ThermostatValue;
+//		thermostatControl.m_idReferences[NANDRAD::HydraulicNetworkControlElement::ID_ThermostatZoneId] =
+//				dataSurfaceHeating[i].m_controlledZoneId;
+//		thermostatControl.m_controllerType = NANDRAD::HydraulicNetworkControlElement::CT_PController;
+//		NANDRAD::KeywordList::setParameter(thermostatControl.m_para, "HydraulicNetworkControlElement::para_t",
+//										   NANDRAD::HydraulicNetworkControlElement::P_Kp, 1e6);
+//		thermostatControl.m_maximumControllerResultValue = 0;
+
+//		// add to control elements
+//		network.m_controlElements.push_back(thermostatControl);
+//	}
+
+
+//	// 6.) Create pipe properties
+
+//	for (unsigned int pipeId: allPipeIds) {
+
+//		// rertieve poiter for easy access
+//		const VICUS::NetworkPipe *pipe = pipeDB[pipeId];
+
+//		// check
+//		if (pipe == nullptr) {
+//			QString msg = qApp->tr("Pipe with id #%1 does not exist in database").arg(pipeId);
+//			errorStack.append(msg);
+//			continue;
+//		}
+//		if (!pipe->isValid()){
+//			errorStack.append(qApp->tr("Pipe with id #%1 has invalid parameters").arg(pipeId));
+//			continue;
+//		}
+
+//		// fill pipe properties
+//		NANDRAD::HydraulicNetworkPipeProperties nandradPipeProp;
+
+//		// copy id number
+//		nandradPipeProp.m_id = pipe->m_id;
+//		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
+//										   NANDRAD::HydraulicNetworkPipeProperties::P_PipeOuterDiameter,
+//										   pipe->m_para[VICUS::NetworkPipe::P_DiameterOutside].get_value("mm"));
+//		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
+//										   NANDRAD::HydraulicNetworkPipeProperties::P_PipeInnerDiameter,
+//										   pipe->diameterInside() * 1000); // m -> mmm
+//		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
+//										   NANDRAD::HydraulicNetworkPipeProperties::P_PipeRoughness,
+//										   pipe->m_para[VICUS::NetworkPipe::P_RoughnessWall].get_value("mm"));
+//		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
+//										   NANDRAD::HydraulicNetworkPipeProperties::P_UValueWall, pipe->UValue());
+//		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
+//										   NANDRAD::HydraulicNetworkPipeProperties::P_DensityWall,
+//										   pipe->m_para[VICUS::NetworkPipe::P_DensityWall].value);
+//		NANDRAD::KeywordList::setParameter(nandradPipeProp.m_para, "HydraulicNetworkPipeProperties::para_t",
+//										   NANDRAD::HydraulicNetworkPipeProperties::P_HeatCapacityWall,
+//										   pipe->m_para[VICUS::NetworkPipe::P_HeatCapacityWall].value);
+
+//		// add property to hydraulic network
+//		network.m_pipeProperties.push_back(nandradPipeProp);
+//	}
+//	if (!errorStack.empty())
+//		return;
+
+//	// add to network vector
+//	m_hydraulicNetworks.push_back(network);
+
+
+//	if (supplySystem.m_supplyType != SupplySystem::ST_SubNetwork) {
+
+//		// 7.) Create interface translation models
+
+//		// create summation model
+//		NANDRAD::HeatLoadSummationModel summationModel;
+//		summationModel.m_id = VICUS::uniqueIdAdd(usedModelIds);
+//		usedModelIds.push_back(summationModel.m_id);
+//		summationModel.m_displayName = std::string("Heat load summation ") + supplySystem.m_displayName.string();
+//		summationModel.m_objectList = idealHeaterObjectList.m_name;
+
+//		// add to model vector
+//		m_summationModels.push_back(summationModel);
+
+//		// create adapter model
+//		NANDRAD::NetworkInterfaceAdapterModel adapterModel;
+//		adapterModel.m_id = VICUS::uniqueIdAdd(usedModelIds);
+//		usedModelIds.push_back(adapterModel.m_id);
+//		adapterModel.m_displayName = std::string("Network adapter ") + supplySystem.m_displayName.string();
+//		adapterModel.m_summationModelId = summationModel.m_id;
+//		// change fluid capacity pareameter name
+//		adapterModel.m_fluidHeatCapacity.set("FluidHeatCapacity", fluid.m_para[NANDRAD::HydraulicFluid::P_HeatCapacity].value,
+//				fluid.m_para[NANDRAD::HydraulicFluid::P_HeatCapacity].unit());
+
+//		// add to model vector
+//		m_adapterModels.push_back(adapterModel);
+
+//		// create a adapter object list
+//		NANDRAD::ObjectList adapterObjectList;
+//		adapterObjectList.m_name = adapterModel.m_displayName;
+//		adapterObjectList.m_referenceType = NANDRAD::ModelInputReference::MRT_MODEL;
+//		adapterObjectList.m_filterID.m_ids.insert(adapterModel.m_id);
+
+
+//		// 8.) Create schedule parameter
+
+//		std::vector<double> maxMassFluxVals(1, 0.0);
+//		std::vector<double> supplyTempVals(1, 20.);
+
+//		if(supplySystem.m_supplyType == VICUS::SupplySystem::ST_StandAlone) {
+//			maxMassFluxVals[0] = supplySystem.m_para[SupplySystem::P_MaximumMassFlux].value;
+//			supplyTempVals[0] = supplySystem.m_para[SupplySystem::P_SupplyTemperature].get_value("C");
+//		}
+//		else {
+//			maxMassFluxVals[0] = supplySystem.m_para[SupplySystem::P_MaximumMassFluxFMU].value;
+//		}
+
+//		// fluid mass flux setpoint
+//		NANDRAD::DailyCycle massFluxSetDailyCycle;
+//		massFluxSetDailyCycle.m_timePoints.push_back(0);
+//		massFluxSetDailyCycle.m_values.m_values["MassFluxSetpointSchedule [kg/s]"] = maxMassFluxVals;
+
+//		NANDRAD::Schedule massFluxSetSchedule;
+//		massFluxSetSchedule.m_type = NANDRAD::Schedule::ST_ALLDAYS;
+//		massFluxSetSchedule.m_dailyCycles.push_back(massFluxSetDailyCycle);
+
+//		// fluid mass flux
+//		NANDRAD::DailyCycle massFluxDailyCycle;
+//		massFluxDailyCycle.m_timePoints.push_back(0);
+//		massFluxDailyCycle.m_values.m_values["MassFluxSchedule [kg/s]"] = maxMassFluxVals;
+
+//		NANDRAD::Schedule massFluxSchedule;
+//		massFluxSchedule.m_type = NANDRAD::Schedule::ST_ALLDAYS;
+//		massFluxSchedule.m_dailyCycles.push_back(massFluxDailyCycle);
+
+//		// fluid supply temperature
+//		NANDRAD::DailyCycle supplyTempDailyCycle;
+//		supplyTempDailyCycle.m_timePoints.push_back(0);
+//		supplyTempDailyCycle.m_values.m_values["SupplyTemperatureSchedule [C]"] = supplyTempVals;
+
+//		NANDRAD::Schedule supplyTempSchedule;
+//		supplyTempSchedule.m_type = NANDRAD::Schedule::ST_ALLDAYS;
+//		supplyTempSchedule.m_dailyCycles.push_back(supplyTempDailyCycle);
+
+
+//		// add new schedule and object list: pump
+//		m_objLists.push_back(pumpObjectList);
+//		m_scheduleGroups[pumpObjectList.m_name].push_back(massFluxSetSchedule);
+//		// ideal heater
+//		m_objLists.push_back(idealHeaterObjectList);
+//		m_scheduleGroups[idealHeaterObjectList.m_name].push_back(supplyTempSchedule);
+//		// adapter model
+//		m_objLists.push_back(adapterObjectList);
+//		m_scheduleGroups[adapterObjectList.m_name].push_back(massFluxSchedule);
+//		m_scheduleGroups[adapterObjectList.m_name].push_back(supplyTempSchedule);
+
+
+//		// 9.) Create FMI description
+
+//		switch(supplySystem.m_supplyType) {
+//		case VICUS::SupplySystem::ST_DatabaseFMU:
+//		case VICUS::SupplySystem::ST_UserDefinedFMU: {
+
+//			unsigned int id = 3 * (m_hydraulicNetworks.size() - 1);
+
+//			// add an fmu description for mass flux: pump
+//			NANDRAD::FMIVariableDefinition inputMassFlux;
+//			inputMassFlux.m_varName = "NetworkElement.MassFluxSetpointSchedule";
+//			inputMassFlux.m_objectId = pumpElem.m_id;
+//			inputMassFlux.m_fmiVarName = "MassFlow";
+//			inputMassFlux.m_fmiVarDescription = "Demand network mass flow.";
+//			inputMassFlux.m_unit = "kg/s";
+//			inputMassFlux.m_fmiTypeName = "input";
+//			inputMassFlux.m_fmiStartValue = 0.0;
+//			inputMassFlux.m_fmiValueRef = ++id;
+
+//			m_inputVariables.push_back(inputMassFlux);
+
+//			// add an fmu description for mass flux: adapter model
+//			inputMassFlux.m_varName = "Model.MassFluxSchedule";
+//			inputMassFlux.m_objectId = adapterModel.m_id;
+//			inputMassFlux.m_fmiVarName = "MassFlow";
+//			inputMassFlux.m_fmiVarDescription = "Demand network mass flow.";
+//			inputMassFlux.m_unit = "kg/s";
+//			inputMassFlux.m_fmiTypeName = "input";
+//			inputMassFlux.m_fmiStartValue = 0.0;
+//			inputMassFlux.m_fmiValueRef = id;
+
+//			m_inputVariables.push_back(inputMassFlux);
+
+//			// add an fmu description for supply temperature: ideal heater
+//			NANDRAD::FMIVariableDefinition inputSupplyTemp;
+//			inputSupplyTemp.m_varName = "NetworkElement.SupplyTemperatureSchedule";
+//			inputSupplyTemp.m_objectId = idealHeaterElem.m_id;
+//			inputSupplyTemp.m_fmiVarName = "SupplyTemperature";
+//			inputSupplyTemp.m_unit = "K";
+//			inputSupplyTemp.m_fmiVarDescription = "Demand network flow temperature.";
+//			inputSupplyTemp.m_fmiTypeName = "input";
+//			inputSupplyTemp.m_fmiStartValue = defaultFluidTemperature;
+//			inputSupplyTemp.m_fmiValueRef = ++id;
+
+//			m_inputVariables.push_back(inputSupplyTemp);
+
+//			// add an fmu description for supply temperature: adapter model
+//			inputSupplyTemp.m_varName = "Model.SupplyTemperatureSchedule";
+//			inputSupplyTemp.m_objectId = adapterModel.m_id;
+//			inputSupplyTemp.m_fmiVarName = "SupplyTemperature";
+//			inputSupplyTemp.m_unit = "K";
+//			inputSupplyTemp.m_fmiVarDescription = "Demand network flow temperature.";
+//			inputSupplyTemp.m_fmiTypeName = "input";
+//			inputSupplyTemp.m_fmiStartValue = defaultFluidTemperature;
+//			inputSupplyTemp.m_fmiValueRef = id;
+
+//			m_inputVariables.push_back(inputSupplyTemp);
+
+//			// add an fmu description for return temperature
+//			NANDRAD::FMIVariableDefinition outputReturnTemp;
+//			outputReturnTemp.m_varName = "Model.ReturnTemperature";
+//			outputReturnTemp.m_objectId = adapterModel.m_id;
+//			outputReturnTemp.m_fmiVarName = "ReturnTemperature";
+//			outputReturnTemp.m_unit = "K";
+//			outputReturnTemp.m_fmiVarDescription = "Demand network return temperature.";
+//			outputReturnTemp.m_fmiTypeName = "output";
+//			outputReturnTemp.m_fmiStartValue = defaultFluidTemperature;
+//			outputReturnTemp.m_fmiValueRef = ++id;
+
+//			m_outputVariables.push_back(outputReturnTemp);
+
+//		} break;
+//		default: break;
+//		}
+
+//	}
 
 
 }
@@ -4228,7 +4226,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 
 			NANDRAD::HydraulicNetworkComponent nandradComp;
 			nandradComp.m_id = uniqueIdAdd(allComponentIds);
-			nandradComp.m_displayName = comp.m_displayName.string();
+			nandradComp.m_displayName = comp.m_displayName.string(IBK::MultiLanguageString::m_language, "en");
 			nandradComp.m_modelType = VICUS::NetworkComponent::nandradNetworkComponentModelType(comp.m_modelType);
 			comp.nandradNetworkComponentParameter(nandradComp.m_para);
 			nandradComp.m_polynomCoefficients = comp.m_polynomCoefficients;
@@ -4242,7 +4240,7 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 			mapVicusComp2NandradComp[std::make_pair(sub->m_id, comp.m_id)] = nandradComp.m_id;
 
 			// check schedules of component and add them to map
-			std::vector<std::string> requiredScheduleNames = NetworkComponent::requiredScheduleNames(comp.m_modelType);
+			std::vector<std::string> requiredScheduleNames = NetworkComponent::requiredScheduleNames(comp.m_modelType, comp.m_heatExchange.m_individualHeatExchange);
 			if (requiredScheduleNames.size() > 0 && requiredScheduleNames.size() != comp.m_scheduleIds.size()){
 				std::string names;
 				for (const std::string & name: requiredScheduleNames)
@@ -4258,13 +4256,11 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 					mapNandradComp2Schedules[nandradComp.m_id].push_back(*sched);
 				}
 				// special treatment of schedules that belong to the NetworkHeatExchange in VICUS but to the Component in NANDRAD
-				if (comp.m_heatExchange.m_modelType == NetworkHeatExchange::T_HeatLossConstantCondenser ||
-					comp.m_heatExchange.m_modelType == NetworkHeatExchange::T_HeatLossSplineCondenser) {
+				if (!comp.m_heatExchange.m_individualHeatExchange &&
+					(comp.m_heatExchange.m_modelType == NetworkHeatExchange::T_HeatLossConstantCondenser ||
+					comp.m_heatExchange.m_modelType == NetworkHeatExchange::T_HeatLossSplineCondenser) ) {
 					Schedule sched = comp.m_heatExchange.condenserTemperatureSchedule();
 					mapNandradComp2Schedules[nandradComp.m_id].push_back(sched);
-				} else if (comp.m_heatExchange.m_modelType == NetworkHeatExchange::T_HeatLossConstantCondenser ||
-						   comp.m_heatExchange.m_modelType == NetworkHeatExchange::T_HeatLossSplineCondenser) {
-					// ...
 				}
 			}
 
@@ -4377,9 +4373,8 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 
 			// copy the element and create a unique element id for it
 			unsigned int id = uniqueIdAdd(allElementIds);
-			NANDRAD::HydraulicNetworkElement nandradElement(id, elem.m_inletNodeId, elem.m_outletNodeId,
-															NANDRAD::INVALID_ID, NANDRAD::INVALID_ID,
-															elem.m_componentId, elem.m_controlElementId);
+			NANDRAD::HydraulicNetworkElement nandradElement;
+			nandradElement.m_id = id;
 
 			// set the new elements inlet and outlet node id using the map that we created
 			nandradElement.m_inletNodeId = subNetNodeIdMap[elem.m_inletNodeId];
@@ -4865,8 +4860,9 @@ void Project::generateNetworkProjectData(NANDRAD::Project & p, QStringList &erro
 
 		// create and add object list
 		NANDRAD::ObjectList objList;
-		std::string objListName = comp->m_displayName + " elements";
+		std::string objListName = comp->m_displayName;
 		std::string uniqueObjListName = VICUS::uniqueName(objListName, allObjListNames);
+		allObjListNames.insert(uniqueObjListName);
 		objList.m_name = uniqueObjListName;
 		objList.m_referenceType = NANDRAD::ModelInputReference::MRT_NETWORKELEMENT;
 		for (unsigned int elementId: it->second)

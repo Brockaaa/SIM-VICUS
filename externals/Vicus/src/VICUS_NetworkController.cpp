@@ -17,6 +17,8 @@ namespace VICUS {
 NetworkController::NetworkController(){
 	// set default value
 	m_para[P_RelControllerErrorForIntegratorReset] = IBK::Parameter("RelControllerErrorForIntegratorReset", 0.7, "---");
+	for (int i=0; i<NUM_ID; ++i)
+		m_idReferences[i] = VICUS::INVALID_ID;
 }
 
 
@@ -43,41 +45,6 @@ bool NetworkController::isValid(const Database<Schedule> &scheduleDB) const {
 
 	return true;
 }
-
-
-AbstractDBElement::ComparisonResult NetworkController::equal(const VICUS::AbstractDBElement *other) const {
-	const NetworkController * otherCtrl = dynamic_cast<const NetworkController*>(other);
-	if (otherCtrl == nullptr)
-		return Different;
-
-	// check important parameters
-
-	if (m_modelType != otherCtrl->m_modelType
-		|| m_controllerType != otherCtrl->m_controllerType
-		|| m_controlledProperty != otherCtrl->m_controlledProperty
-		|| m_maximumControllerResultValue > otherCtrl->m_maximumControllerResultValue
-		|| m_maximumControllerResultValue < otherCtrl->m_maximumControllerResultValue)
-		return Different;
-
-	for (unsigned int i=0; i<NANDRAD::HydraulicNetworkControlElement::NUM_P; ++i) {
-		if (m_para[i] != otherCtrl->m_para[i])
-			return Different;
-	}
-
-	for (unsigned int i=0; i<NANDRAD::HydraulicNetworkControlElement::NUM_ID; ++i) {
-		if (m_idReferences[i] != otherCtrl->m_idReferences[i])
-			return Different;
-	}
-
-
-	//check meta data
-	if (m_displayName != otherCtrl->m_displayName ||
-		m_color != otherCtrl->m_color)
-		return OnlyMetaDataDiffers;
-
-	return Equal;
-}
-
 
 
 void NetworkController::checkParameters() const {

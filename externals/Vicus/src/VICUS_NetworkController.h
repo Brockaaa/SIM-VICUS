@@ -23,7 +23,7 @@ namespace VICUS {
 	uniform member names like 'm_id' and 'm_displayName' for the DB read/write process with template functions
 	This this should be the best solution ...
 */
-class NetworkController: public AbstractDBElement {
+class NetworkController {
 public:
 
 	NetworkController();
@@ -90,15 +90,11 @@ public:
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
-	VICUS_READWRITE_OVERRIDE
+	VICUS_READWRITE
 	VICUS_COMP(NetworkController)
-	VICUS_COMPARE_WITH_ID
 
 	/*! Checks if all parameters are valid. */
 	bool isValid(const Database<Schedule> &scheduleDB) const;
-
-	/*! Comparison operator */
-	ComparisonResult equal(const AbstractDBElement *other) const override;
 
 	/*! A copy of NANDRAD::HydraulicNetworkControlElement::checkParameters */
 	void checkParameters() const;
@@ -107,14 +103,9 @@ public:
 	static para_t setPointType(ControlledProperty controlledProperty);
 
 
-	// *** PUBLIC MEMBER VARIABLES added for VICUS ***
+	// *** PUBLIC MEMBER VARIABLES ***
 
-	//:inherited	unsigned int					m_id = INVALID_ID;				// XML:A
-	//:inherited	IBK::MultiLanguageString		m_displayName;					// XML:A
-	//:inherited	QColor							m_color;						// XML:A
-
-
-	// *** PUBLIC MEMBER VARIABLES from NANDRAD::HydraulicNetworkControlElement ***
+	IBK::MultiLanguageString		m_displayName;									// XML:A
 
 	/*! Determines variability of setpoint parameters. */
 	ModelType						m_modelType = NUM_MT;							// XML:A

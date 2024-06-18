@@ -42,7 +42,7 @@ public:
 	bool isValid(const Database<Schedule> &scheduleDB) const;
 
 	/*! updates the BMBlocks in the graphical Network with data from the NetworkElements */
-	void init();
+	void initialize();
 
 	/*! reads the subnetwork from XML, calls init() */
 	void readXML(const TiXmlElement *element) override;
@@ -87,7 +87,7 @@ public:
 	/*! Stores id of element with heat exchange parameterization. INVALID_ID means no heat exchange. */
 	unsigned int										m_idHeatExchangeElement = INVALID_ID;	// XML:A
 
-	/* stores all components used in this subnetwork */
+	/*! Stores all components used in this subnetwork */
 	std::vector<NetworkComponent>                       m_components;                           // XML:E
 
 	/*! Holds graphical information of the elements, contains BMBlocks and BMConnectors */

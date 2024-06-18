@@ -84,7 +84,7 @@ public:
 	VICUS_COMPARE_WITH_ID
 
 	/*! Checks if the network definition is valid. */
-	bool isValid(const Database<SubNetwork> &subNetworkDB, const Database<VICUS::NetworkComponent> & compDB, const Database<VICUS::NetworkController> & ctrlDB, const Database<VICUS::Schedule> & scheduleDB) const;
+	bool isValid(const Database<SubNetwork> &subNetworkDB, const Database<VICUS::Schedule> & scheduleDB) const;
 
 	/*! Comparison operator */
 	ComparisonResult equal(const AbstractDBElement *other) const override;

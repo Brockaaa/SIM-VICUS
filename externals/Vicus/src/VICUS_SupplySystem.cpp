@@ -37,8 +37,6 @@ AbstractDBElement::ComparisonResult SupplySystem::equal(const AbstractDBElement 
 
 
 bool SupplySystem::isValid(const Database<SubNetwork> &subNetworkDB,
-						   const Database<NetworkComponent> &compDB,
-						   const Database<NetworkController> &ctrlDB,
 						   const Database<Schedule> &scheduleDB) const
 {
 	FUNCID(SupplySystem::isValid);

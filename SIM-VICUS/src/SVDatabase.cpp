@@ -78,7 +78,6 @@ SVDatabase::SVDatabase() :
 	m_pipes(1100000),
 	m_fluids(1102500),
 	m_networkComponents(1105000),
-	m_networkControllers(1107500),
 	m_subNetworks(1110000),
 	m_supplySystems(1085000),
 	m_epdDatasets(1090000),
@@ -124,7 +123,6 @@ void SVDatabase::readDatabases(DatabaseTypes t) {
 		m_pipes.readXML(					dbDir / "db_pipes.xml", "NetworkPipes", "NetworkPipe", true);
 		m_fluids.readXML(					dbDir / "db_fluids.xml", "NetworkFluids", "NetworkFluid", true);
 		m_networkComponents.readXML(		dbDir / "db_networkComponents.xml", "NetworkComponents", "NetworkComponent", true);
-		m_networkControllers.readXML(		dbDir / "db_networkControllers.xml", "NetworkControllers", "NetworkController", true);
 		m_subNetworks.readXML		(		dbDir / "db_subNetworks.xml", "SubNetworks", "SubNetwork", true);
 		m_schedules.readXML(				dbDir / "db_schedules.xml", "Schedules", "Schedule", true);
 		m_internalLoads.readXML(			dbDir / "db_internalLoads.xml", "InternalLoads", "InternalLoad", true);
@@ -176,8 +174,6 @@ void SVDatabase::readDatabases(DatabaseTypes t) {
 		m_fluids.readXML(					userDbDir / "db_fluids.xml", "NetworkFluids", "NetworkFluid", false);
 	if (t == NUM_DT || t == DT_NetworkComponents)
 		m_networkComponents.readXML(		userDbDir / "db_networkComponents.xml", "NetworkComponents", "NetworkComponent", false);
-	if (t == NUM_DT || t == DT_NetworkControllers)
-		m_networkControllers.readXML(		userDbDir / "db_networkControllers.xml", "NetworkControllers", "NetworkController", false);
 	if (t == NUM_DT || t == DT_SubNetworks)
 		m_subNetworks.readXML(				userDbDir / "db_subNetworks.xml", "SubNetworks", "SubNetwork", false);
 	if (t == NUM_DT || t == DT_SupplySystems)
@@ -239,8 +235,6 @@ void SVDatabase::writeDatabases(DatabaseTypes t) const {
 		m_fluids.writeXML(				userDbDir / "db_fluids.xml", "NetworkFluids");
 	if (t == NUM_DT || t == DT_NetworkComponents)
 		m_networkComponents.writeXML(	userDbDir / "db_networkComponents.xml", "NetworkComponents");
-	if (t == NUM_DT || t == DT_NetworkControllers)
-		m_networkControllers.writeXML(	userDbDir / "db_networkControllers.xml", "NetworkControllers");
 	if (t == NUM_DT || t == DT_SubNetworks)
 		m_subNetworks.writeXML		(	userDbDir / "db_subNetworks.xml", "SubNetworks");
 	if (t == NUM_DT || t == DT_SupplySystems)
@@ -287,7 +281,6 @@ void SVDatabase::mergeDatabases(const SVDatabase & db) {
 	m_pipes.import(db.m_pipes);
 	m_fluids.import(db.m_fluids);
 	m_networkComponents.import(db.m_networkComponents);
-	m_networkControllers.import(db.m_networkControllers);
 	m_subNetworks.import(db.m_subNetworks);
 	m_supplySystems.import(db.m_supplySystems);
 	m_schedules.import(db.m_schedules);
@@ -363,7 +356,6 @@ void SVDatabase::updateEmbeddedDatabase(VICUS::Project & p) {
 	storeVector(p.m_embeddedDB.m_pipes, m_pipes);
 	storeVector(p.m_embeddedDB.m_fluids, m_fluids);
 	storeVector(p.m_embeddedDB.m_networkComponents, m_networkComponents);
-	storeVector(p.m_embeddedDB.m_networkControllers, m_networkControllers);
 	storeVector(p.m_embeddedDB.m_subNetworks, m_subNetworks);
 	storeVector(p.m_embeddedDB.m_supplySystems, m_supplySystems);
 	storeVector(p.m_embeddedDB.m_EPDDatasets, m_epdDatasets);
@@ -409,8 +401,6 @@ void SVDatabase::updateReferencedElements(const VICUS::Project &p) {
 	for (auto it=m_subNetworks.begin(); it!=m_subNetworks.end(); ++it)
 		it->second.m_isReferenced = false;
 	for (auto it=m_networkComponents.begin(); it!=m_networkComponents.end(); ++it)
-		it->second.m_isReferenced = false;
-	for (auto it=m_networkControllers.begin(); it!=m_networkControllers.end(); ++it)
 		it->second.m_isReferenced = false;
 	for (auto it=m_schedules.begin(); it!=m_schedules.end(); ++it)
 		it->second.m_isReferenced = false;
@@ -511,7 +501,6 @@ void SVDatabase::updateElementChildren() {
 	m_pipes.clearChildren();
 	m_fluids.clearChildren();
 	m_networkComponents.clearChildren();
-	m_networkControllers.clearChildren();
 	m_subNetworks.clearChildren();
 	m_schedules.clearChildren();
 	m_internalLoads.clearChildren();
@@ -690,13 +679,8 @@ void SVDatabase::updateElementChildren() {
 		VICUS::SubNetwork &sub = it->second;
 
 		for (const VICUS::NetworkElement &elem: sub.m_elements){
-			// network controller
-			VICUS::NetworkController * ctr = m_networkControllers[elem.m_controlElementId];
-			if (ctr != nullptr)
-				sub.m_childrenRefs.insert(ctr);
-
 			// network components
-			VICUS::NetworkComponent * comp = m_networkComponents[elem.m_componentId];
+			VICUS::NetworkComponent * comp = VICUS::element(sub.m_components, elem.m_componentId);
 			if (comp != nullptr) {
 				sub.m_childrenRefs.insert(comp);
 
@@ -770,7 +754,6 @@ void SVDatabase::determineDuplicates(std::vector<std::vector<SVDatabase::Duplica
 	findDublicates(m_pipes, duplicatePairs[DT_Pipes]);
 	findDublicates(m_fluids, duplicatePairs[DT_Fluids]);
 	findDublicates(m_networkComponents, duplicatePairs[DT_NetworkComponents]);
-	findDublicates(m_networkControllers, duplicatePairs[DT_NetworkControllers]);
 	findDublicates(m_subNetworks, duplicatePairs[DT_SubNetworks]);
 	findDublicates(m_supplySystems, duplicatePairs[DT_SupplySystems]);
 	//findDublicates(m_epdDatasets, duplicatePairs[DT_EPDDatasets]);
@@ -974,16 +957,6 @@ void SVDatabase::removeDBElement(SVDatabase::DatabaseTypes dbType, unsigned int 
 			}
 			m_networkComponents.remove(elementID);
 			m_networkComponents.m_modified = true;
-		} break;
-
-		case SVDatabase::DT_NetworkControllers: {
-			for (const auto & p : m_subNetworks) {
-				VICUS::SubNetwork & s = const_cast<VICUS::SubNetwork &>(p.second); // const-cast is ok here
-				for (VICUS::NetworkElement & el: s.m_elements)
-					replaceID(elementID, replacementElementID, el.m_controlElementId, m_subNetworks);
-			}
-			m_networkControllers.remove(elementID);
-			m_networkControllers.m_modified = true;
 		} break;
 
 		case SVDatabase::DT_SubNetworks: {
@@ -1200,7 +1173,6 @@ void SVDatabase::removeLocalElements() {
 	m_pipes.removeLocalElements();
 	m_fluids.removeLocalElements();
 	m_networkComponents.removeLocalElements();
-	m_networkControllers.removeLocalElements();
 	m_subNetworks.removeLocalElements();
 	m_schedules.removeLocalElements();
 	m_internalLoads.removeLocalElements();
@@ -1250,8 +1222,6 @@ void SVDatabase::removeNotReferencedLocalElements(SVDatabase::DatabaseTypes dbTy
 			m_supplySystems.removeNotReferencedLocalElements(); break;
 		case DT_EpdDatasets:
 			m_epdDatasets.removeNotReferencedLocalElements(); break;
-		case DT_NetworkControllers:
-			m_networkControllers.removeNotReferencedLocalElements();  break;
 		case DT_NetworkComponents:
 			m_networkComponents.removeNotReferencedLocalElements(); break;
 		case DT_Schedules:
@@ -1272,15 +1242,12 @@ void SVDatabase::removeNotReferencedLocalElements(SVDatabase::DatabaseTypes dbTy
 			m_infiltration.removeNotReferencedLocalElements(); break;
 		case DT_ZoneTemplates:
 			m_zoneTemplates.removeNotReferencedLocalElements(); break;
-		break;
 		case DT_AcousticTemplates:
 			m_acousticTemplates.removeNotReferencedLocalElements(); break;
-		break;
 		case DT_AcousticSoundProtectionTemplates:
 			m_acousticSoundProtectionTemplates.removeNotReferencedLocalElements(); break;
 		case DT_AcousticBuildingTemplates:
 			m_acousticBuildingTemplates.removeNotReferencedLocalElements(); break;
-		break;
 		case NUM_DT:
 		break;
 	}
@@ -1364,9 +1331,6 @@ void SVDatabase::findLocalChildren(DatabaseTypes dbType, unsigned int id,
 		case DT_EpdDatasets:
 			Q_ASSERT(m_epdDatasets[id] != nullptr);
 			m_epdDatasets[id]->collectLocalChildren(localChildren); break;
-		case DT_NetworkControllers:
-			Q_ASSERT(m_networkControllers[id] != nullptr);
-			m_networkControllers[id]->collectLocalChildren(localChildren);  break;
 		case DT_NetworkComponents:
 			Q_ASSERT(m_networkComponents[id] != nullptr);
 			m_networkComponents[id]->collectLocalChildren(localChildren); break;
@@ -1406,9 +1370,7 @@ void SVDatabase::findLocalChildren(DatabaseTypes dbType, unsigned int id,
 		case DT_AcousticBuildingTemplates:
 			Q_ASSERT(m_acousticBuildingTemplates[id] != nullptr);
 			m_acousticBuildingTemplates[id]->collectLocalChildren(localChildren); break;
-		break;
 		case NUM_DT:
-
 		break;
 	}
 }

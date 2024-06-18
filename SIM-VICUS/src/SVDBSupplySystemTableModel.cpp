@@ -85,10 +85,7 @@ QVariant SVDBSupplySystemTableModel::data ( const QModelIndex & index, int role)
 
 		case Qt::DecorationRole : {
 			if (index.column() == ColCheck) {
-				if (it->second.isValid(SVSettings::instance().m_db.m_subNetworks,
-									   SVSettings::instance().m_db.m_networkComponents,
-									   SVSettings::instance().m_db.m_networkControllers,
-									   SVSettings::instance().m_db.m_schedules))
+				if (it->second.isValid(SVSettings::instance().m_db.m_subNetworks, SVSettings::instance().m_db.m_schedules))
 					return QIcon(":/gfx/actions/16x16/ok.png");
 				else
 					return QIcon(":/gfx/actions/16x16/error.png");
@@ -116,10 +113,7 @@ QVariant SVDBSupplySystemTableModel::data ( const QModelIndex & index, int role)
 		case Qt::ToolTipRole: {
 			if(index.column() == ColCheck) {
 				std::string errorMsg = "";
-				if (!it->second.isValid(SVSettings::instance().m_db.m_subNetworks,
-										SVSettings::instance().m_db.m_networkComponents,
-										SVSettings::instance().m_db.m_networkControllers,
-										SVSettings::instance().m_db.m_schedules))
+				if (!it->second.isValid(SVSettings::instance().m_db.m_subNetworks, SVSettings::instance().m_db.m_schedules))
 					return QString::fromStdString(it->second.m_errorMsg);
 			}
 		}

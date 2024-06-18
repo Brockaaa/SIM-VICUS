@@ -122,7 +122,6 @@ void SVDBDuplicatesDialog::onCurrentRowChanged(const QModelIndex & current, cons
 		case SVDatabase::DT_Pipes:					dbItem(db.m_pipes, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_Fluids:					dbItem(db.m_fluids, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_NetworkComponents:		dbItem(db.m_networkComponents, leftID, rightID, dbElemLeft, dbElemRight); break;
-		case SVDatabase::DT_NetworkControllers:		dbItem(db.m_networkControllers, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_SubNetworks:			dbItem(db.m_subNetworks, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_SupplySystems:			dbItem(db.m_supplySystems, leftID, rightID, dbElemLeft, dbElemRight); break;
 		case SVDatabase::DT_Schedules:				dbItem(db.m_schedules, leftID, rightID, dbElemLeft, dbElemRight); break;
@@ -430,11 +429,6 @@ void SVDBDuplicatesDialog::updateUi() {
 					left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_networkComponents[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
 					right = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_networkComponents[duplicates.m_idSecond]->m_displayName) ).arg(duplicates.m_idSecond);
 					break;
-				case SVDatabase::DT_NetworkControllers:
-					item->setText(tr("NetworkControllers"));
-					left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_networkControllers[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
-					right = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_networkControllers[duplicates.m_idSecond]->m_displayName) ).arg(duplicates.m_idSecond);
-					break;
 				case SVDatabase::DT_SubNetworks:
 					item->setText(tr("SubNetworks"));
 					left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_subNetworks[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
@@ -507,8 +501,8 @@ void SVDBDuplicatesDialog::updateUi() {
 					break;
 				case SVDatabase::DT_AcousticSoundProtectionTemplates:
 					item->setText(tr("AcousticSoundProtectionTemplates"));
-                                        left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticSoundProtectionTemplates[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
-                                        right = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticSoundProtectionTemplates[duplicates.m_idSecond]->m_displayName) ).arg(duplicates.m_idSecond);
+										left = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticSoundProtectionTemplates[duplicates.m_idFirst]->m_displayName) ).arg(duplicates.m_idFirst);
+										right = tr("%1 [%2]").arg( QtExt::MultiLangString2QString(db.m_acousticSoundProtectionTemplates[duplicates.m_idSecond]->m_displayName) ).arg(duplicates.m_idSecond);
 					break;
 				case SVDatabase::DT_AcousticSoundAbsorptions:
 					item->setText(tr("AcousticSoundAbsorptions"));

@@ -80,7 +80,7 @@ public:
 	std::vector<VICUS::AcousticBoundaryCondition>		m_acousticBoundaryConditions;		// XML:E
 
 	/*! Map pf all database acoustic boundary conditions */
-	std::vector<VICUS::AcousticSoundAbsorption>					m_acousticSoundAbsorptions;		// XML:E
+	std::vector<VICUS::AcousticSoundAbsorption>			m_acousticSoundAbsorptions;			// XML:E
 
 	/*! Map of all database boundary conditions. */
 	std::vector<VICUS::BoundaryCondition>				m_boundaryConditions;				// XML:E
@@ -105,9 +105,6 @@ public:
 
 	/*! Map of all hydraulic network components */
 	std::vector<VICUS::NetworkComponent>				m_networkComponents;				// XML:E
-
-	/*! Map of all hydraulic network controllers */
-	std::vector<VICUS::NetworkController>				m_networkControllers;				// XML:E
 
 	/*! Map of all hydraulic sub networks */
 	std::vector<VICUS::SubNetwork>						m_subNetworks;						// XML:E

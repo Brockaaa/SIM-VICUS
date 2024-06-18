@@ -70,7 +70,7 @@ bool NetworkComponent::isValid(const Database<Schedule> &scheduleDB) const {
 	}
 
 	// check if there is the correct number of schedules and given schedules really exist
-	std::vector<std::string> reqSchedules = requiredScheduleNames(m_modelType);
+	std::vector<std::string> reqSchedules = requiredScheduleNames(m_modelType, m_heatExchange.m_individualHeatExchange);
 	if (reqSchedules.size() != m_scheduleIds.size())
 		return false;
 	for (unsigned int id: m_scheduleIds){
@@ -198,11 +198,17 @@ AbstractDBElement::ComparisonResult NetworkComponent::equal(const AbstractDBElem
 }
 
 
-std::vector<std::string> NetworkComponent::requiredScheduleNames(const NetworkComponent::ModelType modelType) {
+std::vector<std::string> NetworkComponent::requiredScheduleNames(const NetworkComponent::ModelType modelType, bool individualHeatExchange) {
 	switch (modelType)	{
 		case MT_HeatPumpVariableIdealCarnotSourceSide:
-		case MT_HeatPumpVariableSourceSide:
-			return {};
+		case MT_HeatPumpVariableSourceSide: {
+			// if there is an individual heat exchange defined we need the supply temperature,
+			// otherwise this is provided by the heat exchange definition
+			if (individualHeatExchange)
+				return {"SupplyTemperatureSchedule [C]"};
+			else
+				return {};
+		}
 		case MT_HeatPumpVariableIdealCarnotSupplySide:
 			return {"CondenserOutletSetpointSchedule [C]"};
 		case MT_HeatPumpOnOffSourceSide:

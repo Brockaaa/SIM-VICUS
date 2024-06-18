@@ -959,16 +959,6 @@ bool SVProjectHandler::importEmbeddedDB(VICUS::Project & pro) {
 		);
 	}
 
-	// network controllers
-	std::map<unsigned int, unsigned int> netControllersIDMap;
-	for (VICUS::NetworkController & e : pro.m_embeddedDB.m_networkControllers) {
-
-		importDBElement(e, db.m_networkControllers, netControllersIDMap,
-						"Network Controller '%1' with #%2 imported -> new ID #%3.\n",
-						"Network Controller '%1' with #%2 exists already -> ID #%3.\n"
-		);
-	}
-
 	// network subnetwork-components
 	std::map<unsigned int, unsigned int> subNetworksIDMap;
 	for (VICUS::SubNetwork & e : pro.m_embeddedDB.m_subNetworks) {
@@ -1062,7 +1052,6 @@ bool SVProjectHandler::importEmbeddedDB(VICUS::Project & pro) {
 	idsModified |= !fluidsIDMap.empty();
 	idsModified |= !surfaceHeatingIDMap.empty();
 	idsModified |= !netComponentsIDMap.empty();
-	idsModified |= !netControllersIDMap.empty();
 	idsModified |= !subNetworksIDMap.empty();
 	idsModified |= !acousticBoundaryConditionsIDMap.empty();
 	idsModified |= !acousticSoundAbsorptionsIDMap.empty();

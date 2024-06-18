@@ -51,7 +51,6 @@ public:
 		DT_Pipes,
 		DT_Fluids,
 		DT_NetworkComponents,
-		DT_NetworkControllers,
 		DT_SubNetworks,
 		DT_SupplySystems,
 		DT_EpdDatasets,
@@ -180,11 +179,6 @@ public:
 	/*! Map of all hydraulic network components */
 	VICUS::Database<VICUS::NetworkComponent>			m_networkComponents;
 
-	/*! Map of all hydraulic network controllers -- deprecated
-	Controllers are stored in the network component since Version 1.2
-	This is only kept for conversion purposes. */
-	VICUS::Database<VICUS::NetworkController>			m_networkControllers;
-
 	/*! Map of all hydraulic sub networks */
 	VICUS::Database<VICUS::SubNetwork>					m_subNetworks;
 
@@ -230,11 +224,11 @@ public:
 	/*! Map of all database acoustic sound absorption templates. */
 	VICUS::Database<VICUS::AcousticSoundAbsorption>		m_acousticSoundAbsorptions;
 
-    /*! Map of all database Acoustic reference components. */
-    VICUS::Database<VICUS::AcousticReferenceComponent>	m_acousticReferenceComponents;
+	/*! Map of all database Acoustic reference components. */
+	VICUS::Database<VICUS::AcousticReferenceComponent>	m_acousticReferenceComponents;
 
-    /*! Map of all database Acoustic Building Templates. */
-    VICUS::Database<VICUS::AcousticBuildingTemplate>	m_acousticBuildingTemplates;
+	/*! Map of all database Acoustic Building Templates. */
+	VICUS::Database<VICUS::AcousticBuildingTemplate>	m_acousticBuildingTemplates;
 
 };
 
