@@ -112,6 +112,9 @@ private:
 
 	/*! Name of Controller from VICUS::KeywordListQt */
 	QString								  m_controllerName;
+
+	/*! Pixmap of current Heat Exchange */
+	QPixmap								 m_pixmapHx;
 \
 	/*! HeatExchange to draw small icon */
 	VICUS::NetworkHeatExchange::ModelType m_heatExchageModelType = VICUS::NetworkHeatExchange::NUM_T;

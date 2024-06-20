@@ -186,7 +186,7 @@ public:
 	void setController(const VICUS::BMBlock * block, QString controllerName);
 
 	/*! sets NetworkHeatExchange ModelType of Block and it's BlockItem */
-	void setHeatExchange(const VICUS::BMBlock * block, VICUS::NetworkHeatExchange::ModelType modelType);
+	void setHeatExchange(const VICUS::BMBlock * block, VICUS::NetworkHeatExchange::ModelType modelType, bool externallyDefined = false);
 
 	/*! Creates new Connector between two Blocks and Sockets */
 	void createConnection(const VICUS::BMBlock * startBlock, const VICUS::BMBlock * targetBlock, const VICUS::BMSocket * startSocket, const VICUS::BMSocket * targetSocket);

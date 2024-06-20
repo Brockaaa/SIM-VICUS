@@ -50,7 +50,6 @@
 
 SVBMZoomMeshGraphicsView::SVBMZoomMeshGraphicsView(QWidget *parent) :
 	QGraphicsView(parent),
-	m_resolution(10000), // 1000 px/m
 	m_gridStep(100),
 	m_gridEnabled( true ),
 	m_zoomLevel(1),
@@ -61,9 +60,11 @@ SVBMZoomMeshGraphicsView::SVBMZoomMeshGraphicsView(QWidget *parent) :
 	setTransformationAnchor(AnchorUnderMouse);
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	setRenderHint(QPainter::Antialiasing, true);
+	setRenderHint(QPainter::HighQualityAntialiasing, true);
 
 	setViewportUpdateMode( QGraphicsView::FullViewportUpdate );
-	setResolution(1);
+	m_resolution = 1;
 	setAcceptDrops(true);
 	setScene(m_sceneManager);
 }

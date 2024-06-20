@@ -37,6 +37,7 @@
 #include <iostream>
 
 #include <QPainter>
+#include <QSvgRenderer>
 #include <QPainterPath>
 #include <QLinearGradient>
 #include <QStyleOptionGraphicsItem>
@@ -170,16 +171,16 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 	QPen p;
 	if(m_block->m_mode == VICUS::BMBlockType::NetworkComponentBlock)
 	{
-		if (m_block->m_properties.contains("ShowPixmap") &&
-			m_block->m_properties["ShowPixmap"].toBool() &&
-			m_block->m_properties.contains("Pixmap"))
+		if (m_block->m_properties.contains("ShowImage") &&
+			m_block->m_properties["ShowImage"].toBool() &&
+			m_block->m_properties.contains("Image"))
 		{
 			// fill entire background with white
 			QRectF r = rect();
 			painter->setBrush(Qt::white);
 
-			QPixmap p = m_block->m_properties["Pixmap"].value<QPixmap>();
-			painter->drawPixmap(r, p, p.rect());
+			QSvgRenderer p(m_block->m_properties["Image"].value<QString>());
+			p.render(painter, r);
 			painter->setBrush(Qt::NoBrush);
 		}
 		else {
@@ -286,16 +287,10 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 	}
 
 	if(m_heatExchageModelType != VICUS::NetworkHeatExchange::NUM_T){
-		p.setStyle(Qt::SolidLine);
-		p.setColor(Qt::black);
-		QRectF hXRect(QPointF(rect().width(),0), QPointF(rect().height() + 5,5));
-		QLinearGradient gradHx(QPointF(0, 0), QPointF(0, 0));
-		gradHx.setColorAt(0, QColor(255,0,0));
-		gradHx.setColorAt(1, QColor(255,0,0));
-		painter->setBrush(gradHx);
-		painter->fillRect(hXRect, gradHx);
-		painter->setPen(p);
-		painter->drawRect(hXRect);
+		QRectF hXRect(QPointF(rect().width(),0), QPointF(rect().height() + 20,20));
+		painter->setBrush(Qt::white);
+		painter->drawPixmap(hXRect, m_pixmapHx, m_pixmapHx.rect());
+		painter->setBrush(Qt::NoBrush);
 	}
 
 	painter->restore();

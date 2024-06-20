@@ -500,6 +500,25 @@ NANDRAD::HydraulicNetworkHeatExchange NetworkHeatExchange::toNandradHeatExchange
 	return hx;
 }
 
+QString NetworkHeatExchange::iconFileFromModelType(ModelType modelType)
+{
+	switch(modelType) {
+		case VICUS::NetworkHeatExchange::ModelType::T_HeatLossConstantCondenser:
+		case VICUS::NetworkHeatExchange::ModelType::T_HeatLossConstant:
+			return ":/icons/light/png/network_icons/heatflux_const.png";
+		case VICUS::NetworkHeatExchange::ModelType::T_HeatLossSplineCondenser:
+		case VICUS::NetworkHeatExchange::ModelType::T_HeatLossSpline:
+			return ":/icons/light/png/network_icons/heatflux_spline.png";
+		case VICUS::NetworkHeatExchange::ModelType::T_TemperatureConstant:
+			return ":/icons/light/png/network_icons/temperature_const.png";
+		case VICUS::NetworkHeatExchange::ModelType::T_TemperatureSpline:
+			return ":/icons/light/png/network_icons/temperature_spline.png";
+		default:
+			return "";
+	}
+
+}
+
 
 Schedule NetworkHeatExchange::condenserTemperatureSchedule() const{
 

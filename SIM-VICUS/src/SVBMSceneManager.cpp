@@ -90,16 +90,10 @@ void SVBMSceneManager::updateNetwork(VICUS::BMNetwork & network, std::vector<VIC
 			VICUS::NetworkComponent* component = VICUS::element(networkComponents, b.m_componentId);
 
 			//create and set QPixmap
-			QSvgRenderer renderer(VICUS::NetworkComponent::iconFileFromModelType(component->m_modelType));
-			QPixmap pixmap(VICUS::BLOCK_WIDTH * 2, VICUS::BLOCK_HEIGHT * 2);
-			pixmap.fill(Qt::transparent);
+			VICUS::NetworkComponent::iconFileFromModelType(component->m_modelType);
 
-			QPainter painter(&pixmap);
-			renderer.render(&painter);
-			painter.end();
-
-			b.m_properties["ShowPixmap"] = true;
-			b.m_properties["Pixmap"] = pixmap;
+			b.m_properties["ShowImage"] = true;
+			b.m_properties["Image"] = VICUS::NetworkComponent::iconFileFromModelType(component->m_modelType);
 
 			b.m_sockets[0].m_pos = QPointF(0, VICUS::BLOCK_HEIGHT / 2);
 			b.m_sockets[1].m_pos = QPointF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT / 2);
@@ -505,16 +499,8 @@ void SVBMSceneManager::addBlock(VICUS::NetworkComponent::ModelType type, QPoint 
 	b.m_sockets.append(s2);
 
 	//create and set QPixmap
-	QSvgRenderer renderer(VICUS::NetworkComponent::iconFileFromModelType(type));
-	QPixmap pixmap(VICUS::BLOCK_WIDTH * 2, VICUS::BLOCK_HEIGHT * 2);
-	pixmap.fill(Qt::transparent);
-
-	QPainter painter(&pixmap);
-	renderer.render(&painter);
-	painter.end();
-
-	b.m_properties["ShowPixmap"] = true;
-	b.m_properties["Pixmap"] = pixmap;
+	b.m_properties["ShowImage"] = true;
+	b.m_properties["Image"] = VICUS::NetworkComponent::iconFileFromModelType(type);
 	b.m_displayName = VICUS::KeywordListQt::Keyword("NetworkComponent::ModelType", type);
 
 	// do we have a component from db?
@@ -547,10 +533,19 @@ void SVBMSceneManager::setController(const VICUS::BMBlock * block, QString contr
 	}
 }
 
-void SVBMSceneManager::setHeatExchange(const VICUS::BMBlock * block, VICUS::NetworkHeatExchange::ModelType modelType) {
+void SVBMSceneManager::setHeatExchange(const VICUS::BMBlock * block, VICUS::NetworkHeatExchange::ModelType modelType, bool externallyDefined) {
 	for(SVBMBlockItem * item : m_blockItems){
-		if(item->m_block == block){
+		if(item->m_block == block) {
 			item->m_heatExchageModelType = modelType;
+			if(externallyDefined) {
+				item->m_pixmapHx = QPixmap(":/icons/light/png/network_icons/heatexchange_external.png");
+			}
+			else{
+				QString iconFile = VICUS::NetworkHeatExchange::iconFileFromModelType(modelType);
+				if(!iconFile.isEmpty()) {
+					item->m_pixmapHx = QPixmap(VICUS::NetworkHeatExchange::iconFileFromModelType(modelType));
+				}
+			}
 		}
 	}
 }

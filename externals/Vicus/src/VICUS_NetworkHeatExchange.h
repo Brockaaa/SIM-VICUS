@@ -131,6 +131,13 @@ public:
 
 	NANDRAD::HydraulicNetworkHeatExchange toNandradHeatExchange() const;
 
+
+	// *** Static Functions
+
+	// Helper function to get iconFile from ModelType
+	static QString iconFileFromModelType(VICUS::NetworkHeatExchange::ModelType modelType);
+
+
 	// *** Public Member variables ***
 
 	/*! Model Type */

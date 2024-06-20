@@ -227,7 +227,7 @@ void SVSubNetworkEditDialog::updateNetwork() {
 		if(comp->m_networkController.m_controlledProperty != VICUS::NetworkController::NUM_CP){
 			m_sceneManager->setController(&block, QString::fromStdString(comp->m_networkController.m_displayName.string(IBK::MultiLanguageString::m_language)));
 		}
-		m_sceneManager->setHeatExchange(&block,comp->m_heatExchange.m_modelType);
+		m_sceneManager->setHeatExchange(&block, comp->m_heatExchange.m_modelType, comp->m_heatExchange.m_individualHeatExchange);
 	}
 }
 
@@ -765,17 +765,6 @@ void SVSubNetworkEditDialog::on_newBlockAdded(VICUS::BMBlock *block, unsigned in
 		block->m_componentId = newCompID;
 		m_sceneManager->setHeatExchange(block, newComp.m_heatExchange.m_modelType);
 	}
-	// copy component from DB
-	// TODO	add a default HeatExchange when no heatExchange/NUM_T not allowed?
-	else {
-		Q_ASSERT(m_db->m_networkComponents[componentID] != nullptr);
-		VICUS::NetworkComponent component =	*m_db->m_networkComponents[componentID];
-		component.m_builtIn = false;
-		component.m_id = newComponentID();
-		block->m_componentId = component.m_id;
-		m_networkComponents.push_back(component);
-		m_sceneManager->setHeatExchange(block, component.m_heatExchange.m_modelType);
-	}
 }
 
 void SVSubNetworkEditDialog::keyPressEvent(QKeyEvent *event)
@@ -1124,16 +1113,8 @@ void SVSubNetworkEditDialog::createNewScene()
 		block.m_size = QSizeF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT);
 
 		//create and set QPixmap
-		QSvgRenderer renderer(VICUS::NetworkComponent::iconFileFromModelType(type));
-		QPixmap pixmap(VICUS::BLOCK_WIDTH * 2, VICUS::BLOCK_HEIGHT * 2);
-		pixmap.fill(Qt::transparent);
-
-		QPainter painter(&pixmap);
-		renderer.render(&painter);
-		painter.end();
-
-		block.m_properties["ShowPixmap"] = true;
-		block.m_properties["Pixmap"] = pixmap;
+		block.m_properties["ShowImage"] = true;
+		block.m_properties["Image"] = VICUS::NetworkComponent::iconFileFromModelType(type);
 
 		inlet.m_name = VICUS::INLET_NAME;
 		inlet.m_isInlet = true;
@@ -1403,7 +1384,7 @@ void SVSubNetworkEditDialog::on_copyBlockButton_clicked()
 
 		m_networkComponents.push_back(component);
 		m_sceneManager->addBlock(newBlock, component.m_modelType);
-		m_sceneManager->setHeatExchange(&m_sceneManager->network().m_blocks.back(), component.m_heatExchange.m_modelType);
+		m_sceneManager->setHeatExchange(&m_sceneManager->network().m_blocks.back(), component.m_heatExchange.m_modelType, component.m_heatExchange.m_individualHeatExchange);
 
 		m_sceneManager->update();
 	}
@@ -1552,7 +1533,8 @@ void SVSubNetworkEditDialog::on_heatExchangeChanged(VICUS::NetworkHeatExchange::
 	if(m_sceneManager->selectedBlocks().size() != 1)
 		return;
 	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().first());
-	m_sceneManager->setHeatExchange(selectedBlock, modelType);
+	const VICUS::NetworkComponent* comp = VICUS::element(m_networkComponents, selectedBlock->m_componentId);
+	m_sceneManager->setHeatExchange(selectedBlock, modelType, comp->m_heatExchange.m_individualHeatExchange);
 	m_sceneManager->update();
 
 }
