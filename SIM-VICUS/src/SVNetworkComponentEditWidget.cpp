@@ -29,7 +29,7 @@
 #include <algorithm>
 
 #include "SVSettings.h"
-#include "SVDatabaseEditDialog.h"
+#include "SVSubNetworkComponentDBEditDialog.h"
 #include "SVMainWindow.h"
 #include "SVStyle.h"
 #include "SVConstants.h"
@@ -876,7 +876,7 @@ SVNetworkComponentEditWidget::HeatLossSplineEnergyDemandDialog::HeatLossSplineEn
 void SVNetworkComponentEditWidget::on_pushButtonComponentDBDialogOpen_clicked()
 {
 	if (m_componentDBEditDialog == nullptr){
-		m_componentDBEditDialog = new SVDatabaseEditDialog(window(),
+		m_componentDBEditDialog = new SVSubNetworkComponentDBEditDialog(window(),
 														 new SVSubNetworkComponentDBTableModel(window(), SVSettings::instance().m_db),
 														 new SVSubNetworkComponentDBEditWidget(window()),
 														   tr("Network Component Database"), QString(), true

@@ -42,6 +42,7 @@ class SVNetworkComponentHeatExchangeEditWidget;
 class SVDBNetworkComponentTableModel;
 class SVNetworkControllerEditDialog;
 class SVNetworkComponentHeatExchangeEditWidget;
+class SVSubNetworkComponentDBEditDialog;
 class SVDatabaseEditDialog;
 class SVDatabase;
 class QwtPlot;
@@ -136,7 +137,7 @@ private:
 	std::vector<std::vector<double>>		m_yData1;
 	std::vector<std::vector<double>>		m_yData2;
 
-	SVDatabaseEditDialog					*m_componentDBEditDialog = nullptr;
+	SVSubNetworkComponentDBEditDialog		*m_componentDBEditDialog = nullptr;
 
 	SVNetworkComponentHeatExchangeEditWidget *m_widgetNetworkComponentHeatExchangeEditWidget;
 

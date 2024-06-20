@@ -152,7 +152,6 @@ SOURCES += \
 	../../src/SVSimulationShadingOptions.cpp \
 	../../src/SVSmartIntersectionDialog.cpp \
 	../../src/SVStructuralUnitCreationDialog.cpp \
-	../../src/SVSubNetworkComponentDBEditWidget.cpp \
 	../../src/SVTimeSeriesPreviewWidget.cpp \
 	../../src/SVTimeSliderWidget.cpp \
 	../../src/SVUndoAddDrawing.cpp \
@@ -325,6 +324,8 @@ SOURCES += \
 	../../src/SVSimulationStartOptions.cpp \
 	../../src/SVSmartSelectDialog.cpp \
 	../../src/SVStyle.cpp \
+	../../src/SVSubNetworkComponentDBEditDialog.cpp \
+	../../src/SVSubNetworkComponentDBEditWidget.cpp \
 	../../src/SVSubNetworkComponentDBTableModel.cpp \
 	../../src/SVSubNetworkEditDialog.cpp \
 	../../src/SVSubNetworkEditDialogTable.cpp \
@@ -405,7 +406,6 @@ HEADERS  += \
 	../../src/SVSimulationShadingOptions.h \
 	../../src/SVSmartIntersectionDialog.h \
 	../../src/SVStructuralUnitCreationDialog.h \
-	../../src/SVSubNetworkComponentDBEditWidget.h \
 	../../src/SVTimeSeriesPreviewDialog.h \
 	../../src/SVTimeSeriesPreviewWidget.h \
 	../../src/SVTimeSliderWidget.h \
@@ -576,6 +576,8 @@ HEADERS  += \
 	../../src/SVSimulationStartOptions.h \
 	../../src/SVSmartSelectDialog.h \
 	../../src/SVStyle.h \
+	../../src/SVSubNetworkComponentDBEditDialog.h \
+	../../src/SVSubNetworkComponentDBEditWidget.h \
 	../../src/SVSubNetworkComponentDBTableModel.h \
 	../../src/SVSubNetworkEditDialog.h \
 	../../src/SVSubNetworkEditDialogTable.h \
