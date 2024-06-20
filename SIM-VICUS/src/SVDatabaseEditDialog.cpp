@@ -43,7 +43,6 @@
 #include "SVMainWindow.h"
 #include "SVAbstractDatabaseEditWidget.h"
 #include "SVDBDialogAddDependentElements.h"
-#include "SVSubNetworkEditDialog.h"
 #include "SVDatabaseSortFilterProxyModel.h"
 
 // includes for all the dialogs
@@ -121,11 +120,9 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 	m_dbModel(tableModel),
 	m_editWidget(editWidget)
 {
-	// dialog most only be created by main window or SVSubNetworkEditDialog
-	// check if the parent is a SVMainWindow or a SVSubNetworkEditDialog
+	// dialog most only be created by main window
 	SVMainWindow* pointerSVMainWindow = dynamic_cast<SVMainWindow*>(parent);
-	SVSubNetworkEditDialog* pointerSVSubNetworkEditDialog = dynamic_cast<SVSubNetworkEditDialog*>(parent);
-	Q_ASSERT(pointerSVMainWindow != nullptr || pointerSVSubNetworkEditDialog != nullptr);
+	Q_ASSERT(pointerSVMainWindow != nullptr);
 	m_ui->setupUi(this);
 	m_ui->gridLayoutTableView->setMargin(4);
 
@@ -200,19 +197,13 @@ SVDatabaseEditDialog::SVDatabaseEditDialog(QWidget *parent, SVAbstractDatabaseTa
 	}
 
 	connect(SVMainWindow::instance().preferencesDialog()->pageStyle(), &SVPreferencesPageStyle::styleChanged, this, &SVDatabaseEditDialog::onStyleChanged);
-
-	if(pointerSVMainWindow){
-		// connect to main window to recognise if main screen has changed
-		connect(&SVMainWindow::instance(), &SVMainWindow::screenHasChanged, this, &SVDatabaseEditDialog::onScreenChanged);
-	} else if(pointerSVSubNetworkEditDialog){
-		m_ui->toolButtonAdd->setVisible(false);
-		m_ui->toolButtonCopy->setVisible(false);
-		m_ui->toolButtonRemoveFromUserDB->setVisible(false);
-		m_ui->toolButtonStoreInUserDB->setVisible(false);
-		m_ui->pushButtonRemoveUnusedElements->setVisible(false);
-		m_ui->label_3->setVisible(false);
-		m_ui->frameProject->setVisible(false);
-	}
+	m_ui->toolButtonAdd->setVisible(false);
+	m_ui->toolButtonCopy->setVisible(false);
+	m_ui->toolButtonRemoveFromUserDB->setVisible(false);
+	m_ui->toolButtonStoreInUserDB->setVisible(false);
+	m_ui->pushButtonRemoveUnusedElements->setVisible(false);
+	m_ui->label_3->setVisible(false);
+	m_ui->frameProject->setVisible(false);
 }
 
 
