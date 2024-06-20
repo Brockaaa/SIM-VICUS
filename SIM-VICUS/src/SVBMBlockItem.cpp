@@ -286,7 +286,7 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 		painter->drawText(textRect, Qt::AlignCenter | Qt::AlignHCenter, elidedText);
 	}
 
-	if(m_heatExchageModelType != VICUS::NetworkHeatExchange::NUM_T){
+	if(!m_pixmapHx.isNull()){
 		QRectF hXRect(QPointF(rect().width(),0), QPointF(rect().height() + 20,20));
 		painter->setBrush(Qt::white);
 		painter->drawPixmap(hXRect, m_pixmapHx, m_pixmapHx.rect());

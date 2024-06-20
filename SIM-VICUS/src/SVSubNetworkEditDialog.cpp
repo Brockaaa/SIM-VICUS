@@ -1544,6 +1544,7 @@ void SVSubNetworkEditDialog::on_externallyDefinedStateChanged(bool checked)
 	VICUS::BMBlock *selectedBlock = const_cast<VICUS::BMBlock*>(m_sceneManager->selectedBlocks().first());
 	VICUS::NetworkComponent& component = m_networkComponents[componentIndex(selectedBlock->m_componentId)];
 	component.m_heatExchange.m_individualHeatExchange = checked;
+	m_sceneManager->setHeatExchange(selectedBlock, component.m_heatExchange.m_modelType, checked);
 
 	if(!checked) return;
 

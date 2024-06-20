@@ -115,9 +115,9 @@ private:
 
 	/*! Pixmap of current Heat Exchange */
 	QPixmap								 m_pixmapHx;
-\
+
 	/*! HeatExchange to draw small icon */
-	VICUS::NetworkHeatExchange::ModelType m_heatExchageModelType = VICUS::NetworkHeatExchange::NUM_T;
+	VICUS::NetworkHeatExchange::ModelType m_heatExchangeModelType = VICUS::NetworkHeatExchange::NUM_T;
 
 	friend class SVBMSceneManager;
 };
