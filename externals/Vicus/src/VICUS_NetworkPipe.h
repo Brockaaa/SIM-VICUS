@@ -53,6 +53,7 @@ public:
 		P_DensityWall,						// Keyword: DensityWall							[kg/m3]	'Density of pipe wall'
 		P_ThicknessInsulation,				// Keyword: ThicknessInsulation					[mm]	'Thickness of insulation around pipe'
 		P_ThermalConductivityInsulation,	// Keyword: ThermalConductivityInsulation		[W/mK]	'Thermal conductivity of insulation'
+		P_ThicknessOuterLayer,				// Keyword: ThicknessOuterLayer					[mm]	'Thickness of outer protection layer'
 		NUM_P
 	};
 
@@ -63,6 +64,16 @@ public:
 
 	/*! Calculates the effective U-value per m length of pipe in [W/mK]. */
 	double UValue() const;
+
+	/*! Calculates the SDR used to assess mechanical strength. */
+	unsigned int SDRvalue() const {
+		return (unsigned int)std::round(m_para[P_DiameterOutside].value / m_para[P_ThicknessWall].value);
+	}
+
+	/*! Calculates the total outer diameter incl. protection layer. */
+	double totalOuterDiameter() const {
+		return m_para[P_DiameterOutside].value + 2 * m_para[P_ThicknessInsulation].value + 2 * m_para[P_ThicknessOuterLayer].value;
+	}
 
 	/*! Returns the inner pipe diameter in [m].
 		\warning Parameters are not checked for validity. If used unchecked, result may be negative or zero.
@@ -87,6 +98,10 @@ public:
 
 	/*! A custom category name. */
 	IBK::MultiLanguageString			m_categoryName;						// XML:A
+
+	QString								m_productName;						// XML:A
+
+	QString								m_manufacturerName;					// XML:A
 
 	/*! Pipe parameters. */
 	IBK::Parameter						m_para[NUM_P];						// XML:E

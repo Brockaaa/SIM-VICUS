@@ -65,7 +65,7 @@ bool NetworkPipe::isValid() const {
 		return false;
 
 	for (int i=0; i<NUM_P; ++i){
-		bool zeroAllowed = (para_t(i) == P_ThicknessInsulation);
+		bool zeroAllowed = (para_t(i) == P_ThicknessInsulation) || (para_t(i) == P_ThicknessOuterLayer);
 		try {
 			m_para[i].checkedValue(KeywordList::Keyword("NetworkPipe::para_t", i), KeywordList::Unit("NetworkPipe::para_t", i),
 								   KeywordList::Unit("NetworkPipe::para_t", i), 0, zeroAllowed, std::numeric_limits<double>::max(),
