@@ -171,6 +171,11 @@ unsigned int SVAbstractDatabaseEditDialog::select(unsigned int initialId, bool r
 	return initialId;
 }
 
+SVAbstractDatabaseTableModel * SVAbstractDatabaseEditDialog::dbModel() const
+{
+	return m_dbModel;
+}
+
 void SVAbstractDatabaseEditDialog::on_pushButtonSelect_clicked()
 {
 	accept();
@@ -188,9 +193,18 @@ void SVAbstractDatabaseEditDialog::on_pushButtonClose_clicked()
 
 void SVAbstractDatabaseEditDialog::onCurrentIndexChanged(const QModelIndex & current, const QModelIndex &)
 {
-	// retrieve current ID
-	int id = current.data(Role_Id).toInt();
-	m_editWidget->updateInput(id);
+	if (!current.isValid()) {
+		m_ui->pushButtonSelect->setEnabled(false);
+		m_editWidgetContainerWidget->setEnabled(false);
+		m_editWidget->updateInput(-1);
+	} else {
+		m_editWidgetContainerWidget->setEnabled(true);
+		m_ui->pushButtonSelect->setEnabled(true);
+		m_ui->tableView->selectRow(current.row());
+		// retrieve current ID
+		int id = current.data(Role_Id).toInt();
+		m_editWidget->updateInput(id);
+	}
 }
 
 void SVAbstractDatabaseEditDialog::onStyleChanged() {

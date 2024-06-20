@@ -38,6 +38,8 @@ public:
 	*/
 	unsigned int select(unsigned int initialId, bool resetModel = true, QString filterText = "", int filterColumn = -1);
 
+	SVAbstractDatabaseTableModel * dbModel() const;
+
 private slots:
 	void on_pushButtonSelect_clicked();
 	void on_pushButtonCancel_clicked();
