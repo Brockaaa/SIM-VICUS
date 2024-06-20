@@ -45,9 +45,6 @@ SVDBPipeEditWidget::SVDBPipeEditWidget(QWidget *parent) :
 	m_ui->lineEditName->initLanguages(QtExt::LanguageHandler::instance().langId().toStdString(), THIRD_LANGUAGE, true);
 	m_ui->lineEditName->setDialog3Caption(tr("Pipe identification name"));
 
-	// The name is not supposed to be changed by the user! Its still possible to use whatever category.
-	m_ui->lineEditName->setReadOnly(true);
-
 	m_ui->pushButtonColor->setDontUseNativeDialog(SVSettings::instance().m_dontUseNativeDialogs);
 
 	m_ui->lineEditCategory->initLanguages(QtExt::LanguageHandler::instance().langId().toStdString(), THIRD_LANGUAGE, true);
@@ -61,6 +58,7 @@ SVDBPipeEditWidget::SVDBPipeEditWidget(QWidget *parent) :
 	m_ui->lineEditInsulationThickness->setup(0, std::numeric_limits<double>::max(), tr("Insulation thickness"), true, true);
 	m_ui->lineEditWallHeatCapacity->setup(0, std::numeric_limits<double>::max(), tr("Pipe wall heat capacity"), false, true);
 	m_ui->lineEditWallDensity->setup(0, std::numeric_limits<double>::max(), tr("Pipe wall density"), false, true);
+	m_ui->lineEditThicknessOuterLayer->setup(0, std::numeric_limits<double>::max(), tr("Thickness of outer protection layer"), true, true);
 
 }
 
@@ -91,6 +89,10 @@ void SVDBPipeEditWidget::updateInput(int id) {
 	m_ui->lineEditWallHeatCapacity->setEnabled(isEnabled);
 	m_ui->lineEditWallDensity->setEnabled(isEnabled);
 	m_ui->pushButtonColor->setEnabled(isEnabled);
+	m_ui->lineEditManufacturer->setEnabled(isEnabled);
+	m_ui->lineEditProduct->setEnabled(isEnabled);
+	m_ui->lineEditSDR->setEnabled(isEnabled);
+	m_ui->lineEditThicknessOuterLayer->setEnabled(isEnabled);
 
 	if (!isEnabled) {
 		// clear input controls
@@ -105,6 +107,10 @@ void SVDBPipeEditWidget::updateInput(int id) {
 		m_ui->lineEditWallHeatCapacity->clear();
 		m_ui->lineEditWallDensity->clear();
 		m_ui->lineEditUValue->clear();
+		m_ui->lineEditManufacturer->clear();
+		m_ui->lineEditProduct->clear();
+		m_ui->lineEditSDR->clear();
+		m_ui->lineEditThicknessOuterLayer->clear();
 		m_ui->pushButtonColor->setColor(Qt::gray);
 
 		m_autoNameGeneration = false;
@@ -122,6 +128,8 @@ void SVDBPipeEditWidget::updateInput(int id) {
 	// now update the GUI controls
 	m_ui->lineEditName->setString(pipe->m_displayName);
 	m_ui->lineEditCategory->setString(pipe->m_categoryName);
+	m_ui->lineEditManufacturer->setText(pipe->m_manufacturerName);
+	m_ui->lineEditProduct->setText(pipe->m_productName);
 
 	// Mind: some parameters may not be set, yet
 	//       however, we expect the parameter to hold values converted to the base SI-unit -> if no unit, or an
@@ -134,8 +142,12 @@ void SVDBPipeEditWidget::updateInput(int id) {
 	m_ui->lineEditInsulationThickness->setValue(pipe->m_para[VICUS::NetworkPipe::P_ThicknessInsulation].value * 1000);
 	m_ui->lineEditWallHeatCapacity->setValue(pipe->m_para[VICUS::NetworkPipe::P_HeatCapacityWall].value);
 	m_ui->lineEditWallDensity->setValue(pipe->m_para[VICUS::NetworkPipe::P_DensityWall].value);
-	if (pipe->isValid())
+	m_ui->lineEditThicknessOuterLayer->setValue(pipe->m_para[VICUS::NetworkPipe::P_ThicknessOuterLayer].value * 1000);
+	if (pipe->isValid()) {
 		m_ui->lineEditUValue->setText(QString("%L1").arg(pipe->UValue(),0, 'f', 3));
+		m_ui->lineEditSDR->setText(QString("%1").arg(pipe->SDRvalue()));
+		m_ui->lineEditTotalOuterDiameter->setText(QString("%L1").arg(pipe->totalOuterDiameter() *1000,0, 'f', 1));
+	}
 
 	m_ui->pushButtonColor->blockSignals(true);
 	m_ui->pushButtonColor->setColor(pipe->m_color);
@@ -146,6 +158,7 @@ void SVDBPipeEditWidget::updateInput(int id) {
 	if (pipe->m_builtIn)
 		isEditable = false;
 
+	m_ui->lineEditName->setReadOnly(!isEditable);
 	m_ui->lineEditCategory->setReadOnly(!isEditable);
 	m_ui->lineEditWallLambda->setReadOnly(!isEditable);
 	m_ui->lineEditOuterDiameter->setReadOnly(!isEditable);
@@ -156,6 +169,10 @@ void SVDBPipeEditWidget::updateInput(int id) {
 	m_ui->lineEditWallHeatCapacity->setReadOnly(!isEditable);
 	m_ui->lineEditWallDensity->setReadOnly(!isEditable);
 	m_ui->pushButtonColor->setReadOnly(!isEditable);
+	m_ui->lineEditManufacturer->setReadOnly(!isEditable);
+	m_ui->lineEditProduct->setReadOnly(!isEditable);
+	m_ui->lineEditSDR->setReadOnly(!isEditable);
+	m_ui->lineEditThicknessOuterLayer->setReadOnly(!isEditable);
 }
 
 

@@ -38,8 +38,11 @@ public:
 		ColId,
 		ColColor,
 		ColCheck,
+		ColManufacturer,
+		ColProduct,
 		ColName,
-		Category,
+		ColSDR,
+		ColCategory,
 		NumColumns
 	};
 

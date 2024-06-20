@@ -49,7 +49,7 @@ SVDBPipeTableModel::SVDBPipeTableModel(QObject *parent, SVDatabase &db) :
 }
 
 
-QVariant SVDBPipeTableModel::data ( const QModelIndex & index, int role) const {
+QVariant SVDBPipeTableModel::data( const QModelIndex & index, int role) const {
 	if (!index.isValid())
 		return QVariant();
 
@@ -69,7 +69,16 @@ QVariant SVDBPipeTableModel::data ( const QModelIndex & index, int role) const {
 			switch (index.column()) {
 				case ColId					: return it->first;
 				case ColName				: return QtExt::MultiLangString2QString(it->second.m_displayName);
-				case Category				: return QtExt::MultiLangString2QString(it->second.m_categoryName);
+				case ColCategory			: return QtExt::MultiLangString2QString(it->second.m_categoryName);
+				case ColManufacturer		: {
+					QString name = it->second.m_manufacturerName;
+					if (name.size()==0)
+						return tr("generic");
+					else
+						return name;
+				}
+				case ColProduct				: return it->second.m_productName;
+				case ColSDR					: return it->second.SDRvalue();
 			}
 		} break;
 
@@ -134,7 +143,10 @@ QVariant SVDBPipeTableModel::headerData(int section, Qt::Orientation orientation
 			switch ( section ) {
 				case ColId					: return tr("Id");
 				case ColName				: return tr("Name");
-				case Category				: return tr("Category");
+				case ColCategory			: return tr("Category");
+				case ColManufacturer		: return tr("Manufacturer");
+				case ColProduct				: return tr("Product");
+				case ColSDR					: return tr("SDR");
 			}
 		} break;
 
@@ -168,6 +180,7 @@ QModelIndex SVDBPipeTableModel::addNewItem() {
 	VICUS::KeywordList::setParameter(pipe.m_para, "NetworkPipe::para_t", VICUS::NetworkPipe::P_ThermalConductivityInsulation, 0.035);
 	VICUS::KeywordList::setParameter(pipe.m_para, "NetworkPipe::para_t", VICUS::NetworkPipe::P_HeatCapacityWall, 1900);
 	VICUS::KeywordList::setParameter(pipe.m_para, "NetworkPipe::para_t", VICUS::NetworkPipe::P_DensityWall, 960);
+	VICUS::KeywordList::setParameter(pipe.m_para, "NetworkPipe::para_t", VICUS::NetworkPipe::P_ThicknessOuterLayer, 0);
 
 	pipe.m_categoryName.setString("PE", QtExt::LanguageHandler::instance().langId().toStdString());
 	pipe.m_displayName = pipe.nameFromData();
@@ -210,8 +223,11 @@ void SVDBPipeTableModel::deleteItem(const QModelIndex & index) {
 void SVDBPipeTableModel::setColumnResizeModes(QTableView * tableView) {
 	tableView->horizontalHeader()->setSectionResizeMode(SVDBPipeTableModel::ColId, QHeaderView::Fixed);
 	tableView->horizontalHeader()->setSectionResizeMode(SVDBPipeTableModel::ColCheck, QHeaderView::Fixed);
+	tableView->horizontalHeader()->setSectionResizeMode(SVDBPipeTableModel::ColManufacturer, QHeaderView::ResizeToContents);
+	tableView->horizontalHeader()->setSectionResizeMode(SVDBPipeTableModel::ColProduct, QHeaderView::ResizeToContents);
 	tableView->horizontalHeader()->setSectionResizeMode(SVDBPipeTableModel::ColName, QHeaderView::Stretch);
-	tableView->horizontalHeader()->setSectionResizeMode(SVDBPipeTableModel::Category, QHeaderView::Fixed);
+	tableView->horizontalHeader()->setSectionResizeMode(SVDBPipeTableModel::ColSDR, QHeaderView::Fixed);
+	tableView->horizontalHeader()->setSectionResizeMode(SVDBPipeTableModel::ColCategory, QHeaderView::Fixed);
 }
 
 
