@@ -152,11 +152,11 @@
         <file>icons/light/svg/network_icons/IdealHeaterCooler.svg</file>
         <file>icons/light/svg/network_icons/PressureLossElement.svg</file>
         <file>icons/light/svg/network_icons/VariablePressurePump.svg</file>
-        <file>icons/light/png/network_icons/heatexchange_external.png</file>
-        <file>icons/light/png/network_icons/heatflux_const.png</file>
-        <file>icons/light/png/network_icons/heatflux_spline.png</file>
-        <file>icons/light/png/network_icons/temperature_const.png</file>
-        <file>icons/light/png/network_icons/temperature_spline.png</file>
+        <file>icons/light/svg/network_icons/heatexchange_external.svg</file>
+        <file>icons/light/svg/network_icons/heatflux_const.svg</file>
+        <file>icons/light/svg/network_icons/heatflux_spline.svg</file>
+        <file>icons/light/svg/network_icons/temperature_const.svg</file>
+        <file>icons/light/svg/network_icons/temperature_spline.svg</file>
 
         <file>icons/dark/svg/assign_db_element.svg</file>
         <file>icons/dark/svg/assign_table_element.svg</file>

@@ -538,15 +538,10 @@ void SVBMSceneManager::setHeatExchange(const VICUS::BMBlock * block, VICUS::Netw
 		if(item->m_block == block) {
 			item->m_heatExchangeModelType = modelType;
 			if(externallyDefined) {
-				item->m_pixmapHx = QPixmap(":/icons/light/png/network_icons/heatexchange_external.png");
+				item->m_imageHx = QString(":/icons/light/svg/network_icons/heatexchange_external.svg");
 				return;
 			}
-			QString iconFile = VICUS::NetworkHeatExchange::iconFileFromModelType(modelType);
-			if(!iconFile.isEmpty()) {
-				item->m_pixmapHx = QPixmap(VICUS::NetworkHeatExchange::iconFileFromModelType(modelType));
-			} else {
-				item->m_pixmapHx = QPixmap();
-			}
+			item->m_imageHx = VICUS::NetworkHeatExchange::iconFileFromModelType(modelType);
 		}
 	}
 }

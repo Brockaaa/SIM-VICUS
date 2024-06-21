@@ -286,10 +286,11 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 		painter->drawText(textRect, Qt::AlignCenter | Qt::AlignHCenter, elidedText);
 	}
 
-	if(!m_pixmapHx.isNull()){
-		QRectF hXRect(QPointF(rect().width(),0), QPointF(rect().height() + 20,20));
+	if(!m_imageHx.isEmpty()){
 		painter->setBrush(Qt::white);
-		painter->drawPixmap(hXRect, m_pixmapHx, m_pixmapHx.rect());
+		QRectF hXRect(QPointF(rect().width(),0), QPointF(rect().height() + 20,20));
+		QSvgRenderer svgRenderer(m_imageHx);
+		svgRenderer.render(painter, hXRect);
 		painter->setBrush(Qt::NoBrush);
 	}
 

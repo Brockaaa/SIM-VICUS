@@ -505,14 +505,14 @@ QString NetworkHeatExchange::iconFileFromModelType(ModelType modelType)
 	switch(modelType) {
 		case VICUS::NetworkHeatExchange::ModelType::T_HeatLossConstantCondenser:
 		case VICUS::NetworkHeatExchange::ModelType::T_HeatLossConstant:
-			return ":/icons/light/png/network_icons/heatflux_const.png";
+			return ":/icons/light/svg/network_icons/heatflux_const.svg";
 		case VICUS::NetworkHeatExchange::ModelType::T_HeatLossSplineCondenser:
 		case VICUS::NetworkHeatExchange::ModelType::T_HeatLossSpline:
-			return ":/icons/light/png/network_icons/heatflux_spline.png";
+			return ":/icons/light/svg/network_icons/heatflux_spline.svg";
 		case VICUS::NetworkHeatExchange::ModelType::T_TemperatureConstant:
-			return ":/icons/light/png/network_icons/temperature_const.png";
+			return ":/icons/light/svg/network_icons/temperature_const.svg";
 		case VICUS::NetworkHeatExchange::ModelType::T_TemperatureSpline:
-			return ":/icons/light/png/network_icons/temperature_spline.png";
+			return ":/icons/light/svg/network_icons/temperature_spline.svg";
 		default:
 			return "";
 	}

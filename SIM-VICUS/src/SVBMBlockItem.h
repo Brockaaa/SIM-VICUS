@@ -114,7 +114,7 @@ private:
 	QString								  m_controllerName;
 
 	/*! Pixmap of current Heat Exchange */
-	QPixmap								 m_pixmapHx;
+	QString								  m_imageHx;
 
 	/*! HeatExchange to draw small icon */
 	VICUS::NetworkHeatExchange::ModelType m_heatExchangeModelType = VICUS::NetworkHeatExchange::NUM_T;
