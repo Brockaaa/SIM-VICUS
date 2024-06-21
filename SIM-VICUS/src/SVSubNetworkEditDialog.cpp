@@ -1112,10 +1112,6 @@ void SVSubNetworkEditDialog::createNewScene()
 		block.m_mode = VICUS::BMBlockType::NetworkComponentBlock;
 		block.m_size = QSizeF(VICUS::BLOCK_WIDTH, VICUS::BLOCK_HEIGHT);
 
-		//create and set QPixmap
-		block.m_properties["ShowImage"] = true;
-		block.m_properties["Image"] = VICUS::NetworkComponent::iconFileFromModelType(type);
-
 		inlet.m_name = VICUS::INLET_NAME;
 		inlet.m_isInlet = true;
 		inlet.m_id = element.m_inletNodeId;

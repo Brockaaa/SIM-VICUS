@@ -69,6 +69,14 @@ SVBMBlockItem::SVBMBlockItem(VICUS::BMBlock * b, VICUS::NetworkComponent::ModelT
 	createSocketItems();
 }
 
+SVBMBlockItem::~SVBMBlockItem()
+{
+	if(m_image != nullptr)
+		delete m_image;
+	if(m_imageHx != nullptr)
+		delete m_imageHx;
+}
+
 bool SVBMBlockItem::acceptingConnection(const QPointF & scenePos){
 	if(this->m_block->m_mode == VICUS::InvisibleBlock || this->m_block->m_mode == VICUS::GlobalInlet) return false;
 
@@ -171,17 +179,11 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 	QPen p;
 	if(m_block->m_mode == VICUS::BMBlockType::NetworkComponentBlock)
 	{
-		if (m_block->m_properties.contains("ShowImage") &&
-			m_block->m_properties["ShowImage"].toBool() &&
-			m_block->m_properties.contains("Image"))
-		{
+		if(m_image != nullptr) {
 			// fill entire background with white
 			QRectF r = rect();
 			painter->setBrush(Qt::white);
-
-			QSvgRenderer p(m_block->m_properties["Image"].value<QString>());
-			p.render(painter, r);
-			painter->setBrush(Qt::NoBrush);
+			m_image->render(painter, r);
 		}
 		else {
 			QLinearGradient grad(QPointF(0,0), QPointF(rect().width(),0));
@@ -286,12 +288,9 @@ void SVBMBlockItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 		painter->drawText(textRect, Qt::AlignCenter | Qt::AlignHCenter, elidedText);
 	}
 
-	if(!m_imageHx.isEmpty()){
-		painter->setBrush(Qt::white);
+	if(m_imageHx != nullptr){
 		QRectF hXRect(QPointF(rect().width(),0), QPointF(rect().height() + 20,20));
-		QSvgRenderer svgRenderer(m_imageHx);
-		svgRenderer.render(painter, hXRect);
-		painter->setBrush(Qt::NoBrush);
+		m_imageHx->render(painter, hXRect);
 	}
 
 	painter->restore();

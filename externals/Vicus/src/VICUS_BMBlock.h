@@ -39,8 +39,6 @@
 #include <QPointF>
 #include <QSizeF>
 #include <QLineF>
-#include <QVariant>
-#include <QMap>
 
 #include "VICUS_BMSocket.h"
 #include "VICUS_BMGlobals.h"
@@ -84,10 +82,8 @@ public:
 	/*! Name to be displayed in Scene */
 	QString                     m_displayName;
 
-
 	/*! Position (top left corner) of block. */
 	QPointF						m_pos;
-
 
 	/*! Sockets that belong to this block. */
 	QList<BMSocket>				m_sockets;
@@ -95,12 +91,8 @@ public:
 	/*! Size of block. */
 	QSizeF						m_size;
 
-	/*! Custom properties. */
-	QMap<QString, QVariant>		m_properties;
-
 	/*! VICUS::NetworkComponent::ModelType of Block */
 	unsigned int				m_componentId;
-
 
 	/*! If true, this block is only a virtual block with a single socket, that is invisible (not painted)
 		and only exists, until the connected has been attached to a socket of another block.

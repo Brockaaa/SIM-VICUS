@@ -35,6 +35,7 @@
 #define SVBMBlockItemH
 
 #include <QGraphicsRectItem>
+#include <QSvgRenderer>
 #include <VICUS_NetworkComponent.h>
 #include <VICUS_NetworkHeatExchange.h>
 
@@ -52,6 +53,8 @@ public:
 		must have a lifetime longer than the graphics item.
 	*/
 	explicit SVBMBlockItem(VICUS::BMBlock * b, VICUS::NetworkComponent::ModelType modelType = VICUS::NetworkComponent::NUM_MT);
+
+	~SVBMBlockItem();
 
 	const VICUS::BMBlock * block() const { return m_block; }
 
@@ -113,8 +116,11 @@ private:
 	/*! Name of Controller from VICUS::KeywordListQt */
 	QString								  m_controllerName;
 
+	/*! Pixmap of the component */
+	QSvgRenderer						  *m_image = nullptr;
+
 	/*! Pixmap of current Heat Exchange */
-	QString								  m_imageHx;
+	QSvgRenderer						  *m_imageHx = nullptr;
 
 	/*! HeatExchange to draw small icon */
 	VICUS::NetworkHeatExchange::ModelType m_heatExchangeModelType = VICUS::NetworkHeatExchange::NUM_T;
