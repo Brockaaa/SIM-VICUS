@@ -29,6 +29,7 @@
 #include <QtExt_Style.h>
 #include <QtExt_LanguageStringEditWidget1.h>
 #include <QtExt_LanguageHandler.h>
+#include <QtExt_Conversions.h>
 
 #include <VICUS_BMNetwork.h>
 #include <VICUS_BMBlock.h>
@@ -104,9 +105,6 @@ void SVSubNetworkEditDialog::setupSubNetwork(VICUS::SubNetwork *subNetwork, Subn
 {
 	m_subNetwork = subNetwork;
 	m_mode = mode;
-	if(m_subNetwork->m_elements.size() != 0 && m_subNetwork->m_components.size() == 0){
-		convertSubnetwork();
-	}
 	updateNetwork();
 }
 
@@ -175,9 +173,8 @@ void SVSubNetworkEditDialog::updateToolBoxPages(){
 
 
 void SVSubNetworkEditDialog::updateNetwork() {
-	FUNCID(SVSubNetworkEditDialog::updateNetwork);
 
-	setWindowTitle(QString::fromStdString(m_subNetwork->m_displayName.string()));
+	setWindowTitle(QtExt::MultiLangString2QString(m_subNetwork->m_displayName) );
 
 	m_networkComponents = m_subNetwork->m_components;
 
@@ -856,10 +853,8 @@ bool SVSubNetworkEditDialog::checkValidityOfNetworkElementsAndGraphicalNetwork()
 			countNetworkElementBlocks++;
 	}
 
-	if(countNetworkElementBlocks != sizeOfNetworkElements){
-		IBK::IBK_Message(tr("The network contains invalid elements. Please check the network.").toStdString());
+	if (countNetworkElementBlocks != sizeOfNetworkElements)
 		return false;
-	}
 
 	// Check if for each NetworkElement, there is one NetworkComponentBlock, check if inlet and outlet IDs are correct
 	for(const VICUS::NetworkElement& element: m_subNetwork->m_elements){
