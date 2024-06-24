@@ -363,65 +363,65 @@ bool NetworkComponent::hasPipeProperties(const NetworkComponent::ModelType model
 
 QString NetworkComponent::iconFileFromModelType(NetworkComponent::ModelType modelType) {
 	switch (modelType) {
-	case VICUS::NetworkComponent::ModelType::MT_SimplePipe:
-		return ":/icons/light/svg/network_icons/SimplePipe.svg";
-	case VICUS::NetworkComponent::ModelType::MT_DynamicPipe:
-		return ":/icons/light/svg/network_icons/DynamicPipe.svg";
-	case VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump:
-		return ":/icons/light/svg/network_icons/ConstantPressurePump.svg";
-	case VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump:
-		return ":/icons/light/svg/network_icons/ConstantMassFluxPump.svg";
-	case VICUS::NetworkComponent::ModelType::MT_ControlledPump:
-		return ":/icons/light/svg/network_icons/ControlledPump.svg";
-	case VICUS::NetworkComponent::ModelType::MT_VariablePressurePump:
-		return ":/icons/light/svg/network_icons/VariablePressurePump.svg";
-	case VICUS::NetworkComponent::ModelType::MT_HeatExchanger:
-		return ":/icons/light/svg/network_icons/HeatExchanger.svg";
-	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide:
-		return ":/icons/light/svg/network_icons/HeatPumpVariableIdealCarnotSourceSide.svg";
-	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide:
-		return ":/icons/light/svg/network_icons/HeatPumpVariableIdealCarnotSupplySide.svg";
-	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide:
-		return ":/icons/light/svg/network_icons/HeatPumpVariableSourceSide.svg";
-	case VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide:
-		return ":/icons/light/svg/network_icons/HeatPumpOnOffSourceSide.svg";
-	case VICUS::NetworkComponent::ModelType::MT_ControlledValve:
-		return ":/icons/light/svg/network_icons/ControlledValve.svg";
-	case VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve:
-		return ":/icons/light/svg/network_icons/ConstantPressureLossValve.svg";
-	case VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler:
-		return ":/icons/light/svg/network_icons/IdealHeaterCooler.svg";
-	case VICUS::NetworkComponent::ModelType::MT_PressureLossElement:
-		return ":/icons/light/svg/network_icons/PressureLossElement.svg";
-	default:
-			throw std::invalid_argument("Unknown modelType");
+		case VICUS::NetworkComponent::ModelType::MT_SimplePipe:
+			return ":/icons/light/svg/network_icons/SimplePipe.svg";
+		case VICUS::NetworkComponent::ModelType::MT_DynamicPipe:
+			return ":/icons/light/svg/network_icons/DynamicPipe.svg";
+		case VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump:
+			return ":/icons/light/svg/network_icons/ConstantPressurePump.svg";
+		case VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump:
+			return ":/icons/light/svg/network_icons/ConstantMassFluxPump.svg";
+		case VICUS::NetworkComponent::ModelType::MT_ControlledPump:
+			return ":/icons/light/svg/network_icons/ControlledPump.svg";
+		case VICUS::NetworkComponent::ModelType::MT_VariablePressurePump:
+			return ":/icons/light/svg/network_icons/VariablePressurePump.svg";
+		case VICUS::NetworkComponent::ModelType::MT_HeatExchanger:
+			return ":/icons/light/svg/network_icons/HeatExchanger.svg";
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide:
+			return ":/icons/light/svg/network_icons/HeatPumpVariableIdealCarnotSourceSide.svg";
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide:
+			return ":/icons/light/svg/network_icons/HeatPumpVariableIdealCarnotSupplySide.svg";
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide:
+			return ":/icons/light/svg/network_icons/HeatPumpVariableSourceSide.svg";
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide:
+			return ":/icons/light/svg/network_icons/HeatPumpOnOffSourceSide.svg";
+		case VICUS::NetworkComponent::ModelType::MT_ControlledValve:
+			return ":/icons/light/svg/network_icons/ControlledValve.svg";
+		case VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve:
+			return ":/icons/light/svg/network_icons/ConstantPressureLossValve.svg";
+		case VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler:
+			return ":/icons/light/svg/network_icons/IdealHeaterCooler.svg";
+		case VICUS::NetworkComponent::ModelType::MT_PressureLossElement:
+			return ":/icons/light/svg/network_icons/PressureLossElement.svg";
+		case VICUS::NetworkComponent::ModelType::NUM_MT:
+			return "";
 	}
 }
 
 
 NetworkComponent::ComponentCategory NetworkComponent::componentCategoryFromModelType(NetworkComponent::ModelType modelType) {
 	switch (modelType) {
-	case VICUS::NetworkComponent::ModelType::MT_SimplePipe:
-	case VICUS::NetworkComponent::ModelType::MT_DynamicPipe:
+		case VICUS::NetworkComponent::ModelType::MT_SimplePipe:
+		case VICUS::NetworkComponent::ModelType::MT_DynamicPipe:
 			return CC_Pipes;
-	case VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump:
-	case VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump:
-	case VICUS::NetworkComponent::ModelType::MT_ControlledPump:
-	case VICUS::NetworkComponent::ModelType::MT_VariablePressurePump:
+		case VICUS::NetworkComponent::ModelType::MT_ConstantPressurePump:
+		case VICUS::NetworkComponent::ModelType::MT_ConstantMassFluxPump:
+		case VICUS::NetworkComponent::ModelType::MT_ControlledPump:
+		case VICUS::NetworkComponent::ModelType::MT_VariablePressurePump:
 			return CC_Pumps;
-	case VICUS::NetworkComponent::ModelType::MT_HeatExchanger:
-	case VICUS::NetworkComponent::ModelType::MT_ControlledValve:
-	case VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve:
-	case VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler:
-	case VICUS::NetworkComponent::ModelType::MT_PressureLossElement:
+		case VICUS::NetworkComponent::ModelType::MT_HeatExchanger:
+		case VICUS::NetworkComponent::ModelType::MT_ControlledValve:
+		case VICUS::NetworkComponent::ModelType::MT_ConstantPressureLossValve:
+		case VICUS::NetworkComponent::ModelType::MT_IdealHeaterCooler:
+		case VICUS::NetworkComponent::ModelType::MT_PressureLossElement:
 			return CC_Other;
-	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide:
-	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide:
-	case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide:
-	case VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide:
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSourceSide:
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableIdealCarnotSupplySide:
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpVariableSourceSide:
+		case VICUS::NetworkComponent::ModelType::MT_HeatPumpOnOffSourceSide:
 			return CC_Heatpumps;
-	default:
-			throw std::invalid_argument("Unknown modelType");
+		case VICUS::NetworkComponent::ModelType::NUM_MT:
+			return CC_Other; // for compiler
 	}
 }
 
