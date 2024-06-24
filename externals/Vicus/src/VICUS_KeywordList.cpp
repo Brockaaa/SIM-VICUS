@@ -700,6 +700,7 @@ namespace VICUS {
 				case 5 : return "DensityWall";
 				case 6 : return "ThicknessInsulation";
 				case 7 : return "ThermalConductivityInsulation";
+				case 8 : return "ThicknessOuterLayer";
 			} break;
 			// OutputDefinition::timeType_t
 			case 61 :
@@ -1444,6 +1445,7 @@ namespace VICUS {
 				case 5 : return "DensityWall";
 				case 6 : return "ThicknessInsulation";
 				case 7 : return "ThermalConductivityInsulation";
+				case 8 : return "ThicknessOuterLayer";
 			} break;
 			// OutputDefinition::timeType_t
 			case 61 :
@@ -2189,6 +2191,7 @@ namespace VICUS {
 				case 5 : return "Density of pipe wall";
 				case 6 : return "Thickness of insulation around pipe";
 				case 7 : return "Thermal conductivity of insulation";
+				case 8 : return "Thickness of outer protection layer";
 			} break;
 			// OutputDefinition::timeType_t
 			case 61 :
@@ -2933,6 +2936,7 @@ namespace VICUS {
 				case 5 : return "kg/m3";
 				case 6 : return "mm";
 				case 7 : return "W/mK";
+				case 8 : return "mm";
 			} break;
 			// OutputDefinition::timeType_t
 			case 61 :
@@ -3677,6 +3681,7 @@ namespace VICUS {
 				case 5 : return "#FFFFFF";
 				case 6 : return "#FFFFFF";
 				case 7 : return "#FFFFFF";
+				case 8 : return "#FFFFFF";
 			} break;
 			// OutputDefinition::timeType_t
 			case 61 :
@@ -4421,6 +4426,7 @@ namespace VICUS {
 				case 5 : return std::numeric_limits<double>::quiet_NaN();
 				case 6 : return std::numeric_limits<double>::quiet_NaN();
 				case 7 : return std::numeric_limits<double>::quiet_NaN();
+				case 8 : return std::numeric_limits<double>::quiet_NaN();
 			} break;
 			// OutputDefinition::timeType_t
 			case 61 :
@@ -4723,7 +4729,7 @@ namespace VICUS {
 			// NetworkNode::NodeType
 			case 59 : return 3;
 			// NetworkPipe::para_t
-			case 60 : return 8;
+			case 60 : return 9;
 			// OutputDefinition::timeType_t
 			case 61 : return 3;
 			// Outputs::flag_t
@@ -4903,7 +4909,7 @@ namespace VICUS {
 			// NetworkNode::NodeType
 			case 59 : return 2;
 			// NetworkPipe::para_t
-			case 60 : return 7;
+			case 60 : return 8;
 			// OutputDefinition::timeType_t
 			case 61 : return 2;
 			// Outputs::flag_t

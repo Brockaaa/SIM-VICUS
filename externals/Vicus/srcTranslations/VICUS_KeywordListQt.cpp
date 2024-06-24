@@ -345,6 +345,7 @@ KeywordListQt::KeywordListQt() {
 	tr("Density of pipe wall");
 	tr("Thickness of insulation around pipe");
 	tr("Thermal conductivity of insulation");
+	tr("Thickness of outer protection layer");
 	tr("Write values as calculated at output times.");
 	tr("Average values in time (mean value in output step).");
 	tr("Integrate values in time.");
