@@ -106,6 +106,9 @@ public:
 	/*! Pipe parameters. */
 	IBK::Parameter						m_para[NUM_P];						// XML:E
 
+	// *** Runtime Variable ***
+	bool								m_selected = false;
+
 };
 
 

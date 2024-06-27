@@ -81,7 +81,9 @@ enum DataRoles {
 	/*! Role to identify local database components, which are not stored in user database. */
 	Role_Local,
 	/*! Role to identify referenced database components, which are currently used in the project. */
-	Role_Referenced
+	Role_Referenced,
+	/*! Role used to check if it is selected or marked by the user in a SVAbstractDatabaseEditDialog */
+	Role_PreselectedForProject,
 };
 
 /*! Different edit/coloring modes. */

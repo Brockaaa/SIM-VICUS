@@ -111,6 +111,9 @@ SOURCES += \
 ../../src/SVDBDuplicatesDialog.cpp \
 ../../src/SVDBEpdEditWidget.cpp \
 ../../src/SVDBEpdTableModel.cpp \
+	../../src/SVDBPipeDelegate.cpp \
+	../../src/SVDBPipeEditDialog.cpp \
+	../../src/SVDBPipeSelectionTableModel.cpp \
 	../../src/SVDBSubNetworkEditWidget.cpp \
 	../../src/SVDBSubNetworkTableModel.cpp \
 	../../src/SVDBSupplySystemEditWidget.cpp \
@@ -357,6 +360,9 @@ HEADERS  += \
 	../../src/SVDBDuplicatesDialog.h \
 	../../src/SVDBEpdEditWidget.h \
 	../../src/SVDBEpdTableModel.h \
+	../../src/SVDBPipeDelegate.h \
+	../../src/SVDBPipeEditDialog.h \
+	../../src/SVDBPipeSelectionTableModel.h \
 	../../src/SVDBSubNetworkEditWidget.h \
 	../../src/SVDBSubNetworkTableModel.h \
 	../../src/SVDBSupplySystemEditWidget.h \

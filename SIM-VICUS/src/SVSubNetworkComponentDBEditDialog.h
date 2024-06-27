@@ -16,12 +16,12 @@ public:
 									  bool horizontalLayout);
 
 private slots:
-	void on_toolButtonRemove_clicked();
+	void on_m_toolButtonRemove_clicked();
 
 	void onCurrentIndexChanged(const QModelIndex &current, const QModelIndex &previous);
 
 private:
-	QToolButton						*toolButtonRemove = nullptr;
+	QToolButton						*m_toolButtonRemove = nullptr;
 
 };
 
