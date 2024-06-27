@@ -9,9 +9,9 @@ TEMPLATE = app
 # this pri must be sourced from all our applications
 include( ../../../externals/IBK/projects/Qt/IBK.pri )
 
-QT += xml opengl network printsupport widgets svg
+QT += xml opengl network printsupport widgets svg webenginewidgets
 
-CONFIG += c++11
+CONFIG += c++11 use_gold_linker
 
 CONFIG(debug, debug|release) {
 # during development, show console window with debug messages in addition to on-screen console
@@ -282,6 +282,7 @@ SOURCES += \
 	../../src/SVDebugApplication.cpp \
 	../../src/SVGeometryView.cpp \
 	../../src/SVImportIDFDialog.cpp \
+	../../src/SVImportPDFDialog.cpp \
 	../../src/SVLocalCoordinateView.cpp \
 	../../src/SVLogFileDialog.cpp \
 	../../src/SVLogWidget.cpp \
@@ -545,6 +546,7 @@ HEADERS  += \
 	../../src/SVDebugApplication.h \
 	../../src/SVGeometryView.h \
 	../../src/SVImportIDFDialog.h \
+	../../src/SVImportPDFDialog.h \
 	../../src/SVLocalCoordinateView.h \
 	../../src/SVLogFileDialog.h \
 	../../src/SVLogWidget.h \
@@ -642,6 +644,7 @@ FORMS    += \
 	../../src/SVDrawingPropertiesDialog.ui \
 	../../src/SVGeometryView.ui \
 	../../src/SVImportIDFDialog.ui \
+	../../src/SVImportPDFDialog.ui \
 	../../src/SVLcaLccResultsWidget.ui \
 	../../src/SVLcaLccSettingsWidget.ui \
 	../../src/SVLocalCoordinateView.ui \
