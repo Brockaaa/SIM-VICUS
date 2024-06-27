@@ -510,8 +510,10 @@ QString NetworkHeatExchange::iconFileFromModelType(ModelType modelType)
 		case VICUS::NetworkHeatExchange::ModelType::T_HeatLossSpline:
 			return ":/icons/light/svg/network_icons/heatflux_spline.svg";
 		case VICUS::NetworkHeatExchange::ModelType::T_TemperatureConstant:
+		case VICUS::NetworkHeatExchange::ModelType::T_TemperatureConstantEvaporator:
 			return ":/icons/light/svg/network_icons/temperature_const.svg";
 		case VICUS::NetworkHeatExchange::ModelType::T_TemperatureSpline:
+		case VICUS::NetworkHeatExchange::ModelType::T_TemperatureSplineEvaporator:
 			return ":/icons/light/svg/network_icons/temperature_spline.svg";
 		default:
 			return "";
