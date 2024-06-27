@@ -220,7 +220,9 @@ void SVNetworkComponentHeatExchangeEditWidget::updateInput(VICUS::NetworkCompone
 	m_ui->comboBoxHeatExchange->setCurrentIndex(idx);
 
 	// this also enables / disables the remaining widget. We still continue to update everything
+	blockSignals(true);
 	m_ui->checkBoxExternallyDefined->setChecked(m_hx->m_individualHeatExchange);
+	blockSignals(false);
 
 	// update of relevant page
 	on_comboBoxHeatExchange_activated(idx);
