@@ -9,7 +9,7 @@ TEMPLATE = app
 # this pri must be sourced from all our applications
 include( ../../../externals/IBK/projects/Qt/IBK.pri )
 
-QT += xml opengl network printsupport widgets svg webenginewidgets
+QT += xml opengl network printsupport widgets svg
 
 CONFIG += c++11 use_gold_linker
 
@@ -120,6 +120,7 @@ SOURCES += \
 	../../src/SVDBSupplySystemTableModel.cpp \
 	../../src/SVDatabaseSortFilterProxyModel.cpp \
 	../../src/SVDrawingPropertiesDialog.cpp \
+	../../src/SVImportPDFDialogGraphicsView.cpp \
 	../../src/SVLcaLccResultsWidget.cpp \
 	../../src/SVLcaLccSettingsWidget.cpp \
 	../../src/SVNetworkExportDialog.cpp \
@@ -370,6 +371,7 @@ HEADERS  += \
 	../../src/SVDBSupplySystemTableModel.h \
 	../../src/SVDatabaseSortFilterProxyModel.h \
 	../../src/SVDrawingPropertiesDialog.h \
+	../../src/SVImportPDFDialogGraphicsView.h \
 	../../src/SVLcaLccResultsWidget.h \
 	../../src/SVLcaLccSettingsWidget.h \
 	../../src/SVNetworkExportDialog.h \
