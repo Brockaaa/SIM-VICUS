@@ -39,14 +39,23 @@ private slots:
 
 	void on_lineEditHeight_editingFinishedSuccessfully();
 
+	void on_toolButtonLoad_clicked();
+
+protected:
+	void keyPressEvent(QKeyEvent *event) override;
+
 private:
 	Ui::SVImportPDFDialog *m_ui;
+
+	bool loadDocumentAndInitialize(QString& fname);
 
 	bool				m_twoPointMode = false;
 
 	int					m_heightPx = 0;
 
 	int					m_widthPx = 0;
+
+	double				m_aspectRatio = 0;
 
 	float				m_scale = 1;
 

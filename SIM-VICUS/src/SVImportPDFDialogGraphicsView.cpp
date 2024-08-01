@@ -21,6 +21,7 @@ void SVImportPDFDialogGraphicsView::setImage(const QImage &image)
 {
 	m_zoomLevel = 0;
 	resetTransform();
+	m_points.clear();
 	m_image = image;
 	m_scene->clear();
 
