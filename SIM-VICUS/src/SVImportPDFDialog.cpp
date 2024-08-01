@@ -220,18 +220,3 @@ bool SVImportPDFDialog::loadDocumentAndInitialize(QString & fname)
 	return true;
 }
 
-QString SVImportPDFDialog::openDocument()
-{
-
-	QString fname = QFileDialog::getOpenFileName(
-		this,
-		tr("Select File to open"),
-		"/home/sandisk/SHK",
-		tr("Image or PDF files (*.pdf *.png *.xpm *.jpg *.jpeg);;All files (*.*)"), nullptr,
-		SVSettings::instance().m_dontUseNativeDialogs ? QFileDialog::DontUseNativeDialog : QFileDialog::Options()
-		);
-
-
-	return fname;
-}
-

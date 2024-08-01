@@ -43,14 +43,18 @@ void SVImportPDFDialogGraphicsView::setTwoPointMode(bool twoPointMode)
 
 void SVImportPDFDialogGraphicsView::zoomIn()
 {
-	scale(1.2, 1.2);
-	m_zoomLevel++;
+	if (m_zoomLevel < 35) {
+		scale(1.2, 1.2);
+		updatePointsAndLines();
+		m_zoomLevel++;
+	}
 }
 
 void SVImportPDFDialogGraphicsView::zoomOut()
 {
-	if(m_zoomLevel > 0){
+	if (m_zoomLevel > 0) {
 		scale(1/1.2, 1/1.2);
+		updatePointsAndLines();
 		m_zoomLevel--;
 	}
 }
@@ -130,15 +134,41 @@ void SVImportPDFDialogGraphicsView::leaveEvent(QEvent * event)
 void SVImportPDFDialogGraphicsView::drawPoint(const QPointF & pos)
 {
 	QPen pen(Qt::red);
+	pen.setCosmetic(true);  // This ensures constant pixel width
 	pen.setWidth(3);
-	m_scene->addEllipse(pos.x() - 2, pos.y() - 2, 4, 4, pen, QBrush(Qt::red));
+
+	QGraphicsEllipseItem* point = m_scene->addEllipse(0, 0, 4, 4, pen, QBrush(Qt::red));
+	point->setPos(pos - QPointF(2, 2));  // Center the point on the given position
+	point->setFlags(QGraphicsItem::ItemIgnoresTransformations);  // Keep constant size
 }
 
 void SVImportPDFDialogGraphicsView::drawLine()
 {
 	QPen pen(Qt::blue);
+	pen.setCosmetic(true);  // This ensures constant pixel width
 	pen.setWidth(2);
-	m_scene->addLine(QLineF(m_points[0], m_points[1]), pen);
+
+	QGraphicsLineItem* line = m_scene->addLine(QLineF(m_points[0] - QPointF(1.75, 1.75), m_points[1] - QPointF(1.75, 1.75)), pen);
+	//line->setFlags(QGraphicsItem::ItemIgnoresTransformations);  // Keep constant width
+}
+
+void SVImportPDFDialogGraphicsView::updatePointsAndLines()
+{
+	// Remove existing points and lines
+	for (auto item : m_scene->items()) {
+		if (item->type() == QGraphicsEllipseItem::Type || item->type() == QGraphicsLineItem::Type) {
+			m_scene->removeItem(item);
+			delete item;
+		}
+	}
+
+	if (m_points.size() == 2) {
+		drawLine();
+	}
+	// Redraw points and lines
+	for (const QPointF &point : m_points) {
+		drawPoint(point);
+	}
 }
 
 void SVImportPDFDialogGraphicsView::removePointsFromScene()

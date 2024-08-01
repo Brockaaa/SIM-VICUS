@@ -47,6 +47,8 @@ private:
 
 	void drawLine();
 
+	void updatePointsAndLines();
+
 	void removePointsFromScene();
 
 	int						m_dragThreshold = 5;
