@@ -95,8 +95,11 @@ bool SVImportPDFDialog::import()
 
 
 	// Resize view to maintain aspect ratio
-	
-	double aspectRatio = static_cast<double>(m_image.width()) / m_image.height();
+
+	int imageWidth = m_image.width();
+	int imageHeight = m_image.height();
+
+	double aspectRatio = (double)imageWidth / (double)imageHeight;
 
 	int newWidth, newHeight;
 

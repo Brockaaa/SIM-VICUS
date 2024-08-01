@@ -19,15 +19,18 @@ SVImportPDFDialogGraphicsView::SVImportPDFDialogGraphicsView(QWidget *parent)
 
 void SVImportPDFDialogGraphicsView::setImage(const QImage &image)
 {
+	m_zoomLevel = 0;
+	resetTransform();
 	m_image = image;
 	m_scene->clear();
+
 	QPixmap pixmap = QPixmap::fromImage(image);
+	double ratio = (double)pixmap.rect().width() / (double)rect().width();
+	double inverseRatio = (double)rect().width() / (double)pixmap.rect().width();
+	m_scene->setSceneRect(QRect(0, 0, rect().width() * ratio, rect().height() * ratio));
+	scale(inverseRatio, inverseRatio);
+
 	QGraphicsPixmapItem *item = m_scene->addPixmap(pixmap);
-	qDebug() << "Pixmap rect: " << pixmap.rect();
-	qDebug() << "Scene rect: " << rect();
-	m_scene->setSceneRect(rect());
-	double ratio = (double)rect().width() / (double)pixmap.rect().width();
-	scale(ratio, ratio);
 }
 
 void SVImportPDFDialogGraphicsView::setTwoPointMode(bool twoPointMode)
