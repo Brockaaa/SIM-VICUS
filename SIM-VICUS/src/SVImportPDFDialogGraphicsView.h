@@ -68,6 +68,8 @@ private:
 	int						m_zoomLevel = 0;
 
 	QImage					m_image;
+
+	friend class SVImportPDFDialog;
 };
 
 #endif // SVIMPORTPDFDIALOGGRAPHICSVIEW_H
