@@ -55,10 +55,6 @@ bool SVImportPDFDialog::import() {
 	}
 }
 
-float SVImportPDFDialog::scale() {
-	return m_ui->graphicsView->scaling();
-}
-
 void SVImportPDFDialog::changeTwoPointMode(bool checked) {
 
 	m_twoPointMode = checked;
