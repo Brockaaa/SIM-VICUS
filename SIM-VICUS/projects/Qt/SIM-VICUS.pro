@@ -11,8 +11,7 @@ include( ../../../externals/IBK/projects/Qt/IBK.pri )
 
 QT += xml opengl network printsupport widgets svg
 
-CONFIG += c++11 use_gold_linker
-
+CONFIG += c++11
 CONFIG(debug, debug|release) {
 # during development, show console window with debug messages in addition to on-screen console
 # (useful for dual-screen setups)
