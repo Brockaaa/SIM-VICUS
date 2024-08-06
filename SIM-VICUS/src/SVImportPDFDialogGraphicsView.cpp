@@ -30,12 +30,14 @@ void SVImportPDFDialogGraphicsView::setImage(const QImage &image) {
 	m_scene->setSceneRect(QRect(0, 0, rect().width() * ratio, rect().height() * ratio));
 	scale(inverseRatio, inverseRatio);
 
-	QGraphicsPixmapItem *item = m_scene->addPixmap(pixmap);
+	m_pixmapItem = m_scene->addPixmap(pixmap);
 }
 
 void SVImportPDFDialogGraphicsView::setTwoPointMode(bool twoPointMode) {
-	if(!twoPointMode)
+	if (!twoPointMode) {
 		removePointsFromScene();
+		emit pointCountChanged(0);
+	}
 	m_twoPointMode = twoPointMode;
 }
 
@@ -66,7 +68,7 @@ void SVImportPDFDialogGraphicsView::mouseMoveEvent(QMouseEvent * event) {
 
 	int distance = (event->pos() - m_startPos).manhattanLength();
 	if (distance >= m_dragThreshold) {
-		if(!m_isDragging && m_twoPointMode)
+		if (!m_isDragging && m_twoPointMode)
 			QApplication::restoreOverrideCursor();
 		m_isDragging = true;
 	}
@@ -75,7 +77,7 @@ void SVImportPDFDialogGraphicsView::mouseMoveEvent(QMouseEvent * event) {
 }
 
 void SVImportPDFDialogGraphicsView::mouseReleaseEvent(QMouseEvent * event) {
-	if(!m_isDragging && m_twoPointMode){
+	if (!m_isDragging && m_twoPointMode){
 		QPointF scenePos = mapToScene(event->pos());
 		if (m_points.size() < 2)
 		{
@@ -86,7 +88,7 @@ void SVImportPDFDialogGraphicsView::mouseReleaseEvent(QMouseEvent * event) {
 			removePointsFromScene();
 		emit pointCountChanged(m_points.size());
 	}
-	if(m_isDragging && m_twoPointMode)
+	if (m_isDragging && m_twoPointMode)
 		QApplication::setOverrideCursor(Qt::CrossCursor);
 	m_isDragging = false;
 	m_startPos = QPointF(0,0);
@@ -103,13 +105,13 @@ void SVImportPDFDialogGraphicsView::wheelEvent(QWheelEvent * event) {
 }
 
 void SVImportPDFDialogGraphicsView::enterEvent(QEvent * event) {
-	if(m_twoPointMode)
+	if (m_twoPointMode)
 		QApplication::setOverrideCursor(Qt::CrossCursor);
 	QGraphicsView::enterEvent(event);
 }
 
 void SVImportPDFDialogGraphicsView::leaveEvent(QEvent * event) {
-	if(m_twoPointMode)
+	if (m_twoPointMode)
 		QApplication::restoreOverrideCursor();
 	QGraphicsView::enterEvent(event);
 }
@@ -143,7 +145,7 @@ void SVImportPDFDialogGraphicsView::updatePointsAndLines() {
 		drawLine();
 	}
 
-	for(QPointF &point : m_points){
+	for (QPointF &point : m_points) {
 		drawPoint(point);
 	}
 }

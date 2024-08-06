@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QGraphicsView>
 
+class QGraphicsPixmapItem;
+
 class SVImportPDFDialogGraphicsView : public QGraphicsView
 {
 	Q_OBJECT
@@ -68,6 +70,8 @@ private:
 	int						m_zoomLevel = 0;
 
 	QImage					m_image;
+
+	QGraphicsPixmapItem		*m_pixmapItem;
 
 	friend class SVImportPDFDialog;
 };
