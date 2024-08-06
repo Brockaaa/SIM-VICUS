@@ -188,6 +188,11 @@ public:
 		setText(t);
 	}
 
+	void clear() {
+		m_storedText = "";
+		QLineEdit::clear();
+	}
+
 
 protected:
 
