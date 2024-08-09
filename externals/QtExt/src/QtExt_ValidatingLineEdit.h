@@ -205,6 +205,9 @@ protected:
 	/*! Overloaded focusInEvent to apply Elision if set */
 	void focusOutEvent(QFocusEvent *e) override;
 
+	/*! Overloaded resizeEvent to adjust Ellision if set */
+	void resizeEvent(QResizeEvent *event) override;
+
 signals:
 	/*! Emits the result of the editing, but only if a result was entered correctly. */
 	void editingFinishedSuccessfully();
