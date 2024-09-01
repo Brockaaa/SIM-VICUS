@@ -61,6 +61,7 @@ HEADERS += \
 	../../src/VICUS_Database.h \
 	../../src/VICUS_Drawing.h \
 	../../src/VICUS_DrawingLayer.h \
+	../../src/VICUS_DrawingOSM.h \
 	../../src/VICUS_EmbeddedDatabase.h \
 	../../src/VICUS_EpdCategorySet.h \
 	../../src/VICUS_EpdDataset.h \
@@ -144,6 +145,7 @@ SOURCES += \
 	../../src/VICUS_DailyCycle.cpp \
 	../../src/VICUS_Drawing.cpp \
 	../../src/VICUS_DrawingLayer.cpp \
+	../../src/VICUS_DrawingOSM.cpp \
 	../../src/VICUS_EpdCategorySet.cpp \
 	../../src/VICUS_EpdDataset.cpp \
 	../../src/VICUS_EpdModuleDataset.cpp \
