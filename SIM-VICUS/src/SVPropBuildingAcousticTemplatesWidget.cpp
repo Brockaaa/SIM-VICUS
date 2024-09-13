@@ -66,6 +66,7 @@ void SVPropBuildingAcousticTemplatesWidget::onModified(int modificationType, Mod
 		case SVProjectHandler::OutputsModified:
 		case SVProjectHandler::StructuralUnitsModified:
 		case SVProjectHandler::DrawingModified:
+		case SVProjectHandler::DrawingOSMModified:
 		case SVProjectHandler::LcaLccModified:
 		break;
 	}

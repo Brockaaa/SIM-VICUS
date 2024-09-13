@@ -290,5 +290,6 @@ void SVUndoDeleteSelected::redo() {
 	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingGeometryChanged);
 	SVProjectHandler::instance().setModified( SVProjectHandler::NetworkGeometryChanged);
 	SVProjectHandler::instance().setModified( SVProjectHandler::DrawingModified);
+	SVProjectHandler::instance().setModified( SVProjectHandler::DrawingOSMModified);
 }
 

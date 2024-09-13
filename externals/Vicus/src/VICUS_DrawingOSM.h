@@ -9,6 +9,17 @@
 #include <string>
 #include <vector>
 
+#include "VICUS_PlaneGeometry.h"
+#include "VICUS_RotationMatrix.h"
+#include "VICUS_Drawing.h"
+
+#include <IBKMK_Vector2D.h>
+#include <IBKMK_UTM.h>
+
+#include <QQuaternion>
+#include <QMatrix4x4>
+#include <QColor>
+
 namespace VICUS {
 
 /*!
@@ -25,31 +36,25 @@ public:
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
-	~DrawingOSM();
-
 	enum Types{
 		NodeType,
 		WayType,
 		RelationType
 	};
 
+	enum MainTag{
+		T_building,
+		T_highway,
+		T_waterway,
+		T_natural,
+		NumT,
+	};
+
 	struct Tag{
 		std::string key;
 		std::string value;
 
-		void readXML(const TiXmlElement * element) {
-			FUNCID(DrawingOSM::Tag::readXML);
-
-			if (!TiXmlAttribute::attributeByName(element, "k"))
-				throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-										 IBK::FormatString("Missing required 'k' attribute.") ), FUNC_ID);
-			if (!TiXmlAttribute::attributeByName(element, "v"))
-				throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-										 IBK::FormatString("Missing required 'v' attribute.") ), FUNC_ID);
-
-			key = TiXmlAttribute::attributeByName(element, "k")->ValueStr();
-			value = TiXmlAttribute::attributeByName(element, "v")->ValueStr();
-		}
+		void readXML(const TiXmlElement * element);
 	};
 
 	struct Member{
@@ -57,47 +62,13 @@ public:
 		int ref;
 		std::string role;
 
-		void readXML(const TiXmlElement * element) {
-			FUNCID(DrawingOSM::Member::readXML);
-
-			if (!TiXmlAttribute::attributeByName(element, "type"))
-				throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-										 IBK::FormatString("Missing required 'type' attribute.") ), FUNC_ID);
-			if (!TiXmlAttribute::attributeByName(element, "ref"))
-				throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-										 IBK::FormatString("Missing required 'ref' attribute.") ), FUNC_ID);
-			if (!TiXmlAttribute::attributeByName(element, "role"))
-				throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-										 IBK::FormatString("Missing required 'role' attribute.") ), FUNC_ID);
-
-			std::string typeStr = TiXmlAttribute::attributeByName(element, "type")->ValueStr();
-			if (typeStr == "node")
-				type = NodeType;
-			else if (typeStr == "way")
-				type = WayType;
-			else if (typeStr == "relation")
-				type = RelationType;
-			else
-				throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-										 IBK::FormatString("Unknown type '%1'.").arg(typeStr) ), FUNC_ID);
-
-			ref = TiXmlAttribute::attributeByName(element, "ref")->IntValue();
-			role = TiXmlAttribute::attributeByName(element, "role")->ValueStr();
-		}
+		void readXML(const TiXmlElement * element);
 	};
 
 	struct Nd{
 		int ref;
 
-		void readXML(const TiXmlElement * element) {
-			FUNCID(DrawingOSM::nd::readXML);
-
-			if (!TiXmlAttribute::attributeByName(element, "ref"))
-				throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-										 IBK::FormatString("Missing required 'ref' attribute.") ), FUNC_ID);
-
-			ref = TiXmlAttribute::attributeByName(element, "ref")->IntValue();
-		}
+		void readXML(const TiXmlElement * element);
 	};
 
 	struct BoundingBox{
@@ -107,173 +78,171 @@ public:
 		double maxlon;
 	};
 
-	/* Abstract class for all directly drawable dxf entities */
+	/* Abstract class for all OSM XML elements */
 	struct AbstractOSMElement {
 
-		~AbstractOSMElement(){
-			for (size_t i = 0; i < m_tags.size(); ++i)
-				delete m_tags[i];
-			m_tags.clear();
-		}
+		void readXML(const TiXmlElement * element);
 
-		void readXML(const TiXmlElement * element){
-			FUNCID(DrawingOSM::AbstractOSMElement::readXML);
+		bool containsKey(const std::string& key) const;
 
-			// mandatory attributes
-			if (!TiXmlAttribute::attributeByName(element, "id"))
-				throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-										 IBK::FormatString("Missing required 'id' attribute.") ), FUNC_ID);
+		bool containsValue(const std::string& value) const;
 
-			// Read common attributes
-			const TiXmlAttribute * attrib = element->FirstAttribute();
-			while (attrib) {
-				const std::string & attribName = attrib->NameStr();
-				if (attribName == "id") {
-					m_id = attrib->IntValue();
-				}
-				else if (attribName == "visible") {
-					std::string value = attrib->ValueStr();
-					m_visible = value == "true" ? true : false;
-				}
-				attrib = attrib->Next();
-			}
-		}
+		bool containsKeyValue(const std::string& key, const std::string& value) const;
 
 		unsigned int                    m_id = VICUS::INVALID_ID; // unique id
 
-		std::vector<Tag*>				m_tags; // stores all tags. Does not make an effort to interpret them
+		std::vector<Tag>				m_tags; // stores all tags. Does not make an effort to interpret them
 
 		bool                            m_visible = true; // visibility flag
 	};
 
-	/*! Stores attributes of line */
+	/*! A single point on the mapo */
 	struct Node : public AbstractOSMElement {
 
-		void readXML(const TiXmlElement * element) {
-			FUNCID(DrawingOSM::Node::readXML);
-
-			AbstractOSMElement::readXML(element);
-
-			// Check for mandatory attributes
-			if (!TiXmlAttribute::attributeByName(element, "lat"))
-				throw IBK::Exception(IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-					IBK::FormatString("Missing required 'lat' attribute.")), FUNC_ID);
-			if (!TiXmlAttribute::attributeByName(element, "lon"))
-				throw IBK::Exception(IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-					IBK::FormatString("Missing required 'lon' attribute.")), FUNC_ID);
-
-			// Read the latitude and longitude attributes
-			m_lat = TiXmlAttribute::attributeByName(element, "lat")->DoubleValue();
-			m_lon = TiXmlAttribute::attributeByName(element, "lon")->DoubleValue();
-
-			// Read child elements
-			const TiXmlElement * child = element->FirstChildElement();
-			while (child) {
-				const std::string & childName = child->ValueStr();
-				if (childName == "tag") {
-					Tag *tag = new Tag();
-					tag->readXML(child);
-					m_tags.push_back(tag);
-				}
-				child = child->NextSiblingElement();
-			}
-		}
+		void readXML(const TiXmlElement * element);
 
 		/*! Point coordinate */
 		double                          m_lon;
 		double                          m_lat;
 	};
 
-	/*! Stores both LW and normal polyline */
+	/*! List of Nodes that make up a way. A way describes a polylines */
 	struct Way : public AbstractOSMElement {
 
-		~Way(){
-			for (size_t i = 0; i < m_nd.size(); ++i)
-				delete m_nd[i];
-			m_nd.clear();
-		}
+		void readXML(const TiXmlElement * element);
 
-		void readXML(const TiXmlElement * element) {
-			FUNCID(DrawingOSM::Way::readXML);
-
-			AbstractOSMElement::readXML(element);
-
-			// Read child elements
-			const TiXmlElement * child = element->FirstChildElement();
-			while (child) {
-				const std::string & childName = child->ValueStr();
-				if (childName == "tag") {
-					Tag *tag = new Tag();
-					tag->readXML(child);
-					m_tags.push_back(tag);
-				}
-				if (childName == "nd") {
-					Nd *nd = new Nd();
-					nd->readXML(child);
-					m_nd.push_back(nd);
-				}
-				child = child->NextSiblingElement();
-			}
-		}
-
-		std::vector<Nd*>				m_nd;
+		std::vector<Nd>				m_nd;
 	};
 
 	/*! Stores both LW and normal polyline */
 	struct Relation : public AbstractOSMElement {
 
-		~Relation(){
-			for (size_t i = 0; i < m_members.size(); ++i) {
-					delete m_members[i];
-			}
-			m_members.clear();
-		}
+		void readXML(const TiXmlElement * element);
 
-		void readXML(const TiXmlElement * element) {
-			FUNCID(DrawingOSM::Relation::readXML);
-
-			AbstractOSMElement::readXML(element);
-
-			// Read child elements
-			const TiXmlElement * child = element->FirstChildElement();
-			while (child) {
-				const std::string & childName = child->ValueStr();
-				if (childName == "tag") {
-					Tag *tag = new Tag();
-					tag->readXML(child);
-					m_tags.push_back(tag);
-				}
-				if (childName == "member") {
-					Member *member = new Member();
-					member->readXML(child);
-					m_members.push_back(member);
-				}
-				child = child->NextSiblingElement();
-			}
-		}
-
-		std::vector<Member*>				m_members;
+		std::vector<Member>				m_members;
 	};
 
 
+	struct AbstractDrawingObject {
+
+		AbstractDrawingObject(const DrawingOSM * drawing)
+			: m_drawing(drawing)
+		{}
+
+		virtual const std::vector<VICUS::PlaneGeometry>& planeGeometries() const = 0;
+
+		void updatePlaneGeometry() {
+			m_dirtyTriangulation = true;
+		}
+
+		unsigned int m_zPosition = 0;
+
+	protected:
+		/*! Flag to indictate recalculation of points. */
+		mutable bool								m_dirtyPoints = true;
+		/*! Flag to indictate recalculation triangulation. */
+		mutable bool								m_dirtyTriangulation = true;
+		/*! Points of objects. */
+		mutable std::vector<IBKMK::Vector2D>		m_pickPoints;
+		/*! Plane Geometries with all triangulated data.
+		*/
+		mutable std::vector<VICUS::PlaneGeometry>	m_planeGeometries;
+		/*! Pointer to DrawingOSM object this AbstractDrawingObject belongs to */
+		const DrawingOSM * m_drawing = nullptr;
+	};
+
+	struct AreaBorder : AbstractDrawingObject {
+
+		AreaBorder(const DrawingOSM * drawing)
+			: AbstractDrawingObject(drawing)
+		{}
+
+		/*! polyline coordinates */
+		std::vector<IBKMK::Vector2D>		m_polyline;
+		QColor								m_colorArea	  = QColor("#d9d0c9");
+		QColor								m_colorBorder = QColor("#c7b7b0");
+
+		const std::vector<VICUS::PlaneGeometry>& planeGeometries() const override;
+	};
+
+
+	struct AbstractOSMObject {
+	};
+
+
+	// https://wiki.openstreetmap.org/wiki/Simple_3D_Buildings#How_to_map
+	/*! Building Object. Contains only 2D information. */
+	struct Building : AbstractOSMObject {
+		std::vector<AreaBorder>				m_areaBorders;
+	};
+
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
+	/*! Fills m_nodes, m_ways, m_relations, m_boundingBox with values from a OSM XML */
 	void readXML(const TiXmlElement * element);
 
+	/*! calls readXML. Afterwards calculates m_utmZone and m_origin */
 	bool readOSMFile(QString filePath);
+	void constructObjects();
+
+	/*! Updates all planes, when transformation operations are applied.
+		MIND: Always call this function, when the drawing transformation
+		(translation, rotation) were changed, since the triangulation is
+		redone.
+	*/
+	void updatePlaneGeometries();
+
+
+	const Node* findNodeFromId(unsigned int id) const;
+	const Way* findWayFromId(unsigned int id) const;
+	const Relation* findRelationFromId(unsigned int id) const;
+	inline IBKMK::Vector2D convertLatLonToVector2D(double lat, double lon);
+
+	// *** Methods to create Buildings streets. etc. ***
+
+	// extracts information from a way for a building
+	void createBuilding(Way &way);
+	void createBuilding(Relation &relation);
 
 	// *** PUBLIC MEMBER VARIABLES ***
 
+	// *** List of OSM XML Elements ***
 	/*! list of nodes */
-	std::vector<Node*>								m_nodes;
+	std::vector<Node>								m_nodes;
 	/*! list of ways */
-	std::vector<Way*>								m_ways;
+	std::vector<Way>								m_ways;
 	/*! lists of relations */
-	std::vector<Relation*>								m_relations;
+	std::vector<Relation>							m_relations;
 	/*! Stores the bounding box of the drawing */
-	BoundingBox									m_boundingBox;
+	BoundingBox										m_boundingBox;
+
+
+	/*! UTM zone defined by the longitude (minlon) of the bounding box */
+	int												m_utmZone = 0;
+	/*! Conversion of minlat, minlon of bounding box in the Universal Transverse Mercator projection. */
+	IBKMK::Vector2D									m_originMercatorProjection;
+
+
+
+	/*! point of origin */
+	IBKMK::Vector3D															m_origin			= IBKMK::Vector3D(0,0,0);
+	/*! rotation matrix */
+	RotationMatrix															m_rotationMatrix	= RotationMatrix(QQuaternion(1.0,0.0,0.0,0.0));
+	/*! scale factor */
+	double																	m_scalingFactor		= 1.0;
+
+	// *** List of OSM Objects like buildings, streets with all relevant information ***
+	std::vector<Building>							m_buildings;
+
 	/*! path of the OSM File */
-	QString										m_filePath;
+	QString											m_filePath;
+
+private:
+	void processRelation(const Relation& relation, std::vector<const Node*>& nodes, std::vector<const Way*>& ways, bool& outline);
+
+	/*! Flag to indictate recalculation triangulation. */
+	mutable bool								m_dirtyTriangulation = true;
+
 };
 
 } // namespace VICUS

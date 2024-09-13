@@ -119,6 +119,7 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 	bool updateNetwork = false;
 	bool updateBuilding = false;
 	bool updateDrawing = false;
+	bool updateDrawingOSM = false;
 	bool updateCamera = false;
 	bool updateSelection = false;
 	// filter out all modification types that we handle
@@ -130,6 +131,7 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		updateNetwork = true;
 		updateCamera = true;
 		updateDrawing = true;
+		updateDrawingOSM = true;
 		updateSelection = true;
 		// clear new polygon drawing object
 		m_newGeometryObject.clear();
@@ -209,6 +211,7 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		updateBuilding = true;
 		updateNetwork = true;
 		updateDrawing = true;
+		updateDrawingOSM = true;
 
 		// Now check if our new selection set is different from the previous selection set.
 		std::set<const VICUS::Object*> selectedObjects;
@@ -242,6 +245,17 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 			const_cast<VICUS::Drawing &>(d).updatePlaneGeometries();
 
 		m_drawingGeometryObject.updateBuffers();
+	} break;
+
+	case SVProjectHandler::DrawingOSMModified: {
+		updateBuilding = true;
+		updateDrawingOSM = true;
+		updateSelection = true;
+
+		for (const VICUS::DrawingOSM &d : project().m_drawingsOSM)
+			const_cast<VICUS::DrawingOSM &>(d).updatePlaneGeometries();
+
+		m_drawingOSMGeometryObject.updateBuffers();
 	} break;
 
 	case SVProjectHandler::StructuralUnitsModified :
@@ -306,6 +320,10 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		generate2DDrawingGeometry();
 	}
 
+	if(updateDrawingOSM){
+		m_drawingOSMGeometryObject.create(m_buildingShader->shaderProgram());
+		generate2DDrawingOSMGeometry();
+	}
 
 	// update all GPU buffers (transfer cached data to GPU)
 	if (updateBuilding || updateSelection) {
@@ -321,6 +339,10 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		m_drawingGeometryObject.updateBuffers();
 	}
 
+	if(updateDrawingOSM){
+		m_drawingOSMGeometryObject.updateBuffers();
+	}
+
 	// store current coloring mode
 	SVViewState vs = SVViewStateHandler::instance().viewState();
 	m_lastColorMode = vs.m_objectColorMode;
@@ -334,6 +356,7 @@ void Scene::destroy() {
 	m_transparentBuildingObject.destroy();
 	m_networkGeometryObject.destroy();
 	m_drawingGeometryObject.destroy();
+	m_drawingOSMGeometryObject.destroy();
 	m_selectedGeometryObject.destroy();
 	m_measurementObject.destroy();
 	m_coordinateSystemObject.destroy();
@@ -1206,6 +1229,7 @@ void Scene::render() {
 
 		// render opaque part of drawing object
 		m_drawingGeometryObject.renderOpaque();
+		m_drawingOSMGeometryObject.renderOpaque();
 
 	}
 
@@ -1989,6 +2013,47 @@ void Scene::generate2DDrawingGeometry() {
 	}
 
 	m_drawingGeometryObject.m_transparentStartIndex = m_drawingGeometryObject.m_indexBufferData.size();
+}
+
+void Scene::generate2DDrawingOSMGeometry() {
+	// initialise necessary objects to draw OpaqueGeometryObject
+	m_drawingOSMGeometryObject.m_vertexBufferData.clear();
+	m_drawingOSMGeometryObject.m_colorBufferData.clear();
+	m_drawingOSMGeometryObject.m_indexBufferData.clear();
+	m_drawingOSMGeometryObject.m_vertexStartMap.clear();
+
+	m_drawingOSMGeometryObject.m_vertexBufferData.reserve(500000);
+	m_drawingOSMGeometryObject.m_colorBufferData.reserve(500000);
+	m_drawingOSMGeometryObject.m_indexBufferData.reserve(500000);
+
+	unsigned int currentVertexIndex = 0;
+	unsigned int currentElementIndex = 0;
+
+	const VICUS::Project & p = project();
+
+	for (const VICUS::DrawingOSM & drawing : p.m_drawingsOSM) {
+
+		for (const auto & building : drawing.m_buildings){
+			for (const auto & areaBorder : building.m_areaBorders) {
+				const QColor color = areaBorder.m_colorArea;
+				const std::vector<VICUS::PlaneGeometry> &planes = areaBorder.planeGeometries();
+				for (const VICUS::PlaneGeometry &plane : planes) {
+					addPlane(plane.triangulationData(), color, currentVertexIndex, currentElementIndex,
+							 m_drawingOSMGeometryObject.m_vertexBufferData,
+							 m_drawingOSMGeometryObject.m_colorBufferData,
+							 m_drawingOSMGeometryObject.m_indexBufferData,
+							 false);
+					addPlane(plane.triangulationData(), color, currentVertexIndex, currentElementIndex,
+							 m_drawingOSMGeometryObject.m_vertexBufferData,
+							 m_drawingOSMGeometryObject.m_colorBufferData,
+							 m_drawingOSMGeometryObject.m_indexBufferData,
+							 true);
+				}
+			}
+		}
+	}
+
+	m_drawingOSMGeometryObject.m_transparentStartIndex = m_drawingOSMGeometryObject.m_indexBufferData.size();
 }
 
 // Helper to color all child surfaces (recursive)

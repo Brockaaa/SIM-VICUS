@@ -99,6 +99,7 @@ void SVPropFloorManagerWidget::onModified(int modificationType, ModificationInfo
 		case SVProjectHandler::StructuralUnitsModified:
 		case SVProjectHandler::ObjectRenamed:
 		case SVProjectHandler::DrawingModified:
+		case SVProjectHandler::DrawingOSMModified:
 		case SVProjectHandler::LcaLccModified:
 		break;
 	}

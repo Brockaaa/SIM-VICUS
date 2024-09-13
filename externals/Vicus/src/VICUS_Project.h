@@ -52,6 +52,7 @@
 #include "VICUS_EmbeddedDatabase.h"
 #include "VICUS_PlainGeometry.h"
 #include "VICUS_Drawing.h"
+#include "VICUS_DrawingOSM.h"
 #include "VICUS_StructuralUnit.h"
 
 #include "VICUS_AcousticTemplate.h"
@@ -353,6 +354,7 @@ public:
 
 	std::vector<Drawing>								m_drawings;
 
+	std::vector<DrawingOSM>								m_drawingsOSM;
 
 	/*! Path placeholder mappings used to substitute placeholders for database and user databases.
 		These placeholders are read from the path placeholders section of the project file and hold

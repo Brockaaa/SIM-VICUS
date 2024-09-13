@@ -115,6 +115,7 @@
 #include "SVUndoModifySiteData.h"
 #include "SVSimulationSettingsView.h"
 #include "SVStructuralUnitCreationDialog.h"
+#include "SVUndoAddDrawingOSM.h"
 
 #include "plugins/SVDatabasePluginInterface.h"
 #include "plugins/SVImportPluginInterface.h"
@@ -2363,7 +2364,22 @@ void SVMainWindow::on_actionDBAcousticSoundAbsorptions_triggered() {
 	dbAcousticSoundAbsorptionEditDialog()->edit();
 }
 
+void SVMainWindow::on_actionFileImportOSM_triggered()
+{
+	QString fname = QFileDialog::getOpenFileName(
+		this,
+		tr("Select File to open"),
+		"/home/sandisk/SHK/osm/",
+		tr("OSM (*.osm *.xml *.txt);;All files (*.*)"), nullptr,
+		SVSettings::instance().m_dontUseNativeDialogs ? QFileDialog::DontUseNativeDialog : QFileDialog::Options()
+		);
 
+	VICUS::DrawingOSM drawing;
+	drawing.readOSMFile(fname);
+	drawing.constructObjects();
 
+	SVUndoAddDrawingOSM * undoAdd = new SVUndoAddDrawingOSM(tr("modified network"), drawing);
+	undoAdd->push(); // modifies project and updates views
 
+}
 

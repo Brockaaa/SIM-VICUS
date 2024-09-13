@@ -121,6 +121,7 @@ void SVUndoModifySurfaceGeometry::undo() {
 	// NOTE: this may be slow for larger geometries...
 	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingGeometryChanged );
 	SVProjectHandler::instance().setModified( SVProjectHandler::DrawingModified );
+	SVProjectHandler::instance().setModified( SVProjectHandler::DrawingOSMModified );
 	SVProjectHandler::instance().setModified( SVProjectHandler::BuildingTopologyChanged );
 }
 

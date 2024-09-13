@@ -169,6 +169,8 @@ private:
 
 	void generate2DDrawingGeometry();
 
+	void generate2DDrawingOSMGeometry();
+
 	/*! Processes all surfaces and assigns colors based on current object color mode. */
 	void recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) const;
 
@@ -269,8 +271,10 @@ private:
 	GridObject				m_gridObject;
 	/*! A geometry drawing object (transparency only for windows) for building (room) surfaces.*/
 	OpaqueGeometryObject	m_buildingGeometryObject;
-	/*! todo */
+	/*! A geometry drawing object dxf file format structures. */
 	OpaqueGeometryObject	m_drawingGeometryObject;
+	/*! A geometry drawing object for OSM map structures. */
+	OpaqueGeometryObject	m_drawingOSMGeometryObject;
 	/*! A geometry drawing object (no transparency) for network elements.*/
 	OpaqueGeometryObject	m_networkGeometryObject;
 	/*! A geometry drawing object for building (room) surfaces.*/

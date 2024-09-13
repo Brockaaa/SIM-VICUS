@@ -155,6 +155,7 @@ void SVNavigationTreeWidget::onModified(int modificationType, ModificationInfo *
 	case SVProjectHandler::AllModified :
 	case SVProjectHandler::NetworkGeometryChanged :
 	case SVProjectHandler::DrawingModified :
+	case SVProjectHandler::DrawingOSMModified :
 	case SVProjectHandler::BuildingGeometryChanged :
 		break;
 	case SVProjectHandler::BuildingTopologyChanged : {

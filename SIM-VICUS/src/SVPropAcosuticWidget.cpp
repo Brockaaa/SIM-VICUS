@@ -80,6 +80,7 @@ void SVPropAcosuticWidget::onModified(int modificationType, ModificationInfo */*
 	case SVProjectHandler::ClimateLocationAndFileModified:
 	case SVProjectHandler::OutputsModified:
 	case SVProjectHandler::DrawingModified:
+	case SVProjectHandler::DrawingOSMModified:
 	case SVProjectHandler::LcaLccModified:
 		break;
 	}

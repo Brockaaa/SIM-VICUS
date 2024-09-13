@@ -108,6 +108,8 @@ public:
 		ObjectRenamed,
 		/*! Drawings have been added / removed from project */
 		DrawingModified,
+		/*! OSM Drawings have been added / removed from project */
+		DrawingOSMModified,
 		/*! LCA / LCC settings have been modified. */
 		LcaLccModified,
 		/*! Used whenever the project data changes completely (new project created, project loaded etc.)

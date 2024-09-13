@@ -126,6 +126,7 @@ void SVPropBuildingEditWidget::onModified(int modificationType, ModificationInfo
 		case SVProjectHandler::OutputsModified:
 		case SVProjectHandler::StructuralUnitsModified:
 		case SVProjectHandler::DrawingModified:
+		case SVProjectHandler::DrawingOSMModified:
 		case SVProjectHandler::LcaLccModified:
 		break;
 	}

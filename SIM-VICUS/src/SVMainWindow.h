@@ -388,6 +388,8 @@ private slots:
 
 	void on_actionDBAcousticSoundAbsorptions_triggered();
 
+	void on_actionFileImportOSM_triggered();
+
 private:
 
 	void updateMainView();
