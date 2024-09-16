@@ -217,14 +217,14 @@ void DrawingOSM::createHighway(Way & way)
 	if (!way.containsKey("highway")) return;
 	Highway highway(this);
 
+	LineFromPlanes lineFromPlanes(this);
 	for (int i = 0; i < way.m_nd.size() ; i++) {
 		const Node * node = findNodeFromId(way.m_nd[i].ref);
 		Q_ASSERT(node);
-		highway.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+		lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
 	}
-
+	highway.m_linesFromPlanes.push_back(lineFromPlanes);
 	m_highways.push_back(highway);
-
 }
 
 void DrawingOSM::processRelation(const Relation & relation, std::vector<const Node *> & nodes, std::vector<const Way *> & ways, bool & outline) {
@@ -574,6 +574,88 @@ const void DrawingOSM::Building::addGeometryData(std::vector<VICUS::DrawingOSM::
 {
 	for (auto& areaBorder : m_areaBorders) {
 		areaBorder.addGeometryData(data);
+	}
+}
+
+const void DrawingOSM::Highway::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	for (auto& lineFromPlanes : m_linesFromPlanes) {
+		lineFromPlanes.addGeometryData(data);
+	}
+}
+
+const void DrawingOSM::AreaNoBorder::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	FUNCID(DrawingOSM::AreaNoBorder::addGeometryData);
+	try {
+		if (m_dirtyTriangulation) {
+			m_geometryData.clear();
+
+			std::vector<IBKMK::Vector3D> areaPoints;
+
+			for (int i = 1; i < m_polyline.size(); i++) {
+				IBKMK::Vector3D p = IBKMK::Vector3D(m_polyline[i].m_x,
+													m_polyline[i].m_y,
+													m_zPosition * Z_MULTIPLYER);
+
+				QVector3D vec = m_drawing->m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+				vec += IBKVector2QVector(m_drawing->m_origin);
+
+				areaPoints.push_back(QVector2IBKVector(vec));
+			}
+
+			VICUS::Polygon3D polygon3D(areaPoints);
+			GeometryData geometryData;
+			// Initialize PlaneGeometry with the polygon
+			geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(polygon3D));
+			geometryData.m_color = m_color;
+			m_geometryData.push_back(geometryData);
+
+			m_dirtyTriangulation = false;
+		}
+		for (auto& geometryData : m_geometryData) {
+			data.push_back(&geometryData);
+		}
+	}
+	catch (IBK::Exception &ex) {
+		throw IBK::Exception( ex, IBK::FormatString("Error generating plane geometries for 'DrawingOSM::AreaNoBorder' element.\n%1").arg(ex.what()), FUNC_ID);
+	}
+}
+
+const void DrawingOSM::LineFromPlanes::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	FUNCID(DrawingOSM::LineFromPlanes::addGeometryData);
+	try {
+		if (m_dirtyTriangulation) {
+
+			// Create Vector to store vertices of polyline
+			std::vector<IBKMK::Vector3D> polylinePoints;
+
+			// adds z-coordinate to polyline
+			for(unsigned int i = 0; i < m_polyline.size(); ++i){
+				IBKMK::Vector3D p = IBKMK::Vector3D(m_polyline[i].m_x,
+													m_polyline[i].m_y,
+													m_zPosition * Z_MULTIPLYER);
+				QVector3D vec = m_drawing->m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+				vec += IBKVector2QVector(m_drawing->m_origin);
+
+				polylinePoints.push_back(QVector2IBKVector(vec));
+			}
+
+			std::vector<PlaneGeometry> planeGeometry;
+			if (m_drawing->generatePlanesFromPolyline(polylinePoints, false, m_lineThickness, planeGeometry)) {
+				GeometryData geometryData;
+				geometryData.m_planeGeometry = planeGeometry;
+				geometryData.m_color = QColor(Qt::black);
+				m_geometryData.push_back(geometryData);
+			}
+		}
+		for (auto& geometryData : m_geometryData) {
+			data.push_back(&geometryData);
+		}
+	}
+	catch (IBK::Exception &ex) {
+		throw IBK::Exception( ex, IBK::FormatString("Error generating plane geometries for 'DrawingOSM::LineFromPlanes' element.\n%1").arg(ex.what()), FUNC_ID);
 	}
 }
 

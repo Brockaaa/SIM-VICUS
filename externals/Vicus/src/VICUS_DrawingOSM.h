@@ -170,6 +170,35 @@ public:
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
 
+	struct AreaNoBorder : AbstractDrawingObject {
+
+		AreaNoBorder(const DrawingOSM * drawing)
+			: AbstractDrawingObject(drawing)
+		{}
+
+		/*! polyline coordinates */
+		std::vector<IBKMK::Vector2D>		m_polyline;
+		QColor								m_color = QColor(Qt::black);
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+	};
+
+	struct LineFromPlanes : AbstractDrawingObject {
+
+		LineFromPlanes(const DrawingOSM * drawing)
+			: AbstractDrawingObject(drawing)
+		{}
+
+		/*! polyline coordinates */
+		std::vector<IBKMK::Vector2D>		m_polyline;
+
+		double								m_lineThickness = 0.3;
+
+		QColor								m_color = QColor(Qt::black);
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+	};
+
 	struct AbstractOSMObject {
 		const virtual void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const = 0;
 	};
@@ -188,7 +217,7 @@ public:
 			: m_drawing(drawing)
 		{}
 
-		std::vector<IBKMK::Vector2D>		m_polyline;
+		std::vector<LineFromPlanes>			m_linesFromPlanes;
 
 		double								m_lineThickness = 0.3;
 
@@ -196,7 +225,7 @@ public:
 
 		const DrawingOSM * m_drawing = nullptr;
 
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override{}
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 
 	};
 
