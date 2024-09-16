@@ -2044,6 +2044,10 @@ void Scene::generate2DDrawingOSMGeometry() {
 		for( const auto & highway : drawing.m_highways) {
 			highway.addGeometryData(geometryData);
 		}
+
+		for( const auto & water : drawing.m_waters) {
+			water.addGeometryData(geometryData);
+		}
 	}
 
 	// adding geometry data to GeometryObject

@@ -136,7 +136,13 @@ void DrawingOSM::constructObjects()
 	for (auto& way : m_ways) {
 		createBuilding(way);
 		createHighway(way);
+		createWater(way);
 	}
+
+	for (auto& relation : m_relations) {
+		createBuilding(relation);
+	}
+
 }
 
 void DrawingOSM::updatePlaneGeometries()
@@ -182,9 +188,11 @@ inline IBKMK::Vector2D DrawingOSM::convertLatLonToVector2D(double lat, double lo
 
 void DrawingOSM::createBuilding(Way & way){
 	if (!way.containsKey("building")) return;
+	if (way.containsKeyValue("building", "cellar")) return;
 	Building building;
 
 	AreaBorder areaBorder(this);
+	areaBorder.m_zPosition = 5;
 
 	for (int i = 0; i < way.m_nd.size() ; i++) {
 		const Node * node = findNodeFromId(way.m_nd[i].ref);
@@ -198,24 +206,54 @@ void DrawingOSM::createBuilding(Way & way){
 
 void DrawingOSM::createBuilding(Relation & relation){
 	bool containsKeyBuilding = relation.containsKey("building");
-	bool containsKeyTags = relation.containsKeyValue("tags", "building");
-	Q_ASSERT(containsKeyBuilding || containsKeyTags);
+	bool containsKeyTags = relation.containsKeyValue("type", "multipolygon");
+	if(!(containsKeyBuilding && containsKeyTags)) return;
 	Building building;
 
-	std::vector<const Node*> nodes;
-	std::vector<const Way*> ways;
-	bool outline = false;
+	AreaBorder areaBorder(this);
+	std::vector<const Way*> waysOuter;
+	std::vector<const Way*> waysInner;
 
-	processRelation(relation, nodes, ways, outline);
+	for (int i = 0; i < relation.m_members.size(); i++) {
+		if (relation.m_members[i].type != WayType) continue;
+		const Way * way = findWayFromId(relation.m_members[i].ref);
+		if(!way) continue;
+		if (relation.m_members[i].role == "outer") {
+			waysOuter.push_back(way);
+		} else if (relation.m_members[i].role == "inner") {
+			waysInner.push_back(way);
+		}
+	}
 
-	//Polyline buildingOutline;
+	if(waysOuter.size() <= 0) return;
 
+	for (const Way * way : waysOuter) {
+		for (int i = 0; i < way->m_nd.size() ; i++) {
+			const Node * node = findNodeFromId(way->m_nd[i].ref);
+			Q_ASSERT(node);
+			areaBorder.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+		}
+	}
+
+	for (const Way * way : waysInner) {
+		std::vector<IBKMK::Vector2D> polylineInner;
+		for (int i = 0; i < way->m_nd.size() ; i++) {
+			const Node * node = findNodeFromId(way->m_nd[i].ref);
+			Q_ASSERT(node);
+			polylineInner.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+		}
+		areaBorder.m_innerPolylines.push_back(polylineInner);
+	}
+
+	areaBorder.m_multipolygon = areaBorder.m_innerPolylines.size() != 0;
+	building.m_areaBorders.push_back(areaBorder);
+	m_buildings.push_back(building);
 }
 
 void DrawingOSM::createHighway(Way & way)
 {
 	if (!way.containsKey("highway")) return;
-	Highway highway(this);
+	Highway highway;
 
 	LineFromPlanes lineFromPlanes(this);
 	for (int i = 0; i < way.m_nd.size() ; i++) {
@@ -223,8 +261,26 @@ void DrawingOSM::createHighway(Way & way)
 		Q_ASSERT(node);
 		lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
 	}
+	lineFromPlanes.m_zPosition = 3;
 	highway.m_linesFromPlanes.push_back(lineFromPlanes);
 	m_highways.push_back(highway);
+}
+
+void DrawingOSM::createWater(Way & way)
+{
+	if (!way.containsKey("water")) return;
+	Water water;
+
+	AreaNoBorder areaNoBorder(this);
+	areaNoBorder.m_color = QColor(Qt::blue);
+	for (int i = 0; i < way.m_nd.size() ; i++) {
+		const Node * node = findNodeFromId(way.m_nd[i].ref);
+		Q_ASSERT(node);
+		areaNoBorder.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+	}
+	areaNoBorder.m_zPosition = 1;
+	water.m_areaNoBorder.push_back(areaNoBorder);
+	m_waters.push_back(water);
 }
 
 void DrawingOSM::processRelation(const Relation & relation, std::vector<const Node *> & nodes, std::vector<const Way *> & ways, bool & outline) {
@@ -556,6 +612,18 @@ const void DrawingOSM::AreaBorder::addGeometryData(std::vector<VICUS::DrawingOSM
 			GeometryData geometryData;
 			// Initialize PlaneGeometry with the polygon
 			geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(polygon3D));
+
+			if(m_multipolygon) {
+				std::vector<PlaneGeometry::Hole> holes;
+				for(int j = 0; j < m_innerPolylines.size(); j++) {
+					VICUS::Polygon2D polygon2d(m_innerPolylines[j]);
+					holes.push_back(PlaneGeometry::Hole(j, polygon2d, false));
+				}
+
+				VICUS::PlaneGeometry& planeGeometry = geometryData.m_planeGeometry.back();
+				planeGeometry.setHoles(holes);
+			}
+
 			geometryData.m_color = m_colorArea;
 			m_geometryData.push_back(geometryData);
 
@@ -656,6 +724,13 @@ const void DrawingOSM::LineFromPlanes::addGeometryData(std::vector<GeometryData 
 	}
 	catch (IBK::Exception &ex) {
 		throw IBK::Exception( ex, IBK::FormatString("Error generating plane geometries for 'DrawingOSM::LineFromPlanes' element.\n%1").arg(ex.what()), FUNC_ID);
+	}
+}
+
+const void DrawingOSM::Water::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	for (auto& areaNoBorder : m_areaNoBorder) {
+		areaNoBorder.addGeometryData(data);
 	}
 }
 

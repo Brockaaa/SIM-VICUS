@@ -164,8 +164,11 @@ public:
 
 		/*! polyline coordinates */
 		std::vector<IBKMK::Vector2D>		m_polyline;
-		QColor								m_colorArea	  = QColor("#d9d0c9");
+		std::vector<std::vector<IBKMK::Vector2D>>		m_innerPolylines;
+		QColor								m_colorArea	  = QColor("#2f302f");
 		QColor								m_colorBorder = QColor("#c7b7b0");
+
+		bool								m_multipolygon = false;
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
@@ -178,7 +181,10 @@ public:
 
 		/*! polyline coordinates */
 		std::vector<IBKMK::Vector2D>		m_polyline;
+		std::vector<IBKMK::Vector2D>		m_innerPolylines;
 		QColor								m_color = QColor(Qt::black);
+
+		bool								m_multipolygon = false;
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
@@ -212,18 +218,15 @@ public:
 	};
 
 	struct Highway : AbstractOSMObject {
-
-		Highway(const DrawingOSM * drawing)
-			: m_drawing(drawing)
-		{}
-
 		std::vector<LineFromPlanes>			m_linesFromPlanes;
 
 		double								m_lineThickness = 0.3;
 
-		unsigned int m_zPosition = 0;
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+	};
 
-		const DrawingOSM * m_drawing = nullptr;
+	struct Water : AbstractOSMObject {
+		std::vector<AreaNoBorder>			m_areaNoBorder;
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 
@@ -262,6 +265,9 @@ public:
 	void createHighway(Way &way);
 	void createHighway(Relation &relation);
 
+	// extracts water body from ways relations etc.
+	void createWater(Way &way);
+
 	// *** PUBLIC MEMBER VARIABLES ***
 
 	// *** List of OSM XML Elements ***
@@ -281,17 +287,17 @@ public:
 	IBKMK::Vector2D									m_centerMercatorProjection;
 
 
-
 	/*! point of origin */
-	IBKMK::Vector3D															m_origin			= IBKMK::Vector3D(0,0,0);
+	IBKMK::Vector3D									m_origin			= IBKMK::Vector3D(0,0,0);
 	/*! rotation matrix */
-	RotationMatrix															m_rotationMatrix	= RotationMatrix(QQuaternion(1.0,0.0,0.0,0.0));
+	RotationMatrix									m_rotationMatrix	= RotationMatrix(QQuaternion(1.0,0.0,0.0,0.0));
 	/*! scale factor */
-	double																	m_scalingFactor		= 1.0;
+	double											m_scalingFactor		= 1.0;
 
 	// *** List of OSM Objects like buildings, streets with all relevant information ***
 	std::vector<Building>							m_buildings;
 	std::vector<Highway>							m_highways;
+	std::vector<Water>								m_waters;
 
 	/*! path of the OSM File */
 	QString											m_filePath;
