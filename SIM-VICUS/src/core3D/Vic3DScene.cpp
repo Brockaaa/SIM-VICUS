@@ -2026,30 +2026,39 @@ void Scene::generate2DDrawingOSMGeometry() {
 	m_drawingOSMGeometryObject.m_colorBufferData.reserve(500000);
 	m_drawingOSMGeometryObject.m_indexBufferData.reserve(500000);
 
+	m_drawingOSMGeometryObject.m_drawTriangleStrips = false;
+
 	unsigned int currentVertexIndex = 0;
 	unsigned int currentElementIndex = 0;
 
 	const VICUS::Project & p = project();
 
-	for (const VICUS::DrawingOSM & drawing : p.m_drawingsOSM) {
+	std::vector<VICUS::DrawingOSM::GeometryData*> geometryData;
 
-		for (const auto & building : drawing.m_buildings){
-			for (const auto & areaBorder : building.m_areaBorders) {
-				const QColor color = areaBorder.m_colorArea;
-				const std::vector<VICUS::PlaneGeometry> &planes = areaBorder.planeGeometries();
-				for (const VICUS::PlaneGeometry &plane : planes) {
-					addPlane(plane.triangulationData(), color, currentVertexIndex, currentElementIndex,
-							 m_drawingOSMGeometryObject.m_vertexBufferData,
-							 m_drawingOSMGeometryObject.m_colorBufferData,
-							 m_drawingOSMGeometryObject.m_indexBufferData,
-							 false);
-					addPlane(plane.triangulationData(), color, currentVertexIndex, currentElementIndex,
-							 m_drawingOSMGeometryObject.m_vertexBufferData,
-							 m_drawingOSMGeometryObject.m_colorBufferData,
-							 m_drawingOSMGeometryObject.m_indexBufferData,
-							 true);
-				}
-			}
+	// collecting all geometryData from Objects
+	for (const VICUS::DrawingOSM & drawing : p.m_drawingsOSM) {
+		for (const auto & building : drawing.m_buildings) {
+			building.addGeometryData(geometryData);
+		}
+
+		for( const auto & highway : drawing.m_highways) {
+			highway.addGeometryData(geometryData);
+		}
+	}
+
+	// adding geometry data to GeometryObject
+	for( const auto& data : geometryData) {
+		for (const VICUS::PlaneGeometry &plane : data->m_planeGeometry) {
+			addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
+					 m_drawingOSMGeometryObject.m_vertexBufferData,
+					 m_drawingOSMGeometryObject.m_colorBufferData,
+					 m_drawingOSMGeometryObject.m_indexBufferData,
+					 false);
+			addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
+					 m_drawingOSMGeometryObject.m_vertexBufferData,
+					 m_drawingOSMGeometryObject.m_colorBufferData,
+					 m_drawingOSMGeometryObject.m_indexBufferData,
+					 true);
 		}
 	}
 

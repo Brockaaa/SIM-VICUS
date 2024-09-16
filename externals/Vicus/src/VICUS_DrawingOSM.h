@@ -123,13 +123,18 @@ public:
 	};
 
 
+	struct GeometryData {
+		std::vector<VICUS::PlaneGeometry>	m_planeGeometry;
+		QColor								m_color;
+	};
+
 	struct AbstractDrawingObject {
 
 		AbstractDrawingObject(const DrawingOSM * drawing)
 			: m_drawing(drawing)
 		{}
 
-		virtual const std::vector<VICUS::PlaneGeometry>& planeGeometries() const = 0;
+		const virtual void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const = 0;
 
 		void updatePlaneGeometry() {
 			m_dirtyTriangulation = true;
@@ -146,7 +151,7 @@ public:
 		mutable std::vector<IBKMK::Vector2D>		m_pickPoints;
 		/*! Plane Geometries with all triangulated data.
 		*/
-		mutable std::vector<VICUS::PlaneGeometry>	m_planeGeometries;
+		mutable std::vector<GeometryData>			m_geometryData;
 		/*! Pointer to DrawingOSM object this AbstractDrawingObject belongs to */
 		const DrawingOSM * m_drawing = nullptr;
 	};
@@ -162,19 +167,39 @@ public:
 		QColor								m_colorArea	  = QColor("#d9d0c9");
 		QColor								m_colorBorder = QColor("#c7b7b0");
 
-		const std::vector<VICUS::PlaneGeometry>& planeGeometries() const override;
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
-
 
 	struct AbstractOSMObject {
+		const virtual void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const = 0;
 	};
-
 
 	// https://wiki.openstreetmap.org/wiki/Simple_3D_Buildings#How_to_map
 	/*! Building Object. Contains only 2D information. */
 	struct Building : AbstractOSMObject {
 		std::vector<AreaBorder>				m_areaBorders;
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
+
+	struct Highway : AbstractOSMObject {
+
+		Highway(const DrawingOSM * drawing)
+			: m_drawing(drawing)
+		{}
+
+		std::vector<IBKMK::Vector2D>		m_polyline;
+
+		double								m_lineThickness = 0.3;
+
+		unsigned int m_zPosition = 0;
+
+		const DrawingOSM * m_drawing = nullptr;
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override{}
+
+	};
+
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
@@ -200,9 +225,13 @@ public:
 
 	// *** Methods to create Buildings streets. etc. ***
 
-	// extracts information from a way for a building
+	// creates complete buildings from ways relations etc.
 	void createBuilding(Way &way);
 	void createBuilding(Relation &relation);
+
+	// extracts streets from ways relations etc.
+	void createHighway(Way &way);
+	void createHighway(Relation &relation);
 
 	// *** PUBLIC MEMBER VARIABLES ***
 
@@ -220,7 +249,7 @@ public:
 	/*! UTM zone defined by the longitude (minlon) of the bounding box */
 	int												m_utmZone = 0;
 	/*! Conversion of minlat, minlon of bounding box in the Universal Transverse Mercator projection. */
-	IBKMK::Vector2D									m_originMercatorProjection;
+	IBKMK::Vector2D									m_centerMercatorProjection;
 
 
 
@@ -233,12 +262,17 @@ public:
 
 	// *** List of OSM Objects like buildings, streets with all relevant information ***
 	std::vector<Building>							m_buildings;
+	std::vector<Highway>							m_highways;
 
 	/*! path of the OSM File */
 	QString											m_filePath;
 
 private:
 	void processRelation(const Relation& relation, std::vector<const Node*>& nodes, std::vector<const Way*>& ways, bool& outline);
+
+	/*! Function to generate plane geometries from a polyline. */
+	bool generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline,
+									bool connectEndStart, double width, std::vector<PlaneGeometry> &planes) const;
 
 	/*! Flag to indictate recalculation triangulation. */
 	mutable bool								m_dirtyTriangulation = true;

@@ -118,11 +118,12 @@ bool DrawingOSM::readOSMFile(QString filePath)
 	qDebug() << "Root element: " << root->Value();
 
 	readXML(document.RootElement());
-	double x, y;
-	m_utmZone = IBKMK::LatLonToUTMXY(m_boundingBox.minlat, m_boundingBox.minlon, m_utmZone, x, y);
+	double minx, miny, maxx, maxy;
+	m_utmZone = IBKMK::LatLonToUTMXY(m_boundingBox.minlat, m_boundingBox.minlon, m_utmZone, minx, miny);
+	IBKMK::LatLonToUTMXY(m_boundingBox.maxlat, m_boundingBox.maxlon, m_utmZone, maxx, maxy);
 
-	m_originMercatorProjection = IBKMK::Vector2D(x,y);
-	qDebug() << "m_origin: " << QString::number(x) << " " << QString::number(y);
+	m_centerMercatorProjection = IBKMK::Vector2D(minx + (maxx - minx) / 2,miny + (maxy - miny) / 2);
+	qDebug() << "m_origin: " << QString::number(minx + (maxx - minx) / 2) << " " << QString::number(miny + (maxy - miny) / 2);
 	qDebug() << "m_utmZone: " << QString::number(m_utmZone);
 
 	m_filePath = filePath;
@@ -134,6 +135,7 @@ void DrawingOSM::constructObjects()
 {
 	for (auto& way : m_ways) {
 		createBuilding(way);
+		createHighway(way);
 	}
 }
 
@@ -175,7 +177,7 @@ inline IBKMK::Vector2D DrawingOSM::convertLatLonToVector2D(double lat, double lo
 {
 	double x, y;
 	IBKMK::LatLonToUTMXY(lat, lon, m_utmZone, x, y);
-	return IBKMK::Vector2D(x, y) - m_originMercatorProjection;
+	return IBKMK::Vector2D(x, y) - m_centerMercatorProjection;
 }
 
 void DrawingOSM::createBuilding(Way & way){
@@ -210,6 +212,21 @@ void DrawingOSM::createBuilding(Relation & relation){
 
 }
 
+void DrawingOSM::createHighway(Way & way)
+{
+	if (!way.containsKey("highway")) return;
+	Highway highway(this);
+
+	for (int i = 0; i < way.m_nd.size() ; i++) {
+		const Node * node = findNodeFromId(way.m_nd[i].ref);
+		Q_ASSERT(node);
+		highway.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+	}
+
+	m_highways.push_back(highway);
+
+}
+
 void DrawingOSM::processRelation(const Relation & relation, std::vector<const Node *> & nodes, std::vector<const Way *> & ways, bool & outline) {
 	if (relation.containsKey("building:part")) return; // if relation contains building:part, it is presumably only 3D information, skip
 
@@ -235,6 +252,106 @@ void DrawingOSM::processRelation(const Relation & relation, std::vector<const No
 			}
 		}
 	}
+}
+
+bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline, bool connectEndStart, double width, std::vector<PlaneGeometry> & planes) const
+{
+	// initialise values
+	IBKMK::Vector3D lineVector, previousVector, crossProduct, perpendicularVector;
+	std::vector<IBKMK::Vector3D> previousVertices;
+	double halfWidth = width / 2;
+	double length;
+
+	// if polyline is empty, return
+	if(polyline.size() < 2){
+		return false;
+	}
+
+	// initialise previousVector
+	previousVector = polyline[1] - polyline[0];
+
+	auto processSegment = [&](const IBKMK::Vector3D& startPoint, const IBKMK::Vector3D& endPoint)->void {
+		// calculate line vector
+		lineVector = endPoint - startPoint;
+		length = lineVector.magnitude();
+		if(length <= 0)
+			return;
+
+		IBKMK::Vector3D normal(m_rotationMatrix.toQuaternion().toRotationMatrix()(0,2),
+							   m_rotationMatrix.toQuaternion().toRotationMatrix()(1,2),
+							   m_rotationMatrix.toQuaternion().toRotationMatrix()(2,2));
+
+		// calculate perpendicular vector
+		perpendicularVector = lineVector.crossProduct(normal);
+		perpendicularVector.normalize();
+		perpendicularVector *= halfWidth;
+
+		// create vertices for the line
+		std::vector<IBKMK::Vector3D> lineVertices = {
+			startPoint - perpendicularVector,
+			endPoint - perpendicularVector,
+			endPoint + perpendicularVector,
+			startPoint + perpendicularVector,
+		};
+
+		// Transformation for block segment
+		// Draw the line
+		IBKMK::Polygon3D p(VICUS::Polygon2D::T_Rectangle, lineVertices[0], lineVertices[3], lineVertices[1]);
+		planes.push_back(VICUS::PlaneGeometry(p));
+
+		// Calculate the cross product between the current line Vector and previous to get the direction of the triangle
+		crossProduct = lineVector.crossProduct(previousVector);
+
+		if (previousVertices.size() == lineVertices.size()) {
+			// draws the triangle
+			if(crossProduct.m_z < -1e-10){
+				// line is left
+				std::vector<IBKMK::Vector3D> verts(3);
+				verts[0] = previousVertices[1];
+				verts[1] = startPoint;
+				verts[2] = lineVertices[0];
+
+				IBKMK::Polygon3D poly3d(verts);
+				planes.push_back(PlaneGeometry(poly3d));
+			}
+			else if(crossProduct.m_z > 1e-10){
+				// line is right
+
+				// line is left
+				std::vector<IBKMK::Vector3D> verts(3);
+				verts[0] = lineVertices[3];
+				verts[1] = previousVertices[2];
+				verts[2] = startPoint;
+
+				IBKMK::Polygon3D poly3d(verts);
+				planes.push_back(PlaneGeometry(poly3d));
+			}
+			else {
+				// if z coordinate of cross product is 0, lines are parallel, no triangle needed (would crash anyway)
+				previousVector = lineVector;
+				previousVertices = lineVertices;
+				return;
+			}
+		}
+
+		// update previous values
+		previousVector = lineVector;
+		previousVertices = lineVertices;
+	};
+
+	// loops through all points in polyline, draws a line between every two points, adds a triangle between two lines to fill out the gaps
+	for (unsigned int i = 0; i < polyline.size() - 1; i++) {
+		processSegment(polyline[i], polyline[i+1]);
+	}
+
+	// repeats the code of the for loop for the last line and adds two triangles to fill out the lines
+	if(connectEndStart){
+		unsigned int lastIndex = polyline.size() - 1;
+		processSegment(polyline[lastIndex], polyline[0]);
+		processSegment(polyline[0], polyline[1]);
+	}
+
+	return true;
 }
 
 void DrawingOSM::AbstractOSMElement::readXML(const TiXmlElement * element){
@@ -415,16 +532,16 @@ void DrawingOSM::Relation::readXML(const TiXmlElement * element) {
 	}
 }
 
-const std::vector<PlaneGeometry> & DrawingOSM::AreaBorder::planeGeometries() const
+const void DrawingOSM::AreaBorder::addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*>& data) const
 {
-	FUNCID(DrawingOSM::AreaBorder::planeGeometries);
+	FUNCID(DrawingOSM::AreaBorder::addGeometryData);
 	try {
 		if (m_dirtyTriangulation) {
-			m_planeGeometries.clear();
+			m_geometryData.clear();
 
 			std::vector<IBKMK::Vector3D> areaPoints;
 
-			for(unsigned int i = 0; i < m_polyline.size(); i++){
+			for (int i = 1; i < m_polyline.size(); i++) {
 				IBKMK::Vector3D p = IBKMK::Vector3D(m_polyline[i].m_x,
 													m_polyline[i].m_y,
 													m_zPosition * Z_MULTIPLYER);
@@ -436,17 +553,27 @@ const std::vector<PlaneGeometry> & DrawingOSM::AreaBorder::planeGeometries() con
 			}
 
 			VICUS::Polygon3D polygon3D(areaPoints);
-
+			GeometryData geometryData;
 			// Initialize PlaneGeometry with the polygon
-			m_planeGeometries.push_back(VICUS::PlaneGeometry(polygon3D));
-
-			return m_planeGeometries;
+			geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(polygon3D));
+			geometryData.m_color = m_colorArea;
+			m_geometryData.push_back(geometryData);
 
 			m_dirtyTriangulation = false;
+		}
+		for(auto& geometryData : m_geometryData) {
+			data.push_back(&geometryData);
 		}
 	}
 	catch (IBK::Exception &ex) {
 		throw IBK::Exception( ex, IBK::FormatString("Error generating plane geometries for 'DrawingOSM::AreaBorder' element.\n%1").arg(ex.what()), FUNC_ID);
+	}
+}
+
+const void DrawingOSM::Building::addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const
+{
+	for (auto& areaBorder : m_areaBorders) {
+		areaBorder.addGeometryData(data);
 	}
 }
 
