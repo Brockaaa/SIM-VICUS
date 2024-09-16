@@ -11,5 +11,6 @@ uniform mat4 modelToWorld;             // parameter: model to world transformati
 void main() {
   /* Shift z-value a little down, so that grid is underneath geometry at same z-level. */
   gl_Position = worldToView * modelToWorld * vec4(position.x, position.y, - 0.02, 1.0);
+  gl_Position.z = gl_Position.z + 0.001;
 }
 
