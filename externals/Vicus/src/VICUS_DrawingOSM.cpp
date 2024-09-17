@@ -195,6 +195,7 @@ void DrawingOSM::createBuilding(Way & way){
 
 	AreaBorder areaBorder(this);
 	areaBorder.m_zPosition = 5;
+	if(way.containsKeyValue("layer", "-1")) areaBorder.m_zPosition = 0;
 
 	for (int i = 0; i < way.m_nd.size() ; i++) {
 		const Node * node = findNodeFromId(way.m_nd[i].ref);
@@ -214,6 +215,7 @@ void DrawingOSM::createBuilding(Relation & relation){
 
 	AreaBorder areaBorder(this);
 	areaBorder.m_zPosition = 5;
+	if(relation.containsKeyValue("layer", "-1")) areaBorder.m_zPosition = 0;
 	std::vector<const Way*> waysOuter;
 	std::vector<const Way*> waysInner;
 
@@ -257,16 +259,34 @@ void DrawingOSM::createHighway(Way & way)
 {
 	if (!way.containsKey("highway")) return;
 	Highway highway;
+	bool area = way.containsKeyValue("area", "yes");
 
-	LineFromPlanes lineFromPlanes(this);
-	lineFromPlanes.m_lineThickness = 3.5;
-	lineFromPlanes.m_zPosition = 3;
-	for (int i = 0; i < way.m_nd.size() ; i++) {
-		const Node * node = findNodeFromId(way.m_nd[i].ref);
-		Q_ASSERT(node);
-		lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+	if (area) {
+		AreaBorder areaBorder(this);
+		areaBorder.m_zPosition = 2.7;
+		if(way.containsKeyValue("layer", "-1")) areaBorder.m_zPosition = 0;
+		areaBorder.m_colorArea = QColor("#78909c");
+
+		for (int i = 0; i < way.m_nd.size() ; i++) {
+			const Node * node = findNodeFromId(way.m_nd[i].ref);
+			Q_ASSERT(node);
+			areaBorder.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+		}
+
+		highway.m_areaBorders.push_back(areaBorder);
+	} else  {
+		LineFromPlanes lineFromPlanes(this);
+		lineFromPlanes.m_lineThickness = 3.5;
+		lineFromPlanes.m_zPosition = 3;
+		lineFromPlanes.m_color = QColor("#78909c");
+		for (int i = 0; i < way.m_nd.size() ; i++) {
+			const Node * node = findNodeFromId(way.m_nd[i].ref);
+			Q_ASSERT(node);
+			lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+		}
+		highway.m_linesFromPlanes.push_back(lineFromPlanes);
 	}
-	highway.m_linesFromPlanes.push_back(lineFromPlanes);
+
 	m_highways.push_back(highway);
 }
 
@@ -281,6 +301,7 @@ void DrawingOSM::createWater(Way & way)
 		AreaNoBorder areaNoBorder(this);
 		areaNoBorder.m_color = QColor("#aad3df");
 		areaNoBorder.m_zPosition = 1;
+		if(way.containsKeyValue("layer", "-1")) areaNoBorder.m_zPosition = 0;
 
 		for (int i = 0; i < way.m_nd.size() ; i++) {
 			const Node * node = findNodeFromId(way.m_nd[i].ref);
@@ -291,7 +312,8 @@ void DrawingOSM::createWater(Way & way)
 	} else if (containsWaterway) {
 		LineFromPlanes lineFromPlanes(this);
 		lineFromPlanes.m_lineThickness = 1;
-		lineFromPlanes.m_zPosition = 1;
+		lineFromPlanes.m_zPosition = 2;
+		if(way.containsKeyValue("layer", "-1")) lineFromPlanes.m_zPosition = 0;
 		for (int i = 0; i < way.m_nd.size() ; i++) {
 			const Node * node = findNodeFromId(way.m_nd[i].ref);
 			Q_ASSERT(node);
@@ -312,6 +334,7 @@ void DrawingOSM::createWater(Relation & relation)
 	AreaNoBorder areaNoBorder(this);
 	areaNoBorder.m_color = QColor("#aad3df");
 	areaNoBorder.m_zPosition = 1;
+	if(relation.containsKeyValue("layer", "-1")) areaNoBorder.m_zPosition = 0;
 	std::vector<const Way*> waysOuter;
 	std::vector<const Way*> waysInner;
 
@@ -360,11 +383,14 @@ void DrawingOSM::createLand(Way & way)
 	std::string value = way.getValueFromKey("landuse");
 
 	AreaNoBorder areaNoBorder(this);
-	areaNoBorder.m_color = QColor("#c8facc"); // forest #add19e
+	areaNoBorder.m_color = QColor("#c8facc");
+	areaNoBorder.m_zPosition = 1;
+
 	if (value == "residential"){
 		areaNoBorder.m_color = QColor("#f2dad9");
 	} else if (value == "forest") {
 		areaNoBorder.m_color = QColor("#add19e");
+		areaNoBorder.m_zPosition = 0;
 	} else if (value == "industrial") {
 		areaNoBorder.m_color = QColor("#ebdbe8");
 	} else if (value == "village_green") {
@@ -373,6 +399,7 @@ void DrawingOSM::createLand(Way & way)
 		areaNoBorder.m_color = QColor("#c7c7b4");
 	} else if (value == "grass") {
 		areaNoBorder.m_color = QColor("#cdebb0");
+		areaNoBorder.m_zPosition = 0;
 	} else if (value == "retail") {
 		areaNoBorder.m_color = QColor("#ffd6d1");
 	} else if (value == "commercial") {
@@ -385,16 +412,17 @@ void DrawingOSM::createLand(Way & way)
 		areaNoBorder.m_color = QColor("#f5dcba");
 	} else if (value == "meadow") {
 		areaNoBorder.m_color = QColor("#cdebb0");
+		areaNoBorder.m_zPosition = 2;
 	} else if (value == "religious") {
 		areaNoBorder.m_color = QColor("#d0d0d0");
 	} else if (value == "flowerbed") {
 		areaNoBorder.m_color = QColor("#cdebb0");
+		areaNoBorder.m_zPosition = 2;
 	} else if (value == "recreation_ground") {
 		areaNoBorder.m_color = QColor("#dffce2");
 	} else if (value == "brownfield") {
 		areaNoBorder.m_color = QColor("#c7c7b4");
 	}
-	areaNoBorder.m_zPosition = 1;
 
 	for (int i = 0; i < way.m_nd.size() ; i++) {
 		const Node * node = findNodeFromId(way.m_nd[i].ref);
@@ -779,6 +807,9 @@ const void DrawingOSM::Highway::addGeometryData(std::vector<GeometryData *> & da
 {
 	for (auto& lineFromPlanes : m_linesFromPlanes) {
 		lineFromPlanes.addGeometryData(data);
+	}
+	for (auto& areaBorder : m_areaBorders) {
+		areaBorder.addGeometryData(data);
 	}
 }
 

@@ -130,6 +130,7 @@ public:
 		QColor								m_color;
 		bool								m_extrudingPolygon = false;
 		double								m_height = 5;
+		int									m_zPosition;
 	};
 
 	struct AbstractDrawingObject {
@@ -223,6 +224,7 @@ public:
 
 	struct Highway : AbstractOSMObject {
 		std::vector<LineFromPlanes>			m_linesFromPlanes;
+		std::vector<AreaBorder>				m_areaBorders;
 
 		double								m_lineThickness = 0.3;
 
