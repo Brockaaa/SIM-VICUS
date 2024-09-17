@@ -181,7 +181,7 @@ public:
 
 		/*! polyline coordinates */
 		std::vector<IBKMK::Vector2D>		m_polyline;
-		std::vector<IBKMK::Vector2D>		m_innerPolylines;
+		std::vector<std::vector<IBKMK::Vector2D>>		m_innerPolylines;
 		QColor								m_color = QColor(Qt::black);
 
 		bool								m_multipolygon = false;
@@ -198,9 +198,9 @@ public:
 		/*! polyline coordinates */
 		std::vector<IBKMK::Vector2D>		m_polyline;
 
-		double								m_lineThickness = 0.3;
+		double								m_lineThickness = 1;
 
-		QColor								m_color = QColor(Qt::black);
+		QColor								m_color = QColor("#78909c");
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
@@ -226,7 +226,7 @@ public:
 	};
 
 	struct Water : AbstractOSMObject {
-		std::vector<AreaNoBorder>			m_areaNoBorder;
+		std::vector<AreaNoBorder>			m_areaNoBorders;
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 
@@ -267,6 +267,7 @@ public:
 
 	// extracts water body from ways relations etc.
 	void createWater(Way &way);
+	void createWater(Relation &relation);
 
 	// *** PUBLIC MEMBER VARIABLES ***
 

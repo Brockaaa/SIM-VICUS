@@ -47,7 +47,7 @@ const unsigned int SEGMENT_COUNT_CIRCLE		= 15;
 const unsigned int SEGMENT_COUNT_ELLIPSE	= 15;
 
 // Multiplyer for different layers and their heights
-const double Z_MULTIPLYER					= 0.000001;
+const double Z_MULTIPLYER					= 0.2;   // TODO
 // Default scaling of fonts in DXF
 const double DEFAULT_FONT_SCALING			= 0.1;
 const double DEFAULT_FONT_SIZE				= 50;
