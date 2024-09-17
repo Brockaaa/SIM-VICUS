@@ -89,6 +89,8 @@ public:
 
 		bool containsKeyValue(const std::string& key, const std::string& value) const;
 
+		std::string getValueFromKey(const std::string& key) const;
+
 		unsigned int                    m_id = VICUS::INVALID_ID; // unique id
 
 		std::vector<Tag>				m_tags; // stores all tags. Does not make an effort to interpret them
@@ -126,6 +128,8 @@ public:
 	struct GeometryData {
 		std::vector<VICUS::PlaneGeometry>	m_planeGeometry;
 		QColor								m_color;
+		bool								m_extrudingPolygon = false;
+		double								m_height = 5;
 	};
 
 	struct AbstractDrawingObject {
@@ -227,11 +231,18 @@ public:
 
 	struct Water : AbstractOSMObject {
 		std::vector<AreaNoBorder>			m_areaNoBorders;
+		std::vector<LineFromPlanes>			m_linesFromPlanes;
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 
 	};
 
+	struct Land : AbstractOSMObject {
+		std::vector<AreaNoBorder>			m_areaNoBorders;
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+
+	};
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
@@ -269,6 +280,9 @@ public:
 	void createWater(Way &way);
 	void createWater(Relation &relation);
 
+	// extracts land from ways, relations etc.
+	void createLand(Way &way);
+
 	// *** PUBLIC MEMBER VARIABLES ***
 
 	// *** List of OSM XML Elements ***
@@ -299,6 +313,7 @@ public:
 	std::vector<Building>							m_buildings;
 	std::vector<Highway>							m_highways;
 	std::vector<Water>								m_waters;
+	std::vector<Land>								m_land;
 
 	/*! path of the OSM File */
 	QString											m_filePath;

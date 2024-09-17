@@ -2039,6 +2039,13 @@ void Scene::generate2DDrawingOSMGeometry() {
 	for (const VICUS::DrawingOSM & drawing : p.m_drawingsOSM) {
 		for (const auto & building : drawing.m_buildings) {
 			building.addGeometryData(geometryData);
+			// for(auto& areaBorder : building.m_areaBorders){
+			// 	if (areaBorder.m_multipolygon) continue;
+			// 	addPolygonExtrusion(areaBorder.m_polyline, building.m_height, areaBorder.m_colorArea, currentVertexIndex, currentElementIndex,
+			// 						m_drawingOSMGeometryObject.m_vertexBufferData,
+			// 						m_drawingOSMGeometryObject.m_colorBufferData,
+			// 						m_drawingOSMGeometryObject.m_indexBufferData);
+			// }
 		}
 
 		for( const auto & highway : drawing.m_highways) {
@@ -2048,10 +2055,22 @@ void Scene::generate2DDrawingOSMGeometry() {
 		for( const auto & water : drawing.m_waters) {
 			water.addGeometryData(geometryData);
 		}
+
+		for( const auto & land : drawing.m_land) {
+			land.addGeometryData(geometryData);
+		}
 	}
 
 	// adding geometry data to GeometryObject
 	for( const auto& data : geometryData) {
+		//if(data->m_extrudingPolygon) {
+		//	for (const VICUS::PlaneGeometry &plane : data->m_planeGeometry) {
+		//		addPolygonExtrusion(plane.polygon3D(), data->m_color currentVertexIndex, currentElementIndex,
+		//							m_drawingOSMGeometryObject.m_vertexBufferData,
+		//							m_drawingOSMGeometryObject.m_colorBufferData,
+		//							m_drawingOSMGeometryObject.m_indexBufferData);
+		//	}
+		//}
 		for (const VICUS::PlaneGeometry &plane : data->m_planeGeometry) {
 			addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
 					 m_drawingOSMGeometryObject.m_vertexBufferData,

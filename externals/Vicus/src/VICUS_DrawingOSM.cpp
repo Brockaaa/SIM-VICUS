@@ -137,6 +137,7 @@ void DrawingOSM::constructObjects()
 		createBuilding(way);
 		createHighway(way);
 		createWater(way);
+		createLand(way);
 	}
 
 	for (auto& relation : m_relations) {
@@ -271,19 +272,33 @@ void DrawingOSM::createHighway(Way & way)
 
 void DrawingOSM::createWater(Way & way)
 {
-	if (!way.containsKey("water")) return;
+	bool containsWater = way.containsKey("water");
+	bool containsWaterway = way.containsKey("waterway");
+	if( !(containsWater || containsWaterway)) return;
 	Water water;
 
-	AreaNoBorder areaNoBorder(this);
-	areaNoBorder.m_color = QColor(Qt::blue);
-	areaNoBorder.m_zPosition = 1;
+	if (containsWater) {
+		AreaNoBorder areaNoBorder(this);
+		areaNoBorder.m_color = QColor("#aad3df");
+		areaNoBorder.m_zPosition = 1;
 
-	for (int i = 0; i < way.m_nd.size() ; i++) {
-		const Node * node = findNodeFromId(way.m_nd[i].ref);
-		Q_ASSERT(node);
-		areaNoBorder.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+		for (int i = 0; i < way.m_nd.size() ; i++) {
+			const Node * node = findNodeFromId(way.m_nd[i].ref);
+			Q_ASSERT(node);
+			areaNoBorder.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+		}
+		water.m_areaNoBorders.push_back(areaNoBorder);
+	} else if (containsWaterway) {
+		LineFromPlanes lineFromPlanes(this);
+		lineFromPlanes.m_lineThickness = 1;
+		lineFromPlanes.m_zPosition = 1;
+		for (int i = 0; i < way.m_nd.size() ; i++) {
+			const Node * node = findNodeFromId(way.m_nd[i].ref);
+			Q_ASSERT(node);
+			lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+		}
+		water.m_linesFromPlanes.push_back(lineFromPlanes);
 	}
-	water.m_areaNoBorders.push_back(areaNoBorder);
 	m_waters.push_back(water);
 }
 
@@ -295,7 +310,7 @@ void DrawingOSM::createWater(Relation & relation)
 	Water water;
 
 	AreaNoBorder areaNoBorder(this);
-	areaNoBorder.m_color = QColor(Qt::blue);
+	areaNoBorder.m_color = QColor("#aad3df");
 	areaNoBorder.m_zPosition = 1;
 	std::vector<const Way*> waysOuter;
 	std::vector<const Way*> waysInner;
@@ -336,6 +351,58 @@ void DrawingOSM::createWater(Relation & relation)
 	water.m_areaNoBorders.push_back(areaNoBorder);
 	m_waters.push_back(water);
 
+}
+
+void DrawingOSM::createLand(Way & way)
+{
+	if (!way.containsKey("landuse")) return;
+	Land land;
+	std::string value = way.getValueFromKey("landuse");
+
+	AreaNoBorder areaNoBorder(this);
+	areaNoBorder.m_color = QColor("#c8facc"); // forest #add19e
+	if (value == "residential"){
+		areaNoBorder.m_color = QColor("#f2dad9");
+	} else if (value == "forest") {
+		areaNoBorder.m_color = QColor("#add19e");
+	} else if (value == "industrial") {
+		areaNoBorder.m_color = QColor("#ebdbe8");
+	} else if (value == "village_green") {
+		areaNoBorder.m_color = QColor("#cdebb0");
+	} else if (value == "construction") {
+		areaNoBorder.m_color = QColor("#c7c7b4");
+	} else if (value == "grass") {
+		areaNoBorder.m_color = QColor("#cdebb0");
+	} else if (value == "retail") {
+		areaNoBorder.m_color = QColor("#ffd6d1");
+	} else if (value == "commercial") {
+		areaNoBorder.m_color = QColor("#f2dad9");
+	} else if (value == "public_administration") {
+		areaNoBorder.m_color = QColor("#f2efe9");
+	} else if (value == "railway") {
+		areaNoBorder.m_color = QColor("#ebdbe8");
+	} else if (value == "farmyard") {
+		areaNoBorder.m_color = QColor("#f5dcba");
+	} else if (value == "meadow") {
+		areaNoBorder.m_color = QColor("#cdebb0");
+	} else if (value == "religious") {
+		areaNoBorder.m_color = QColor("#d0d0d0");
+	} else if (value == "flowerbed") {
+		areaNoBorder.m_color = QColor("#cdebb0");
+	} else if (value == "recreation_ground") {
+		areaNoBorder.m_color = QColor("#dffce2");
+	} else if (value == "brownfield") {
+		areaNoBorder.m_color = QColor("#c7c7b4");
+	}
+	areaNoBorder.m_zPosition = 1;
+
+	for (int i = 0; i < way.m_nd.size() ; i++) {
+		const Node * node = findNodeFromId(way.m_nd[i].ref);
+		Q_ASSERT(node);
+		areaNoBorder.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+	}
+	land.m_areaNoBorders.push_back(areaNoBorder);
+	m_land.push_back(land);
 }
 
 void DrawingOSM::processRelation(const Relation & relation, std::vector<const Node *> & nodes, std::vector<const Way *> & ways, bool & outline) {
@@ -495,6 +562,7 @@ bool DrawingOSM::AbstractOSMElement::containsKey(const std::string& key) const
 	return false;
 }
 
+
 bool DrawingOSM::AbstractOSMElement::containsValue(const std::string& value) const
 {
 	for (int i = 0; i < m_tags.size(); i++) {
@@ -511,6 +579,15 @@ bool DrawingOSM::AbstractOSMElement::containsKeyValue(const std::string & key, c
 			return true;
 	}
 	return false;
+}
+
+std::string DrawingOSM::AbstractOSMElement::getValueFromKey(const std::string & key) const
+{
+	for (int i = 0; i < m_tags.size(); i++) {
+		if(m_tags[i].key == key)
+			return m_tags[i].value;
+	}
+	return std::string("");
 }
 
 void DrawingOSM::Nd::readXML(const TiXmlElement * element) {
@@ -793,6 +870,16 @@ const void DrawingOSM::LineFromPlanes::addGeometryData(std::vector<GeometryData 
 }
 
 const void DrawingOSM::Water::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	for (auto& areaNoBorder : m_areaNoBorders) {
+		areaNoBorder.addGeometryData(data);
+	}
+	for (auto& lineFromPlanes : m_linesFromPlanes) {
+		lineFromPlanes.addGeometryData(data);
+	}
+}
+
+const void DrawingOSM::Land::addGeometryData(std::vector<GeometryData *> & data) const
 {
 	for (auto& areaNoBorder : m_areaNoBorders) {
 		areaNoBorder.addGeometryData(data);
