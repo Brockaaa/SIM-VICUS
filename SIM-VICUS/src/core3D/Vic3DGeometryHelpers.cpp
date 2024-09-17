@@ -821,6 +821,47 @@ void addBox(const std::vector<IBKMK::Vector3D> & v, const QColor & c,
 #endif
 }
 
+void addPolygonExtrusion(const std::vector<IBKMK::Vector3D> & bottomFace, double height, const QColor & c,
+						 unsigned int & currentVertexIndex, unsigned int & currentElementIndex,
+						 std::vector<Vertex> & vertexBufferData, std::vector<ColorRGBA> & colorBufferData, std::vector<GLuint> & indexBufferData){
+
+	FUNCID(addExtrudedPolygon);
+	// Create top face by offsetting bottom face by height
+	std::vector<IBKMK::Vector3D> topFace;
+	for (auto it = bottomFace.rbegin(); it != bottomFace.rend(); ++it) {
+		topFace.push_back(IBKMK::Vector3D(it->m_x, it->m_y, it->m_z + height));
+	}
+
+	// Add bottom face
+	{
+		IBKMK::Polygon3D p(bottomFace);
+		if (!p.isValid())
+			throw IBK::Exception("Invalid bottom face polygon.", FUNC_ID);
+		VICUS::PlaneGeometry g1(p);
+		addPlane(g1.triangulationData(), c, currentVertexIndex, currentElementIndex,
+				 vertexBufferData, colorBufferData, indexBufferData, false);
+	}
+
+	// Add top face
+	{
+		IBKMK::Polygon3D p(topFace);
+		VICUS::PlaneGeometry g1(p);
+		addPlane(g1.triangulationData(), c, currentVertexIndex, currentElementIndex,
+				 vertexBufferData, colorBufferData, indexBufferData, false);
+	}
+
+	// Add side faces
+	for (size_t i = 0; i < bottomFace.size(); ++i) {
+		size_t nextI = (i + 1) % bottomFace.size();
+
+		// Create two triangles for each side face
+		addPlane(VICUS::PlaneTriangulationData(bottomFace[i], topFace[bottomFace.size() - 1 - i], bottomFace[nextI]), c,
+				 currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, false);
+		addPlane(VICUS::PlaneTriangulationData(bottomFace[nextI], topFace[bottomFace.size() - 1 - i], topFace[bottomFace.size() - 1 - nextI]), c,
+				 currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, false);
+	}
+}
+
 void addLine(const IBKMK::Vector3D & startPoint, const IBKMK::Vector3D & endPoint, const VICUS::RotationMatrix &matrix, double width, const QColor & color,
 			 unsigned int & currentVertexIndex, unsigned int & currentElementIndex, std::vector<Vertex> & vertexBufferData,
 			 std::vector<ColorRGBA> & colorBufferData, std::vector<GLuint> & indexBufferData) {
