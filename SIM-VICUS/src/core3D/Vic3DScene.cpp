@@ -2059,6 +2059,18 @@ void Scene::generate2DDrawingOSMGeometry() {
 		for( const auto & land : drawing.m_land) {
 			land.addGeometryData(geometryData);
 		}
+
+		for( const auto & leisure : drawing.m_leisure) {
+			leisure.addGeometryData(geometryData);
+		}
+
+		for( const auto & natural : drawing.m_natural) {
+			natural.addGeometryData(geometryData);
+		}
+
+		for( const auto & amenity : drawing.m_amenity) {
+			amenity.addGeometryData(geometryData);
+		}
 	}
 
 	// adding geometry data to GeometryObject

@@ -138,6 +138,9 @@ void DrawingOSM::constructObjects()
 		createHighway(way);
 		createWater(way);
 		createLand(way);
+		createLeisure(way);
+		createNatural(way);
+		createAmenity(way);
 	}
 
 	for (auto& relation : m_relations) {
@@ -300,7 +303,7 @@ void DrawingOSM::createWater(Way & way)
 	if (containsWater) {
 		AreaNoBorder areaNoBorder(this);
 		areaNoBorder.m_color = QColor("#aad3df");
-		areaNoBorder.m_zPosition = 1;
+		areaNoBorder.m_zPosition = 2;
 		if(way.containsKeyValue("layer", "-1")) areaNoBorder.m_zPosition = 0;
 
 		for (int i = 0; i < way.m_nd.size() ; i++) {
@@ -402,6 +405,8 @@ void DrawingOSM::createLand(Way & way)
 		areaNoBorder.m_zPosition = 0;
 	} else if (value == "retail") {
 		areaNoBorder.m_color = QColor("#ffd6d1");
+	} else if (value == "cemetery") {
+		areaNoBorder.m_color = QColor("#aacbaf");
 	} else if (value == "commercial") {
 		areaNoBorder.m_color = QColor("#f2dad9");
 	} else if (value == "public_administration") {
@@ -412,12 +417,12 @@ void DrawingOSM::createLand(Way & way)
 		areaNoBorder.m_color = QColor("#f5dcba");
 	} else if (value == "meadow") {
 		areaNoBorder.m_color = QColor("#cdebb0");
-		areaNoBorder.m_zPosition = 2;
+		areaNoBorder.m_zPosition = 1.8;
 	} else if (value == "religious") {
 		areaNoBorder.m_color = QColor("#d0d0d0");
 	} else if (value == "flowerbed") {
 		areaNoBorder.m_color = QColor("#cdebb0");
-		areaNoBorder.m_zPosition = 2;
+		areaNoBorder.m_zPosition = 2.2;
 	} else if (value == "recreation_ground") {
 		areaNoBorder.m_color = QColor("#dffce2");
 	} else if (value == "brownfield") {
@@ -431,6 +436,110 @@ void DrawingOSM::createLand(Way & way)
 	}
 	land.m_areaNoBorders.push_back(areaNoBorder);
 	m_land.push_back(land);
+}
+
+void DrawingOSM::createLeisure(Way & way)
+{
+	if (!way.containsKey("leisure")) return;
+	Leisure leisure;
+	std::string value = way.getValueFromKey("landuse");
+
+	AreaNoBorder areaNoBorder(this);
+	areaNoBorder.m_color = QColor("#c8facc");
+	areaNoBorder.m_zPosition = 1;
+
+	if (value == "park"){
+		areaNoBorder.m_color = QColor("#c8facc");
+	}
+
+	for (int i = 0; i < way.m_nd.size() ; i++) {
+		const Node * node = findNodeFromId(way.m_nd[i].ref);
+		Q_ASSERT(node);
+		areaNoBorder.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+	}
+	leisure.m_areaNoBorders.push_back(areaNoBorder);
+	m_leisure.push_back(leisure);
+}
+
+void DrawingOSM::createNatural(Way & way)
+{
+	if (!way.containsKey("natural")) return;
+	Natural natural;
+	std::string value = way.getValueFromKey("natural");
+
+	bool noArea = false;
+
+	QColor color = QColor("#c8facc");
+	double zPosition = 1.8;
+
+	if (value == "water"){
+		color = QColor("#aad3df");
+		zPosition = 2.3;
+	} else if (value == "tree_row") {
+		color = QColor("#b8d4a7");
+		noArea = true;
+	}
+
+	if (noArea) {
+		LineFromPlanes lineFromPlanes(this);
+		lineFromPlanes.m_color = color;
+		lineFromPlanes.m_zPosition = zPosition;
+		lineFromPlanes.m_lineThickness = 3;
+
+		if(way.containsKeyValue("layer", "-1")) lineFromPlanes.m_zPosition = 0;
+		for (int i = 0; i < way.m_nd.size() ; i++) {
+			const Node * node = findNodeFromId(way.m_nd[i].ref);
+			Q_ASSERT(node);
+			lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+		}
+
+		natural.m_linesFromPlanes.push_back(lineFromPlanes);
+		m_natural.push_back(natural);
+		return;
+	}
+
+	AreaNoBorder areaNoBorder(this);
+	areaNoBorder.m_color = color;
+	areaNoBorder.m_zPosition = zPosition;
+
+
+	for (int i = 0; i < way.m_nd.size() ; i++) {
+		const Node * node = findNodeFromId(way.m_nd[i].ref);
+		Q_ASSERT(node);
+		areaNoBorder.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+	}
+	natural.m_areaNoBorders.push_back(areaNoBorder);
+	m_natural.push_back(natural);
+}
+
+void DrawingOSM::createAmenity(Way & way)
+{
+	if (!way.containsKey("amenity")) return;
+	if (way.containsKey("building")) return;
+	Amenity amenity;
+	std::string value = way.getValueFromKey("amenity");
+
+	AreaNoBorder areaNoBorder(this);
+	areaNoBorder.m_color = QColor("#c8facc");
+	areaNoBorder.m_zPosition = 2;
+
+	if (value == "parking") {
+		areaNoBorder.m_color = QColor("#eeeeee");
+	} else if (value == "kindergarten") {
+		areaNoBorder.m_color = QColor("#ffffe5");
+	} else if (value == "school") {
+		areaNoBorder.m_color = QColor("#ffffe5");
+	} else if (value == "social_facility") {
+		areaNoBorder.m_color = QColor("#ffffe5");
+	}
+
+	for (int i = 0; i < way.m_nd.size() ; i++) {
+		const Node * node = findNodeFromId(way.m_nd[i].ref);
+		Q_ASSERT(node);
+		areaNoBorder.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+	}
+	amenity.m_areaNoBorders.push_back(areaNoBorder);
+	m_amenity.push_back(amenity);
 }
 
 void DrawingOSM::processRelation(const Relation & relation, std::vector<const Node *> & nodes, std::vector<const Way *> & ways, bool & outline) {
@@ -508,7 +617,7 @@ bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> &
 
 		if (previousVertices.size() == lineVertices.size()) {
 			// draws the triangle
-			if(crossProduct.m_z < -1e-10){
+			if(crossProduct.m_z > 1e-10){
 				// line is left
 				std::vector<IBKMK::Vector3D> verts(3);
 				verts[0] = previousVertices[1];
@@ -518,7 +627,7 @@ bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> &
 				IBKMK::Polygon3D poly3d(verts);
 				planes.push_back(PlaneGeometry(poly3d));
 			}
-			else if(crossProduct.m_z > 1e-10){
+			else if(crossProduct.m_z < -1e-10){
 				// line is right
 
 				// line is left
@@ -911,6 +1020,30 @@ const void DrawingOSM::Water::addGeometryData(std::vector<GeometryData *> & data
 }
 
 const void DrawingOSM::Land::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	for (auto& areaNoBorder : m_areaNoBorders) {
+		areaNoBorder.addGeometryData(data);
+	}
+}
+
+const void DrawingOSM::Leisure::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	for (auto& areaNoBorder : m_areaNoBorders) {
+		areaNoBorder.addGeometryData(data);
+	}
+}
+
+const void DrawingOSM::Natural::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	for (auto& areaNoBorder : m_areaNoBorders) {
+		areaNoBorder.addGeometryData(data);
+	}
+	for (auto& lineFromPlanes : m_linesFromPlanes) {
+		lineFromPlanes.addGeometryData(data);
+	}
+}
+
+const void DrawingOSM::Amenity::addGeometryData(std::vector<GeometryData *> & data) const
 {
 	for (auto& areaNoBorder : m_areaNoBorders) {
 		areaNoBorder.addGeometryData(data);

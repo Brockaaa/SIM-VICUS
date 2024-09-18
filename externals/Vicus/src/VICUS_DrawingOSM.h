@@ -246,6 +246,28 @@ public:
 
 	};
 
+	struct Leisure : AbstractOSMObject {
+		std::vector<AreaNoBorder>			m_areaNoBorders;
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+
+	};
+
+	struct Natural : AbstractOSMObject {
+		std::vector<AreaNoBorder>			m_areaNoBorders;
+		std::vector<LineFromPlanes>			m_linesFromPlanes;
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+
+	};
+
+	struct Amenity : AbstractOSMObject {
+		std::vector<AreaNoBorder>			m_areaNoBorders;
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+
+	};
+
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
 	/*! Fills m_nodes, m_ways, m_relations, m_boundingBox with values from a OSM XML */
@@ -253,7 +275,6 @@ public:
 
 	/*! calls readXML. Afterwards calculates m_utmZone and m_origin */
 	bool readOSMFile(QString filePath);
-	void constructObjects();
 
 	/*! Updates all planes, when transformation operations are applied.
 		MIND: Always call this function, when the drawing transformation
@@ -269,6 +290,7 @@ public:
 	inline IBKMK::Vector2D convertLatLonToVector2D(double lat, double lon);
 
 	// *** Methods to create Buildings streets. etc. ***
+	void constructObjects();
 
 	// creates complete buildings from ways relations etc.
 	void createBuilding(Way &way);
@@ -284,6 +306,15 @@ public:
 
 	// extracts land from ways, relations etc.
 	void createLand(Way &way);
+
+	// extracts leisure objects from ways, relations etc.
+	void createLeisure(Way &way);
+
+	// extracts natural objects from ways etc.
+	void createNatural(Way &way);
+
+	// extracts amenityobjects from ways etc.
+	void createAmenity(Way &way);
 
 	// *** PUBLIC MEMBER VARIABLES ***
 
@@ -316,6 +347,9 @@ public:
 	std::vector<Highway>							m_highways;
 	std::vector<Water>								m_waters;
 	std::vector<Land>								m_land;
+	std::vector<Leisure>							m_leisure;
+	std::vector<Natural>							m_natural;
+	std::vector<Amenity>							m_amenity;
 
 	/*! path of the OSM File */
 	QString											m_filePath;
