@@ -177,5 +177,14 @@ void enlargeBoundingBox(const Vector2D & v, Vector2D & minVec, Vector2D & maxVec
 	maxVec.m_y = std::max(maxVec.m_y, v.m_y);
 }
 
+bool counterClockwise(const Vector2D & a, const Vector2D & b, const Vector2D & c) {
+	return (c.m_y-a.m_y)*(b.m_x-a.m_x) > (b.m_y - a.m_y)*(c.m_x - a.m_x);
+}
+
+bool lineSegmentIntersect(const Vector2D & a, const Vector2D & b, const Vector2D & c, const Vector2D & d)
+{
+	return counterClockwise(a,c,d) != counterClockwise(b,c,d) && counterClockwise(a,b,c) != counterClockwise(a,b,d);
+}
+
 
 } // namespace IBKMK

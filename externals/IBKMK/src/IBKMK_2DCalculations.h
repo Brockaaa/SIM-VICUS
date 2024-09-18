@@ -60,6 +60,12 @@ bool intersectsLine2D(const std::vector<Vector2D> & polygon,
 */
 int pointInPolygon(const std::vector<Vector2D> & poly, const IBK::point2D<double> &p);
 
+// checks if 3 points are in counterclockwise order
+bool counterClockwise(const Vector2D & a, const Vector2D & b, const Vector2D & c);
+
+// checks if 2 linesegments intersect. https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
+bool lineSegmentIntersect(const Vector2D &a, const Vector2D &b, const Vector2D &c, const Vector2D &d);
+
 /*! Eliminates collinear points in a polygon.
 	All points that are closer together than the provided epsilon will be merged.
 */
