@@ -188,6 +188,7 @@ void DrawingOSM::createMultipolygonsFromRelation(Relation & relation, std::vecto
 		}
 
 		VICUS::PlaneGeometry outerPlaneGeometry (outerPolygon);
+		if (!outerPlaneGeometry.isValid()) continue;
 
 		for (auto& innerPolyline : multipolygon.m_innerPolylines) {
 			std::vector<IBKMK::Vector3D> innerPolygon;
@@ -329,11 +330,14 @@ void DrawingOSM::constructObjects()
 		createLeisure(way);
 		createNatural(way);
 		createAmenity(way);
+		createPlace(way);
 	}
 
 	for (auto& relation : m_relations) {
 		createBuilding(relation);
 		createWater(relation);
+		createHighway(relation);
+		createPlace(relation);
 	}
 
 }
@@ -381,6 +385,7 @@ inline IBKMK::Vector2D DrawingOSM::convertLatLonToVector2D(double lat, double lo
 void DrawingOSM::createBuilding(Way & way){
 	if (!way.containsKey("building")) return;
 	if (way.containsKeyValue("building", "cellar")) return;
+	if (way.containsKeyValue("building", "roof")) return;
 	Building building;
 
 	AreaBorder areaBorder(this);
@@ -398,6 +403,8 @@ void DrawingOSM::createBuilding(Relation & relation)
 	bool containsKeyBuilding = relation.containsKey("building");
 	bool containsKeyTags = relation.containsKeyValue("type", "multipolygon");
 	if(!(containsKeyBuilding && containsKeyTags)) return;
+	if (relation.containsKeyValue("building", "cellar")) return;
+	if (relation.containsKeyValue("building", "roof")) return;
 	Building building;
 
 	std::vector<Multipolygon> multipolygons;
@@ -439,6 +446,29 @@ void DrawingOSM::createHighway(Way & way)
 			lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
 		}
 		highway.m_linesFromPlanes.push_back(lineFromPlanes);
+	}
+
+	m_highways.push_back(highway);
+}
+
+void DrawingOSM::createHighway(Relation & relation)
+{
+	bool containsKey = relation.containsKeyValue("highway", "pedestrian") || relation.containsKeyValue("highway", "footway");
+	bool isMultipolygon = relation.containsKeyValue("type", "multipolygon");
+	if (relation.containsKey("place")) return;
+	if (!(containsKey && isMultipolygon)) return;
+
+	Highway highway;
+
+	std::vector<Multipolygon> multipolygons;
+	createMultipolygonsFromRelation(relation, multipolygons);
+
+	for (auto multipolygon : multipolygons) {
+		AreaBorder areaBorder(this);
+		areaBorder.m_zPosition = 0;
+		areaBorder.m_multiPolygon = multipolygon;
+		areaBorder.m_colorArea = QColor("#78909c");
+		highway.m_areaBorders.push_back(areaBorder);
 	}
 
 	m_highways.push_back(highway);
@@ -487,8 +517,9 @@ void DrawingOSM::createWater(Relation & relation)
 
 	for (auto multipolygon : multipolygons) {
 		AreaNoBorder areaNoBorder(this);
-		areaNoBorder.m_zPosition = 5;
+		areaNoBorder.m_zPosition = 2;
 		areaNoBorder.m_multiPolygon = multipolygon;
+		areaNoBorder.m_color = QColor("#aad3df");
 		water.m_areaNoBorders.push_back(areaNoBorder);
 	}
 
@@ -656,7 +687,45 @@ void DrawingOSM::createAmenity(Way & way)
 	}
 
 	amenity.m_areaNoBorders.push_back(areaNoBorder);
-	m_amenity.push_back(amenity);
+	m_amenities.push_back(amenity);
+}
+
+void DrawingOSM::createPlace(Way & way)
+{
+	if (!way.containsKey("place")) return;
+	if (way.containsKey("building")) return;
+	Place place;
+	std::string value = way.getValueFromKey("amenity");
+
+	AreaBorder areaBorder(this);
+	areaBorder.m_colorArea = QColor("#c8facc");
+	areaBorder.m_zPosition = 1.75;
+
+	createMultipolygonFromWay(way, areaBorder.m_multiPolygon);
+
+	place.m_areaBorders.push_back(areaBorder);
+	m_places.push_back(place);
+}
+
+void DrawingOSM::createPlace(Relation & relation)
+{
+	bool containsKey = relation.containsKey("water") || relation.containsKey("waterway");
+	bool containsKeyTags = relation.containsKeyValue("type", "multipolygon");
+	if(!(containsKey && containsKeyTags)) return;
+	Place place;
+
+	std::vector<Multipolygon> multipolygons;
+	createMultipolygonsFromRelation(relation, multipolygons);
+
+	for (auto multipolygon : multipolygons) {
+		AreaBorder areaBorder(this);
+		areaBorder.m_zPosition = 2;
+		areaBorder.m_multiPolygon = multipolygon;
+		areaBorder.m_colorArea = QColor("#aad3df");
+		place.m_areaBorders.push_back(areaBorder);
+	}
+
+	m_places.push_back(place);
 }
 
 void DrawingOSM::processRelation(const Relation & relation, std::vector<const Node *> & nodes, std::vector<const Way *> & ways, bool & outline) {
@@ -1164,6 +1233,13 @@ const void DrawingOSM::Amenity::addGeometryData(std::vector<GeometryData *> & da
 {
 	for (auto& areaNoBorder : m_areaNoBorders) {
 		areaNoBorder.addGeometryData(data);
+	}
+}
+
+const void DrawingOSM::Place::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	for (auto& areaBorder : m_areaBorders) {
+		areaBorder.addGeometryData(data);
 	}
 }
 

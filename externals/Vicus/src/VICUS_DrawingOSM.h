@@ -269,6 +269,13 @@ public:
 
 	};
 
+	struct Place : AbstractOSMObject {
+		std::vector<AreaBorder>			m_areaBorders;
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+
+	};
+
 	std::vector<IBKMK::Vector2D> convertHoleToLocalCoordinates(const std::vector<IBKMK::Vector3D> & globalVertices, const IBKMK::Vector3D & offset, const IBKMK::Vector3D & localX, const IBKMK::Vector3D & localY);
 
 	void createMultipolygonFromWay(Way &way, Multipolygon &multipolygon);
@@ -322,6 +329,10 @@ public:
 	// extracts amenityobjects from ways etc.
 	void createAmenity(Way &way);
 
+	// extracts place objects from ways
+	void createPlace(Way &way);
+	void createPlace(Relation &relation);
+
 	// *** PUBLIC MEMBER VARIABLES ***
 
 	// *** List of OSM XML Elements ***
@@ -355,7 +366,8 @@ public:
 	std::vector<Land>								m_land;			// generally z value 0 < x <= 1 meadow is 1.8, flowerbed is 1.8
 	std::vector<Leisure>							m_leisure;		// generally z value 1 <= x < 2
 	std::vector<Natural>							m_natural;		// generally z value 1 < x < 2, amenity water is 2
-	std::vector<Amenity>							m_amenity;		// generally z value 1 < x < 2
+	std::vector<Amenity>							m_amenities;		// generally z value 1 < x < 2
+	std::vector<Place>								m_places;
 
 	/*! path of the OSM File */
 	QString											m_filePath;

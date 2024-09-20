@@ -2068,8 +2068,12 @@ void Scene::generate2DDrawingOSMGeometry() {
 			natural.addGeometryData(geometryData);
 		}
 
-		for( const auto & amenity : drawing.m_amenity) {
+		for( const auto & amenity : drawing.m_amenities) {
 			amenity.addGeometryData(geometryData);
+		}
+
+		for( const auto & place : drawing.m_places) {
+			place.addGeometryData(geometryData);
 		}
 	}
 
