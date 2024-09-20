@@ -161,19 +161,21 @@ public:
 		const DrawingOSM * m_drawing = nullptr;
 	};
 
+	struct Multipolygon {
+		std::vector<IBKMK::Vector2D> m_outerPolyline;
+		std::vector<std::vector<IBKMK::Vector2D>> m_innerPolylines;
+	};
+
 	struct AreaBorder : AbstractDrawingObject {
 
 		AreaBorder(const DrawingOSM * drawing)
 			: AbstractDrawingObject(drawing)
 		{}
 
-		/*! polyline coordinates */
-		std::vector<IBKMK::Vector2D>		m_polyline;
-		std::vector<std::vector<IBKMK::Vector2D>>		m_innerPolylines;
+		Multipolygon						m_multiPolygon;
+
 		QColor								m_colorArea	  = QColor("#2f302f");
 		QColor								m_colorBorder = QColor("#c7b7b0");
-
-		bool								m_multipolygon = false;
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
@@ -184,12 +186,9 @@ public:
 			: AbstractDrawingObject(drawing)
 		{}
 
-		/*! polyline coordinates */
-		std::vector<IBKMK::Vector2D>		m_polyline;
-		std::vector<std::vector<IBKMK::Vector2D>>		m_innerPolylines;
-		QColor								m_color = QColor(Qt::black);
+		Multipolygon						m_multiPolygon;
 
-		bool								m_multipolygon = false;
+		QColor								m_color = QColor(Qt::black);
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
@@ -206,6 +205,8 @@ public:
 		double								m_lineThickness = 1;
 
 		QColor								m_color = QColor("#78909c");
+
+		int									m_layer = 0; // only used for explicit ordering in case objects overlap
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
@@ -267,6 +268,11 @@ public:
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 
 	};
+
+	std::vector<IBKMK::Vector2D> convertHoleToLocalCoordinates(const std::vector<IBKMK::Vector3D> & globalVertices, const IBKMK::Vector3D & offset, const IBKMK::Vector3D & localX, const IBKMK::Vector3D & localY);
+
+	void createMultipolygonFromWay(Way &way, Multipolygon &multipolygon);
+	void createMultipolygonsFromRelation(Relation &relation, std::vector<Multipolygon>& multipolygons);
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
@@ -343,13 +349,13 @@ public:
 	double											m_scalingFactor		= 1.0;
 
 	// *** List of OSM Objects like buildings, streets with all relevant information ***
-	std::vector<Building>							m_buildings;
-	std::vector<Highway>							m_highways;
-	std::vector<Water>								m_waters;
-	std::vector<Land>								m_land;
-	std::vector<Leisure>							m_leisure;
-	std::vector<Natural>							m_natural;
-	std::vector<Amenity>							m_amenity;
+	std::vector<Building>							m_buildings;    // generally z value 5
+	std::vector<Highway>							m_highways;		// generally z value  2.5 <= x < 5
+	std::vector<Water>								m_waters;		// generally z value 2
+	std::vector<Land>								m_land;			// generally z value 0 < x <= 1 meadow is 1.8, flowerbed is 1.8
+	std::vector<Leisure>							m_leisure;		// generally z value 1 <= x < 2
+	std::vector<Natural>							m_natural;		// generally z value 1 < x < 2, amenity water is 2
+	std::vector<Amenity>							m_amenity;		// generally z value 1 < x < 2
 
 	/*! path of the OSM File */
 	QString											m_filePath;
