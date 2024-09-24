@@ -186,5 +186,39 @@ bool lineSegmentIntersect(const Vector2D & a, const Vector2D & b, const Vector2D
 	return counterClockwise(a,c,d) != counterClockwise(b,c,d) && counterClockwise(a,b,c) != counterClockwise(a,b,d);
 }
 
+bool lineIntersect(const std::vector<Vector2D> line1, const std::vector<Vector2D> line2)
+{
+	for (size_t i = 0; i < line1.size() - 1; ++i) {
+		for (size_t j = 0; j < line2.size() - 1; ++j) {
+			if (lineSegmentIntersect(line1[i], line1[i+1], line2[j], line2[j+1])) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+int polygonInPolygon(const std::vector<Vector2D> & poly1, const std::vector<Vector2D> & poly2)
+{
+	bool poly1InPoly2 = true;
+	for (const auto& coord : poly1) {
+		if (pointInPolygon(poly2, coord) != 1) {
+			poly1InPoly2 = false;
+			break;
+		}
+	}
+	if (poly1InPoly2) return 1;
+	bool poly2InPoly1 = true;
+	for (const auto& coord : poly2) {
+		if (pointInPolygon(poly1, coord) != 1) {
+			poly2InPoly1 = false;
+			break;
+		}
+	}
+
+	if(poly2InPoly1) return 2;
+	return 0;
+}
+
 
 } // namespace IBKMK
