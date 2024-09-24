@@ -145,7 +145,7 @@ public:
 			m_dirtyTriangulation = true;
 		}
 
-		unsigned int m_zPosition = 0;
+		double m_zPosition = 0;
 
 	protected:
 		/*! Flag to indictate recalculation of points. */
@@ -278,7 +278,20 @@ public:
 
 	std::vector<IBKMK::Vector2D> convertHoleToLocalCoordinates(const std::vector<IBKMK::Vector3D> & globalVertices, const IBKMK::Vector3D & offset, const IBKMK::Vector3D & localX, const IBKMK::Vector3D & localY);
 
+	// *** Methods and Helper Functions To Create Polygons ***
 	void createMultipolygonFromWay(Way &way, Multipolygon &multipolygon);
+
+	void createMultipolygonsFromRelationOld(Relation &relation, std::vector<Multipolygon>& multipolygons);
+
+	struct WayWithMarks {
+		std::vector<int> refs;
+		bool assigned = false;
+		bool selected = false;
+		bool reversedOrder = false;
+	};
+	std::vector<IBKMK::Vector2D> convertVectorWayWithMarksToVector2D(const std::vector<WayWithMarks*>& ways);
+	void ringAssignment(std::vector<WayWithMarks>& ways, std::vector<std::vector<WayWithMarks*>>& allRings);
+	void ringGrouping(std::vector<std::vector<WayWithMarks*>>& rings, std::vector<Multipolygon>& multipolygons);
 	void createMultipolygonsFromRelation(Relation &relation, std::vector<Multipolygon>& multipolygons);
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
@@ -319,6 +332,7 @@ public:
 
 	// extracts land from ways, relations etc.
 	void createLand(Way &way);
+	void createLand(Relation &relation);
 
 	// extracts leisure objects from ways, relations etc.
 	void createLeisure(Way &way);
@@ -366,7 +380,7 @@ public:
 	std::vector<Land>								m_land;			// generally z value 0 < x <= 1 meadow is 1.8, flowerbed is 1.8
 	std::vector<Leisure>							m_leisure;		// generally z value 1 <= x < 2
 	std::vector<Natural>							m_natural;		// generally z value 1 < x < 2, amenity water is 2
-	std::vector<Amenity>							m_amenities;		// generally z value 1 < x < 2
+	std::vector<Amenity>							m_amenities;	// generally z value 1 < x < 2
 	std::vector<Place>								m_places;
 
 	/*! path of the OSM File */
