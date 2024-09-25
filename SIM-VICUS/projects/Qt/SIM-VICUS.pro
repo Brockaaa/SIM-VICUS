@@ -172,6 +172,7 @@ SOURCES += \
 	../../src/SVView3DCalculation.cpp \
 	../../src/SVZoneInformationDialog.cpp \
 	../../src/SVZoneSelectionDialog.cpp \
+	../../src/Vic3DOSMObject.cpp \
 	../../src/actions/SVUndoAddBuilding.cpp \
 	../../src/actions/SVUndoAddBuildingLevel.cpp \
 	../../src/actions/SVUndoAddNetwork.cpp \
@@ -434,6 +435,7 @@ HEADERS  += \
 	../../src/SVZoneInformationDialog.h \
 	../../src/SVZoneListModel.h \
 	../../src/SVZoneSelectionDialog.h \
+	../../src/Vic3DOSMObject.h \
 	../../src/actions/SVUndoAddBuilding.h \
 	../../src/actions/SVUndoAddBuildingLevel.h \
 	../../src/actions/SVUndoAddNetwork.h \

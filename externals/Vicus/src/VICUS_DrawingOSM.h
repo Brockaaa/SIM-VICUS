@@ -130,7 +130,6 @@ public:
 		QColor								m_color;
 		bool								m_extrudingPolygon = false;
 		double								m_height = 5;
-		int									m_zPosition;
 	};
 
 	struct AbstractDrawingObject {
@@ -144,8 +143,6 @@ public:
 		void updatePlaneGeometry() {
 			m_dirtyTriangulation = true;
 		}
-
-		double m_zPosition = 0;
 
 	protected:
 		/*! Flag to indictate recalculation of points. */
@@ -213,6 +210,8 @@ public:
 
 	struct AbstractOSMObject {
 		const virtual void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const = 0;
+
+		double								m_zPosition = 0;
 	};
 
 	// https://wiki.openstreetmap.org/wiki/Simple_3D_Buildings#How_to_map
@@ -308,6 +307,7 @@ public:
 		redone.
 	*/
 	void updatePlaneGeometries();
+	const void geometryData(std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>>& geometryData) const;
 
 
 	const Node* findNodeFromId(unsigned int id) const;

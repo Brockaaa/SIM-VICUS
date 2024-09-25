@@ -321,8 +321,8 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 	}
 
 	if(updateDrawingOSM){
-		m_drawingOSMGeometryObject.create(m_buildingShader->shaderProgram());
-		generate2DDrawingOSMGeometry();
+		m_drawingOSMGeometryObject.create(m_buildingShader);
+		m_drawingOSMGeometryObject.generateOSMGeometry();
 	}
 
 	// update all GPU buffers (transfer cached data to GPU)
@@ -1229,7 +1229,7 @@ void Scene::render() {
 
 		// render opaque part of drawing object
 		m_drawingGeometryObject.renderOpaque();
-		m_drawingOSMGeometryObject.renderOpaque();
+		m_drawingOSMGeometryObject.render();
 
 	}
 
@@ -2013,95 +2013,6 @@ void Scene::generate2DDrawingGeometry() {
 	}
 
 	m_drawingGeometryObject.m_transparentStartIndex = m_drawingGeometryObject.m_indexBufferData.size();
-}
-
-void Scene::generate2DDrawingOSMGeometry() {
-	// initialise necessary objects to draw OpaqueGeometryObject
-	m_drawingOSMGeometryObject.m_vertexBufferData.clear();
-	m_drawingOSMGeometryObject.m_colorBufferData.clear();
-	m_drawingOSMGeometryObject.m_indexBufferData.clear();
-	m_drawingOSMGeometryObject.m_vertexStartMap.clear();
-
-	m_drawingOSMGeometryObject.m_vertexBufferData.reserve(500000);
-	m_drawingOSMGeometryObject.m_colorBufferData.reserve(500000);
-	m_drawingOSMGeometryObject.m_indexBufferData.reserve(500000);
-
-	m_drawingOSMGeometryObject.m_drawTriangleStrips = false;
-
-	unsigned int currentVertexIndex = 0;
-	unsigned int currentElementIndex = 0;
-
-	const VICUS::Project & p = project();
-
-	std::vector<VICUS::DrawingOSM::GeometryData*> geometryData;
-
-	// collecting all geometryData from Objects
-	for (const VICUS::DrawingOSM & drawing : p.m_drawingsOSM) {
-		for (const auto & building : drawing.m_buildings) {
-			building.addGeometryData(geometryData);
-			// for(auto& areaBorder : building.m_areaBorders){
-			// 	if (areaBorder.m_multipolygon) continue;
-			// 	addPolygonExtrusion(areaBorder.m_polyline, building.m_height, areaBorder.m_colorArea, currentVertexIndex, currentElementIndex,
-			// 						m_drawingOSMGeometryObject.m_vertexBufferData,
-			// 						m_drawingOSMGeometryObject.m_colorBufferData,
-			// 						m_drawingOSMGeometryObject.m_indexBufferData);
-			// }
-		}
-
-		for( const auto & highway : drawing.m_highways) {
-			highway.addGeometryData(geometryData);
-		}
-
-		for( const auto & water : drawing.m_waters) {
-			water.addGeometryData(geometryData);
-		}
-
-		for( const auto & land : drawing.m_land) {
-			land.addGeometryData(geometryData);
-		}
-
-		for( const auto & leisure : drawing.m_leisure) {
-			leisure.addGeometryData(geometryData);
-		}
-
-		for( const auto & natural : drawing.m_natural) {
-			natural.addGeometryData(geometryData);
-		}
-
-		for( const auto & amenity : drawing.m_amenities) {
-			amenity.addGeometryData(geometryData);
-		}
-
-		for( const auto & place : drawing.m_places) {
-			place.addGeometryData(geometryData);
-		}
-	}
-
-	// adding geometry data to GeometryObject
-	for( const auto& data : geometryData) {
-		//if(data->m_extrudingPolygon) {
-		//	for (const VICUS::PlaneGeometry &plane : data->m_planeGeometry) {
-		//		addPolygonExtrusion(plane.polygon3D(), data->m_color currentVertexIndex, currentElementIndex,
-		//							m_drawingOSMGeometryObject.m_vertexBufferData,
-		//							m_drawingOSMGeometryObject.m_colorBufferData,
-		//							m_drawingOSMGeometryObject.m_indexBufferData);
-		//	}
-		//}
-		for (const VICUS::PlaneGeometry &plane : data->m_planeGeometry) {
-			addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
-					 m_drawingOSMGeometryObject.m_vertexBufferData,
-					 m_drawingOSMGeometryObject.m_colorBufferData,
-					 m_drawingOSMGeometryObject.m_indexBufferData,
-					 false);
-			addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
-					 m_drawingOSMGeometryObject.m_vertexBufferData,
-					 m_drawingOSMGeometryObject.m_colorBufferData,
-					 m_drawingOSMGeometryObject.m_indexBufferData,
-					 true);
-		}
-	}
-
-	m_drawingOSMGeometryObject.m_transparentStartIndex = m_drawingOSMGeometryObject.m_indexBufferData.size();
 }
 
 // Helper to color all child surfaces (recursive)

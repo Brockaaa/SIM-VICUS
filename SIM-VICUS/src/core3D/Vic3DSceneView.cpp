@@ -82,6 +82,7 @@ SceneView::SceneView() :
 	blocks.m_uniformNames.append("lightPos");
 	blocks.m_uniformNames.append("lightColor");
 	blocks.m_uniformNames.append("viewPos");
+	blocks.m_uniformNames.append("zAltering");
 	m_shaderPrograms[SHADER_OPAQUE_GEOMETRY] = blocks;
 
 	// Shaderprogram : simple lines with uniform/fixed color

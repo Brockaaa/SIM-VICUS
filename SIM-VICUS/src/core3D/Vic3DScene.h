@@ -39,6 +39,7 @@
 #include "Vic3DCamera.h"
 #include "Vic3DGridObject.h"
 #include "Vic3DOpaqueGeometryObject.h"
+#include "Vic3DOSMObject.h"
 #include "Vic3DTransparentBuildingObject.h"
 #include "Vic3DOrbitControllerObject.h"
 #include "Vic3DCoordinateSystemObject.h"
@@ -169,8 +170,6 @@ private:
 
 	void generate2DDrawingGeometry();
 
-	void generate2DDrawingOSMGeometry();
-
 	/*! Processes all surfaces and assigns colors based on current object color mode. */
 	void recolorObjects(SVViewState::ObjectColorMode ocm, unsigned int id) const;
 
@@ -273,8 +272,8 @@ private:
 	OpaqueGeometryObject	m_buildingGeometryObject;
 	/*! A geometry drawing object dxf file format structures. */
 	OpaqueGeometryObject	m_drawingGeometryObject;
-	/*! A geometry drawing object for OSM map structures. */
-	OpaqueGeometryObject	m_drawingOSMGeometryObject;
+	/*! An object for OSM map structures. */
+	OSMObject				m_drawingOSMGeometryObject;
 	/*! A geometry drawing object (no transparency) for network elements.*/
 	OpaqueGeometryObject	m_networkGeometryObject;
 	/*! A geometry drawing object for building (room) surfaces.*/

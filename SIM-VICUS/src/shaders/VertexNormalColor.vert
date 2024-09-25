@@ -12,10 +12,12 @@ out vec3 fragNormal;                   // output: fragment normal vector
 out vec3 fragPos;                      // output: fragment position in world coords
 
 uniform mat4 worldToView;              // parameter: the world-to-view matrix
+uniform float zAltering = 0.0;	       // parameter:
 
 void main() {
   // Mind multiplication order for matrixes
   gl_Position = worldToView * vec4(position, 1.0);
+  gl_Position.z -= zAltering;
   fragPos = position;
   fragColor = color;
   fragNormal = normal; // do not rotate normals - light position is also given in world coordinates
