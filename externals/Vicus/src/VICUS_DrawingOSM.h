@@ -8,6 +8,7 @@
 #include <VICUS_Object.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "VICUS_PlaneGeometry.h"
 #include "VICUS_RotationMatrix.h"
@@ -356,11 +357,11 @@ public:
 
 	// *** List of OSM XML Elements ***
 	/*! list of nodes */
-	std::vector<Node>								m_nodes;
+	std::unordered_map<unsigned int, Node>			m_nodes;
 	/*! list of ways */
-	std::vector<Way>								m_ways;
+	std::unordered_map<unsigned int, Way>			m_ways;
 	/*! lists of relations */
-	std::vector<Relation>							m_relations;
+	std::unordered_map<unsigned int, Relation>		m_relations;
 	/*! Stores the bounding box of the drawing */
 	BoundingBox										m_boundingBox;
 

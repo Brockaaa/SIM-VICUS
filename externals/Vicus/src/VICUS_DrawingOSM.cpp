@@ -507,17 +507,17 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 			else if (cName == "node") {
 				Node obj;
 				obj.readXML(c);
-				m_nodes.push_back(obj);
+				m_nodes[obj.m_id] = obj;
 			}
 			else if (cName == "way") {
 				Way obj ;
 				obj.readXML(c);
-				m_ways.push_back(obj);
+				m_ways[obj.m_id] = obj;
 			}
 			else if (cName == "relation") {
 				Relation obj;
 				obj.readXML(c);
-				m_relations.push_back(obj);
+				m_relations[obj.m_id] = obj;
 			}
 			c = c->NextSiblingElement();
 		}
@@ -565,36 +565,36 @@ bool DrawingOSM::readOSMFile(QString filePath)
 
 void DrawingOSM::constructObjects()
 {
-	for (auto& way : m_ways) {
-		if (way.containsKey("building"))
-			createBuilding(way);
-		else if (way.containsKey("place") || way.containsKey("heritage"))
-			createPlace(way);
-		else if (way.containsKey("highway"))
-			createHighway(way);
-		else if (way.containsKey("water") || way.containsKey("waterway"))
-			createWater(way);
-		else if (way.containsKey("landuse"))
-			createLand(way);
-		else if (way.containsKey("leisure"))
-			createLeisure(way);
-		else if (way.containsKey("natural"))
-			createNatural(way);
-		else if (way.containsKey("amenity"))
-			createAmenity(way);
+	for (auto& pair : m_ways) {
+		if (pair.second.containsKey("building"))
+			createBuilding(pair.second);
+		else if (pair.second.containsKey("place") || pair.second.containsKey("heritage"))
+			createPlace(pair.second);
+		else if (pair.second.containsKey("highway"))
+			createHighway(pair.second);
+		else if (pair.second.containsKey("water") || pair.second.containsKey("waterway"))
+			createWater(pair.second);
+		else if (pair.second.containsKey("landuse"))
+			createLand(pair.second);
+		else if (pair.second.containsKey("leisure"))
+			createLeisure(pair.second);
+		else if (pair.second.containsKey("natural"))
+			createNatural(pair.second);
+		else if (pair.second.containsKey("amenity"))
+			createAmenity(pair.second);
 	}
 
-	for (auto& relation : m_relations) {
-		if (relation.containsKey("building"))
-			createBuilding(relation);
-		else if (relation.containsKey("place"))
-			createPlace(relation);
-		else if (relation.containsKey("water") || relation.containsKey("waterway"))
-			createWater(relation);
-		else if (relation.containsKey("highway"))
-			createHighway(relation);
-		else if (relation.containsKey("landuse"))
-			createLand(relation);
+	for (auto& pair : m_relations) {
+		if (pair.second.containsKey("building"))
+			createBuilding(pair.second);
+		else if (pair.second.containsKey("place"))
+			createPlace(pair.second);
+		else if (pair.second.containsKey("water") || pair.second.containsKey("waterway"))
+			createWater(pair.second);
+		else if (pair.second.containsKey("highway"))
+			createHighway(pair.second);
+		else if (pair.second.containsKey("landuse"))
+			createLand(pair.second);
 	}
 }
 
@@ -653,26 +653,32 @@ const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>
 
 const DrawingOSM::Node * DrawingOSM::findNodeFromId(unsigned int id) const
 {
-	for (auto& node : m_nodes) {
-		if (node.m_id == id) return &node;
+	auto it = m_nodes.find(id);
+	if (it != m_nodes.end()) {
+		return &it->second;
+	} else {
+		return nullptr;
 	}
-	return nullptr;
 }
 
 const DrawingOSM::Way * DrawingOSM::findWayFromId(unsigned int id) const
 {
-	for (auto& way : m_ways) {
-		if (way.m_id == id) return &way;
+	auto it = m_ways.find(id);
+	if (it != m_ways.end()) {
+		return &it->second;
+	} else {
+		return nullptr;
 	}
-	return nullptr;
 }
 
 const DrawingOSM::Relation * DrawingOSM::findRelationFromId(unsigned int id) const
 {
-	for (auto& relation : m_relations) {
-		if (relation.m_id == id) return &relation;
+	auto it = m_relations.find(id);
+	if (it != m_relations.end()) {
+		return &it->second;
+	} else {
+		return nullptr;
 	}
-	return nullptr;
 }
 
 inline IBKMK::Vector2D DrawingOSM::convertLatLonToVector2D(double lat, double lon)
