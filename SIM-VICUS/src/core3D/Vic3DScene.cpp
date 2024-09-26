@@ -1148,6 +1148,7 @@ void Scene::render() {
 	glClearColor(backgroundColor.x(), backgroundColor.y(), backgroundColor.z(), 1.0f);
 
 	QVector3D viewPos = m_camera.translation();
+	qDebug() << viewPos.z();
 
 	const SVViewState & vs = SVViewStateHandler::instance().viewState();
 
@@ -1216,7 +1217,7 @@ void Scene::render() {
 
 	// only render opaque building geometry, if not in InterlinkedSurfaces mode
 	if (vs.m_objectColorMode != SVViewState::OCM_InterlinkedSurfaces) {
-
+		m_drawingOSMGeometryObject.render(viewPos.z());
 		// render network geometry
 		m_networkGeometryObject.renderOpaque();
 
@@ -1229,7 +1230,7 @@ void Scene::render() {
 
 		// render opaque part of drawing object
 		m_drawingGeometryObject.renderOpaque();
-		m_drawingOSMGeometryObject.render();
+
 
 	}
 

@@ -116,7 +116,7 @@ void OSMObject::generateOSMGeometry() {
 
 	// collecting all geometryData from Objects
 	for (const VICUS::DrawingOSM & drawing : p.m_drawingsOSM) {
-		std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>> geometryDataWithLayer;
+		std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>> geometryDataWithLayer; // std::map sorts by key
 		drawing.geometryData(geometryDataWithLayer);
 
 		qDebug() << "Layers: ";
@@ -161,11 +161,12 @@ void OSMObject::generateOSMGeometry() {
 	}
 }
 
-void OSMObject::render() {
+void OSMObject::render(float z) {
 	if(m_buildingShader == nullptr) return;
+	if (abs(z) < 10) z > 0 ? z = 10 : z = -10; // z needs to stay above a threshold. Value arbitrary, through observing in scene
 
 	for(auto VAOWithBuffer : m_VAOWithBuffers) {
-		m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], (float)VAOWithBuffer->m_layer / 100);
+		m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], (float)VAOWithBuffer->m_layer * z / 10000/* value arbitrary */);
 		// bind all buffers ("position", "normal" and "color" arrays)
 		VAOWithBuffer->m_vao.bind();
 		// now draw the geometry
@@ -174,7 +175,7 @@ void OSMObject::render() {
 		VAOWithBuffer->m_vao.release();
 	}
 
-	m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], 0);
+	m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], (float)5 * z / 10000);
 }
 
 void OSMObject::updateBuffers() {

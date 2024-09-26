@@ -52,7 +52,7 @@ public:
 	void generateOSMGeometry();
 
 	/*! Binds the buffer and paints. */
-	void render();
+	void render(float z);
 
 	void updateBuffers();
 
