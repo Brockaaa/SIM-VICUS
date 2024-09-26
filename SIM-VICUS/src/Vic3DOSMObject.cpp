@@ -166,7 +166,7 @@ void OSMObject::render(float z) {
 	if (abs(z) < 10) z > 0 ? z = 10 : z = -10; // z needs to stay above a threshold. Value arbitrary, through observing in scene
 
 	for(auto VAOWithBuffer : m_VAOWithBuffers) {
-		m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], (float)VAOWithBuffer->m_layer * z / 10000/* value arbitrary */);
+		m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], (float)VAOWithBuffer->m_layer * z / 2000/* value arbitrary */);
 		// bind all buffers ("position", "normal" and "color" arrays)
 		VAOWithBuffer->m_vao.bind();
 		// now draw the geometry

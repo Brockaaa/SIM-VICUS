@@ -210,10 +210,57 @@ public:
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
 
+	/*! Provides enum for key value pairs. Also defines the order in which objects are drawn when overlapping */
+	enum KeyValue{
+		LANDUSE_VILLAGE_GREEN,
+		LANDUSE_GRASS,
+		LANDUSE_BROWNFIELD,
+		LANDUSE_FOREST,
+		LANDUSE_FARMYARD,
+		LANDUSE_CONSTRUCTION,
+		LANDUSE_INDUSTRIAL,
+		LANDUSE_RETAIL,
+		LANDUSE_COMMERCIAL,
+		LANDUSE_RESIDENTIAL,
+		LANDUSE_RAILWAY,
+		LANDUSE_PUBLIC_ADMINISTRATION,
+		LANDUSE_RELIGIOUS,
+		LANDUSE_RECREATION_GROUND,
+		LANDUSE_CEMETERY,
+		LANDUSE,
+		LEISURE,
+		LEISURE_PARK,
+		NATURAL,
+		NATURAL_TREE_ROW,
+		PLACE,
+		HERITAGE,
+		AMENITY,
+		AMENITY_KINDERGARTEN,
+		AMENITY_SCHOOL,
+		AMENITY_SOCIAL_FACILITY,
+		LANDUSE_MEADOW,
+		LANDUSE_FLOWERBED,
+		WATERWAY,
+		WATER,
+		NATURAL_WATER,
+		HIGHWAY,
+		BUILDING,
+		NUM_KV
+	};
+
+
 	struct AbstractOSMObject {
 		const virtual void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const = 0;
 
 		void initialize(AbstractOSMElement& osmElement);
+
+		void assignKeyValue();
+
+		std::string							m_key = "";
+
+		std::string							m_value = "";
+
+		KeyValue							m_keyValue = NUM_KV;
 
 		double								m_zPosition = 0;
 
