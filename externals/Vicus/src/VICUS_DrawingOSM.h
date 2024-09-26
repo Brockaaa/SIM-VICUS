@@ -81,6 +81,8 @@ public:
 	/* Abstract class for all OSM XML elements */
 	struct AbstractOSMElement {
 
+		virtual ~AbstractOSMElement() {}
+
 		void readXML(const TiXmlElement * element);
 
 		bool containsKey(const std::string& key) const;
@@ -139,7 +141,6 @@ public:
 		{}
 
 		const virtual void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const = 0;
-
 		void updatePlaneGeometry() {
 			m_dirtyTriangulation = true;
 		}
@@ -211,7 +212,11 @@ public:
 	struct AbstractOSMObject {
 		const virtual void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const = 0;
 
+		void initialize(AbstractOSMElement& osmElement);
+
 		double								m_zPosition = 0;
+
+		int									m_layer = 0;
 	};
 
 	// https://wiki.openstreetmap.org/wiki/Simple_3D_Buildings#How_to_map
@@ -387,8 +392,6 @@ public:
 	QString											m_filePath;
 
 private:
-	void processRelation(const Relation& relation, std::vector<const Node*>& nodes, std::vector<const Way*>& ways, bool& outline);
-
 	/*! Function to generate plane geometries from a polyline. */
 	bool generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline,
 									bool connectEndStart, double width, std::vector<PlaneGeometry> &planes) const;

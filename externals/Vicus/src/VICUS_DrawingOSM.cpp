@@ -566,24 +566,36 @@ bool DrawingOSM::readOSMFile(QString filePath)
 void DrawingOSM::constructObjects()
 {
 	for (auto& way : m_ways) {
-		createBuilding(way);
-		createHighway(way);
-		createWater(way);
-		createLand(way);
-		createLeisure(way);
-		createNatural(way);
-		createAmenity(way);
-		createPlace(way);
+		if (way.containsKey("building"))
+			createBuilding(way);
+		else if (way.containsKey("place") || way.containsKey("heritage"))
+			createPlace(way);
+		else if (way.containsKey("highway"))
+			createHighway(way);
+		else if (way.containsKey("water") || way.containsKey("waterway"))
+			createWater(way);
+		else if (way.containsKey("landuse"))
+			createLand(way);
+		else if (way.containsKey("leisure"))
+			createLeisure(way);
+		else if (way.containsKey("natural"))
+			createNatural(way);
+		else if (way.containsKey("amenity"))
+			createAmenity(way);
 	}
 
 	for (auto& relation : m_relations) {
-		createBuilding(relation);
-		createWater(relation);
-		createHighway(relation);
-		createPlace(relation);
-		createLand(relation);
+		if (relation.containsKey("building"))
+			createBuilding(relation);
+		else if (relation.containsKey("place"))
+			createPlace(relation);
+		else if (relation.containsKey("water") || relation.containsKey("waterway"))
+			createWater(relation);
+		else if (relation.containsKey("highway"))
+			createHighway(relation);
+		else if (relation.containsKey("landuse"))
+			createLand(relation);
 	}
-
 }
 
 void DrawingOSM::updatePlaneGeometries()
@@ -671,10 +683,10 @@ inline IBKMK::Vector2D DrawingOSM::convertLatLonToVector2D(double lat, double lo
 }
 
 void DrawingOSM::createBuilding(Way & way) {
-	if (!way.containsKey("building")) return;
 	if (way.containsKeyValue("building", "cellar")) return;
 	if (way.containsKeyValue("building", "roof")) return;
 	Building building;
+	building.initialize(way);
 	building.m_zPosition = 5;
 
 	AreaBorder areaBorder(this);
@@ -687,12 +699,11 @@ void DrawingOSM::createBuilding(Way & way) {
 }
 
 void DrawingOSM::createBuilding(Relation & relation) {
-	bool containsKeyBuilding = relation.containsKey("building");
-	bool containsKeyTags = relation.containsKeyValue("type", "multipolygon");
-	if(!(containsKeyBuilding && containsKeyTags)) return;
+	if (!relation.containsKeyValue("type", "multipolygon")) return;
 	if (relation.containsKeyValue("building", "cellar")) return;
 	if (relation.containsKeyValue("building", "roof")) return;
 	Building building;
+	building.initialize(relation);
 	building.m_zPosition = 5;
 
 	std::vector<Multipolygon> multipolygons;
@@ -709,8 +720,8 @@ void DrawingOSM::createBuilding(Relation & relation) {
 
 void DrawingOSM::createHighway(Way & way)
 {
-	if (!way.containsKey("highway")) return;
 	Highway highway;
+	highway.initialize(way);
 	highway.m_zPosition = 3;
 	bool area = way.containsKeyValue("area", "yes");
 
@@ -741,10 +752,10 @@ void DrawingOSM::createHighway(Relation & relation)
 {
 	bool containsKey = relation.containsKeyValue("highway", "pedestrian") || relation.containsKeyValue("highway", "footway");
 	bool isMultipolygon = relation.containsKeyValue("type", "multipolygon");
-	if (relation.containsKey("place")) return;
 	if (!(containsKey && isMultipolygon)) return;
 
 	Highway highway;
+	highway.initialize(relation);
 	highway.m_zPosition = 0;
 
 	std::vector<Multipolygon> multipolygons;
@@ -762,25 +773,21 @@ void DrawingOSM::createHighway(Relation & relation)
 
 void DrawingOSM::createWater(Way & way)
 {
-	bool containsWater = way.containsKey("water");
-	bool containsWaterway = way.containsKey("waterway");
-	if( !(containsWater || containsWaterway)) return;
 	Water water;
+	water.initialize(way);
+	bool containsWater = way.containsKey("water");
 
-	if (containsWater) {
+	if (containsWater) /* water */ {
 		AreaNoBorder areaNoBorder(this);
 		areaNoBorder.m_color = QColor("#aad3df");
 		water.m_zPosition = 2;
-		//if(way.containsKeyValue("layer", "-1")) areaNoBorder.m_zPosition = 0;
-
 		createMultipolygonFromWay(way, areaNoBorder.m_multiPolygon);
 		water.m_areaNoBorders.push_back(areaNoBorder);
 
-	} else if (containsWaterway) {
+	} else /* waterway */ {
 		LineFromPlanes lineFromPlanes(this);
 		lineFromPlanes.m_lineThickness = 1;
 		water.m_zPosition = 1.95;
-		//if(way.containsKeyValue("layer", "-1")) lineFromPlanes.m_zPosition = 0;
 		for (int i = 0; i < way.m_nd.size() ; i++) {
 			const Node * node = findNodeFromId(way.m_nd[i].ref);
 			Q_ASSERT(node);
@@ -793,10 +800,9 @@ void DrawingOSM::createWater(Way & way)
 
 void DrawingOSM::createWater(Relation & relation)
 {
-	bool containsKey = relation.containsKey("water") || relation.containsKey("waterway");
-	bool containsKeyTags = relation.containsKeyValue("type", "multipolygon");
-	if(!(containsKey && containsKeyTags)) return;
+	if(!(relation.containsKeyValue("type", "multipolygon"))) return;
 	Water water;
+	water.initialize(relation);
 	water.m_zPosition = 2;
 
 	std::vector<Multipolygon> multipolygons;
@@ -814,7 +820,6 @@ void DrawingOSM::createWater(Relation & relation)
 
 void DrawingOSM::createLand(Way & way)
 {
-	if (!way.containsKey("landuse")) return;
 	Land land;
 	std::string value = way.getValueFromKey("landuse");
 
@@ -881,8 +886,9 @@ void DrawingOSM::createLand(Way & way)
 }
 
 void DrawingOSM::createLand(Relation& relation){
-	if (!relation.containsKey("landuse")) return;
+	if(!(relation.containsKeyValue("type", "multipolygon"))) return;
 	Land land;
+	land.initialize(relation);
 	std::string value = relation.getValueFromKey("landuse");
 
 	AreaNoBorder areaNoBorder(this);
@@ -959,8 +965,8 @@ void DrawingOSM::createLand(Relation& relation){
 
 void DrawingOSM::createLeisure(Way & way)
 {
-	if (!way.containsKey("leisure")) return;
 	Leisure leisure;
+	leisure.initialize(way);
 	leisure.m_zPosition = 1;
 	std::string value = way.getValueFromKey("leisure");
 
@@ -979,8 +985,8 @@ void DrawingOSM::createLeisure(Way & way)
 
 void DrawingOSM::createNatural(Way & way)
 {
-	if (!way.containsKey("natural")) return;
 	Natural natural;
+	natural.initialize(way);
 	std::string value = way.getValueFromKey("natural");
 
 	bool noArea = false;
@@ -1027,9 +1033,8 @@ void DrawingOSM::createNatural(Way & way)
 
 void DrawingOSM::createAmenity(Way & way)
 {
-	if (!way.containsKey("amenity")) return;
-	if (way.containsKey("building")) return;
 	Amenity amenity;
+	amenity.initialize(way);
 	amenity.m_zPosition = 1.75;
 	std::string value = way.getValueFromKey("amenity");
 
@@ -1054,9 +1059,8 @@ void DrawingOSM::createAmenity(Way & way)
 
 void DrawingOSM::createPlace(Way & way)
 {
-	if (!(way.containsKey("place") || way.containsKey("heritage"))) return;
-	if (way.containsKey("building")) return;
 	Place place;
+	place.initialize(way);
 	place.m_zPosition = 1.75;
 	std::string value = way.getValueFromKey("amenity");
 
@@ -1071,9 +1075,9 @@ void DrawingOSM::createPlace(Way & way)
 
 void DrawingOSM::createPlace(Relation & relation)
 {
-	if (!(relation.containsKey("place") || relation.containsKey("heritage"))) return;
 	if (!relation.containsKeyValue("type", "multipolygon")) return;
 	Place place;
+	place.initialize(relation);
 	place.m_zPosition = 2;
 
 	std::vector<Multipolygon> multipolygons;
@@ -1087,31 +1091,6 @@ void DrawingOSM::createPlace(Relation & relation)
 	}
 
 	m_places.push_back(place);
-}
-
-void DrawingOSM::processRelation(const Relation & relation, std::vector<const Node *> & nodes, std::vector<const Way *> & ways, bool & outline) {
-	if (relation.containsKey("building:part")) return; // if relation contains building:part, it is presumably only 3D information, skip
-
-	for (const Member& member : relation.m_members) {
-		if (member.type == NodeType) {
-			const Node* node = findNodeFromId(member.ref);
-			if (node) {
-				nodes.push_back(node);
-			}
-		}
-		else if (member.type == WayType) {
-			const Way* way = findWayFromId(member.ref);
-			if (!way) continue;
-			if (way->containsKey("building:part")) continue;
-			ways.push_back(way);
-		}
-		else if(member.type == RelationType) {
-			const Relation* subRelation = findRelationFromId(member.ref);
-			if(subRelation) {
-				processRelation(*subRelation, nodes, ways, outline);
-			}
-		}
-	}
 }
 
 bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline, bool connectEndStart, double width, std::vector<PlaneGeometry> & planes) const
@@ -1602,6 +1581,13 @@ const void DrawingOSM::Place::addGeometryData(std::vector<GeometryData *> & data
 	for (auto& areaBorder : m_areaBorders) {
 		areaBorder.addGeometryData(data);
 	}
+}
+
+
+void DrawingOSM::AbstractOSMObject::initialize(AbstractOSMElement & osmElement)
+{
+	std::string layer = osmElement.getValueFromKey("layer");
+	if (layer != "") m_layer = std::stoi(layer);
 }
 
 } // namespace VICUS

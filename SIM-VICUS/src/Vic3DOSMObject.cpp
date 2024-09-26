@@ -31,6 +31,7 @@ void OSMObject::destroy()
 		VAOWithBuffer->m_indexBufferObject.destroy();
 		delete(VAOWithBuffer);
 	}
+	m_VAOWithBuffers.clear();
 }
 
 void OSMObject::configureNewVAOWithBuffer(VAOWithBufferStruct * VAOWithBuffer)
@@ -109,6 +110,7 @@ void OSMObject::configureNewVAOWithBuffer(VAOWithBufferStruct * VAOWithBuffer)
 }
 
 void OSMObject::generateOSMGeometry() {
+	destroy();
 
 	const VICUS::Project & p = project();
 
