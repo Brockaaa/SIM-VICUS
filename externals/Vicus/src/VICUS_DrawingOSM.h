@@ -43,14 +43,6 @@ public:
 		RelationType
 	};
 
-	enum MainTag{
-		T_building,
-		T_highway,
-		T_waterway,
-		T_natural,
-		NumT,
-	};
-
 	struct Tag{
 		std::string key;
 		std::string value;
@@ -101,7 +93,7 @@ public:
 		bool                            m_visible = true; // visibility flag
 	};
 
-	/*! A single point on the mapo */
+	/*! A single point on the map */
 	struct Node : public AbstractOSMElement {
 
 		void readXML(const TiXmlElement * element);
@@ -111,7 +103,7 @@ public:
 		double                          m_lat;
 	};
 
-	/*! List of Nodes that make up a way. A way describes a polylines */
+	/*! List of Nodes that make up a way. A way describes a polyline */
 	struct Way : public AbstractOSMElement {
 
 		void readXML(const TiXmlElement * element);
@@ -212,10 +204,12 @@ public:
 
 	/*! Provides enum for key value pairs. Also defines the order in which objects are drawn when overlapping */
 	enum KeyValue{
-		LANDUSE_VILLAGE_GREEN,
-		LANDUSE_GRASS,
+		PLACE,
+		HERITAGE,
+		LANDUSE,
 		LANDUSE_BROWNFIELD,
 		LANDUSE_FOREST,
+		LANDUSE_ORCHARD,
 		LANDUSE_FARMYARD,
 		LANDUSE_CONSTRUCTION,
 		LANDUSE_INDUSTRIAL,
@@ -227,13 +221,12 @@ public:
 		LANDUSE_RELIGIOUS,
 		LANDUSE_RECREATION_GROUND,
 		LANDUSE_CEMETERY,
-		LANDUSE,
+		LANDUSE_VILLAGE_GREEN,
+		LANDUSE_GRASS,
 		LEISURE,
 		LEISURE_PARK,
 		NATURAL,
 		NATURAL_TREE_ROW,
-		PLACE,
-		HERITAGE,
 		AMENITY,
 		AMENITY_KINDERGARTEN,
 		AMENITY_SCHOOL,
@@ -243,6 +236,7 @@ public:
 		WATERWAY,
 		WATER,
 		NATURAL_WATER,
+		BRIDGE,
 		HIGHWAY,
 		BUILDING,
 		NUM_KV
@@ -252,7 +246,7 @@ public:
 	struct AbstractOSMObject {
 		const virtual void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const = 0;
 
-		void initialize(AbstractOSMElement& osmElement);
+		bool initialize(AbstractOSMElement& osmElement);
 
 		void assignKeyValue();
 
@@ -295,6 +289,8 @@ public:
 	struct Land : AbstractOSMObject {
 		std::vector<AreaNoBorder>			m_areaNoBorders;
 
+		QColor	setColor();
+
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 
 	};
@@ -325,15 +321,18 @@ public:
 		std::vector<AreaBorder>			m_areaBorders;
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+	};
 
+	struct Bridge : AbstractOSMObject {
+		std::vector<AreaBorder>			m_areaBorders;
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
 
 	std::vector<IBKMK::Vector2D> convertHoleToLocalCoordinates(const std::vector<IBKMK::Vector3D> & globalVertices, const IBKMK::Vector3D & offset, const IBKMK::Vector3D & localX, const IBKMK::Vector3D & localY);
 
 	// *** Methods and Helper Functions To Create Polygons ***
 	void createMultipolygonFromWay(Way &way, Multipolygon &multipolygon);
-
-	void createMultipolygonsFromRelationOld(Relation &relation, std::vector<Multipolygon>& multipolygons);
 
 	struct WayWithMarks {
 		std::vector<int> refs;
@@ -377,6 +376,7 @@ public:
 
 	// extracts streets from ways relations etc.
 	void createHighway(Way &way);
+	// should be deprecated. All highways that are areas should be some form of place, landuse etc.
 	void createHighway(Relation &relation);
 
 	// extracts water body from ways relations etc.
@@ -396,9 +396,12 @@ public:
 	// extracts amenityobjects from ways etc.
 	void createAmenity(Way &way);
 
-	// extracts place objects from ways
+	// extracts place objects from ways, relations
 	void createPlace(Way &way);
 	void createPlace(Relation &relation);
+
+	// extracts bridge objects from ways
+	void createBridge(Way &way);
 
 	// *** PUBLIC MEMBER VARIABLES ***
 
@@ -435,6 +438,7 @@ public:
 	std::vector<Natural>							m_natural;		// generally z value 1 < x < 2, amenity water is 2
 	std::vector<Amenity>							m_amenities;	// generally z value 1 < x < 2
 	std::vector<Place>								m_places;
+	std::vector<Bridge>								m_bridges;
 
 	/*! path of the OSM File */
 	QString											m_filePath;

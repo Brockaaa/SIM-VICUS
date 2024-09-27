@@ -61,159 +61,6 @@ void DrawingOSM::createMultipolygonFromWay(Way & way, Multipolygon & multipolygo
 	}
 }
 
-void DrawingOSM::createMultipolygonsFromRelationOld(Relation & relation, std::vector<Multipolygon> & multipolygons)
-{
-
-	/* simple struct to group together the outer polyline with multiple inner polylines to form a single Polygon with possible multiple inner holes
-	 * only contains references to nodes */
-	struct OuterInners {
-		std::vector<int> outer;
-		std::vector<std::vector<int>> inners;
-	};
-
-	std::vector<OuterInners> vectorOuterInner;
-
-	auto processWay = [&](std::vector<int>& nodeRefs, int wayRef) -> bool {
-		const Way* way = findWayFromId(wayRef);
-		if(!way) return false;
-		for (int i = 0; i < way->m_nd.size(); i++) {
-			if (!nodeRefs.empty() && nodeRefs.back() == way->m_nd[i].ref) {
-				continue;
-			}
-			nodeRefs.push_back(way->m_nd[i].ref);
-		}
-		if(nodeRefs[0] == way->m_nd.back().ref && nodeRefs.size() > 1)
-			return true;
-		else
-			return false;
-	};
-
-
-	/* https://wiki.openstreetmap.org/wiki/Relation:multipolygon
-	 * when multiple ways appear right after another, they can form a single polygon.
-	 * If the first node of the first way of a polygon is equal to the last node of a way, then that polygon is fully described.
-	 * all "inner" ways that appear right after an "outer" polygon/ways create holes in that outer polygon.
-	 * multiple "inner" ways can also form a single polygon that cuts a hole in the "outer" polygon */
-
-	bool outerActive = false;
-	bool innerActive = false;
-	OuterInners outerInners;
-
-	for (int i = 0; i < relation.m_members.size(); i++) {
-		if (relation.m_members[i].type != WayType) continue;
-
-		bool roleOuter = relation.m_members[i].role == "outer";
-		bool roleInner = relation.m_members[i].role == "inner";
-
-		// next member is part of an outer polygon
-		if (roleOuter) {
-			innerActive = false;
-
-			// if latest outer Polygon was finished, save it as complete multipolygon
-			if (!outerActive) {
-
-				if(outerInners.outer.size() > 1) {
-
-					for (int j = 0; j < outerInners.inners.size(); ) {
-						if (outerInners.inners[j].size() == 0) {
-							outerInners.inners.erase(outerInners.inners.begin() + j);
-						} else {
-							++j;
-						}
-					}
-
-					vectorOuterInner.push_back(outerInners);
-				}
-				outerInners = OuterInners();
-				outerActive = true;
-			}
-
-			outerActive = !processWay(outerInners.outer, relation.m_members[i].ref);
-			innerActive = !outerActive;
-			if (innerActive)
-				outerInners.inners.push_back(std::vector<int>());
-
-		} else if (roleInner ) {
-			outerActive = false;
-			if (!innerActive){
-				outerInners.inners.push_back(std::vector<int>());
-			}
-			innerActive = !processWay(outerInners.inners.back(), relation.m_members[i].ref);
-			if (!innerActive) {
-				outerInners.inners.push_back(std::vector<int>());
-			}
-		}
-	}
-	if (outerInners.outer.size() > 1) {
-		for (int j = 0; j < outerInners.inners.size(); ) {
-			if (outerInners.inners[j].size() == 0) {
-				outerInners.inners.erase(outerInners.inners.begin() + j);
-			} else {
-				++j;
-			}
-		}
-
-		vectorOuterInner.push_back(outerInners);
-	}
-
-	for (auto& outerInners : vectorOuterInner) {
-		Multipolygon multipolygon;
-
-		for (int id : outerInners.outer) {
-			const Node *node = findNodeFromId(id);
-			Q_ASSERT(node);
-			multipolygon.m_outerPolyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
-		}
-
-		for (auto& inner : outerInners.inners) {
-			std::vector<IBKMK::Vector2D> innerPolyline;
-			for (int id : inner) {
-				const Node *node = findNodeFromId(id);
-				Q_ASSERT(node);
-				innerPolyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
-			}
-			if (innerPolyline.size() > 2)
-				multipolygon.m_innerPolylines.push_back(innerPolyline);
-		}
-
-		std::vector<IBKMK::Vector3D> outerPolygon;
-
-		for (int i = 1; i < multipolygon.m_outerPolyline.size(); i++) {
-			IBKMK::Vector3D p = IBKMK::Vector3D(multipolygon.m_outerPolyline[i].m_x,
-												multipolygon.m_outerPolyline[i].m_y,
-												0);
-
-			QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
-			vec += IBKVector2QVector(m_origin);
-
-			outerPolygon.push_back(QVector2IBKVector(vec));
-		}
-
-		VICUS::PlaneGeometry outerPlaneGeometry (outerPolygon);
-		if (!outerPlaneGeometry.isValid()) continue;
-
-		for (auto& innerPolyline : multipolygon.m_innerPolylines) {
-			std::vector<IBKMK::Vector3D> innerPolygon;
-
-			for (int i = 1; i < innerPolyline.size(); i++) {
-				IBKMK::Vector3D p = IBKMK::Vector3D(innerPolyline[i].m_x,
-													innerPolyline[i].m_y,
-													0);
-
-				QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
-				vec += IBKVector2QVector(m_origin);
-
-				innerPolygon.push_back(QVector2IBKVector(vec));
-			}
-
-			innerPolyline = convertHoleToLocalCoordinates(innerPolygon, outerPlaneGeometry.offset(), outerPlaneGeometry.localX(), outerPlaneGeometry.localY());
-
-		}
-
-		multipolygons.push_back(multipolygon);
-	}
-}
-
 void DrawingOSM::createMultipolygonsFromRelation(Relation & relation, std::vector<Multipolygon> & multipolygons)
 {
 	auto processWay = [&](std::vector<int>& nodeRefs, int wayRef) -> bool {
@@ -307,9 +154,19 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 				if (getNewWay()) {
 					continue;
 				} else {
-					for (auto& way : currentRing) {
-						way->selected = false;
+					for (auto it = currentRing.begin(); it != currentRing.end();) {
+						if ((*it)->selected) {
+							(*it)->selected = false;
+							it = currentRing.erase(it);
+						} else {
+							++it;
+						}
 					}
+					if (checkIfValidGeometry()) {
+						allRings.push_back(currentRing);
+						return true;
+					}
+					return false;
 				}
 			}
 		}
@@ -567,11 +424,12 @@ bool DrawingOSM::readOSMFile(QString filePath)
 
 void DrawingOSM::constructObjects()
 {
+	/* order relevant. For example heritage should come at the very end because key heritage
+	 * is not supposed to occur alone and only in combination with other keys like place.
+	 * In practice this does not always happen */
 	for (auto& pair : m_ways) {
 		if (pair.second.containsKey("building"))
 			createBuilding(pair.second);
-		else if (pair.second.containsKey("place") || pair.second.containsKey("heritage"))
-			createPlace(pair.second);
 		else if (pair.second.containsKey("highway"))
 			createHighway(pair.second);
 		else if (pair.second.containsKey("water") || pair.second.containsKey("waterway"))
@@ -584,6 +442,10 @@ void DrawingOSM::constructObjects()
 			createNatural(pair.second);
 		else if (pair.second.containsKey("amenity"))
 			createAmenity(pair.second);
+		else if (pair.second.containsKey("bridge"))
+			createBridge(pair.second);
+		else if (pair.second.containsKey("place") || pair.second.containsKey("heritage"))
+			createPlace(pair.second);
 	}
 
 	for (auto& pair : m_relations) {
@@ -631,6 +493,10 @@ void DrawingOSM::constructObjects()
 
 	for( const auto & place : m_places) {
 		usedKeyValues.push_back(static_cast<int>(place.m_keyValue));
+	}
+
+	for( const auto & bridge : m_bridges) {
+		usedKeyValues.push_back(static_cast<int>(bridge.m_keyValue));
 	}
 
 	std::unordered_set<int> s;
@@ -685,6 +551,10 @@ void DrawingOSM::constructObjects()
 	for( auto & place : m_places) {
 		assignZValue(place);
 	}
+
+	for( auto & bridge : m_bridges) {
+		assignZValue(bridge);
+	}
 }
 
 void DrawingOSM::updatePlaneGeometries()
@@ -738,6 +608,10 @@ const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>
 	for( const auto & place : m_places) {
 		place.addGeometryData(geometryData[place.m_zPosition]);
 	}
+
+	for( const auto & bridge : m_bridges) {
+		bridge.addGeometryData(geometryData[bridge.m_zPosition]);
+	}
 }
 
 const DrawingOSM::Node * DrawingOSM::findNodeFromId(unsigned int id) const
@@ -783,7 +657,7 @@ void DrawingOSM::createBuilding(Way & way) {
 	if (way.containsKeyValue("building", "roof")) return;
 	Building building;
 	building.m_key = "building";
-	building.initialize(way);
+	if (!building.initialize(way)) return;
 
 	AreaBorder areaBorder(this);
 
@@ -799,7 +673,7 @@ void DrawingOSM::createBuilding(Relation & relation) {
 	if (relation.containsKeyValue("building", "roof")) return;
 	Building building;
 	building.m_key = "building";
-	building.initialize(relation);
+	if (!building.initialize(relation)) return;
 
 	std::vector<Multipolygon> multipolygons;
 	createMultipolygonsFromRelation(relation, multipolygons);
@@ -817,12 +691,11 @@ void DrawingOSM::createHighway(Way & way)
 {
 	Highway highway;
 	highway.m_key = "highway";
-	highway.initialize(way);
+	if (!highway.initialize(way)) return;
 	bool area = way.containsKeyValue("area", "yes");
 
 	if (area) {
 		AreaBorder areaBorder(this);
-		//if(way.containsKeyValue("layer", "-1")) areaBorder.m_zPosition = 0;
 		areaBorder.m_colorArea = QColor("#78909c");
 
 		createMultipolygonFromWay(way, areaBorder.m_multiPolygon);
@@ -851,7 +724,7 @@ void DrawingOSM::createHighway(Relation & relation)
 
 	Highway highway;
 	highway.m_key = "highway";
-	highway.initialize(relation);
+	if (!highway.initialize(relation)) return;
 
 	std::vector<Multipolygon> multipolygons;
 	createMultipolygonsFromRelation(relation, multipolygons);
@@ -874,7 +747,7 @@ void DrawingOSM::createWater(Way & way)
 		water.m_key = "water";
 	else
 		water.m_key = "waterway";
-	water.initialize(way);
+	if (!water.initialize(way)) return;
 
 	if (containsWater) /* water */ {
 		water.m_key = "water";
@@ -906,7 +779,7 @@ void DrawingOSM::createWater(Relation & relation)
 		water.m_key = "water";
 	else
 		water.m_key = "waterway";
-	water.initialize(relation);
+	if (!water.initialize(relation)) return;
 
 	std::vector<Multipolygon> multipolygons;
 	createMultipolygonsFromRelation(relation, multipolygons);
@@ -925,49 +798,13 @@ void DrawingOSM::createLand(Way & way)
 {
 	Land land;
 	land.m_key = "landuse";
-	land.initialize(way);
-	std::string value = way.getValueFromKey("landuse");
+	if (!land.initialize(way)) return;
 
 	AreaNoBorder areaNoBorder(this);
-	areaNoBorder.m_color = QColor("#c8facc");
+	areaNoBorder.m_color = land.setColor();
 
 	createMultipolygonFromWay(way, areaNoBorder.m_multiPolygon);
 
-	if (value == "residential"){
-		areaNoBorder.m_color = QColor("#f2dad9");
-	} else if (value == "forest") {
-		areaNoBorder.m_color = QColor("#add19e");
-	} else if (value == "industrial") {
-		areaNoBorder.m_color = QColor("#ebdbe8");
-	} else if (value == "village_green") {
-		areaNoBorder.m_color = QColor("#cdebb0");
-	} else if (value == "construction") {
-		areaNoBorder.m_color = QColor("#c7c7b4");
-	} else if (value == "grass") {
-		areaNoBorder.m_color = QColor("#cdebb0");
-	} else if (value == "retail") {
-		areaNoBorder.m_color = QColor("#ffd6d1");
-	} else if (value == "cemetery") {
-		areaNoBorder.m_color = QColor("#aacbaf");
-	} else if (value == "commercial") {
-		areaNoBorder.m_color = QColor("#f2dad9");
-	} else if (value == "public_administration") {
-		areaNoBorder.m_color = QColor("#f2efe9");
-	} else if (value == "railway") {
-		areaNoBorder.m_color = QColor("#ebdbe8");
-	} else if (value == "farmyard") {
-		areaNoBorder.m_color = QColor("#f5dcba");
-	} else if (value == "meadow") {
-		areaNoBorder.m_color = QColor("#cdebb0");
-	} else if (value == "religious") {
-		areaNoBorder.m_color = QColor("#d0d0d0");
-	} else if (value == "flowerbed") {
-		areaNoBorder.m_color = QColor("#cdebb0");
-	} else if (value == "recreation_ground") {
-		areaNoBorder.m_color = QColor("#dffce2");
-	} else if (value == "brownfield") {
-		areaNoBorder.m_color = QColor("#c7c7b4");
-	}
 	land.m_areaNoBorders.push_back(areaNoBorder);
 	m_land.push_back(land);
 }
@@ -976,50 +813,13 @@ void DrawingOSM::createLand(Relation& relation){
 	if(!(relation.containsKeyValue("type", "multipolygon"))) return;
 	Land land;
 	land.m_key = "landuse";
-	land.initialize(relation);
-	std::string value = relation.getValueFromKey("landuse");
+	if (!land.initialize(relation)) return;
 
 	AreaNoBorder areaNoBorder(this);
-	QColor color = QColor("#c8facc");
+	QColor color = land.setColor();
 
 	std::vector<Multipolygon> multipolygons;
 	createMultipolygonsFromRelation(relation, multipolygons);
-
-	if (value == "residential"){
-		color = QColor("#f2dad9");
-	} else if (value == "forest") {
-		color = QColor("#add19e");
-	} else if (value == "industrial") {
-		color = QColor("#ebdbe8");
-	} else if (value == "village_green") {
-		color = QColor("#cdebb0");
-	} else if (value == "construction") {
-		color = QColor("#c7c7b4");
-	} else if (value == "grass") {
-		color = QColor("#cdebb0");
-	} else if (value == "retail") {
-		color = QColor("#ffd6d1");
-	} else if (value == "cemetery") {
-		color = QColor("#aacbaf");
-	} else if (value == "commercial") {
-		color = QColor("#f2dad9");
-	} else if (value == "public_administration") {
-		color = QColor("#f2efe9");
-	} else if (value == "railway") {
-		color = QColor("#ebdbe8");
-	} else if (value == "farmyard") {
-		color = QColor("#f5dcba");
-	} else if (value == "meadow") {
-		color = QColor("#cdebb0");
-	} else if (value == "religious") {
-		color = QColor("#d0d0d0");
-	} else if (value == "flowerbed") {
-		color = QColor("#cdebb0");
-	} else if (value == "recreation_ground") {
-		color = QColor("#dffce2");
-	} else if (value == "brownfield") {
-		color = QColor("#c7c7b4");
-	}
 
 	for (auto multipolygon : multipolygons) {
 		AreaNoBorder areaNoBorder(this);
@@ -1034,7 +834,7 @@ void DrawingOSM::createLand(Relation& relation){
 void DrawingOSM::createLeisure(Way & way)
 {
 	Leisure leisure;
-	leisure.initialize(way);
+	if (!leisure.initialize(way)) return;
 
 	AreaNoBorder areaNoBorder(this);
 	areaNoBorder.m_color = QColor("#c8facc");
@@ -1053,16 +853,15 @@ void DrawingOSM::createNatural(Way & way)
 {
 	Natural natural;
 	natural.m_key = "natural";
-	natural.initialize(way);
-	std::string value = way.getValueFromKey("natural");
+	if (!natural.initialize(way)) return;
 
 	bool noArea = false;
 
 	QColor color = QColor("#c8facc");
 
-	if (value == "water"){
+	if (natural.m_value == "water"){
 		color = QColor("#aad3df");
-	} else if (value == "tree_row") {
+	} else if (natural.m_value == "tree_row") {
 		color = QColor("#b8d4a7");
 		noArea = true;
 	}
@@ -1097,7 +896,7 @@ void DrawingOSM::createAmenity(Way & way)
 {
 	Amenity amenity;
 	amenity.m_key = "amenity";
-	amenity.initialize(way);
+	if (!amenity.initialize(way)) return;
 
 	AreaNoBorder areaNoBorder(this);
 	areaNoBorder.m_color = QColor("#c8facc");
@@ -1125,7 +924,7 @@ void DrawingOSM::createPlace(Way & way)
 		place.m_key = "place";
 	else
 		place.m_key = "heritage";
-	place.initialize(way);
+	if (!place.initialize(way)) return;
 
 	AreaBorder areaBorder(this);
 	areaBorder.m_colorArea = QColor("#dddde8");
@@ -1141,7 +940,7 @@ void DrawingOSM::createPlace(Relation & relation)
 	if (!relation.containsKeyValue("type", "multipolygon")) return;
 	Place place;
 	place.m_key = "place";
-	place.initialize(relation);
+	if (!place.initialize(relation)) return;
 
 	std::vector<Multipolygon> multipolygons;
 	createMultipolygonsFromRelation(relation, multipolygons);
@@ -1154,6 +953,21 @@ void DrawingOSM::createPlace(Relation & relation)
 	}
 
 	m_places.push_back(place);
+}
+
+void DrawingOSM::createBridge(Way & way)
+{
+	Bridge bridge;
+	bridge.m_key = "bridge";
+	if (!bridge.initialize(way)) return;
+
+	AreaBorder areaBorder(this);
+	areaBorder.m_colorArea = QColor("#dddde8");
+
+	createMultipolygonFromWay(way, areaBorder.m_multiPolygon);
+
+	bridge.m_areaBorders.push_back(areaBorder);
+	m_bridges.push_back(bridge);
 }
 
 bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline, bool connectEndStart, double width, std::vector<PlaneGeometry> & planes) const
@@ -1608,6 +1422,51 @@ const void DrawingOSM::Water::addGeometryData(std::vector<GeometryData *> & data
 	}
 }
 
+QColor DrawingOSM::Land::setColor()
+{
+	QColor color("#c8facc");
+
+	if (m_value == "residential"){
+		color = QColor("#f2dad9");
+	} else if (m_value == "forest") {
+		color = QColor("#add19e");
+	} else if (m_value == "industrial") {
+		color = QColor("#ebdbe8");
+	} else if (m_value == "orchard") {
+		color = QColor("#aedfa3");
+	} else if (m_value == "village_green") {
+		color = QColor("#cdebb0");
+	} else if (m_value == "construction") {
+		color = QColor("#c7c7b4");
+	} else if (m_value == "grass") {
+		color = QColor("#cdebb0");
+	} else if (m_value == "retail") {
+		color = QColor("#ffd6d1");
+	} else if (m_value == "cemetery") {
+		color = QColor("#aacbaf");
+	} else if (m_value == "commercial") {
+		color = QColor("#f2dad9");
+	} else if (m_value == "public_administration") {
+		color = QColor("#f2efe9");
+	} else if (m_value == "railway") {
+		color = QColor("#ebdbe8");
+	} else if (m_value == "farmyard") {
+		color = QColor("#f5dcba");
+	} else if (m_value == "meadow") {
+		color = QColor("#cdebb0");
+	} else if (m_value == "religious") {
+		color = QColor("#d0d0d0");
+	} else if (m_value == "flowerbed") {
+		color = QColor("#cdebb0");
+	} else if (m_value == "recreation_ground") {
+		color = QColor("#dffce2");
+	} else if (m_value == "brownfield") {
+		color = QColor("#c7c7b4");
+	}
+
+	return color;
+}
+
 const void DrawingOSM::Land::addGeometryData(std::vector<GeometryData *> & data) const
 {
 	for (auto& areaNoBorder : m_areaNoBorders) {
@@ -1647,12 +1506,15 @@ const void DrawingOSM::Place::addGeometryData(std::vector<GeometryData *> & data
 }
 
 
-void DrawingOSM::AbstractOSMObject::initialize(AbstractOSMElement & osmElement)
+bool DrawingOSM::AbstractOSMObject::initialize(AbstractOSMElement & osmElement)
 {
+	if (osmElement.containsKeyValue("location", "underground")) return false;
+	if (osmElement.containsKeyValue("location", "underwater")) return false;
 	m_value = osmElement.getValueFromKey(m_key);
 	std::string layer = osmElement.getValueFromKey("layer");
 	assignKeyValue();
 	if (layer != "") m_layer = std::stoi(layer);
+	return true;
 }
 
 void DrawingOSM::AbstractOSMObject::assignKeyValue()
@@ -1676,6 +1538,8 @@ void DrawingOSM::AbstractOSMObject::assignKeyValue()
 			m_keyValue = LANDUSE_CONSTRUCTION;
 		} else if (m_value == "industrial") {
 			m_keyValue = LANDUSE_INDUSTRIAL;
+		} else if (m_value == "orchard") {
+			m_keyValue = LANDUSE_ORCHARD;
 		} else if (m_value == "retail") {
 			m_keyValue = LANDUSE_RETAIL;
 		} else if (m_value == "commercial") {
@@ -1729,8 +1593,17 @@ void DrawingOSM::AbstractOSMObject::assignKeyValue()
 		m_keyValue = WATERWAY;
 	} else if (m_key == "water") {
 		m_keyValue = WATER;
+	} else if (m_key == "bridge") {
+		m_keyValue = BRIDGE;
 	} else {
 		m_keyValue = NUM_KV;
+	}
+}
+
+const void DrawingOSM::Bridge::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	for (auto& areaBorder : m_areaBorders) {
+		areaBorder.addGeometryData(data);
 	}
 }
 
