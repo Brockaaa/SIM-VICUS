@@ -197,7 +197,21 @@ public:
 
 		QColor								m_color = QColor("#78909c");
 
-		int									m_layer = 0; // only used for explicit ordering in case objects overlap
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+	};
+
+	struct Circle : AbstractDrawingObject {
+
+		Circle(const DrawingOSM * drawing)
+			: AbstractDrawingObject(drawing)
+		{}
+
+		/*! polyline coordinates */
+		IBKMK::Vector2D						m_center;
+
+		double								m_radius = 1;
+
+		QColor								m_color = QColor("#b8d4a7");
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
@@ -226,6 +240,7 @@ public:
 		LANDUSE_PUBLIC_ADMINISTRATION,
 		LANDUSE_RELIGIOUS,
 		LANDUSE_RECREATION_GROUND,
+		TOURISM,
 		LEISURE,
 		LANDUSE_CEMETERY,
 		LANDUSE_VILLAGE_GREEN,
@@ -246,11 +261,13 @@ public:
 		LAYERLANDUSE3,
 		LAYERLANDUSE4,
 		LAYERLANDUSE5,
+		NATURAL_TREE,
 		LAYERHIGHWAYNEG5,
 		LAYERHIGHWAYNEG4,
 		LAYERHIGHWAYNEG3,
 		LAYERHIGHWAYNEG2,
 		LAYERHIGHWAYNEG1,
+		BARRIER,
 		BRIDGE,
 		HIGHWAY_MOTORWAY,
 		HIGHWAY_PEDESTRIAN,
@@ -333,6 +350,7 @@ public:
 	struct Natural : AbstractOSMObject {
 		std::vector<AreaNoBorder>			m_areaNoBorders;
 		std::vector<LineFromPlanes>			m_linesFromPlanes;
+		std::vector<Circle>					m_circles;
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 
@@ -353,6 +371,18 @@ public:
 
 	struct Bridge : AbstractOSMObject {
 		std::vector<AreaBorder>			m_areaBorders;
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+	};
+
+	struct Tourism : AbstractOSMObject {
+		std::vector<AreaBorder>			m_areaBorders;
+
+		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+	};
+
+	struct Barrier : AbstractOSMObject {
+		std::vector<LineFromPlanes>			m_linesFromPlanes;
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
@@ -419,6 +449,7 @@ public:
 	void createLeisure(Way &way);
 
 	// extracts natural objects from ways etc.
+	void createNatural(Node &node);
 	void createNatural(Way &way);
 
 	// extracts amenityobjects from ways etc.
@@ -430,6 +461,12 @@ public:
 
 	// extracts bridge objects from ways
 	void createBridge(Way &way);
+
+	// extracts tourism objects from ways
+	void createTourism(Way &way);
+
+	// extracts tourism objects from ways
+	void createBarrier(Way &way);
 
 	// *** PUBLIC MEMBER VARIABLES ***
 
@@ -467,6 +504,9 @@ public:
 	std::vector<Amenity>							m_amenities;
 	std::vector<Place>								m_places;
 	std::vector<Bridge>								m_bridges;
+	std::vector<Tourism>							m_tourism;
+	std::vector<Barrier>							m_barriers;
+
 
 	/*! path of the OSM File */
 	QString											m_filePath;

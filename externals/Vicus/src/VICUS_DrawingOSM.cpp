@@ -427,6 +427,12 @@ void DrawingOSM::constructObjects()
 	/* order relevant. For example heritage should come at the very end because key heritage
 	 * is not supposed to occur alone and only in combination with other keys like place.
 	 * In practice this does not always happen */
+	for (auto& pair : m_nodes) {
+		if (pair.second.containsKey("natural")) {
+			createNatural(pair.second);
+		}
+	}
+
 	for (auto& pair : m_ways) {
 		if (pair.second.containsKey("building"))
 			createBuilding(pair.second);
@@ -444,6 +450,10 @@ void DrawingOSM::constructObjects()
 			createAmenity(pair.second);
 		else if (pair.second.containsKey("bridge"))
 			createBridge(pair.second);
+		else if (pair.second.containsKey("tourism"))
+			createTourism(pair.second);
+		else if (pair.second.containsKey("barrier"))
+			createBarrier(pair.second);
 		else if (pair.second.containsKey("place") || pair.second.containsKey("heritage"))
 			createPlace(pair.second);
 	}
@@ -591,6 +601,14 @@ void DrawingOSM::constructObjects()
 		usedKeyValues.push_back(convertKeyToInt(bridge));
 	}
 
+	for( const auto & tourism : m_tourism) {
+		usedKeyValues.push_back(convertKeyToInt(tourism));
+	}
+
+	for( const auto & barrier : m_barriers) {
+		usedKeyValues.push_back(convertKeyToInt(barrier));
+	}
+
 	std::unordered_set<int> s;
 	for (int i : usedKeyValues)
 		s.insert(i);
@@ -646,6 +664,14 @@ void DrawingOSM::constructObjects()
 
 	for( auto & bridge : m_bridges) {
 		assignZValue(bridge);
+	}
+
+	for( auto & tourism : m_tourism) {
+		assignZValue(tourism);
+	}
+
+	for( auto & barrier : m_barriers) {
+		assignZValue(barrier);
 	}
 }
 
@@ -703,6 +729,14 @@ const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>
 
 	for( const auto & bridge : m_bridges) {
 		bridge.addGeometryData(geometryData[bridge.m_zPosition]);
+	}
+
+	for( const auto & tourism : m_tourism) {
+		tourism.addGeometryData(geometryData[tourism.m_zPosition]);
+	}
+
+	for( const auto & barrier : m_barriers) {
+		barrier.addGeometryData(geometryData[barrier.m_zPosition]);
 	}
 }
 
@@ -795,7 +829,7 @@ void DrawingOSM::createHighway(Way & way)
 	if (area) {
 		AreaBorder areaBorder(this);
 		areaBorder.m_colorArea = QColor("#dddde8");
-		highway.m_keyValue = PLACE;
+		highway.m_keyValue = LANDUSE_RELIGIOUS;
 
 		createMultipolygonFromWay(way, areaBorder.m_multiPolygon);
 
@@ -807,7 +841,7 @@ void DrawingOSM::createHighway(Way & way)
 
 		if (highway.m_keyValue == HIGHWAY_FOOTWAY || highway.m_keyValue == HIGHWAY_STEPS || highway.m_keyValue == HIGHWAY_PATH) {
 			color = QColor("#fa8173");
-			lineThickness = 1.0f;
+			lineThickness = 0.6f;
 		} else if (highway.m_keyValue == HIGHWAY_SERVICE) {
 			color = QColor("#ffffff");
 			lineThickness = 3.0f;
@@ -853,7 +887,7 @@ void DrawingOSM::createHighway(Relation & relation)
 	bool containsKey = (highway.m_keyValue == HIGHWAY_PEDESTRIAN || highway.m_keyValue == HIGHWAY_FOOTWAY);
 	bool isMultipolygon = relation.containsKeyValue("type", "multipolygon");
 	if (!(containsKey && isMultipolygon)) return;
-	highway.m_keyValue = PLACE; // highway area should not exist, will be handled as place
+	highway.m_keyValue = LANDUSE_RELIGIOUS; // highway area should not exist, assigning a key value that should approximately reflect the order and likely not overlap
 
 	std::vector<Multipolygon> multipolygons;
 	createMultipolygonsFromRelation(relation, multipolygons);
@@ -978,6 +1012,20 @@ void DrawingOSM::createLeisure(Way & way)
 	m_leisure.push_back(leisure);
 }
 
+void DrawingOSM::createNatural(Node & node)
+{
+	Natural natural;
+	natural.m_key = "natural";
+	if (!natural.initialize(node)) return;
+
+	Circle circle(this);
+	circle.m_center = convertLatLonToVector2D(node.m_lat, node.m_lon);
+	circle.m_radius = 1.5;
+
+	natural.m_circles.push_back(circle);
+	m_natural.push_back(natural);
+}
+
 void DrawingOSM::createNatural(Way & way)
 {
 	Natural natural;
@@ -1000,7 +1048,6 @@ void DrawingOSM::createNatural(Way & way)
 		lineFromPlanes.m_color = color;
 		lineFromPlanes.m_lineThickness = 3;
 
-		//if(way.containsKeyValue("layer", "-1")) lineFromPlanes.m_zPosition = 0;
 		for (int i = 0; i < way.m_nd.size() ; i++) {
 			const Node * node = findNodeFromId(way.m_nd[i].ref);
 			Q_ASSERT(node);
@@ -1097,6 +1144,43 @@ void DrawingOSM::createBridge(Way & way)
 
 	bridge.m_areaBorders.push_back(areaBorder);
 	m_bridges.push_back(bridge);
+}
+
+void DrawingOSM::createTourism(Way & way)
+{
+	Tourism tourism;
+	tourism.m_key = "tourism";
+	if (!tourism.initialize(way)) return;
+
+	AreaBorder areaBorder(this);
+	areaBorder.m_colorArea = QColor("#f2efe9");
+
+	createMultipolygonFromWay(way, areaBorder.m_multiPolygon);
+
+	tourism.m_areaBorders.push_back(areaBorder);
+	m_tourism.push_back(tourism);
+}
+
+void DrawingOSM::createBarrier(Way & way)
+{
+	Barrier barrier;
+	barrier.m_key = "barrier";
+	if (!barrier.initialize(way)) return;
+	if (way.containsKeyValue("area", "yes")) return;
+
+	LineFromPlanes lineFromPlanes(this);
+	lineFromPlanes.m_color = QColor("#7b7a7a");
+	lineFromPlanes.m_lineThickness = 1.5;
+
+	for (int i = 0; i < way.m_nd.size() ; i++) {
+		const Node * node = findNodeFromId(way.m_nd[i].ref);
+		Q_ASSERT(node);
+		lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
+	}
+
+	barrier.m_linesFromPlanes.push_back(lineFromPlanes);
+	m_barriers.push_back(barrier);
+	return;
 }
 
 bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline, bool connectEndStart, double width, std::vector<PlaneGeometry> & planes) const
@@ -1531,6 +1615,8 @@ const void DrawingOSM::LineFromPlanes::addGeometryData(std::vector<GeometryData 
 				geometryData.m_color = m_color;
 				m_geometryData.push_back(geometryData);
 			}
+
+			m_dirtyTriangulation = false;
 		}
 		for (auto& geometryData : m_geometryData) {
 			data.push_back(&geometryData);
@@ -1617,6 +1703,9 @@ const void DrawingOSM::Natural::addGeometryData(std::vector<GeometryData *> & da
 	}
 	for (auto& lineFromPlanes : m_linesFromPlanes) {
 		lineFromPlanes.addGeometryData(data);
+	}
+	for (auto& circle : m_circles) {
+		circle.addGeometryData(data);
 	}
 }
 
@@ -1723,6 +1812,8 @@ void DrawingOSM::AbstractOSMObject::assignKeyValue()
 			m_keyValue = NATURAL_TREE_ROW;
 		} else if (m_value == "water") {
 			m_keyValue = NATURAL_WATER;
+		} else if (m_value == "tree") {
+			m_keyValue = NATURAL_TREE;
 		} else {
 			m_keyValue = NATURAL;
 		}
@@ -1746,7 +1837,11 @@ void DrawingOSM::AbstractOSMObject::assignKeyValue()
 		m_keyValue = WATER;
 	} else if (m_key == "bridge") {
 		m_keyValue = BRIDGE;
-	} else {
+	} else if (m_key == "tourism") {
+		m_keyValue = TOURISM;
+	} else if (m_key == "barrier") {
+		m_keyValue = BARRIER;
+	}else {
 		m_keyValue = NUM_KV;
 	}
 }
@@ -1755,6 +1850,67 @@ const void DrawingOSM::Bridge::addGeometryData(std::vector<GeometryData *> & dat
 {
 	for (auto& areaBorder : m_areaBorders) {
 		areaBorder.addGeometryData(data);
+	}
+}
+
+const void DrawingOSM::Tourism::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	for (auto& areaBorder : m_areaBorders) {
+		areaBorder.addGeometryData(data);
+	}
+}
+
+const void DrawingOSM::Barrier::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	for (auto& lineFromPlane : m_linesFromPlanes) {
+		lineFromPlane.addGeometryData(data);
+	}
+}
+
+const void DrawingOSM::Circle::addGeometryData(std::vector<GeometryData *> & data) const
+{
+	FUNCID(DrawingOSM::Circle::addGeometryData);
+	try {
+		if (m_dirtyTriangulation) {
+			std::vector<IBKMK::Vector3D> circlePoints;
+
+			const double TWO_PI = 2 * M_PI;
+			double angleStep = TWO_PI / SEGMENT_COUNT_ELLIPSE;
+
+			circlePoints.resize(SEGMENT_COUNT_ELLIPSE);
+
+			for (int i = 0; i < SEGMENT_COUNT_ELLIPSE; ++i) {
+				double currentAngle = i * angleStep;
+				double x = m_radius * 0.5 * cos(currentAngle);
+				double y = m_radius * 0.5 * sin(currentAngle);
+
+				IBKMK::Vector3D p = IBKMK::Vector3D(x + m_center.m_x,
+													y + m_center.m_y,
+													0);
+
+				QVector3D vec = m_drawing->m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+				vec += IBKVector2QVector(m_drawing->m_origin);
+				circlePoints[i] = QVector2IBKVector(vec);
+			}
+\
+			std::vector<PlaneGeometry> planeGeometry;
+			if (m_drawing->generatePlanesFromPolyline(circlePoints, true,
+															   m_radius,
+													  planeGeometry)) {
+				GeometryData geometryData;
+				geometryData.m_planeGeometry = planeGeometry;
+				geometryData.m_color = m_color;
+				m_geometryData.push_back(geometryData);
+			}
+
+			m_dirtyTriangulation = false;
+		}
+		for (auto& geometryData : m_geometryData) {
+			data.push_back(&geometryData);
+		}
+	}
+	catch (IBK::Exception &ex) {
+		throw IBK::Exception( ex, IBK::FormatString("Error generating plane geometries for 'DrawingOSM::Circle' element.\n%1").arg(ex.what()), FUNC_ID);
 	}
 }
 
