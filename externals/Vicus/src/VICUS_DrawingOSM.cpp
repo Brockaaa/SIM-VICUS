@@ -662,6 +662,7 @@ void DrawingOSM::createBuilding(Way & way) {
 	AreaBorder areaBorder(this);
 
 	createMultipolygonFromWay(way, areaBorder.m_multiPolygon);
+	areaBorder.m_colorArea = QColor("#b3a294");
 
 	building.m_areaBorders.push_back(areaBorder);
 	m_buildings.push_back(building);
@@ -681,6 +682,7 @@ void DrawingOSM::createBuilding(Relation & relation) {
 	for (auto multipolygon : multipolygons) {
 		AreaBorder areaBorder(this);
 		areaBorder.m_multiPolygon = multipolygon;
+		areaBorder.m_colorArea = QColor("#b3a294");
 		building.m_areaBorders.push_back(areaBorder);
 	}
 
@@ -696,15 +698,45 @@ void DrawingOSM::createHighway(Way & way)
 
 	if (area) {
 		AreaBorder areaBorder(this);
-		areaBorder.m_colorArea = QColor("#78909c");
+		areaBorder.m_colorArea = QColor("#dddde8");
+		highway.m_keyValue = PLACE;
 
 		createMultipolygonFromWay(way, areaBorder.m_multiPolygon);
 
 		highway.m_areaBorders.push_back(areaBorder);
 	} else  {
 		LineFromPlanes lineFromPlanes(this);
-		lineFromPlanes.m_lineThickness = 3.5;
-		lineFromPlanes.m_color = QColor("#78909c");
+		double lineThickness = 3.0f;
+		QColor color("#78909c");
+
+		if (highway.m_keyValue == HIGHWAY_FOOTWAY || highway.m_keyValue == HIGHWAY_STEPS) {
+			color = QColor("#fa8173");
+			lineThickness = 1.0f;
+		} else if (highway.m_keyValue == HIGHWAY_SERVICE) {
+			color = QColor("#ffffff");
+			lineThickness = 3.0f;
+		} else if (highway.m_keyValue == HIGHWAY_MOTORWAY) {
+			color = QColor("#f1bcc6");
+			lineThickness = 4.5f;
+		} else if (highway.m_keyValue == HIGHWAY_PRIMARY) {
+			color = QColor("#fcd6a4");
+			lineThickness = 4.2f;
+		} else if (highway.m_keyValue == HIGHWAY_TRUNK) {
+			color = QColor("#fcd6a4");
+			lineThickness = 4.2f;
+		} else if (highway.m_keyValue == HIGHWAY_SECONDARY) {
+			color = QColor("#f7fabf");
+			lineThickness = 4.0f;
+		} else if (highway.m_keyValue == HIGHWAY_RESIDENTIAL) {
+			lineThickness = 3.5f;
+		} else if (highway.m_keyValue == HIGHWAY_PEDESTRIAN) {
+			lineThickness = 2.0f;
+			color = QColor("#dddde8");
+		}
+
+		lineFromPlanes.m_lineThickness = lineThickness;
+		lineFromPlanes.m_color = color;
+
 		for (int i = 0; i < way.m_nd.size() ; i++) {
 			const Node * node = findNodeFromId(way.m_nd[i].ref);
 			Q_ASSERT(node);
@@ -718,21 +750,22 @@ void DrawingOSM::createHighway(Way & way)
 
 void DrawingOSM::createHighway(Relation & relation)
 {
-	bool containsKey = relation.containsKeyValue("highway", "pedestrian") || relation.containsKeyValue("highway", "footway");
-	bool isMultipolygon = relation.containsKeyValue("type", "multipolygon");
-	if (!(containsKey && isMultipolygon)) return;
-
 	Highway highway;
 	highway.m_key = "highway";
 	if (!highway.initialize(relation)) return;
+
+	bool containsKey = (highway.m_keyValue == HIGHWAY_PEDESTRIAN || highway.m_keyValue == HIGHWAY_FOOTWAY);
+	bool isMultipolygon = relation.containsKeyValue("type", "multipolygon");
+	if (!(containsKey && isMultipolygon)) return;
+	highway.m_keyValue = PLACE; // highway area should not exist, will be handled as place
 
 	std::vector<Multipolygon> multipolygons;
 	createMultipolygonsFromRelation(relation, multipolygons);
 
 	for (auto multipolygon : multipolygons) {
 		AreaBorder areaBorder(this);
+		areaBorder.m_colorArea = QColor("#dddde8");
 		areaBorder.m_multiPolygon = multipolygon;
-		areaBorder.m_colorArea = QColor("#78909c");
 		highway.m_areaBorders.push_back(areaBorder);
 	}
 
@@ -1522,7 +1555,27 @@ void DrawingOSM::AbstractOSMObject::assignKeyValue()
 	if (m_key == "building") {
 		m_keyValue = BUILDING;
 	} else if (m_key == "highway") {
-		m_keyValue = HIGHWAY;
+		if (m_value == "footway") {
+			m_keyValue = HIGHWAY_FOOTWAY;
+		} else if (m_value == "steps") {
+			m_keyValue = HIGHWAY_STEPS;
+		} else if (m_value == "service") {
+			m_keyValue = HIGHWAY_SERVICE;
+		} else if (m_value == "motorway") {
+			m_keyValue = HIGHWAY_MOTORWAY;
+		}else if (m_value == "primary") {
+			m_keyValue = HIGHWAY_PRIMARY;
+		}else if (m_value == "secondary") {
+			m_keyValue = HIGHWAY_SECONDARY;
+		}else if (m_value == "residential") {
+			m_keyValue = HIGHWAY_RESIDENTIAL;
+		}else if (m_value == "trunk") {
+			m_keyValue = HIGHWAY_TRUNK;
+		}else if (m_value == "pedestrian") {
+			m_keyValue = HIGHWAY_PEDESTRIAN;
+		}else {
+			m_keyValue = HIGHWAY;
+		}
 	} else if (m_key == "landuse") {
 		if (m_value == "village_green") {
 			m_keyValue = LANDUSE_VILLAGE_GREEN;

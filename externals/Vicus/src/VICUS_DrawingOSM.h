@@ -208,6 +208,7 @@ public:
 		HERITAGE,
 		LANDUSE,
 		LANDUSE_BROWNFIELD,
+		LEISURE_PARK,
 		LANDUSE_FOREST,
 		LANDUSE_ORCHARD,
 		LANDUSE_FARMYARD,
@@ -220,11 +221,10 @@ public:
 		LANDUSE_PUBLIC_ADMINISTRATION,
 		LANDUSE_RELIGIOUS,
 		LANDUSE_RECREATION_GROUND,
+		LEISURE,
 		LANDUSE_CEMETERY,
 		LANDUSE_VILLAGE_GREEN,
 		LANDUSE_GRASS,
-		LEISURE,
-		LEISURE_PARK,
 		NATURAL,
 		NATURAL_TREE_ROW,
 		AMENITY,
@@ -237,7 +237,16 @@ public:
 		WATER,
 		NATURAL_WATER,
 		BRIDGE,
-		HIGHWAY,
+		HIGHWAY_MOTORWAY,
+		HIGHWAY_PEDESTRIAN,
+		HIGHWAY_SERVICE,
+		HIGHWAY_RESIDENTIAL,
+		HIGHWAY, //TERTIARY
+		HIGHWAY_SECONDARY,
+		HIGHWAY_PRIMARY,
+		HIGHWAY_TRUNK,
+		HIGHWAY_FOOTWAY,
+		HIGHWAY_STEPS,
 		BUILDING,
 		NUM_KV
 	};
@@ -272,8 +281,6 @@ public:
 	struct Highway : AbstractOSMObject {
 		std::vector<LineFromPlanes>			m_linesFromPlanes;
 		std::vector<AreaBorder>				m_areaBorders;
-
-		double								m_lineThickness = 0.3;
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
