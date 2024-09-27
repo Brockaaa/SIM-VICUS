@@ -204,6 +204,11 @@ public:
 
 	/*! Provides enum for key value pairs. Also defines the order in which objects are drawn when overlapping */
 	enum KeyValue{
+		LAYERLANDUSENEG5,
+		LAYERLANDUSENEG4,
+		LAYERLANDUSENEG3,
+		LAYERLANDUSENEG2,
+		LAYERLANDUSENEG1,
 		PLACE,
 		HERITAGE,
 		LANDUSE,
@@ -236,6 +241,16 @@ public:
 		WATERWAY,
 		WATER,
 		NATURAL_WATER,
+		LAYERLANDUSE1,
+		LAYERLANDUSE2,
+		LAYERLANDUSE3,
+		LAYERLANDUSE4,
+		LAYERLANDUSE5,
+		LAYERHIGHWAYNEG5,
+		LAYERHIGHWAYNEG4,
+		LAYERHIGHWAYNEG3,
+		LAYERHIGHWAYNEG2,
+		LAYERHIGHWAYNEG1,
 		BRIDGE,
 		HIGHWAY_MOTORWAY,
 		HIGHWAY_PEDESTRIAN,
@@ -247,7 +262,13 @@ public:
 		HIGHWAY_TRUNK,
 		HIGHWAY_FOOTWAY,
 		HIGHWAY_STEPS,
+		HIGHWAY_PATH,
 		BUILDING,
+		LAYERHIGHWAY1,
+		LAYERHIGHWAY2,
+		LAYERHIGHWAY3,
+		LAYERHIGHWAY4,
+		LAYERHIGHWAY5,
 		NUM_KV
 	};
 
@@ -437,13 +458,13 @@ public:
 	double											m_scalingFactor		= 1.0;
 
 	// *** List of OSM Objects like buildings, streets with all relevant information ***
-	std::vector<Building>							m_buildings;    // generally z value 5
-	std::vector<Highway>							m_highways;		// generally z value  2.5 <= x < 5
-	std::vector<Water>								m_waters;		// generally z value 2
-	std::vector<Land>								m_land;			// generally z value 0 < x <= 1 meadow is 1.8, flowerbed is 1.8
-	std::vector<Leisure>							m_leisure;		// generally z value 1 <= x < 2
-	std::vector<Natural>							m_natural;		// generally z value 1 < x < 2, amenity water is 2
-	std::vector<Amenity>							m_amenities;	// generally z value 1 < x < 2
+	std::vector<Building>							m_buildings;
+	std::vector<Highway>							m_highways;
+	std::vector<Water>								m_waters;
+	std::vector<Land>								m_land;
+	std::vector<Leisure>							m_leisure;
+	std::vector<Natural>							m_natural;
+	std::vector<Amenity>							m_amenities;
 	std::vector<Place>								m_places;
 	std::vector<Bridge>								m_bridges;
 

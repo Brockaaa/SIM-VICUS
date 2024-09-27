@@ -463,40 +463,132 @@ void DrawingOSM::constructObjects()
 
 	std::vector<int> usedKeyValues;
 
+	std::function<int(const AbstractOSMObject&)> convertKeyToInt = [&](const AbstractOSMObject& object){
+		if(object.m_layer == 0) {
+			return static_cast<int>(object.m_keyValue);
+		}
+
+		switch (object.m_layer) {
+			case -5: {
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
+					return static_cast<int>(LAYERLANDUSENEG5);
+				} else {
+					return static_cast<int>(LAYERHIGHWAYNEG5);
+				}
+				break;
+			}
+			case -4: {
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
+					return static_cast<int>(LAYERLANDUSENEG4);
+				} else {
+					return static_cast<int>(LAYERHIGHWAYNEG4);
+				}
+				break;
+			}
+			case -3: {
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
+					return static_cast<int>(LAYERLANDUSENEG3);
+				} else {
+					return static_cast<int>(LAYERHIGHWAYNEG3);
+				}
+				break;
+			}
+			case -2: {
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
+					return static_cast<int>(LAYERLANDUSENEG2);
+				} else {
+					return static_cast<int>(LAYERHIGHWAYNEG2);
+				}
+				break;
+			}
+			case -1: {
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
+					return static_cast<int>(LAYERLANDUSENEG1);
+				} else {
+					return static_cast<int>(LAYERHIGHWAYNEG1);
+				}
+				break;
+			}
+			case 5: {
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
+					return static_cast<int>(LAYERLANDUSE5);
+				} else {
+					return static_cast<int>(LAYERHIGHWAY5);
+				}
+				break;
+			}
+			case 4: {
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
+					return static_cast<int>(LAYERLANDUSE4);
+				} else {
+					return static_cast<int>(LAYERHIGHWAY4);
+				}
+				break;
+			}
+			case 3: {
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
+					return static_cast<int>(LAYERLANDUSE3);
+				} else {
+					return static_cast<int>(LAYERHIGHWAY3);
+				}
+				break;
+			}
+			case 2: {
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
+					return static_cast<int>(LAYERLANDUSE2);
+				} else {
+					return static_cast<int>(LAYERHIGHWAY2);
+				}
+				break;
+			}
+			case 1: {
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
+					return static_cast<int>(LAYERLANDUSE1);
+				} else {
+					return static_cast<int>(LAYERHIGHWAY1);
+				}
+				break;
+			}
+			default:
+				return static_cast<int>(static_cast<int>(object.m_keyValue));
+		}
+
+	};
+
 	for (const auto & building : m_buildings) {
-		usedKeyValues.push_back(static_cast<int>(building.m_keyValue));
+		usedKeyValues.push_back(convertKeyToInt(building));
 	}
 
 	for( const auto & highway : m_highways) {
-		usedKeyValues.push_back(static_cast<int>(highway.m_keyValue));
+		usedKeyValues.push_back(convertKeyToInt(highway));
 	}
 
 	for( const auto & water : m_waters) {
-		usedKeyValues.push_back(static_cast<int>(water.m_keyValue));
+		usedKeyValues.push_back(convertKeyToInt(water));
 	}
 
 	for( const auto & land : m_land) {
-		usedKeyValues.push_back(static_cast<int>(land.m_keyValue));
+		usedKeyValues.push_back(convertKeyToInt(land));
 	}
 
 	for( const auto & leisure : m_leisure) {
-		usedKeyValues.push_back(static_cast<int>(leisure.m_keyValue));
+		usedKeyValues.push_back(convertKeyToInt(leisure));
 	}
 
 	for( const auto & natural : m_natural) {
-		usedKeyValues.push_back(static_cast<int>(natural.m_keyValue));
+		usedKeyValues.push_back(convertKeyToInt(natural));
 	}
 
 	for( const auto & amenity : m_amenities) {
-		usedKeyValues.push_back(static_cast<int>(amenity.m_keyValue));
+		usedKeyValues.push_back(convertKeyToInt(amenity));
 	}
 
 	for( const auto & place : m_places) {
-		usedKeyValues.push_back(static_cast<int>(place.m_keyValue));
+		usedKeyValues.push_back(convertKeyToInt(place));
 	}
 
 	for( const auto & bridge : m_bridges) {
-		usedKeyValues.push_back(static_cast<int>(bridge.m_keyValue));
+		usedKeyValues.push_back(convertKeyToInt(bridge));
 	}
 
 	std::unordered_set<int> s;
@@ -512,7 +604,7 @@ void DrawingOSM::constructObjects()
 
 
 	std::function<void(AbstractOSMObject&)> assignZValue = [&](AbstractOSMObject& object){
-		int keyValue = static_cast<int>(object.m_keyValue);
+		int keyValue = convertKeyToInt(object);
 		int i = 0;
 		for (; i < usedKeyValues.size(); i++) {
 			if (usedKeyValues[i] == keyValue) break;
@@ -695,6 +787,10 @@ void DrawingOSM::createHighway(Way & way)
 	highway.m_key = "highway";
 	if (!highway.initialize(way)) return;
 	bool area = way.containsKeyValue("area", "yes");
+	// workaround for messy layer implementation
+	if (highway.m_layer != 0 && way.containsKey("bridge")) {
+		highway.m_layer++;
+	}
 
 	if (area) {
 		AreaBorder areaBorder(this);
@@ -709,7 +805,7 @@ void DrawingOSM::createHighway(Way & way)
 		double lineThickness = 3.0f;
 		QColor color("#78909c");
 
-		if (highway.m_keyValue == HIGHWAY_FOOTWAY || highway.m_keyValue == HIGHWAY_STEPS) {
+		if (highway.m_keyValue == HIGHWAY_FOOTWAY || highway.m_keyValue == HIGHWAY_STEPS || highway.m_keyValue == HIGHWAY_PATH) {
 			color = QColor("#fa8173");
 			lineThickness = 1.0f;
 		} else if (highway.m_keyValue == HIGHWAY_SERVICE) {
@@ -1559,7 +1655,9 @@ void DrawingOSM::AbstractOSMObject::assignKeyValue()
 			m_keyValue = HIGHWAY_FOOTWAY;
 		} else if (m_value == "steps") {
 			m_keyValue = HIGHWAY_STEPS;
-		} else if (m_value == "service") {
+		} else if (m_value == "path") {
+			m_keyValue = HIGHWAY_PATH;
+		}else if (m_value == "service") {
 			m_keyValue = HIGHWAY_SERVICE;
 		} else if (m_value == "motorway") {
 			m_keyValue = HIGHWAY_MOTORWAY;
