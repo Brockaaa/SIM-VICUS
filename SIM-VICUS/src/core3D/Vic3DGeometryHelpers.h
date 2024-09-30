@@ -145,7 +145,7 @@ void addBox(const std::vector<IBKMK::Vector3D> & v, const QColor & c,
 /*! Creates a 3 dimensional object by extruding a polygon to a height */
 void addPolygonExtrusion(const std::vector<IBKMK::Vector3D> & bottomFace, double height, const QColor & c,
 						 unsigned int & currentVertexIndex, unsigned int & currentElementIndex,
-						 std::vector<Vertex> & vertexBufferData, std::vector<ColorRGBA> & colorBufferData, std::vector<GLuint> & indexBufferData);
+						 std::vector<Vertex> & vertexBufferData, std::vector<ColorRGBA> & colorBufferData, std::vector<GLuint> & indexBufferData,const std::vector<std::vector<IBKMK::Vector2D>>* innerPolylines = nullptr);
 
 
 // *** High-level data structures ***

@@ -64,13 +64,6 @@ public:
 		void readXML(const TiXmlElement * element);
 	};
 
-	struct BoundingBox{
-		double minlat;
-		double maxlat;
-		double minlon;
-		double maxlon;
-	};
-
 	/* Abstract class for all OSM XML elements */
 	struct AbstractOSMElement {
 
@@ -119,13 +112,32 @@ public:
 		std::vector<Member>				m_members;
 	};
 
+	struct Multipolygon {
+		std::vector<IBKMK::Vector2D> m_outerPolyline;
+		std::vector<std::vector<IBKMK::Vector2D>> m_innerPolylines;
+	};
 
 	struct GeometryData {
 		std::vector<VICUS::PlaneGeometry>	m_planeGeometry;
+		std::vector<Multipolygon>			m_multipolygons;
 		QColor								m_color;
 		bool								m_extrudingPolygon = false;
-		double								m_height = 5;
+		double								m_height = 2;
 	};
+
+
+	struct BoundingBox{
+		double minlat;
+		double maxlat;
+		double minlon;
+		double maxlon;
+
+		double								m_zPosition = 0;
+
+		mutable GeometryData				m_geometryData;
+		const void addGeometryData(const DrawingOSM* drawing, std::vector<VICUS::DrawingOSM::GeometryData*> &data) const;
+	};
+
 
 	struct AbstractDrawingObject {
 
@@ -152,11 +164,6 @@ public:
 		const DrawingOSM * m_drawing = nullptr;
 	};
 
-	struct Multipolygon {
-		std::vector<IBKMK::Vector2D> m_outerPolyline;
-		std::vector<std::vector<IBKMK::Vector2D>> m_innerPolylines;
-	};
-
 	struct AreaBorder : AbstractDrawingObject {
 
 		AreaBorder(const DrawingOSM * drawing)
@@ -164,6 +171,8 @@ public:
 		{}
 
 		Multipolygon						m_multiPolygon;
+		bool								m_extrudingPolygon = false;
+		double								m_height = 2;
 
 		QColor								m_colorArea	  = QColor("#2f302f");
 		QColor								m_colorBorder = QColor("#c7b7b0");
@@ -218,6 +227,7 @@ public:
 
 	/*! Provides enum for key value pairs. Also defines the order in which objects are drawn when overlapping */
 	enum KeyValue{
+		BOUNDINGBOX,
 		LAYERLANDUSENEG5,
 		LAYERLANDUSENEG4,
 		LAYERLANDUSENEG3,
@@ -312,6 +322,8 @@ public:
 	/*! Building Object. Contains only 2D information. */
 	struct Building : AbstractOSMObject {
 		std::vector<AreaBorder>				m_areaBorders;
+
+		double								m_height = 2;
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
@@ -423,7 +435,7 @@ public:
 	const Node* findNodeFromId(unsigned int id) const;
 	const Way* findWayFromId(unsigned int id) const;
 	const Relation* findRelationFromId(unsigned int id) const;
-	inline IBKMK::Vector2D convertLatLonToVector2D(double lat, double lon);
+	inline IBKMK::Vector2D convertLatLonToVector2D(double lat, double lon) const;
 
 	// *** Methods to create Buildings streets. etc. ***
 	void constructObjects();
@@ -493,6 +505,8 @@ public:
 	RotationMatrix									m_rotationMatrix	= RotationMatrix(QQuaternion(1.0,0.0,0.0,0.0));
 	/*! scale factor */
 	double											m_scalingFactor		= 1.0;
+
+	bool											m_enable3D			= true;
 
 	// *** List of OSM Objects like buildings, streets with all relevant information ***
 	std::vector<Building>							m_buildings;

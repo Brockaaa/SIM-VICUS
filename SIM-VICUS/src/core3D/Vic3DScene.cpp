@@ -1148,7 +1148,6 @@ void Scene::render() {
 	glClearColor(backgroundColor.x(), backgroundColor.y(), backgroundColor.z(), 1.0f);
 
 	QVector3D viewPos = m_camera.translation();
-	qDebug() << viewPos.z();
 
 	const SVViewState & vs = SVViewStateHandler::instance().viewState();
 

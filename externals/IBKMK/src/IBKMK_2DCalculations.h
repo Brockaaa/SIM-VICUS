@@ -69,6 +69,8 @@ int polygonInPolygon(const std::vector<Vector2D> & poly1, const std::vector<Vect
 // checks if 3 points are in counterclockwise order
 bool counterClockwise(const Vector2D & a, const Vector2D & b, const Vector2D & c);
 
+bool polygonClockwise(const std::vector<Vector2D>& polyline);
+
 // checks if 2 linesegments intersect. https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
 bool lineSegmentIntersect(const Vector2D &a, const Vector2D &b, const Vector2D &c, const Vector2D &d);
 

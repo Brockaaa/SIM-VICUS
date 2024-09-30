@@ -119,10 +119,7 @@ void OSMObject::generateOSMGeometry() {
 		std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>> geometryDataWithLayer; // std::map sorts by key
 		drawing.geometryData(geometryDataWithLayer);
 
-		qDebug() << "Layers: ";
 		for (std::map<double,std::vector<VICUS::DrawingOSM::GeometryData*>>::iterator it = geometryDataWithLayer.begin(); it != geometryDataWithLayer.end(); ++it) {
-			qDebug() << it->first;
-
 			VAOWithBufferStruct* VAOWithBuffer = new VAOWithBufferStruct();
 			VAOWithBuffer->m_layer = it->first;
 			configureNewVAOWithBuffer(VAOWithBuffer);
@@ -141,18 +138,38 @@ void OSMObject::generateOSMGeometry() {
 
 			// adding geometry data to GeometryObject
 			for( const auto& data : geometryDataWithLayer[it->first]) {
+				if (data->m_extrudingPolygon) {
+					for (const auto &multipolygon : data->m_multipolygons) {
+						std::vector<IBKMK::Vector3D> areaPoints;
+						for (int i = 1; i < multipolygon.m_outerPolyline.size(); i++) {
+							IBKMK::Vector3D p = IBKMK::Vector3D(multipolygon.m_outerPolyline[i].m_x,
+																multipolygon.m_outerPolyline[i].m_y,
+																0);
 
-				for (const VICUS::PlaneGeometry &plane : data->m_planeGeometry) {
-					addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
-							 VAOWithBuffer->m_vertexBufferData,
-							 VAOWithBuffer->m_colorBufferData,
-							 VAOWithBuffer->m_indexBufferData,
-							 false);
-					addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
-							 VAOWithBuffer->m_vertexBufferData,
-							 VAOWithBuffer->m_colorBufferData,
-							 VAOWithBuffer->m_indexBufferData,
-							 true);
+							QVector3D vec = drawing.m_rotationMatrix.toQuaternion() * QVector3D((float)p.m_x, (float)p.m_y, (float)p.m_z);
+							vec += QVector3D((double)drawing.m_origin.m_x, (double)drawing.m_origin.m_y, (double)drawing.m_origin.m_z);
+
+							areaPoints.push_back(IBKMK::Vector3D((double)vec.x(), (double)vec.y(), (double)vec.z()));
+						}
+						addPolygonExtrusion(areaPoints, data->m_height, data->m_color, currentVertexIndex, currentElementIndex,
+								 VAOWithBuffer->m_vertexBufferData,
+								 VAOWithBuffer->m_colorBufferData,
+								 VAOWithBuffer->m_indexBufferData,
+								 &multipolygon.m_innerPolylines);
+					}
+				} else {
+					for (const VICUS::PlaneGeometry &plane : data->m_planeGeometry) {
+						addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
+								 VAOWithBuffer->m_vertexBufferData,
+								 VAOWithBuffer->m_colorBufferData,
+								 VAOWithBuffer->m_indexBufferData,
+								 false);
+						addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
+								 VAOWithBuffer->m_vertexBufferData,
+								 VAOWithBuffer->m_colorBufferData,
+								 VAOWithBuffer->m_indexBufferData,
+								 true);
+					}
 				}
 			}
 			VAOWithBuffer->m_transparentStartIndex = VAOWithBuffer->m_indexBufferData.size();

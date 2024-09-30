@@ -181,6 +181,25 @@ bool counterClockwise(const Vector2D & a, const Vector2D & b, const Vector2D & c
 	return (c.m_y-a.m_y)*(b.m_x-a.m_x) > (b.m_y - a.m_y)*(c.m_x - a.m_x);
 }
 
+bool polygonClockwise(const std::vector<Vector2D>& polyline) {
+	if (polyline.size() < 3) {
+		// A polyline needs at least 3 points to form an area
+		return false;
+	}
+
+	double area = 0.0;
+	int n = polyline.size();
+
+	for (int i = 0; i < n; ++i) {
+		const Vector2D& current = polyline[i];
+		const Vector2D& next = polyline[(i + 1) % n];
+
+		area += (next.m_x - current.m_x) * (next.m_y + current.m_y);
+	}
+
+	return area > 0;
+}
+
 bool lineSegmentIntersect(const Vector2D & a, const Vector2D & b, const Vector2D & c, const Vector2D & d)
 {
 	return counterClockwise(a,c,d) != counterClockwise(b,c,d) && counterClockwise(a,b,c) != counterClockwise(a,b,d);

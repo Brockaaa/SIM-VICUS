@@ -823,43 +823,91 @@ void addBox(const std::vector<IBKMK::Vector3D> & v, const QColor & c,
 
 void addPolygonExtrusion(const std::vector<IBKMK::Vector3D> & bottomFace, double height, const QColor & c,
 						 unsigned int & currentVertexIndex, unsigned int & currentElementIndex,
-						 std::vector<Vertex> & vertexBufferData, std::vector<ColorRGBA> & colorBufferData, std::vector<GLuint> & indexBufferData){
+						 std::vector<Vertex> & vertexBufferData, std::vector<ColorRGBA> & colorBufferData, std::vector<GLuint> & indexBufferData,const std::vector<std::vector<IBKMK::Vector2D>>* innerPolylines){
 
 	FUNCID(addExtrudedPolygon);
 	// Create top face by offsetting bottom face by height
 	std::vector<IBKMK::Vector3D> topFace;
-	for (auto it = bottomFace.rbegin(); it != bottomFace.rend(); ++it) {
-		topFace.push_back(IBKMK::Vector3D(it->m_x, it->m_y, it->m_z + height));
+
+	for (const auto& v : bottomFace) {
+		topFace.push_back(IBKMK::Vector3D(v.m_x, v.m_y, v.m_z + height));
 	}
 
-	// Add bottom face
-	{
-		IBKMK::Polygon3D p(bottomFace);
-		if (!p.isValid())
-			throw IBK::Exception("Invalid bottom face polygon.", FUNC_ID);
-		VICUS::PlaneGeometry g1(p);
-		addPlane(g1.triangulationData(), c, currentVertexIndex, currentElementIndex,
-				 vertexBufferData, colorBufferData, indexBufferData, false);
+	IBKMK::Polygon3D pbottom(bottomFace);
+	if (!pbottom.isValid())
+		throw IBK::Exception("Invalid bottom face polygon.", FUNC_ID);
+	VICUS::PlaneGeometry g1(pbottom);
+	if (innerPolylines != nullptr) {
+		std::vector<VICUS::PlaneGeometry::Hole> holes;
+		for(unsigned int i = 0; i < innerPolylines->size(); i++) {
+			VICUS::Polygon2D polygon2d((*innerPolylines)[i]);
+			holes.push_back(VICUS::PlaneGeometry::Hole(i, polygon2d, true));
+		}
+		g1.setHoles(holes);
 	}
+	addPlane(g1.triangulationData(), c, currentVertexIndex, currentElementIndex,
+			 vertexBufferData, colorBufferData, indexBufferData, true);
+	addPlane(g1.triangulationData(), c, currentVertexIndex, currentElementIndex,
+			 vertexBufferData, colorBufferData, indexBufferData, false);
 
-	// Add top face
-	{
-		IBKMK::Polygon3D p(topFace);
-		VICUS::PlaneGeometry g1(p);
-		addPlane(g1.triangulationData(), c, currentVertexIndex, currentElementIndex,
-				 vertexBufferData, colorBufferData, indexBufferData, false);
+
+	IBKMK::Polygon3D pTop(topFace);
+	if (!pTop.isValid())
+		throw IBK::Exception("Invalid bottom face polygon.", FUNC_ID);
+	VICUS::PlaneGeometry g2(pTop);
+	if (innerPolylines != nullptr) {
+		std::vector<VICUS::PlaneGeometry::Hole> holes;
+		for(unsigned int i = 0; i < innerPolylines->size(); i++) {
+			VICUS::Polygon2D polygon2d((*innerPolylines)[i]);
+			holes.push_back(VICUS::PlaneGeometry::Hole(i, polygon2d, true));
+		}
+		g2.setHoles(holes);
 	}
+	addPlane(g2.triangulationData(), c, currentVertexIndex, currentElementIndex,
+			 vertexBufferData, colorBufferData, indexBufferData, true);
+	addPlane(g2.triangulationData(), c, currentVertexIndex, currentElementIndex,
+			 vertexBufferData, colorBufferData, indexBufferData, false);
 
-	// Add side faces
 	for (size_t i = 0; i < bottomFace.size(); ++i) {
 		size_t nextI = (i + 1) % bottomFace.size();
 
 		// Create two triangles for each side face
-		addPlane(VICUS::PlaneTriangulationData(bottomFace[i], topFace[bottomFace.size() - 1 - i], bottomFace[nextI]), c,
+		addPlane(VICUS::PlaneTriangulationData(bottomFace[i], bottomFace[nextI], topFace[nextI]), c,
+				 currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, true);
+		addPlane(VICUS::PlaneTriangulationData(bottomFace[i], topFace[nextI], topFace[i]), c,
+				 currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, true);
+		addPlane(VICUS::PlaneTriangulationData(bottomFace[i], bottomFace[nextI], topFace[nextI]), c,
 				 currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, false);
-		addPlane(VICUS::PlaneTriangulationData(bottomFace[nextI], topFace[bottomFace.size() - 1 - i], topFace[bottomFace.size() - 1 - nextI]), c,
+		addPlane(VICUS::PlaneTriangulationData(bottomFace[i], topFace[nextI], topFace[i]), c,
 				 currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, false);
 	}
+
+	if (innerPolylines == nullptr) return;
+
+	const IBKMK::Vector3D& offset = g1.offset();
+	const IBKMK::Vector3D& localX = g1.localX();
+	const IBKMK::Vector3D& localY = g1.localY();
+	// TODO
+	//for (auto& innerPolyline : *innerPolylines) {
+	//	for (size_t i = 0; i < innerPolyline.size(); i++) {
+	//		size_t nextI = (i + 1) % bottomFace.size();
+	//		I
+	//
+	//		IBKMK::Vector3D topFaceNextI = IBKMK::Vector3D(innerPolyline[nextI].m_x, innerPolyline[nextI].m_y, bottomFace[0].m_z + height);
+	//		IBKMK::Vector3D topFaceI = IBKMK::Vector3D(innerPolyline[i].m_x, innerPolyline[i].m_y,  bottomFace[0].m_z + height);
+
+	//		// Create two triangles for each side face
+	//		addPlane(VICUS::PlaneTriangulationData(innerPolyline[i], innerPolyline[nextI], topFaceNextI), c,
+	//				 currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, true);
+	//		addPlane(VICUS::PlaneTriangulationData(innerPolyline[i], topFaceNextI, topFaceI), c,
+	//				 currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, true);
+	//		addPlane(VICUS::PlaneTriangulationData(innerPolyline[i], innerPolyline[nextI], topFaceNextI), c,
+	//				 currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, false);
+	//		addPlane(VICUS::PlaneTriangulationData(innerPolyline[i], topFaceNextI, topFaceI), c,
+	//				 currentVertexIndex, currentElementIndex, vertexBufferData, colorBufferData, indexBufferData, false);
+
+	//	}
+	//}
 }
 
 void addLine(const IBKMK::Vector3D & startPoint, const IBKMK::Vector3D & endPoint, const VICUS::RotationMatrix &matrix, double width, const QColor & color,

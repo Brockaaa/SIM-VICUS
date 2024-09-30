@@ -471,8 +471,6 @@ void DrawingOSM::constructObjects()
 			createLand(pair.second);
 	}
 
-	std::vector<int> usedKeyValues;
-
 	std::function<int(const AbstractOSMObject&)> convertKeyToInt = [&](const AbstractOSMObject& object){
 		if(object.m_layer == 0) {
 			return static_cast<int>(object.m_keyValue);
@@ -565,6 +563,8 @@ void DrawingOSM::constructObjects()
 
 	};
 
+	std::vector<int> usedKeyValues;
+
 	for (const auto & building : m_buildings) {
 		usedKeyValues.push_back(convertKeyToInt(building));
 	}
@@ -619,7 +619,13 @@ void DrawingOSM::constructObjects()
 		usedKeyValues.pop_back();
 		usedKeyValues.insert(usedKeyValues.begin(), lastElement);
 	}
+	usedKeyValues.insert(usedKeyValues.begin(), (static_cast<int>(BOUNDINGBOX))); // boundingbox always included
 
+	int i = 0;
+	for (; i < usedKeyValues.size(); i++) {
+		if (usedKeyValues[i] == static_cast<int>(BOUNDINGBOX)) break;
+	}
+	m_boundingBox.m_zPosition = (i / (double)(usedKeyValues.size() - 1));
 
 	std::function<void(AbstractOSMObject&)> assignZValue = [&](AbstractOSMObject& object){
 		int keyValue = convertKeyToInt(object);
@@ -686,17 +692,11 @@ void DrawingOSM::updatePlaneGeometries()
 
 const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>>& geometryData) const
 {
+
+	m_boundingBox.addGeometryData(this, geometryData[m_boundingBox.m_zPosition]);
+
 	for (const auto & building : m_buildings) {
 		building.addGeometryData(geometryData[building.m_zPosition]);
-
-		// 3D stuff
-		// for(auto& areaBorder : building.m_areaBorders){
-		// 	if (areaBorder.m_multipolygon) continue;
-		// 	addPolygonExtrusion(areaBorder.m_polyline, building.m_height, areaBorder.m_colorArea, currentVertexIndex, currentElementIndex,
-		// 						m_drawingOSMGeometryObject.m_vertexBufferData,
-		// 						m_drawingOSMGeometryObject.m_colorBufferData,
-		// 						m_drawingOSMGeometryObject.m_indexBufferData);
-		// }
 	}
 
 	for( const auto & highway : m_highways) {
@@ -770,7 +770,7 @@ const DrawingOSM::Relation * DrawingOSM::findRelationFromId(unsigned int id) con
 	}
 }
 
-inline IBKMK::Vector2D DrawingOSM::convertLatLonToVector2D(double lat, double lon)
+IBKMK::Vector2D DrawingOSM::convertLatLonToVector2D(double lat, double lon) const
 {
 	double x, y;
 	IBKMK::LatLonToUTMXY(lat, lon, m_utmZone, x, y);
@@ -786,6 +786,8 @@ void DrawingOSM::createBuilding(Way & way) {
 	if (!building.initialize(way)) return;
 
 	AreaBorder areaBorder(this);
+	areaBorder.m_extrudingPolygon = m_enable3D;
+	areaBorder.m_height = building.m_height;
 
 	createMultipolygonFromWay(way, areaBorder.m_multiPolygon);
 	areaBorder.m_colorArea = QColor("#b3a294");
@@ -807,6 +809,8 @@ void DrawingOSM::createBuilding(Relation & relation) {
 
 	for (auto multipolygon : multipolygons) {
 		AreaBorder areaBorder(this);
+		areaBorder.m_extrudingPolygon = m_enable3D;
+		areaBorder.m_height = building.m_height;
 		areaBorder.m_multiPolygon = multipolygon;
 		areaBorder.m_colorArea = QColor("#b3a294");
 		building.m_areaBorders.push_back(areaBorder);
@@ -844,7 +848,7 @@ void DrawingOSM::createHighway(Way & way)
 			lineThickness = 0.6f;
 		} else if (highway.m_keyValue == HIGHWAY_SERVICE) {
 			color = QColor("#ffffff");
-			lineThickness = 3.0f;
+			lineThickness = 2.0f;
 		} else if (highway.m_keyValue == HIGHWAY_MOTORWAY) {
 			color = QColor("#f1bcc6");
 			lineThickness = 4.5f;
@@ -1020,7 +1024,7 @@ void DrawingOSM::createNatural(Node & node)
 
 	Circle circle(this);
 	circle.m_center = convertLatLonToVector2D(node.m_lat, node.m_lon);
-	circle.m_radius = 1.5;
+	circle.m_radius = 1.25;
 
 	natural.m_circles.push_back(circle);
 	m_natural.push_back(natural);
@@ -1476,40 +1480,48 @@ const void DrawingOSM::AreaBorder::addGeometryData(std::vector<VICUS::DrawingOSM
 	FUNCID(DrawingOSM::AreaBorder::addGeometryData);
 	try {
 		if (m_dirtyTriangulation) {
+			GeometryData geometryData;
 			m_geometryData.clear();
 
-			std::vector<IBKMK::Vector3D> areaPoints;
+			if (m_extrudingPolygon) {
+				geometryData.m_extrudingPolygon = true;
+				if (!m_multiPolygon.m_outerPolyline.empty()) {
+					geometryData.m_multipolygons.push_back(m_multiPolygon);
+					geometryData.m_color = m_colorArea;
+					geometryData.m_height = m_height;
+				}
+			} else {
+				std::vector<IBKMK::Vector3D> areaPoints;
 
-			for (int i = 1; i < m_multiPolygon.m_outerPolyline.size(); i++) {
-				IBKMK::Vector3D p = IBKMK::Vector3D(m_multiPolygon.m_outerPolyline[i].m_x,
-													m_multiPolygon.m_outerPolyline[i].m_y,
-													0);
+				for (int i = 1; i < m_multiPolygon.m_outerPolyline.size(); i++) {
+					IBKMK::Vector3D p = IBKMK::Vector3D(m_multiPolygon.m_outerPolyline[i].m_x,
+														m_multiPolygon.m_outerPolyline[i].m_y,
+														0);
 
-				QVector3D vec = m_drawing->m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
-				vec += IBKVector2QVector(m_drawing->m_origin);
+					QVector3D vec = m_drawing->m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+					vec += IBKVector2QVector(m_drawing->m_origin);
 
-				areaPoints.push_back(QVector2IBKVector(vec));
-			}
-
-			VICUS::Polygon3D polygon3D(areaPoints);
-			GeometryData geometryData;
-			// Initialize PlaneGeometry with the polygon
-			geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(polygon3D));
-
-			if(!m_multiPolygon.m_innerPolylines.empty()) {
-				std::vector<PlaneGeometry::Hole> holes;
-				for(int j = 0; j < m_multiPolygon.m_innerPolylines.size(); j++) {
-					VICUS::Polygon2D polygon2d(m_multiPolygon.m_innerPolylines[j]);
-					holes.push_back(PlaneGeometry::Hole(j, polygon2d, true));
+					areaPoints.push_back(QVector2IBKVector(vec));
 				}
 
-				VICUS::PlaneGeometry& planeGeometry = geometryData.m_planeGeometry.back();
-				planeGeometry.setHoles(holes);
+				VICUS::Polygon3D polygon3D(areaPoints);
+				// Initialize PlaneGeometry with the polygon
+				geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(polygon3D));
+
+				if(!m_multiPolygon.m_innerPolylines.empty()) {
+					std::vector<PlaneGeometry::Hole> holes;
+					for(int j = 0; j < m_multiPolygon.m_innerPolylines.size(); j++) {
+						VICUS::Polygon2D polygon2d(m_multiPolygon.m_innerPolylines[j]);
+						holes.push_back(PlaneGeometry::Hole(j, polygon2d, false));
+					}
+
+					VICUS::PlaneGeometry& planeGeometry = geometryData.m_planeGeometry.back();
+					planeGeometry.setHoles(holes);
+				}
+
+				geometryData.m_color = m_colorArea;
 			}
-
-			geometryData.m_color = m_colorArea;
 			m_geometryData.push_back(geometryData);
-
 			m_dirtyTriangulation = false;
 		}
 		for(auto& geometryData : m_geometryData) {
@@ -1567,7 +1579,7 @@ const void DrawingOSM::AreaNoBorder::addGeometryData(std::vector<GeometryData *>
 				std::vector<PlaneGeometry::Hole> holes;
 				for(int j = 0; j < m_multiPolygon.m_innerPolylines.size(); j++) {
 					VICUS::Polygon2D polygon2d(m_multiPolygon.m_innerPolylines[j]);
-					holes.push_back(PlaneGeometry::Hole(j, polygon2d, true));
+					holes.push_back(PlaneGeometry::Hole(j, polygon2d, false));
 				}
 
 				VICUS::PlaneGeometry& planeGeometry = geometryData.m_planeGeometry.back();
@@ -1912,6 +1924,27 @@ const void DrawingOSM::Circle::addGeometryData(std::vector<GeometryData *> & dat
 	catch (IBK::Exception &ex) {
 		throw IBK::Exception( ex, IBK::FormatString("Error generating plane geometries for 'DrawingOSM::Circle' element.\n%1").arg(ex.what()), FUNC_ID);
 	}
+}
+
+const void DrawingOSM::BoundingBox::addGeometryData(const DrawingOSM* drawing, std::vector<GeometryData *> & data) const
+{
+	std::vector<IBKMK::Vector3D> polyline;
+	std::vector<IBKMK::Vector3D> areaPoints;
+	polyline.push_back(IBKMK::Vector3D(drawing->convertLatLonToVector2D(drawing->m_boundingBox.maxlat, drawing->m_boundingBox.minlon)));
+	polyline.push_back(IBKMK::Vector3D(drawing->convertLatLonToVector2D(drawing->m_boundingBox.minlat, drawing->m_boundingBox.minlon)));
+	polyline.push_back(IBKMK::Vector3D(drawing->convertLatLonToVector2D(drawing->m_boundingBox.minlat, drawing->m_boundingBox.maxlon)));
+	polyline.push_back(IBKMK::Vector3D(drawing->convertLatLonToVector2D(drawing->m_boundingBox.maxlat, drawing->m_boundingBox.maxlon)));
+
+	for (auto &p : polyline) {
+		QVector3D vec = drawing->m_rotationMatrix.toQuaternion() * QVector3D((float)p.m_x, (float)p.m_y, (float)p.m_z);
+		vec += QVector3D((double)drawing->m_origin.m_x, (double)drawing->m_origin.m_y, (double)drawing->m_origin.m_z);
+
+		areaPoints.push_back(IBKMK::Vector3D((double)vec.x(), (double)vec.y(), (double)vec.z()));
+	}
+
+	m_geometryData.m_color = QColor("#f2efe9");
+	m_geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(areaPoints));
+	data.push_back(&m_geometryData);
 }
 
 } // namespace VICUS
