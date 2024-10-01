@@ -32,7 +32,7 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertHoleToLocalCoordinates(
 	const std::vector<IBKMK::Vector3D>& globalVertices,
 	const IBKMK::Vector3D& offset,
 	const IBKMK::Vector3D& localX,
-	const IBKMK::Vector3D& localY) {
+	const IBKMK::Vector3D& localY) const {
 	std::vector<IBKMK::Vector2D> localVertices;
 	localVertices.reserve(globalVertices.size());
 
