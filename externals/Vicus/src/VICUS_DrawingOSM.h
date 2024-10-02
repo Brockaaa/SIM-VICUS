@@ -122,11 +122,12 @@ public:
 		std::vector<Multipolygon>			m_multipolygons;
 		QColor								m_color;
 		bool								m_extrudingPolygon = false;
-		double								m_height = 2;
+		double								m_height = 3;
+		double_t							m_minHeight = 0;
 	};
 
 
-	struct BoundingBox{
+	struct BoundingBox {
 		double minlat;
 		double maxlat;
 		double minlon;
@@ -164,31 +165,18 @@ public:
 		const DrawingOSM * m_drawing = nullptr;
 	};
 
-	struct AreaBorder : AbstractDrawingObject {
+	struct Area : AbstractDrawingObject {
 
-		AreaBorder(const DrawingOSM * drawing)
+		Area(const DrawingOSM * drawing)
 			: AbstractDrawingObject(drawing)
 		{}
 
 		Multipolygon						m_multiPolygon;
 		bool								m_extrudingPolygon = false;
-		double								m_height = 2;
+		double								m_height = 3;
+		double								m_minHeight = 0;
 
-		QColor								m_colorArea	  = QColor("#2f302f");
-		QColor								m_colorBorder = QColor("#c7b7b0");
-
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
-	};
-
-	struct AreaNoBorder : AbstractDrawingObject {
-
-		AreaNoBorder(const DrawingOSM * drawing)
-			: AbstractDrawingObject(drawing)
-		{}
-
-		Multipolygon						m_multiPolygon;
-
-		QColor								m_color = QColor(Qt::black);
+		QColor								m_color	  = QColor("#2f302f");
 
 		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
 	};
@@ -301,11 +289,16 @@ public:
 
 
 	struct AbstractOSMObject {
-		const virtual void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const = 0;
+		const virtual void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const;
 
 		bool initialize(AbstractOSMElement& osmElement);
 
 		void assignKeyValue();
+
+		std::vector<Area>					m_areas;
+		std::vector<LineFromPlanes>			m_linesFromPlanes;
+		std::vector<Circle>					m_circles;
+
 
 		std::string							m_key = "";
 
@@ -321,83 +314,39 @@ public:
 	// https://wiki.openstreetmap.org/wiki/Simple_3D_Buildings#How_to_map
 	/*! Building Object. Contains only 2D information. */
 	struct Building : AbstractOSMObject {
-		std::vector<AreaBorder>				m_areaBorders;
 
-		double								m_height = 2;
+		void								calculateHeight(AbstractOSMElement& element);
 
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+		double								m_height = 3;
+
+		double								m_minHeight = 0;
+
+		double								m_levelHeight = 3;
+
+		double								m_roofHeight = 3;
 	};
 
-	struct Highway : AbstractOSMObject {
-		std::vector<LineFromPlanes>			m_linesFromPlanes;
-		std::vector<AreaBorder>				m_areaBorders;
+	struct Highway : AbstractOSMObject {};
 
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
-	};
-
-	struct Water : AbstractOSMObject {
-		std::vector<AreaNoBorder>			m_areaNoBorders;
-		std::vector<LineFromPlanes>			m_linesFromPlanes;
-
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
-
-	};
+	struct Water : AbstractOSMObject {};
 
 	struct Land : AbstractOSMObject {
-		std::vector<AreaNoBorder>			m_areaNoBorders;
-
 		QColor	setColor();
-
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
-
 	};
 
-	struct Leisure : AbstractOSMObject {
-		std::vector<AreaNoBorder>			m_areaNoBorders;
+	struct Leisure : AbstractOSMObject {};
 
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+	struct Natural : AbstractOSMObject {};
 
-	};
+	struct Amenity : AbstractOSMObject {};
 
-	struct Natural : AbstractOSMObject {
-		std::vector<AreaNoBorder>			m_areaNoBorders;
-		std::vector<LineFromPlanes>			m_linesFromPlanes;
-		std::vector<Circle>					m_circles;
+	struct Place : AbstractOSMObject {};
 
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
+	struct Bridge : AbstractOSMObject {};
 
-	};
+	struct Tourism : AbstractOSMObject {};
 
-	struct Amenity : AbstractOSMObject {
-		std::vector<AreaNoBorder>			m_areaNoBorders;
-
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
-
-	};
-
-	struct Place : AbstractOSMObject {
-		std::vector<AreaBorder>			m_areaBorders;
-
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
-	};
-
-	struct Bridge : AbstractOSMObject {
-		std::vector<AreaBorder>			m_areaBorders;
-
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
-	};
-
-	struct Tourism : AbstractOSMObject {
-		std::vector<AreaBorder>			m_areaBorders;
-
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
-	};
-
-	struct Barrier : AbstractOSMObject {
-		std::vector<LineFromPlanes>			m_linesFromPlanes;
-
-		const void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const override;
-	};
+	struct Barrier : AbstractOSMObject {};
 
 	std::vector<IBKMK::Vector2D> convertHoleToLocalCoordinates(const std::vector<IBKMK::Vector3D> & globalVertices, const IBKMK::Vector3D & offset, const IBKMK::Vector3D & localX, const IBKMK::Vector3D & localY) const;
 
@@ -525,7 +474,6 @@ public:
 	/*! path of the OSM File */
 	QString											m_filePath;
 
-private:
 	/*! Function to generate plane geometries from a polyline. */
 	bool generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline,
 									bool connectEndStart, double width, std::vector<PlaneGeometry> &planes) const;

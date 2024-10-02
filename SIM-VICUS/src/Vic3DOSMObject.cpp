@@ -144,7 +144,7 @@ void OSMObject::generateOSMGeometry() {
 						for (int i = 1; i < multipolygon.m_outerPolyline.size(); i++) {
 							IBKMK::Vector3D p = IBKMK::Vector3D(multipolygon.m_outerPolyline[i].m_x,
 																multipolygon.m_outerPolyline[i].m_y,
-																0);
+																data->m_minHeight);
 
 							QVector3D vec = drawing.m_rotationMatrix.toQuaternion() * QVector3D((float)p.m_x, (float)p.m_y, (float)p.m_z);
 							vec += QVector3D((double)drawing.m_origin.m_x, (double)drawing.m_origin.m_y, (double)drawing.m_origin.m_z);
