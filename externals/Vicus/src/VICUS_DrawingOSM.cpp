@@ -74,15 +74,15 @@ void DrawingOSM::createMultipolygonsFromRelation(VicOSM::Relation & relation, st
 
 	std::vector<WayWithMarks> ways;
 
-	//for (int i = 0; i < relation.m_members.size(); i++) {
-	//	if (relation.m_members[i].type != VicOSM::AbstractOSMElement::WayType) continue;
-	//	WayWithMarks way;
-	//	/* if not all ways available, it is likely a huge multipolygon that is partially outside of the boundingbox of the .osm file.
-	//	 * To avoid weird bugs (e.g. areas covered by the polygon that should not be covered), we skip this incomplete multipolygon */
-	//	if (!processWay(way.refs, relation.m_members[i].ref))
-	//		return;
-	//	ways.push_back(way);
-	//}
+	for (int i = 0; i < relation.m_members.size(); i++) {
+		if (relation.m_members[i].type != VicOSM::WayType) continue;
+		WayWithMarks way;
+		/* if not all ways available, it is likely a huge multipolygon that is partially outside of the boundingbox of the .osm file.
+		 * To avoid weird bugs (e.g. areas covered by the polygon that should not be covered), we skip this incomplete multipolygon */
+		if (!processWay(way.refs, relation.m_members[i].ref))
+			return;
+		ways.push_back(way);
+	}
 
 	std::vector<std::vector<WayWithMarks*>> rings;
 	// first creates all possible areas/rings out of the set of open and closed ways
@@ -428,136 +428,258 @@ bool DrawingOSM::readOSMFile(QString filePath)
 
 void DrawingOSM::constructObjects()
 {
-	/* order relevant. For example heritage should come at the very end because key heritage
+	std::function<void(VicOSM::Node&, VicOSM::AbstractOSMObject&)> createCenterFromNodeAndAssignToObject = [&](VicOSM::Node& node, VicOSM::AbstractOSMObject& object){
+		for (auto& circle : object.m_circles) {
+			circle.m_center = convertLatLonToVector2D(node.m_lat, node.m_lon);
+			return;
+		}
+	};
+
+	std::function<void(VicOSM::Way&, VicOSM::AbstractOSMObject&)> createMultipolygonFromWayAndAssignToObject = [&](VicOSM::Way& way, VicOSM::AbstractOSMObject& object){
+		VicOSM::Multipolygon multipolygon;
+		createMultipolygonFromWay(way, multipolygon);
+		for (auto& area : object.m_areas) {
+			area.m_multiPolygon = multipolygon;
+			return;
+		}
+
+		for (auto& lineFromPlanes : object.m_linesFromPlanes) {
+			lineFromPlanes.m_polyline = multipolygon.m_outerPolyline;
+			return;
+		}
+	};
+
+	std::function<void(VicOSM::Relation&, VicOSM::AbstractOSMObject&)> createMultipolygonFromRelationAndAssignToObject = [&](VicOSM::Relation& relation, VicOSM::AbstractOSMObject& object){
+		std::vector<VicOSM::Multipolygon> multipolygons;
+		createMultipolygonsFromRelation(relation, multipolygons);
+		if (!object.m_areas.empty()) {
+			VicOSM::Area templateArea = object.m_areas.front();
+			object.m_areas.pop_back();
+			for (auto& multipolygon : multipolygons) {
+				VicOSM::Area area = templateArea;
+				area.m_multiPolygon = multipolygon;
+				object.m_areas.push_back(area);
+			}
+			return;
+		}
+	};
+
+	// construct all objects from nodes
+	for (auto& pair : m_nodes) {
+		if (pair.second.containsKey("natural")) {
+			VicOSM::Natural natural;
+			if (VicOSM::Natural::createNatural(pair.second, natural)) {
+				createCenterFromNodeAndAssignToObject(pair.second, natural);
+				m_natural.push_back(natural);
+			}
+		}
+	}
+	/* construct all objects from ways
+	 * order relevant. For example heritage should come at the very end because key heritage
 	 * is not supposed to occur alone and only in combination with other keys like place.
 	 * In practice this does not always happen */
-	//for (auto& pair : m_nodes) {
-	//	if (pair.second.containsKey("natural")) {
-	//		createNatural(pair.second);
-	//	}
-	//}
+	for (auto& pair : m_ways) {
+		if (pair.second.containsKey("building")) {
+			VicOSM::Building building;
+			if (VicOSM::Building::createBuilding(pair.second, building, m_enable3D)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, building);
+				m_buildings.push_back(building);
+			}
+		}
+		else if (pair.second.containsKey("highway")) {
+			VicOSM::Highway highway;
+			if (VicOSM::Highway::createHighway(pair.second, highway)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, highway);
+				m_highways.push_back(highway);
+			}
+		}
+		else if (pair.second.containsKey("water") || pair.second.containsKey("waterway")) {
+			VicOSM::Water water;
+			if (VicOSM::Water::createWater(pair.second, water)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, water);
+				m_waters.push_back(water);
+			}
+		}
+		else if (pair.second.containsKey("landuse")) {
+			VicOSM::Land land;
+			if (VicOSM::Land::createLand(pair.second, land)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, land);
+				m_land.push_back(land);
+			}
+		}
+		else if (pair.second.containsKey("leisure")) {
+			VicOSM::Leisure leisure;
+			if (VicOSM::Leisure::createLeisure(pair.second, leisure)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, leisure);
+				m_leisure.push_back(leisure);
+			}
+		}
+		else if (pair.second.containsKey("natural")) {
+			VicOSM::Natural natural;
+			if (VicOSM::Natural::createNatural(pair.second, natural)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, natural);
+				m_natural.push_back(natural);
+			}
+		}
+		else if (pair.second.containsKey("amenity")) {
+			VicOSM::Amenity amenity;
+			if (VicOSM::Amenity::createAmenity(pair.second, amenity)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, amenity);
+				m_amenities.push_back(amenity);
+			}
+		}
+		else if (pair.second.containsKey("bridge")) {
+			VicOSM::Bridge bridge;
+			if (VicOSM::Bridge::createBridge(pair.second, bridge)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, bridge);
+				m_bridges.push_back(bridge);
+			}
+		}
+		else if (pair.second.containsKey("tourism")) {
+			VicOSM::Tourism tourism;
+			if (VicOSM::Tourism::createTourism(pair.second, tourism)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, tourism);
+				m_tourism.push_back(tourism);
+			}
+		}
+		else if (pair.second.containsKey("barrier")) {
+			VicOSM::Barrier barrier;
+			if (VicOSM::Barrier::createBarrier(pair.second, barrier)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, barrier);
+				m_barriers.push_back(barrier);
+			}
+		}
+		else if (pair.second.containsKey("place") || pair.second.containsKey("heritage")) {
+			VicOSM::Place place;
+			if (VicOSM::Place::createPlace(pair.second, place)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, place);
+				m_places.push_back(place);
+			}
+		}
+	}
 
-	//for (auto& pair : m_ways) {
-	//	if (pair.second.containsKey("building"))
-	//		createBuilding(pair.second);
-	//	else if (pair.second.containsKey("highway"))
-	//		createHighway(pair.second);
-	//	else if (pair.second.containsKey("water") || pair.second.containsKey("waterway"))
-	//		createWater(pair.second);
-	//	else if (pair.second.containsKey("landuse"))
-	//		createLand(pair.second);
-	//	else if (pair.second.containsKey("leisure"))
-	//		createLeisure(pair.second);
-	//	else if (pair.second.containsKey("natural"))
-	//		createNatural(pair.second);
-	//	else if (pair.second.containsKey("amenity"))
-	//		createAmenity(pair.second);
-	//	else if (pair.second.containsKey("bridge"))
-	//		createBridge(pair.second);
-	//	else if (pair.second.containsKey("tourism"))
-	//		createTourism(pair.second);
-	//	else if (pair.second.containsKey("barrier"))
-	//		createBarrier(pair.second);
-	//	else if (pair.second.containsKey("place") || pair.second.containsKey("heritage"))
-	//		createPlace(pair.second);
-	//}
+	// construct all objects from relation
+	for (auto& pair : m_relations) {
+		if (pair.second.containsKey("building")) {
+			VicOSM::Building building;
+			if (VicOSM::Building::createBuilding(pair.second, building, m_enable3D)) {
+				createMultipolygonFromRelationAndAssignToObject(pair.second, building);
+				m_buildings.push_back(building);
+			}
+		}
+		else if (pair.second.containsKey("place")) {
+			VicOSM::Place place;
+			if (VicOSM::Place::createPlace(pair.second, place)) {
+				createMultipolygonFromRelationAndAssignToObject(pair.second, place);
+				m_places.push_back(place);
+			}
+		}
+		else if (pair.second.containsKey("water") || pair.second.containsKey("waterway")) {
+			VicOSM::Water water;
+			if (VicOSM::Water::createWater(pair.second, water)) {
+				createMultipolygonFromRelationAndAssignToObject(pair.second, water);
+				m_waters.push_back(water);
+			}
+		}
+		else if (pair.second.containsKey("highway")) {
+			VicOSM::Highway highway;
+			if (VicOSM::Highway::createHighway(pair.second, highway)) {
+				createMultipolygonFromRelationAndAssignToObject(pair.second, highway);
+				m_highways.push_back(highway);
+			}
+		}
+		else if (pair.second.containsKey("landuse")) {
+			VicOSM::Land land;
+			if (VicOSM::Land::createLand(pair.second, land)) {
+				createMultipolygonFromRelationAndAssignToObject(pair.second, land);
+				m_land.push_back(land);
+			}
+		}
+	}
 
-	//for (auto& pair : m_relations) {
-	//	if (pair.second.containsKey("building"))
-	//		createBuilding(pair.second);
-	//	else if (pair.second.containsKey("place"))
-	//		createPlace(pair.second);
-	//	else if (pair.second.containsKey("water") || pair.second.containsKey("waterway"))
-	//		createWater(pair.second);
-	//	else if (pair.second.containsKey("highway"))
-	//		createHighway(pair.second);
-	//	else if (pair.second.containsKey("landuse"))
-	//		createLand(pair.second);
-	//}
-
-	std::function<int(const AbstractOSMObject&)> convertKeyToInt = [&](const AbstractOSMObject& object){
+	std::function<int(const VicOSM::AbstractOSMObject&)> convertKeyToInt = [&](const VicOSM::AbstractOSMObject& object){
 		if(object.m_layer == 0) {
 			return static_cast<int>(object.m_keyValue);
 		}
 
 		switch (object.m_layer) {
 			case -5: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
-					return static_cast<int>(LAYERLANDUSENEG5);
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
+					return static_cast<int>(VicOSM::LAYERLANDUSENEG5);
 				} else {
-					return static_cast<int>(LAYERHIGHWAYNEG5);
+					return static_cast<int>(VicOSM::LAYERHIGHWAYNEG5);
 				}
 				break;
 			}
 			case -4: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
-					return static_cast<int>(LAYERLANDUSENEG4);
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
+					return static_cast<int>(VicOSM::LAYERLANDUSENEG4);
 				} else {
-					return static_cast<int>(LAYERHIGHWAYNEG4);
+					return static_cast<int>(VicOSM::LAYERHIGHWAYNEG4);
 				}
 				break;
 			}
 			case -3: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
-					return static_cast<int>(LAYERLANDUSENEG3);
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
+					return static_cast<int>(VicOSM::LAYERLANDUSENEG3);
 				} else {
-					return static_cast<int>(LAYERHIGHWAYNEG3);
+					return static_cast<int>(VicOSM::LAYERHIGHWAYNEG3);
 				}
 				break;
 			}
 			case -2: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
-					return static_cast<int>(LAYERLANDUSENEG2);
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
+					return static_cast<int>(VicOSM::LAYERLANDUSENEG2);
 				} else {
-					return static_cast<int>(LAYERHIGHWAYNEG2);
+					return static_cast<int>(VicOSM::LAYERHIGHWAYNEG2);
 				}
 				break;
 			}
 			case -1: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
-					return static_cast<int>(LAYERLANDUSENEG1);
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
+					return static_cast<int>(VicOSM::LAYERLANDUSENEG1);
 				} else {
-					return static_cast<int>(LAYERHIGHWAYNEG1);
+					return static_cast<int>(VicOSM::LAYERHIGHWAYNEG1);
 				}
 				break;
 			}
 			case 5: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
-					return static_cast<int>(LAYERLANDUSE5);
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
+					return static_cast<int>(VicOSM::LAYERLANDUSE5);
 				} else {
-					return static_cast<int>(LAYERHIGHWAY5);
+					return static_cast<int>(VicOSM::LAYERHIGHWAY5);
 				}
 				break;
 			}
 			case 4: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
-					return static_cast<int>(LAYERLANDUSE4);
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
+					return static_cast<int>(VicOSM::LAYERLANDUSE4);
 				} else {
-					return static_cast<int>(LAYERHIGHWAY4);
+					return static_cast<int>(VicOSM::LAYERHIGHWAY4);
 				}
 				break;
 			}
 			case 3: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
-					return static_cast<int>(LAYERLANDUSE3);
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
+					return static_cast<int>(VicOSM::LAYERLANDUSE3);
 				} else {
-					return static_cast<int>(LAYERHIGHWAY3);
+					return static_cast<int>(VicOSM::LAYERHIGHWAY3);
 				}
 				break;
 			}
 			case 2: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
-					return static_cast<int>(LAYERLANDUSE2);
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
+					return static_cast<int>(VicOSM::LAYERLANDUSE2);
 				} else {
-					return static_cast<int>(LAYERHIGHWAY2);
+					return static_cast<int>(VicOSM::LAYERHIGHWAY2);
 				}
 				break;
 			}
 			case 1: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(LAYERHIGHWAYNEG5)){
-					return static_cast<int>(LAYERLANDUSE1);
+				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
+					return static_cast<int>(VicOSM::LAYERLANDUSE1);
 				} else {
-					return static_cast<int>(LAYERHIGHWAY1);
+					return static_cast<int>(VicOSM::LAYERHIGHWAY1);
 				}
 				break;
 			}
@@ -618,20 +740,20 @@ void DrawingOSM::constructObjects()
 		s.insert(i);
 	usedKeyValues.assign( s.begin(), s.end() );
 	sort( usedKeyValues.begin(), usedKeyValues.end() );
-	int lastElement = static_cast<int>(NUM_KV);
+	int lastElement = static_cast<int>(VicOSM::NUM_KV);
 	if (!usedKeyValues.empty() && usedKeyValues.back() == lastElement) {
 		usedKeyValues.pop_back();
 		usedKeyValues.insert(usedKeyValues.begin(), lastElement);
 	}
-	usedKeyValues.insert(usedKeyValues.begin(), (static_cast<int>(BOUNDINGBOX))); // boundingbox always included
+	usedKeyValues.insert(usedKeyValues.begin(), (static_cast<int>(VicOSM::BOUNDINGBOX))); // boundingbox always included
 
 	int i = 0;
 	for (; i < usedKeyValues.size(); i++) {
-		if (usedKeyValues[i] == static_cast<int>(BOUNDINGBOX)) break;
+		if (usedKeyValues[i] == static_cast<int>(VicOSM::BOUNDINGBOX)) break;
 	}
 	m_boundingBox.m_zPosition = (i / (double)(usedKeyValues.size() - 1));
 
-	std::function<void(AbstractOSMObject&)> assignZValue = [&](AbstractOSMObject& object){
+	std::function<void(VicOSM::AbstractOSMObject&)> assignZValue = [&](VicOSM::AbstractOSMObject& object){
 		int keyValue = convertKeyToInt(object);
 		int i = 0;
 		for (; i < usedKeyValues.size(); i++) {
@@ -694,54 +816,195 @@ void DrawingOSM::updatePlaneGeometries()
 	}
 }
 
+void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::vector<GeometryData *> & geometryDataVector) const
+{
+	for (auto& area : object.m_areas) {
+		if (area.m_dirtyTriangulation) {
+			GeometryData geometryData;
+
+			if (area.m_extrudingPolygon) {
+				geometryData.m_extrudingPolygon = true;
+				if (!area.m_multiPolygon.m_outerPolyline.empty()) {
+					geometryData.m_multipolygons.push_back(area.m_multiPolygon);
+					geometryData.m_color = area.m_color;
+					geometryData.m_height = area.m_height;
+					geometryData.m_minHeight = area.m_minHeight;
+				}
+			} else {
+				std::vector<IBKMK::Vector3D> areaPoints;
+
+				for (int i = 1; i < area.m_multiPolygon.m_outerPolyline.size(); i++) {
+					IBKMK::Vector3D p = IBKMK::Vector3D(area.m_multiPolygon.m_outerPolyline[i].m_x,
+														area.m_multiPolygon.m_outerPolyline[i].m_y,
+														0);
+
+					QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+					vec += IBKVector2QVector(m_origin);
+
+					areaPoints.push_back(QVector2IBKVector(vec));
+				}
+
+				VICUS::Polygon3D polygon3D(areaPoints);
+				// Initialize PlaneGeometry with the polygon
+				geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(polygon3D));
+
+				if(!area.m_multiPolygon.m_innerPolylines.empty()) {
+					std::vector<PlaneGeometry::Hole> holes;
+					for(int j = 0; j < area.m_multiPolygon.m_innerPolylines.size(); j++) {
+						VICUS::Polygon2D polygon2d(area.m_multiPolygon.m_innerPolylines[j]);
+						holes.push_back(PlaneGeometry::Hole(j, polygon2d, false));
+					}
+
+					VICUS::PlaneGeometry& planeGeometry = geometryData.m_planeGeometry.back();
+					planeGeometry.setHoles(holes);
+				}
+
+				geometryData.m_color = area.m_color;
+			}
+			m_geometryData[&area] = geometryData;
+			area.m_dirtyTriangulation = false;
+		}
+		geometryDataVector.push_back(&m_geometryData[&area]);
+	}
+
+	for (auto& lineFromPlanes : object.m_linesFromPlanes) {
+		if (lineFromPlanes.m_dirtyTriangulation) {
+			// Create Vector to store vertices of polyline
+			std::vector<IBKMK::Vector3D> polylinePoints;
+
+			// adds z-coordinate to polyline
+			for(unsigned int i = 0; i < lineFromPlanes.m_polyline.size(); ++i){
+				IBKMK::Vector3D p = IBKMK::Vector3D(lineFromPlanes.m_polyline[i].m_x,
+													lineFromPlanes.m_polyline[i].m_y,
+													0);
+				QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+				vec += IBKVector2QVector(m_origin);
+
+				polylinePoints.push_back(QVector2IBKVector(vec));
+			}
+
+			std::vector<PlaneGeometry> planeGeometry;
+			if (generatePlanesFromPolyline(polylinePoints, false, lineFromPlanes.m_lineThickness, planeGeometry)) {
+				GeometryData geometryData;
+				geometryData.m_planeGeometry = planeGeometry;
+				geometryData.m_color = lineFromPlanes.m_color;
+				m_geometryData[&lineFromPlanes] = geometryData;
+			}
+
+			lineFromPlanes.m_dirtyTriangulation = false;
+		}
+		geometryDataVector.push_back(&m_geometryData[&lineFromPlanes]);
+	}
+
+	for (auto& circle : object.m_circles) {
+		if (circle.m_dirtyTriangulation) {
+			std::vector<IBKMK::Vector3D> circlePoints;
+
+			const double TWO_PI = 2 * M_PI;
+			double angleStep = TWO_PI / SEGMENT_COUNT_ELLIPSE;
+
+			circlePoints.resize(SEGMENT_COUNT_ELLIPSE);
+
+			for (int i = 0; i < SEGMENT_COUNT_ELLIPSE; ++i) {
+				double currentAngle = i * angleStep;
+				double x = circle.m_radius * 0.5 * cos(currentAngle);
+				double y = circle.m_radius * 0.5 * sin(currentAngle);
+
+				IBKMK::Vector3D p = IBKMK::Vector3D(x + circle.m_center.m_x,
+													y + circle.m_center.m_y,
+													0);
+
+				QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+				vec += IBKVector2QVector(m_origin);
+				circlePoints[i] = QVector2IBKVector(vec);
+			}
+	\
+			std::vector<PlaneGeometry> planeGeometry;
+			if (generatePlanesFromPolyline(circlePoints, true,
+													circle.m_radius,
+													planeGeometry)) {
+				GeometryData geometryData;
+				geometryData.m_planeGeometry = planeGeometry;
+				geometryData.m_color = circle.m_color;
+				m_geometryData[&circle] = geometryData;
+			}
+
+			circle.m_dirtyTriangulation = false;
+		}
+		geometryDataVector.push_back(&m_geometryData[&circle]);
+	}
+}
+
 const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>>& geometryData) const
 {
 
-	m_boundingBox.addGeometryData(this, geometryData[m_boundingBox.m_zPosition]);
+	// add BoundingBox
+	if (m_dirtyTriangulation) {
+		std::vector<IBKMK::Vector3D> polyline;
+		std::vector<IBKMK::Vector3D> areaPoints;
+		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.maxlat, m_boundingBox.minlon)));
+		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.minlat, m_boundingBox.minlon)));
+		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.minlat, m_boundingBox.maxlon)));
+		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.maxlat, m_boundingBox.maxlon)));
 
+		for (auto &p : polyline) {
+			QVector3D vec = m_rotationMatrix.toQuaternion() * QVector3D((float)p.m_x, (float)p.m_y, (float)p.m_z);
+			vec += QVector3D((double)m_origin.m_x, (double)m_origin.m_y, (double)m_origin.m_z);
+
+			areaPoints.push_back(IBKMK::Vector3D((double)vec.x(), (double)vec.y(), (double)vec.z()));
+		}
+
+		m_geometryDataBoundingBox.m_color = QColor("#f2efe9");
+		m_geometryDataBoundingBox.m_planeGeometry.push_back(VICUS::PlaneGeometry(areaPoints));
+	}
+	geometryData[m_boundingBox.m_zPosition].push_back(&m_geometryDataBoundingBox);
+
+	// add all other objects
 	for (const auto & building : m_buildings) {
-		building.addGeometryData(geometryData[building.m_zPosition]);
+		addGeometryData(building, geometryData[building.m_zPosition]);
 	}
 
 	for( const auto & highway : m_highways) {
-		highway.addGeometryData(geometryData[highway.m_zPosition]);
+		addGeometryData(highway, geometryData[highway.m_zPosition]);
 	}
 
 	for( const auto & water : m_waters) {
-		water.addGeometryData(geometryData[water.m_zPosition]);
+		addGeometryData(water, geometryData[water.m_zPosition]);
 	}
 
 	for( const auto & land : m_land) {
-		land.addGeometryData(geometryData[land.m_zPosition]);
+		addGeometryData(land, geometryData[land.m_zPosition]);
 	}
 
 	for( const auto & leisure : m_leisure) {
-		leisure.addGeometryData(geometryData[leisure.m_zPosition]);
+		addGeometryData(leisure, geometryData[leisure.m_zPosition]);
 	}
 
 	for( const auto & natural : m_natural) {
-		natural.addGeometryData(geometryData[natural.m_zPosition]);
+		addGeometryData(natural, geometryData[natural.m_zPosition]);
 	}
 
 	for( const auto & amenity : m_amenities) {
-		amenity.addGeometryData(geometryData[amenity.m_zPosition]);
+		addGeometryData(amenity, geometryData[amenity.m_zPosition]);
 	}
 
 	for( const auto & place : m_places) {
-		place.addGeometryData(geometryData[place.m_zPosition]);
+		addGeometryData(place, geometryData[place.m_zPosition]);
 	}
 
 	for( const auto & bridge : m_bridges) {
-		bridge.addGeometryData(geometryData[bridge.m_zPosition]);
+		addGeometryData(bridge, geometryData[bridge.m_zPosition]);
 	}
 
 	for( const auto & tourism : m_tourism) {
-		tourism.addGeometryData(geometryData[tourism.m_zPosition]);
+		addGeometryData(tourism, geometryData[tourism.m_zPosition]);
 	}
 
 	for( const auto & barrier : m_barriers) {
-		barrier.addGeometryData(geometryData[barrier.m_zPosition]);
+		addGeometryData(barrier, geometryData[barrier.m_zPosition]);
 	}
+
+	m_dirtyTriangulation = false;
 }
 
 const VicOSM::Node * DrawingOSM::findNodeFromId(unsigned int id) const
@@ -880,388 +1143,6 @@ bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> &
 	}
 
 	return true;
-}
-
-
-const void DrawingOSM::Area::addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*>& data) const
-{
-	FUNCID(DrawingOSM::Area::addGeometryData);
-	try {
-		if (m_dirtyTriangulation) {
-			GeometryData geometryData;
-			m_geometryData.clear();
-
-			if (m_extrudingPolygon) {
-				geometryData.m_extrudingPolygon = true;
-				if (!m_multiPolygon.m_outerPolyline.empty()) {
-					geometryData.m_multipolygons.push_back(m_multiPolygon);
-					geometryData.m_color = m_color;
-					geometryData.m_height = m_height;
-					geometryData.m_minHeight = m_minHeight;
-				}
-			} else {
-				std::vector<IBKMK::Vector3D> areaPoints;
-
-				for (int i = 1; i < m_multiPolygon.m_outerPolyline.size(); i++) {
-					IBKMK::Vector3D p = IBKMK::Vector3D(m_multiPolygon.m_outerPolyline[i].m_x,
-														m_multiPolygon.m_outerPolyline[i].m_y,
-														0);
-
-					QVector3D vec = m_drawing->m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
-					vec += IBKVector2QVector(m_drawing->m_origin);
-
-					areaPoints.push_back(QVector2IBKVector(vec));
-				}
-
-				VICUS::Polygon3D polygon3D(areaPoints);
-				// Initialize PlaneGeometry with the polygon
-				geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(polygon3D));
-
-				if(!m_multiPolygon.m_innerPolylines.empty()) {
-					std::vector<PlaneGeometry::Hole> holes;
-					for(int j = 0; j < m_multiPolygon.m_innerPolylines.size(); j++) {
-						VICUS::Polygon2D polygon2d(m_multiPolygon.m_innerPolylines[j]);
-						holes.push_back(PlaneGeometry::Hole(j, polygon2d, false));
-					}
-
-					VICUS::PlaneGeometry& planeGeometry = geometryData.m_planeGeometry.back();
-					planeGeometry.setHoles(holes);
-				}
-
-				geometryData.m_color = m_color;
-			}
-			m_geometryData.push_back(geometryData);
-			m_dirtyTriangulation = false;
-		}
-		for(auto& geometryData : m_geometryData) {
-			data.push_back(&geometryData);
-		}
-	}
-	catch (IBK::Exception &ex) {
-		throw IBK::Exception( ex, IBK::FormatString("Error generating plane geometries for 'DrawingOSM::Area' element.\n%1").arg(ex.what()), FUNC_ID);
-	}
-}
-
-void DrawingOSM::Building::calculateHeight(VicOSM::AbstractOSMElement & element)
-{
-	std::string valueLevel = element.getValueFromKey("building:levels");
-	if (valueLevel != "") {
-		double valueLevelDouble = std::stoi(valueLevel);
-		if (valueLevelDouble > 0) m_height = valueLevelDouble * m_levelHeight;
-	}
-
-	std::string valueRoof = element.getValueFromKey("roof:levels");
-	if (valueRoof != "") {
-		double valueRoofDouble = std::stoi(valueRoof);
-		if (valueRoofDouble > 0) m_height += valueRoofDouble * m_roofHeight;
-	}
-
-	std::string valueHeight = element.getValueFromKey("height");
-	if (valueHeight != "") {
-		double valueHeightDouble = std::stoi(valueHeight);
-		m_height = valueHeightDouble;
-	}
-
-	std::string valueMinLevel = element.getValueFromKey("building:min_level");
-	if (valueMinLevel != "") {
-		double valueMinLevelDouble = std::stoi(valueMinLevel);
-		if (valueMinLevelDouble > 0) m_minHeight = valueMinLevelDouble * m_levelHeight;
-	}
-
-	std::string valueMinHeight = element.getValueFromKey("min_height");
-	if (valueMinHeight != "") {
-		double valueMinHeightDouble = std::stoi(valueMinHeight);
-		m_minHeight = valueMinHeightDouble;
-	}
-
-}
-
-const void DrawingOSM::LineFromPlanes::addGeometryData(std::vector<GeometryData *> & data) const
-{
-	FUNCID(DrawingOSM::LineFromPlanes::addGeometryData);
-	try {
-		if (m_dirtyTriangulation) {
-
-			// Create Vector to store vertices of polyline
-			std::vector<IBKMK::Vector3D> polylinePoints;
-
-			// adds z-coordinate to polyline
-			for(unsigned int i = 0; i < m_polyline.size(); ++i){
-				IBKMK::Vector3D p = IBKMK::Vector3D(m_polyline[i].m_x,
-													m_polyline[i].m_y,
-													0);
-				QVector3D vec = m_drawing->m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
-				vec += IBKVector2QVector(m_drawing->m_origin);
-
-				polylinePoints.push_back(QVector2IBKVector(vec));
-			}
-
-			std::vector<PlaneGeometry> planeGeometry;
-			if (m_drawing->generatePlanesFromPolyline(polylinePoints, false, m_lineThickness, planeGeometry)) {
-				GeometryData geometryData;
-				geometryData.m_planeGeometry = planeGeometry;
-				geometryData.m_color = m_color;
-				m_geometryData.push_back(geometryData);
-			}
-
-			m_dirtyTriangulation = false;
-		}
-		for (auto& geometryData : m_geometryData) {
-			data.push_back(&geometryData);
-		}
-	}
-	catch (IBK::Exception &ex) {
-		throw IBK::Exception( ex, IBK::FormatString("Error generating plane geometries for 'DrawingOSM::LineFromPlanes' element.\n%1").arg(ex.what()), FUNC_ID);
-	}
-}
-
-QColor DrawingOSM::Land::setColor()
-{
-	QColor color("#c8facc");
-
-	if (m_value == "residential"){
-		color = QColor("#f2dad9");
-	} else if (m_value == "forest") {
-		color = QColor("#add19e");
-	} else if (m_value == "industrial") {
-		color = QColor("#ebdbe8");
-	} else if (m_value == "orchard") {
-		color = QColor("#aedfa3");
-	} else if (m_value == "village_green") {
-		color = QColor("#cdebb0");
-	} else if (m_value == "construction") {
-		color = QColor("#c7c7b4");
-	} else if (m_value == "grass") {
-		color = QColor("#cdebb0");
-	} else if (m_value == "retail") {
-		color = QColor("#ffd6d1");
-	} else if (m_value == "cemetery") {
-		color = QColor("#aacbaf");
-	} else if (m_value == "commercial") {
-		color = QColor("#f2dad9");
-	} else if (m_value == "public_administration") {
-		color = QColor("#f2efe9");
-	} else if (m_value == "railway") {
-		color = QColor("#ebdbe8");
-	} else if (m_value == "farmyard") {
-		color = QColor("#f5dcba");
-	} else if (m_value == "meadow") {
-		color = QColor("#cdebb0");
-	} else if (m_value == "religious") {
-		color = QColor("#d0d0d0");
-	} else if (m_value == "flowerbed") {
-		color = QColor("#cdebb0");
-	} else if (m_value == "recreation_ground") {
-		color = QColor("#dffce2");
-	} else if (m_value == "brownfield") {
-		color = QColor("#c7c7b4");
-	}
-
-	return color;
-}
-
-
-
-const void DrawingOSM::AbstractOSMObject::addGeometryData(std::vector<GeometryData *> & data) const
-{
-	for (auto& area : m_areas) {
-		area.addGeometryData(data);
-	}
-	for (auto& lineFromPlanes : m_linesFromPlanes) {
-		lineFromPlanes.addGeometryData(data);
-	}
-	for (auto& circle : m_circles) {
-		circle.addGeometryData(data);
-	}
-}
-
-bool DrawingOSM::AbstractOSMObject::initialize(VicOSM::AbstractOSMElement & osmElement) {
-	if (osmElement.containsKeyValue("location", "underground")) return false;
-	if (osmElement.containsKeyValue("location", "underwater")) return false;
-	m_value = osmElement.getValueFromKey(m_key);
-	std::string layer = osmElement.getValueFromKey("layer");
-	assignKeyValue();
-	if (layer != "") m_layer = std::stoi(layer);
-	return true;
-}
-
-void DrawingOSM::AbstractOSMObject::assignKeyValue()
-{
-	if (m_key == "building") {
-		m_keyValue = BUILDING;
-	} else if (m_key == "highway") {
-		if (m_value == "footway") {
-			m_keyValue = HIGHWAY_FOOTWAY;
-		} else if (m_value == "steps") {
-			m_keyValue = HIGHWAY_STEPS;
-		} else if (m_value == "path") {
-			m_keyValue = HIGHWAY_PATH;
-		}else if (m_value == "service") {
-			m_keyValue = HIGHWAY_SERVICE;
-		} else if (m_value == "motorway") {
-			m_keyValue = HIGHWAY_MOTORWAY;
-		}else if (m_value == "primary") {
-			m_keyValue = HIGHWAY_PRIMARY;
-		}else if (m_value == "secondary") {
-			m_keyValue = HIGHWAY_SECONDARY;
-		}else if (m_value == "residential") {
-			m_keyValue = HIGHWAY_RESIDENTIAL;
-		}else if (m_value == "trunk") {
-			m_keyValue = HIGHWAY_TRUNK;
-		}else if (m_value == "pedestrian") {
-			m_keyValue = HIGHWAY_PEDESTRIAN;
-		}else {
-			m_keyValue = HIGHWAY;
-		}
-	} else if (m_key == "landuse") {
-		if (m_value == "village_green") {
-			m_keyValue = LANDUSE_VILLAGE_GREEN;
-		} else if (m_value == "grass") {
-			m_keyValue = LANDUSE_GRASS;
-		} else if (m_value == "brownfield") {
-			m_keyValue = LANDUSE_BROWNFIELD;
-		} else if (m_value == "forest") {
-			m_keyValue = LANDUSE_FOREST;
-		} else if (m_value == "farmyard") {
-			m_keyValue = LANDUSE_FARMYARD;
-		} else if (m_value == "construction") {
-			m_keyValue = LANDUSE_CONSTRUCTION;
-		} else if (m_value == "industrial") {
-			m_keyValue = LANDUSE_INDUSTRIAL;
-		} else if (m_value == "orchard") {
-			m_keyValue = LANDUSE_ORCHARD;
-		} else if (m_value == "retail") {
-			m_keyValue = LANDUSE_RETAIL;
-		} else if (m_value == "commercial") {
-			m_keyValue = LANDUSE_COMMERCIAL;
-		} else if (m_value == "residential") {
-			m_keyValue = LANDUSE_RESIDENTIAL;
-		} else if (m_value == "railway") {
-			m_keyValue = LANDUSE_RAILWAY;
-		} else if (m_value == "religious") {
-			m_keyValue = LANDUSE_RELIGIOUS;
-		} else if (m_value == "recreation_ground") {
-			m_keyValue = LANDUSE_RECREATION_GROUND;
-		} else if (m_value == "cemetery") {
-			m_keyValue = LANDUSE_CEMETERY;
-		} else if (m_value == "meadow") {
-			m_keyValue = LANDUSE_MEADOW;
-		} else if (m_value == "flowerbed") {
-			m_keyValue = LANDUSE_FLOWERBED;
-		} else {
-			m_keyValue = LANDUSE;
-		}
-	} else if (m_key == "leisure") {
-		if (m_value == "park") {
-			m_keyValue = LEISURE_PARK;
-		} else {
-			m_keyValue = LEISURE;
-		}
-	} else if (m_key == "natural") {
-		if (m_value == "tree_row") {
-			m_keyValue = NATURAL_TREE_ROW;
-		} else if (m_value == "water") {
-			m_keyValue = NATURAL_WATER;
-		} else if (m_value == "tree") {
-			m_keyValue = NATURAL_TREE;
-		} else {
-			m_keyValue = NATURAL;
-		}
-	} else if (m_key == "place") {
-		m_keyValue = PLACE;
-	} else if (m_key == "heritage") {
-		m_keyValue = HERITAGE;
-	} else if (m_key == "amenity") {
-		if (m_value == "kindergarten") {
-			m_keyValue = AMENITY_KINDERGARTEN;
-		} else if (m_value == "school") {
-			m_keyValue = AMENITY_SCHOOL;
-		} else if (m_value == "social_facility") {
-			m_keyValue = AMENITY_SOCIAL_FACILITY;
-		} else {
-			m_keyValue = AMENITY;
-		}
-	} else if (m_key == "waterway") {
-		m_keyValue = WATERWAY;
-	} else if (m_key == "water") {
-		m_keyValue = WATER;
-	} else if (m_key == "bridge") {
-		m_keyValue = BRIDGE;
-	} else if (m_key == "tourism") {
-		m_keyValue = TOURISM;
-	} else if (m_key == "barrier") {
-		m_keyValue = BARRIER;
-	}else {
-		m_keyValue = NUM_KV;
-	}
-}
-
-const void DrawingOSM::Circle::addGeometryData(std::vector<GeometryData *> & data) const
-{
-	FUNCID(DrawingOSM::Circle::addGeometryData);
-	try {
-		if (m_dirtyTriangulation) {
-			std::vector<IBKMK::Vector3D> circlePoints;
-
-			const double TWO_PI = 2 * M_PI;
-			double angleStep = TWO_PI / SEGMENT_COUNT_ELLIPSE;
-
-			circlePoints.resize(SEGMENT_COUNT_ELLIPSE);
-
-			for (int i = 0; i < SEGMENT_COUNT_ELLIPSE; ++i) {
-				double currentAngle = i * angleStep;
-				double x = m_radius * 0.5 * cos(currentAngle);
-				double y = m_radius * 0.5 * sin(currentAngle);
-
-				IBKMK::Vector3D p = IBKMK::Vector3D(x + m_center.m_x,
-													y + m_center.m_y,
-													0);
-
-				QVector3D vec = m_drawing->m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
-				vec += IBKVector2QVector(m_drawing->m_origin);
-				circlePoints[i] = QVector2IBKVector(vec);
-			}
-\
-			std::vector<PlaneGeometry> planeGeometry;
-			if (m_drawing->generatePlanesFromPolyline(circlePoints, true,
-															   m_radius,
-													  planeGeometry)) {
-				GeometryData geometryData;
-				geometryData.m_planeGeometry = planeGeometry;
-				geometryData.m_color = m_color;
-				m_geometryData.push_back(geometryData);
-			}
-
-			m_dirtyTriangulation = false;
-		}
-		for (auto& geometryData : m_geometryData) {
-			data.push_back(&geometryData);
-		}
-	}
-	catch (IBK::Exception &ex) {
-		throw IBK::Exception( ex, IBK::FormatString("Error generating plane geometries for 'DrawingOSM::Circle' element.\n%1").arg(ex.what()), FUNC_ID);
-	}
-}
-
-const void DrawingOSM::BoundingBox::addGeometryData(const DrawingOSM* drawing, std::vector<GeometryData *> & data) const
-{
-	std::vector<IBKMK::Vector3D> polyline;
-	std::vector<IBKMK::Vector3D> areaPoints;
-	polyline.push_back(IBKMK::Vector3D(drawing->convertLatLonToVector2D(drawing->m_boundingBox.maxlat, drawing->m_boundingBox.minlon)));
-	polyline.push_back(IBKMK::Vector3D(drawing->convertLatLonToVector2D(drawing->m_boundingBox.minlat, drawing->m_boundingBox.minlon)));
-	polyline.push_back(IBKMK::Vector3D(drawing->convertLatLonToVector2D(drawing->m_boundingBox.minlat, drawing->m_boundingBox.maxlon)));
-	polyline.push_back(IBKMK::Vector3D(drawing->convertLatLonToVector2D(drawing->m_boundingBox.maxlat, drawing->m_boundingBox.maxlon)));
-
-	for (auto &p : polyline) {
-		QVector3D vec = drawing->m_rotationMatrix.toQuaternion() * QVector3D((float)p.m_x, (float)p.m_y, (float)p.m_z);
-		vec += QVector3D((double)drawing->m_origin.m_x, (double)drawing->m_origin.m_y, (double)drawing->m_origin.m_z);
-
-		areaPoints.push_back(IBKMK::Vector3D((double)vec.x(), (double)vec.y(), (double)vec.z()));
-	}
-
-	m_geometryData.m_color = QColor("#f2efe9");
-	m_geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(areaPoints));
-	data.push_back(&m_geometryData);
 }
 
 } // namespace VICUS

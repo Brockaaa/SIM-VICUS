@@ -19,7 +19,7 @@ void Way::readXML(const TiXmlElement * element) {
 		}
 		if (childName == "nd") {
 			Nd nd;
-			//nd.readXML(child);
+			nd.readXML(child);
 			m_nd.push_back(nd);
 		}
 		child = child->NextSiblingElement();

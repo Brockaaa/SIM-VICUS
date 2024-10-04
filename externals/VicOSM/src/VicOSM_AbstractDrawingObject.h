@@ -11,7 +11,6 @@ struct AbstractDrawingObject {
 		m_dirtyTriangulation = true;
 	}
 
-protected:
 	/*! Flag to indictate recalculation of points. */
 	mutable bool								m_dirtyPoints = true;
 	/*! Flag to indictate recalculation triangulation. */
