@@ -28,6 +28,7 @@ QuaZIP \
 		NandradFMUGenerator \
 		RoomClipper \
 		NandradSolverFMI \
+		VicOSM \
 
 # where to find the sub projects
 SIM-VICUS.file = ../../SIM-VICUS/projects/Qt/SIM-VICUS.pro
@@ -57,6 +58,7 @@ NandradModel.file = ../../NandradSolver/projects/Qt/NandradModel.pro
 DummyDatabasePlugin.file = ../../plugins/DummyDatabasePlugin/projects/Qt/DummyDatabasePlugin.pro
 DummyImportPlugin.file = ../../plugins/DummyImportPlugin/projects/Qt/DummyImportPlugin.pro
 RoomClipper.file  = ../../externals/RoomClipper/projects/Qt/RoomClipper.pro
+VicOSM.file = ../../externals/VicOSM/projects/Qt/VicOSM.pro
 
 
 # dependencies
@@ -77,8 +79,9 @@ IntegratorFramework.depends = IBK IBKMK sundials SuiteSparse
 sundials.depends = SuiteSparse
 Nandrad.depends = IBK TiCPP IBKMK
 Zeppelin.depends = IBK
-Vicus.depends = IBK TiCPP Nandrad IBKMK CCM
+VicOSM.depends = IBK IBKMK TiCPP
+Vicus.depends = IBK TiCPP Nandrad IBKMK CCM VicOSM
 NandradModel.depends = DataIO CCM TiCPP IBK IntegratorFramework Nandrad IBKMK
 DummyDatabasePlugin.depends = Vicus
 DummyImportPlugin.depends = Vicus
-RoomClipper.depends = IBK IBKMK clipper Vicus TiCPP Nandrad CCM
+RoomClipper.depends = IBK IBKMK clipper Vicus TiCPP Nandrad CCM VicOSM

@@ -52,19 +52,19 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertHoleToLocalCoordinates(
 	return localVertices;
 }
 
-void DrawingOSM::createMultipolygonFromWay(Way & way, Multipolygon & multipolygon)
+void DrawingOSM::createMultipolygonFromWay(VicOSM::Way & way, VicOSM::Multipolygon & multipolygon)
 {
 	for (int i = 0; i < way.m_nd.size() ; i++) {
-		const Node * node = findNodeFromId(way.m_nd[i].ref);
+		const VicOSM::Node * node = findNodeFromId(way.m_nd[i].ref);
 		Q_ASSERT(node);
 		multipolygon.m_outerPolyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
 	}
 }
 
-void DrawingOSM::createMultipolygonsFromRelation(Relation & relation, std::vector<Multipolygon> & multipolygons)
+void DrawingOSM::createMultipolygonsFromRelation(VicOSM::Relation & relation, std::vector<VicOSM::Multipolygon> & multipolygons)
 {
 	auto processWay = [&](std::vector<int>& nodeRefs, int wayRef) -> bool {
-		const Way* way = findWayFromId(wayRef);
+		const VicOSM::Way* way = findWayFromId(wayRef);
 		if(!way) return false;
 		for (int i = 0; i < way->m_nd.size(); i++) {
 			nodeRefs.push_back(way->m_nd[i].ref);
@@ -74,15 +74,15 @@ void DrawingOSM::createMultipolygonsFromRelation(Relation & relation, std::vecto
 
 	std::vector<WayWithMarks> ways;
 
-	for (int i = 0; i < relation.m_members.size(); i++) {
-		if (relation.m_members[i].type != WayType) continue;
-		WayWithMarks way;
-		/* if not all ways available, it is likely a huge multipolygon that is partially outside of the boundingbox of the .osm file.
-		 * To avoid weird bugs (e.g. areas covered by the polygon that should not be covered), we skip this incomplete multipolygon */
-		if (!processWay(way.refs, relation.m_members[i].ref))
-			return;
-		ways.push_back(way);
-	}
+	//for (int i = 0; i < relation.m_members.size(); i++) {
+	//	if (relation.m_members[i].type != VicOSM::AbstractOSMElement::WayType) continue;
+	//	WayWithMarks way;
+	//	/* if not all ways available, it is likely a huge multipolygon that is partially outside of the boundingbox of the .osm file.
+	//	 * To avoid weird bugs (e.g. areas covered by the polygon that should not be covered), we skip this incomplete multipolygon */
+	//	if (!processWay(way.refs, relation.m_members[i].ref))
+	//		return;
+	//	ways.push_back(way);
+	//}
 
 	std::vector<std::vector<WayWithMarks*>> rings;
 	// first creates all possible areas/rings out of the set of open and closed ways
@@ -186,13 +186,13 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertVectorWayWithMarksToVector2D(con
 	for (WayWithMarks * way : ways) {
 		if (way->reversedOrder) {
 			for (int i = way->refs.size() - 1; i >= 0; i--) {
-				const Node *node = findNodeFromId(way->refs[i]);
+				const VicOSM::Node *node = findNodeFromId(way->refs[i]);
 				Q_ASSERT(node);
 				vectorCoordinates.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
 			}
 		} else {
 			for (int refs : way->refs) {
-				const Node *node = findNodeFromId(refs);
+				const VicOSM::Node *node = findNodeFromId(refs);
 				Q_ASSERT(node);
 				vectorCoordinates.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
 			}
@@ -201,7 +201,7 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertVectorWayWithMarksToVector2D(con
 	return vectorCoordinates;
 }
 
-void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, std::vector<Multipolygon>& multipolygons)
+void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, std::vector<VicOSM::Multipolygon>& multipolygons)
 {
 
 	// create Matrix and reset available flags
@@ -253,7 +253,7 @@ void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, 
 	};
 
 	// checks if ring is contained in the active Outer Ring and not contained in any other unused ring
-	std::function<void(Multipolygon&)> addAllInners = [&](Multipolygon& multipolygon) {
+	std::function<void(VicOSM::Multipolygon&)> addAllInners = [&](VicOSM::Multipolygon& multipolygon) {
 		for (unsigned int i = 0; i < matrix.size(); i++) {
 			if (std::find(usedRings.begin(), usedRings.end(), i) != usedRings.end())  continue;
 			if (matrix[i][activeOuterRing]) {
@@ -311,7 +311,7 @@ void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, 
 	};
 
 	while(findOuterRing()) {
-		Multipolygon multipolygon;
+		VicOSM::Multipolygon multipolygon;
 		multipolygon.m_outerPolyline = ringsVector[activeOuterRing];
 		addAllInners(multipolygon);
 	}
@@ -368,17 +368,17 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 				}
 			}
 			else if (cName == "node") {
-				Node obj;
+				VicOSM::Node obj;
 				obj.readXML(c);
 				m_nodes[obj.m_id] = obj;
 			}
 			else if (cName == "way") {
-				Way obj ;
+				VicOSM::Way obj ;
 				obj.readXML(c);
 				m_ways[obj.m_id] = obj;
 			}
 			else if (cName == "relation") {
-				Relation obj;
+				VicOSM::Relation obj;
 				obj.readXML(c);
 				m_relations[obj.m_id] = obj;
 			}
@@ -431,49 +431,49 @@ void DrawingOSM::constructObjects()
 	/* order relevant. For example heritage should come at the very end because key heritage
 	 * is not supposed to occur alone and only in combination with other keys like place.
 	 * In practice this does not always happen */
-	for (auto& pair : m_nodes) {
-		if (pair.second.containsKey("natural")) {
-			createNatural(pair.second);
-		}
-	}
+	//for (auto& pair : m_nodes) {
+	//	if (pair.second.containsKey("natural")) {
+	//		createNatural(pair.second);
+	//	}
+	//}
 
-	for (auto& pair : m_ways) {
-		if (pair.second.containsKey("building"))
-			createBuilding(pair.second);
-		else if (pair.second.containsKey("highway"))
-			createHighway(pair.second);
-		else if (pair.second.containsKey("water") || pair.second.containsKey("waterway"))
-			createWater(pair.second);
-		else if (pair.second.containsKey("landuse"))
-			createLand(pair.second);
-		else if (pair.second.containsKey("leisure"))
-			createLeisure(pair.second);
-		else if (pair.second.containsKey("natural"))
-			createNatural(pair.second);
-		else if (pair.second.containsKey("amenity"))
-			createAmenity(pair.second);
-		else if (pair.second.containsKey("bridge"))
-			createBridge(pair.second);
-		else if (pair.second.containsKey("tourism"))
-			createTourism(pair.second);
-		else if (pair.second.containsKey("barrier"))
-			createBarrier(pair.second);
-		else if (pair.second.containsKey("place") || pair.second.containsKey("heritage"))
-			createPlace(pair.second);
-	}
+	//for (auto& pair : m_ways) {
+	//	if (pair.second.containsKey("building"))
+	//		createBuilding(pair.second);
+	//	else if (pair.second.containsKey("highway"))
+	//		createHighway(pair.second);
+	//	else if (pair.second.containsKey("water") || pair.second.containsKey("waterway"))
+	//		createWater(pair.second);
+	//	else if (pair.second.containsKey("landuse"))
+	//		createLand(pair.second);
+	//	else if (pair.second.containsKey("leisure"))
+	//		createLeisure(pair.second);
+	//	else if (pair.second.containsKey("natural"))
+	//		createNatural(pair.second);
+	//	else if (pair.second.containsKey("amenity"))
+	//		createAmenity(pair.second);
+	//	else if (pair.second.containsKey("bridge"))
+	//		createBridge(pair.second);
+	//	else if (pair.second.containsKey("tourism"))
+	//		createTourism(pair.second);
+	//	else if (pair.second.containsKey("barrier"))
+	//		createBarrier(pair.second);
+	//	else if (pair.second.containsKey("place") || pair.second.containsKey("heritage"))
+	//		createPlace(pair.second);
+	//}
 
-	for (auto& pair : m_relations) {
-		if (pair.second.containsKey("building"))
-			createBuilding(pair.second);
-		else if (pair.second.containsKey("place"))
-			createPlace(pair.second);
-		else if (pair.second.containsKey("water") || pair.second.containsKey("waterway"))
-			createWater(pair.second);
-		else if (pair.second.containsKey("highway"))
-			createHighway(pair.second);
-		else if (pair.second.containsKey("landuse"))
-			createLand(pair.second);
-	}
+	//for (auto& pair : m_relations) {
+	//	if (pair.second.containsKey("building"))
+	//		createBuilding(pair.second);
+	//	else if (pair.second.containsKey("place"))
+	//		createPlace(pair.second);
+	//	else if (pair.second.containsKey("water") || pair.second.containsKey("waterway"))
+	//		createWater(pair.second);
+	//	else if (pair.second.containsKey("highway"))
+	//		createHighway(pair.second);
+	//	else if (pair.second.containsKey("landuse"))
+	//		createLand(pair.second);
+	//}
 
 	std::function<int(const AbstractOSMObject&)> convertKeyToInt = [&](const AbstractOSMObject& object){
 		if(object.m_layer == 0) {
@@ -744,7 +744,7 @@ const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>
 	}
 }
 
-const DrawingOSM::Node * DrawingOSM::findNodeFromId(unsigned int id) const
+const VicOSM::Node * DrawingOSM::findNodeFromId(unsigned int id) const
 {
 	auto it = m_nodes.find(id);
 	if (it != m_nodes.end()) {
@@ -754,7 +754,7 @@ const DrawingOSM::Node * DrawingOSM::findNodeFromId(unsigned int id) const
 	}
 }
 
-const DrawingOSM::Way * DrawingOSM::findWayFromId(unsigned int id) const
+const VicOSM::Way * DrawingOSM::findWayFromId(unsigned int id) const
 {
 	auto it = m_ways.find(id);
 	if (it != m_ways.end()) {
@@ -764,7 +764,7 @@ const DrawingOSM::Way * DrawingOSM::findWayFromId(unsigned int id) const
 	}
 }
 
-const DrawingOSM::Relation * DrawingOSM::findRelationFromId(unsigned int id) const
+const VicOSM::Relation * DrawingOSM::findRelationFromId(unsigned int id) const
 {
 	auto it = m_relations.find(id);
 	if (it != m_relations.end()) {
@@ -781,419 +781,6 @@ IBKMK::Vector2D DrawingOSM::convertLatLonToVector2D(double lat, double lon) cons
 	return IBKMK::Vector2D(x, y) - m_centerMercatorProjection;
 }
 
-
-void DrawingOSM::createBuilding(Way & way) {
-	if (way.containsKeyValue("building", "cellar")) return;
-	if (way.containsKeyValue("building", "roof") && !m_enable3D) return;
-	Building building;
-	building.m_key = "building";
-	if (!building.initialize(way)) return;
-	building.calculateHeight(way);
-
-	Area area(this);
-	area.m_extrudingPolygon = m_enable3D;
-	area.m_height = building.m_height;
-	area.m_minHeight = building.m_minHeight;
-
-	createMultipolygonFromWay(way, area.m_multiPolygon);
-	area.m_color = QColor("#b3a294");
-
-	building.m_areas.push_back(area);
-	m_buildings.push_back(building);
-}
-
-void DrawingOSM::createBuilding(Relation & relation) {
-	if (!relation.containsKeyValue("type", "multipolygon")) return;
-	if (relation.containsKeyValue("building", "cellar")) return;
-	if (relation.containsKeyValue("building", "roof") && !m_enable3D) return;
-	Building building;
-	building.m_key = "building";
-	if (!building.initialize(relation)) return;
-	building.calculateHeight(relation);
-
-	std::vector<Multipolygon> multipolygons;
-	createMultipolygonsFromRelation(relation, multipolygons);
-
-	for (auto multipolygon : multipolygons) {
-		Area area(this);
-		area.m_extrudingPolygon = m_enable3D;
-		area.m_height = building.m_height;
-		area.m_minHeight = building.m_minHeight;
-		area.m_multiPolygon = multipolygon;
-		area.m_color = QColor("#b3a294");
-		building.m_areas.push_back(area);
-	}
-
-	m_buildings.push_back(building);
-}
-
-void DrawingOSM::createHighway(Way & way)
-{
-	Highway highway;
-	highway.m_key = "highway";
-	if (!highway.initialize(way)) return;
-	bool area = way.containsKeyValue("area", "yes");
-	// workaround for messy layer implementation
-	if (highway.m_layer != 0 && way.containsKey("bridge")) {
-		highway.m_layer++;
-	}
-
-	if (area) {
-		Area area(this);
-		area.m_color = QColor("#dddde8");
-		highway.m_keyValue = LANDUSE_RELIGIOUS;
-
-		createMultipolygonFromWay(way, area.m_multiPolygon);
-
-		highway.m_areas.push_back(area);
-	} else  {
-		LineFromPlanes lineFromPlanes(this);
-		double lineThickness = 3.0f;
-		QColor color("#78909c");
-
-		if (highway.m_keyValue == HIGHWAY_FOOTWAY || highway.m_keyValue == HIGHWAY_STEPS || highway.m_keyValue == HIGHWAY_PATH) {
-			color = QColor("#fa8173");
-			lineThickness = 0.6f;
-		} else if (highway.m_keyValue == HIGHWAY_SERVICE) {
-			color = QColor("#ffffff");
-			lineThickness = 2.0f;
-		} else if (highway.m_keyValue == HIGHWAY_MOTORWAY) {
-			color = QColor("#f1bcc6");
-			lineThickness = 4.5f;
-		} else if (highway.m_keyValue == HIGHWAY_PRIMARY) {
-			color = QColor("#fcd6a4");
-			lineThickness = 4.2f;
-		} else if (highway.m_keyValue == HIGHWAY_TRUNK) {
-			color = QColor("#fcd6a4");
-			lineThickness = 4.2f;
-		} else if (highway.m_keyValue == HIGHWAY_SECONDARY) {
-			color = QColor("#f7fabf");
-			lineThickness = 4.0f;
-		} else if (highway.m_keyValue == HIGHWAY_RESIDENTIAL) {
-			lineThickness = 3.5f;
-		} else if (highway.m_keyValue == HIGHWAY_PEDESTRIAN) {
-			lineThickness = 2.0f;
-			color = QColor("#dddde8");
-		}
-
-		lineFromPlanes.m_lineThickness = lineThickness;
-		lineFromPlanes.m_color = color;
-
-		for (int i = 0; i < way.m_nd.size() ; i++) {
-			const Node * node = findNodeFromId(way.m_nd[i].ref);
-			Q_ASSERT(node);
-			lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
-		}
-		highway.m_linesFromPlanes.push_back(lineFromPlanes);
-	}
-
-	m_highways.push_back(highway);
-}
-
-void DrawingOSM::createHighway(Relation & relation)
-{
-	Highway highway;
-	highway.m_key = "highway";
-	if (!highway.initialize(relation)) return;
-
-	bool containsKey = (highway.m_keyValue == HIGHWAY_PEDESTRIAN || highway.m_keyValue == HIGHWAY_FOOTWAY);
-	bool isMultipolygon = relation.containsKeyValue("type", "multipolygon");
-	if (!(containsKey && isMultipolygon)) return;
-	highway.m_keyValue = LANDUSE_RELIGIOUS; // highway area should not exist, assigning a key value that should approximately reflect the order and likely not overlap
-
-	std::vector<Multipolygon> multipolygons;
-	createMultipolygonsFromRelation(relation, multipolygons);
-
-	for (auto multipolygon : multipolygons) {
-		Area area(this);
-		area.m_color = QColor("#dddde8");
-		area.m_multiPolygon = multipolygon;
-		highway.m_areas.push_back(area);
-	}
-
-	m_highways.push_back(highway);
-}
-
-void DrawingOSM::createWater(Way & way)
-{
-	Water water;
-	bool containsWater = way.containsKey("water");
-	if (containsWater)
-		water.m_key = "water";
-	else
-		water.m_key = "waterway";
-	if (!water.initialize(way)) return;
-
-	if (containsWater) /* water */ {
-		water.m_key = "water";
-		Area area(this);
-		area.m_color = QColor("#aad3df");
-		createMultipolygonFromWay(way, area.m_multiPolygon);
-		water.m_areas.push_back(area);
-
-	} else /* waterway */ {
-		water.m_key = "waterway";
-		LineFromPlanes lineFromPlanes(this);
-		lineFromPlanes.m_lineThickness = 1;
-		for (int i = 0; i < way.m_nd.size() ; i++) {
-			const Node * node = findNodeFromId(way.m_nd[i].ref);
-			Q_ASSERT(node);
-			lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
-		}
-		water.m_linesFromPlanes.push_back(lineFromPlanes);
-	}
-	m_waters.push_back(water);
-}
-
-void DrawingOSM::createWater(Relation & relation)
-{
-	if(!(relation.containsKeyValue("type", "multipolygon"))) return;
-	Water water;
-	bool containsWater = relation.containsKey("water");
-	if (containsWater)
-		water.m_key = "water";
-	else
-		water.m_key = "waterway";
-	if (!water.initialize(relation)) return;
-
-	std::vector<Multipolygon> multipolygons;
-	createMultipolygonsFromRelation(relation, multipolygons);
-
-	for (auto multipolygon : multipolygons) {
-		Area area(this);
-		area.m_multiPolygon = multipolygon;
-		area.m_color = QColor("#aad3df");
-		water.m_areas.push_back(area);
-	}
-
-	m_waters.push_back(water);
-}
-
-void DrawingOSM::createLand(Way & way)
-{
-	Land land;
-	land.m_key = "landuse";
-	if (!land.initialize(way)) return;
-
-	Area area(this);
-	area.m_color = land.setColor();
-
-	createMultipolygonFromWay(way, area.m_multiPolygon);
-
-	land.m_areas.push_back(area);
-	m_land.push_back(land);
-}
-
-void DrawingOSM::createLand(Relation& relation){
-	if(!(relation.containsKeyValue("type", "multipolygon"))) return;
-	Land land;
-	land.m_key = "landuse";
-	if (!land.initialize(relation)) return;
-
-	Area area(this);
-	QColor color = land.setColor();
-
-	std::vector<Multipolygon> multipolygons;
-	createMultipolygonsFromRelation(relation, multipolygons);
-
-	for (auto multipolygon : multipolygons) {
-		Area area(this);
-		area.m_color = color;
-		area.m_multiPolygon = multipolygon;
-		land.m_areas.push_back(area);
-	}
-
-	m_land.push_back(land);
-}
-
-void DrawingOSM::createLeisure(Way & way)
-{
-	Leisure leisure;
-	if (!leisure.initialize(way)) return;
-
-	Area area(this);
-	area.m_color = QColor("#c8facc");
-
-	createMultipolygonFromWay(way, area.m_multiPolygon);
-
-	if (leisure.m_value == "park"){
-		area.m_color = QColor("#c8facc");
-	}
-
-	leisure.m_areas.push_back(area);
-	m_leisure.push_back(leisure);
-}
-
-void DrawingOSM::createNatural(Node & node)
-{
-	Natural natural;
-	natural.m_key = "natural";
-	if (!natural.initialize(node)) return;
-
-	Circle circle(this);
-	circle.m_center = convertLatLonToVector2D(node.m_lat, node.m_lon);
-	circle.m_radius = 1.25;
-
-	natural.m_circles.push_back(circle);
-	m_natural.push_back(natural);
-}
-
-void DrawingOSM::createNatural(Way & way)
-{
-	Natural natural;
-	natural.m_key = "natural";
-	if (!natural.initialize(way)) return;
-
-	bool noArea = false;
-
-	QColor color = QColor("#c8facc");
-
-	if (natural.m_value == "water"){
-		color = QColor("#aad3df");
-	} else if (natural.m_value == "tree_row") {
-		color = QColor("#b8d4a7");
-		noArea = true;
-	}
-
-	if (noArea) {
-		LineFromPlanes lineFromPlanes(this);
-		lineFromPlanes.m_color = color;
-		lineFromPlanes.m_lineThickness = 3;
-
-		for (int i = 0; i < way.m_nd.size() ; i++) {
-			const Node * node = findNodeFromId(way.m_nd[i].ref);
-			Q_ASSERT(node);
-			lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
-		}
-
-		natural.m_linesFromPlanes.push_back(lineFromPlanes);
-		m_natural.push_back(natural);
-		return;
-	}
-
-	Area area(this);
-	area.m_color = color;
-
-	createMultipolygonFromWay(way, area.m_multiPolygon);
-
-	natural.m_areas.push_back(area);
-	m_natural.push_back(natural);
-}
-
-void DrawingOSM::createAmenity(Way & way)
-{
-	Amenity amenity;
-	amenity.m_key = "amenity";
-	if (!amenity.initialize(way)) return;
-
-	Area area(this);
-	area.m_color = QColor("#c8facc");
-
-	createMultipolygonFromWay(way, area.m_multiPolygon);
-
-	if (amenity.m_value == "parking") {
-		area.m_color = QColor("#eeeeee");
-	} else if (amenity.m_value == "kindergarten") {
-		area.m_color = QColor("#ffffe5");
-	} else if (amenity.m_value == "school") {
-		area.m_color = QColor("#ffffe5");
-	} else if (amenity.m_value == "social_facility") {
-		area.m_color = QColor("#ffffe5");
-	}
-
-	amenity.m_areas.push_back(area);
-	m_amenities.push_back(amenity);
-}
-
-void DrawingOSM::createPlace(Way & way)
-{
-	Place place;
-	if (way.containsKey("place"))
-		place.m_key = "place";
-	else
-		place.m_key = "heritage";
-	if (!place.initialize(way)) return;
-
-	Area area(this);
-	area.m_color = QColor("#dddde8");
-
-	createMultipolygonFromWay(way, area.m_multiPolygon);
-
-	place.m_areas.push_back(area);
-	m_places.push_back(place);
-}
-
-void DrawingOSM::createPlace(Relation & relation)
-{
-	if (!relation.containsKeyValue("type", "multipolygon")) return;
-	Place place;
-	place.m_key = "place";
-	if (!place.initialize(relation)) return;
-
-	std::vector<Multipolygon> multipolygons;
-	createMultipolygonsFromRelation(relation, multipolygons);
-
-	for (auto multipolygon : multipolygons) {
-		Area area(this);
-		area.m_multiPolygon = multipolygon;
-		area.m_color = QColor("#dddde8");
-		place.m_areas.push_back(area);
-	}
-
-	m_places.push_back(place);
-}
-
-void DrawingOSM::createBridge(Way & way)
-{
-	Bridge bridge;
-	bridge.m_key = "bridge";
-	if (!bridge.initialize(way)) return;
-
-	Area area(this);
-	area.m_color = QColor("#dddde8");
-
-	createMultipolygonFromWay(way, area.m_multiPolygon);
-
-	bridge.m_areas.push_back(area);
-	m_bridges.push_back(bridge);
-}
-
-void DrawingOSM::createTourism(Way & way)
-{
-	Tourism tourism;
-	tourism.m_key = "tourism";
-	if (!tourism.initialize(way)) return;
-
-	Area area(this);
-	area.m_color = QColor("#f2efe9");
-
-	createMultipolygonFromWay(way, area.m_multiPolygon);
-
-	tourism.m_areas.push_back(area);
-	m_tourism.push_back(tourism);
-}
-
-void DrawingOSM::createBarrier(Way & way)
-{
-	Barrier barrier;
-	barrier.m_key = "barrier";
-	if (!barrier.initialize(way)) return;
-	if (way.containsKeyValue("area", "yes")) return;
-
-	LineFromPlanes lineFromPlanes(this);
-	lineFromPlanes.m_color = QColor("#7b7a7a");
-	lineFromPlanes.m_lineThickness = 1.5;
-
-	for (int i = 0; i < way.m_nd.size() ; i++) {
-		const Node * node = findNodeFromId(way.m_nd[i].ref);
-		Q_ASSERT(node);
-		lineFromPlanes.m_polyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
-	}
-
-	barrier.m_linesFromPlanes.push_back(lineFromPlanes);
-	m_barriers.push_back(barrier);
-	return;
-}
 
 bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline, bool connectEndStart, double width, std::vector<PlaneGeometry> & planes) const
 {
@@ -1295,193 +882,6 @@ bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> &
 	return true;
 }
 
-void DrawingOSM::AbstractOSMElement::readXML(const TiXmlElement * element){
-	FUNCID(DrawingOSM::AbstractOSMElement::readXML);
-
-	// mandatory attributes
-	if (!TiXmlAttribute::attributeByName(element, "id"))
-		throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-								 IBK::FormatString("Missing required 'id' attribute.") ), FUNC_ID);
-
-	// Read common attributes
-	const TiXmlAttribute * attrib = element->FirstAttribute();
-	while (attrib) {
-		const std::string & attribName = attrib->NameStr();
-		if (attribName == "id") {
-			m_id = attrib->IntValue();
-		}
-		else if (attribName == "visible") {
-			std::string value = attrib->ValueStr();
-			m_visible = value == "true" ? true : false;
-		}
-		attrib = attrib->Next();
-	}
-}
-
-bool DrawingOSM::AbstractOSMElement::containsKey(const std::string& key) const
-{
-	for (int i = 0; i < m_tags.size(); i++) {
-		if(m_tags[i].key == key)
-			return true;
-	}
-	return false;
-}
-
-
-bool DrawingOSM::AbstractOSMElement::containsValue(const std::string& value) const
-{
-	for (int i = 0; i < m_tags.size(); i++) {
-		if(m_tags[i].value == value)
-			return true;
-	}
-	return false;
-}
-
-bool DrawingOSM::AbstractOSMElement::containsKeyValue(const std::string & key, const std::string & value) const
-{
-	for (int i = 0; i < m_tags.size(); i++) {
-		if(m_tags[i].key == key && m_tags[i].value == value)
-			return true;
-	}
-	return false;
-}
-
-std::string DrawingOSM::AbstractOSMElement::getValueFromKey(const std::string & key) const
-{
-	for (int i = 0; i < m_tags.size(); i++) {
-		if(m_tags[i].key == key)
-			return m_tags[i].value;
-	}
-	return std::string("");
-}
-
-void DrawingOSM::Nd::readXML(const TiXmlElement * element) {
-	FUNCID(DrawingOSM::nd::readXML);
-
-	if (!TiXmlAttribute::attributeByName(element, "ref"))
-		throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-								 IBK::FormatString("Missing required 'ref' attribute.") ), FUNC_ID);
-
-	ref = TiXmlAttribute::attributeByName(element, "ref")->IntValue();
-}
-
-void DrawingOSM::Member::readXML(const TiXmlElement * element) {
-	FUNCID(DrawingOSM::Member::readXML);
-
-	if (!TiXmlAttribute::attributeByName(element, "type"))
-		throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-								 IBK::FormatString("Missing required 'type' attribute.") ), FUNC_ID);
-	if (!TiXmlAttribute::attributeByName(element, "ref"))
-		throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-								 IBK::FormatString("Missing required 'ref' attribute.") ), FUNC_ID);
-	if (!TiXmlAttribute::attributeByName(element, "role"))
-		throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-								 IBK::FormatString("Missing required 'role' attribute.") ), FUNC_ID);
-
-	std::string typeStr = TiXmlAttribute::attributeByName(element, "type")->ValueStr();
-	if (typeStr == "node")
-		type = NodeType;
-	else if (typeStr == "way")
-		type = WayType;
-	else if (typeStr == "relation")
-		type = RelationType;
-	else
-		throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-								 IBK::FormatString("Unknown type '%1'.").arg(typeStr) ), FUNC_ID);
-
-	ref = TiXmlAttribute::attributeByName(element, "ref")->IntValue();
-	role = TiXmlAttribute::attributeByName(element, "role")->ValueStr();
-}
-
-void DrawingOSM::Tag::readXML(const TiXmlElement * element) {
-	FUNCID(DrawingOSM::Tag::readXML);
-
-	if (!TiXmlAttribute::attributeByName(element, "k"))
-		throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-								 IBK::FormatString("Missing required 'k' attribute.") ), FUNC_ID);
-	if (!TiXmlAttribute::attributeByName(element, "v"))
-		throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-								 IBK::FormatString("Missing required 'v' attribute.") ), FUNC_ID);
-
-	key = TiXmlAttribute::attributeByName(element, "k")->ValueStr();
-	value = TiXmlAttribute::attributeByName(element, "v")->ValueStr();
-}
-
-void DrawingOSM::Node::readXML(const TiXmlElement * element) {
-	FUNCID(DrawingOSM::Node::readXML);
-
-	AbstractOSMElement::readXML(element);
-
-	// Check for mandatory attributes
-	if (!TiXmlAttribute::attributeByName(element, "lat"))
-		throw IBK::Exception(IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-								 IBK::FormatString("Missing required 'lat' attribute.")), FUNC_ID);
-	if (!TiXmlAttribute::attributeByName(element, "lon"))
-		throw IBK::Exception(IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
-								 IBK::FormatString("Missing required 'lon' attribute.")), FUNC_ID);
-
-	// Read the latitude and longitude attributes
-	m_lat = TiXmlAttribute::attributeByName(element, "lat")->DoubleValue();
-	m_lon = TiXmlAttribute::attributeByName(element, "lon")->DoubleValue();
-
-	// Read child elements
-	const TiXmlElement * child = element->FirstChildElement();
-	while (child) {
-		const std::string & childName = child->ValueStr();
-		if (childName == "tag") {
-			Tag tag;
-			tag.readXML(child);
-			m_tags.push_back(tag);
-		}
-		child = child->NextSiblingElement();
-	}
-}
-
-void DrawingOSM::Way::readXML(const TiXmlElement * element) {
-	FUNCID(DrawingOSM::Way::readXML);
-
-	AbstractOSMElement::readXML(element);
-
-	// Read child elements
-	const TiXmlElement * child = element->FirstChildElement();
-	while (child) {
-		const std::string & childName = child->ValueStr();
-		if (childName == "tag") {
-			Tag tag;
-			tag.readXML(child);
-			m_tags.push_back(tag);
-		}
-		if (childName == "nd") {
-			Nd nd;
-			nd.readXML(child);
-			m_nd.push_back(nd);
-		}
-		child = child->NextSiblingElement();
-	}
-}
-
-void DrawingOSM::Relation::readXML(const TiXmlElement * element) {
-	FUNCID(DrawingOSM::Relation::readXML);
-
-	AbstractOSMElement::readXML(element);
-
-	// Read child elements
-	const TiXmlElement * child = element->FirstChildElement();
-	while (child) {
-		const std::string & childName = child->ValueStr();
-		if (childName == "tag") {
-			Tag tag;
-			tag.readXML(child);
-			m_tags.push_back(tag);
-		}
-		if (childName == "member") {
-			Member member;
-			member.readXML(child);
-			m_members.push_back(member);
-		}
-		child = child->NextSiblingElement();
-	}
-}
 
 const void DrawingOSM::Area::addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*>& data) const
 {
@@ -1542,7 +942,7 @@ const void DrawingOSM::Area::addGeometryData(std::vector<VICUS::DrawingOSM::Geom
 	}
 }
 
-void DrawingOSM::Building::calculateHeight(AbstractOSMElement & element)
+void DrawingOSM::Building::calculateHeight(VicOSM::AbstractOSMElement & element)
 {
 	std::string valueLevel = element.getValueFromKey("building:levels");
 	if (valueLevel != "") {
@@ -1675,8 +1075,7 @@ const void DrawingOSM::AbstractOSMObject::addGeometryData(std::vector<GeometryDa
 	}
 }
 
-bool DrawingOSM::AbstractOSMObject::initialize(AbstractOSMElement & osmElement)
-{
+bool DrawingOSM::AbstractOSMObject::initialize(VicOSM::AbstractOSMElement & osmElement) {
 	if (osmElement.containsKeyValue("location", "underground")) return false;
 	if (osmElement.containsKeyValue("location", "underwater")) return false;
 	m_value = osmElement.getValueFromKey(m_key);

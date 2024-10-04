@@ -14,6 +14,25 @@
 #include "VICUS_RotationMatrix.h"
 #include "VICUS_Drawing.h"
 
+#include "VicOSM_AbstractOSMElement.h"
+#include "VicOSM_Amenity.h"
+#include "VicOSM_Barrier.h"
+#include "VicOSM_BoundingBox.h"
+#include "VicOSM_Bridge.h"
+#include "VicOSM_Building.h"
+#include "VicOSM_Highway.h"
+#include "VicOSM_Land.h"
+#include "VicOSM_Leisure.h"
+#include "VicOSM_Natural.h"
+#include "VicOSM_Place.h"
+#include "VicOSM_Tourism.h"
+#include "VicOSM_Water.h"
+
+#include "VicOSM_AbstractOSMElement.h"
+#include "VicOSM_Node.h"
+#include "VicOSM_Relation.h"
+#include "VicOSM_Way.h"
+
 #include <IBKMK_Vector2D.h>
 #include <IBKMK_UTM.h>
 
@@ -35,91 +54,9 @@ public:
 		return "DrawingOSM";
 	}
 
-	// *** PUBLIC MEMBER FUNCTIONS ***
-
-	enum Types{
-		NodeType,
-		WayType,
-		RelationType
-	};
-
-	struct Tag{
-		std::string key;
-		std::string value;
-
-		void readXML(const TiXmlElement * element);
-	};
-
-	struct Member{
-		Types type;
-		int ref;
-		std::string role;
-
-		void readXML(const TiXmlElement * element);
-	};
-
-	struct Nd{
-		int ref;
-
-		void readXML(const TiXmlElement * element);
-	};
-
-	/* Abstract class for all OSM XML elements */
-	struct AbstractOSMElement {
-
-		virtual ~AbstractOSMElement() {}
-
-		void readXML(const TiXmlElement * element);
-
-		bool containsKey(const std::string& key) const;
-
-		bool containsValue(const std::string& value) const;
-
-		bool containsKeyValue(const std::string& key, const std::string& value) const;
-
-		std::string getValueFromKey(const std::string& key) const;
-
-		unsigned int                    m_id = VICUS::INVALID_ID; // unique id
-
-		std::vector<Tag>				m_tags; // stores all tags. Does not make an effort to interpret them
-
-		bool                            m_visible = true; // visibility flag
-	};
-
-	/*! A single point on the map */
-	struct Node : public AbstractOSMElement {
-
-		void readXML(const TiXmlElement * element);
-
-		/*! Point coordinate */
-		double                          m_lon;
-		double                          m_lat;
-	};
-
-	/*! List of Nodes that make up a way. A way describes a polyline */
-	struct Way : public AbstractOSMElement {
-
-		void readXML(const TiXmlElement * element);
-
-		std::vector<Nd>				m_nd;
-	};
-
-	/*! Stores both LW and normal polyline */
-	struct Relation : public AbstractOSMElement {
-
-		void readXML(const TiXmlElement * element);
-
-		std::vector<Member>				m_members;
-	};
-
-	struct Multipolygon {
-		std::vector<IBKMK::Vector2D> m_outerPolyline;
-		std::vector<std::vector<IBKMK::Vector2D>> m_innerPolylines;
-	};
-
 	struct GeometryData {
 		std::vector<VICUS::PlaneGeometry>	m_planeGeometry;
-		std::vector<Multipolygon>			m_multipolygons;
+		std::vector<VicOSM::Multipolygon>			m_multipolygons;
 		QColor								m_color;
 		bool								m_extrudingPolygon = false;
 		double								m_height = 3;
@@ -171,7 +108,7 @@ public:
 			: AbstractDrawingObject(drawing)
 		{}
 
-		Multipolygon						m_multiPolygon;
+		VicOSM::Multipolygon						m_multiPolygon;
 		bool								m_extrudingPolygon = false;
 		double								m_height = 3;
 		double								m_minHeight = 0;
@@ -291,7 +228,7 @@ public:
 	struct AbstractOSMObject {
 		const virtual void addGeometryData(std::vector<VICUS::DrawingOSM::GeometryData*> &data) const;
 
-		bool initialize(AbstractOSMElement& osmElement);
+		bool initialize(VicOSM::AbstractOSMElement& osmElement);
 
 		void assignKeyValue();
 
@@ -315,7 +252,7 @@ public:
 	/*! Building Object. Contains only 2D information. */
 	struct Building : AbstractOSMObject {
 
-		void								calculateHeight(AbstractOSMElement& element);
+		void								calculateHeight(VicOSM::AbstractOSMElement& element);
 
 		double								m_height = 3;
 
@@ -351,7 +288,7 @@ public:
 	std::vector<IBKMK::Vector2D> convertHoleToLocalCoordinates(const std::vector<IBKMK::Vector3D> & globalVertices, const IBKMK::Vector3D & offset, const IBKMK::Vector3D & localX, const IBKMK::Vector3D & localY) const;
 
 	// *** Methods and Helper Functions To Create Polygons ***
-	void createMultipolygonFromWay(Way &way, Multipolygon &multipolygon);
+	void createMultipolygonFromWay(VicOSM::Way &way, VicOSM::Multipolygon &multipolygon);
 
 	struct WayWithMarks {
 		std::vector<int> refs;
@@ -361,8 +298,8 @@ public:
 	};
 	std::vector<IBKMK::Vector2D> convertVectorWayWithMarksToVector2D(const std::vector<WayWithMarks*>& ways);
 	void ringAssignment(std::vector<WayWithMarks>& ways, std::vector<std::vector<WayWithMarks*>>& allRings);
-	void ringGrouping(std::vector<std::vector<WayWithMarks*>>& rings, std::vector<Multipolygon>& multipolygons);
-	void createMultipolygonsFromRelation(Relation &relation, std::vector<Multipolygon>& multipolygons);
+	void ringGrouping(std::vector<std::vector<WayWithMarks*>>& rings, std::vector<VicOSM::Multipolygon>& multipolygons);
+	void createMultipolygonsFromRelation(VicOSM::Relation &relation, std::vector<VicOSM::Multipolygon>& multipolygons);
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
@@ -381,63 +318,23 @@ public:
 	const void geometryData(std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>>& geometryData) const;
 
 
-	const Node* findNodeFromId(unsigned int id) const;
-	const Way* findWayFromId(unsigned int id) const;
-	const Relation* findRelationFromId(unsigned int id) const;
+	const VicOSM::Node* findNodeFromId(unsigned int id) const;
+	const VicOSM::Way* findWayFromId(unsigned int id) const;
+	const VicOSM::Relation* findRelationFromId(unsigned int id) const;
 	inline IBKMK::Vector2D convertLatLonToVector2D(double lat, double lon) const;
 
 	// *** Methods to create Buildings streets. etc. ***
 	void constructObjects();
 
-	// creates complete buildings from ways relations etc.
-	void createBuilding(Way &way);
-	void createBuilding(Relation &relation);
-
-	// extracts streets from ways relations etc.
-	void createHighway(Way &way);
-	// should be deprecated. All highways that are areas should be some form of place, landuse etc.
-	void createHighway(Relation &relation);
-
-	// extracts water body from ways relations etc.
-	void createWater(Way &way);
-	void createWater(Relation &relation);
-
-	// extracts land from ways, relations etc.
-	void createLand(Way &way);
-	void createLand(Relation &relation);
-
-	// extracts leisure objects from ways, relations etc.
-	void createLeisure(Way &way);
-
-	// extracts natural objects from ways etc.
-	void createNatural(Node &node);
-	void createNatural(Way &way);
-
-	// extracts amenityobjects from ways etc.
-	void createAmenity(Way &way);
-
-	// extracts place objects from ways, relations
-	void createPlace(Way &way);
-	void createPlace(Relation &relation);
-
-	// extracts bridge objects from ways
-	void createBridge(Way &way);
-
-	// extracts tourism objects from ways
-	void createTourism(Way &way);
-
-	// extracts tourism objects from ways
-	void createBarrier(Way &way);
-
 	// *** PUBLIC MEMBER VARIABLES ***
 
 	// *** List of OSM XML Elements ***
 	/*! list of nodes */
-	std::unordered_map<unsigned int, Node>			m_nodes;
+	std::unordered_map<unsigned int, VicOSM::Node>			m_nodes;
 	/*! list of ways */
-	std::unordered_map<unsigned int, Way>			m_ways;
+	std::unordered_map<unsigned int, VicOSM::Way>			m_ways;
 	/*! lists of relations */
-	std::unordered_map<unsigned int, Relation>		m_relations;
+	std::unordered_map<unsigned int, VicOSM::Relation>		m_relations;
 	/*! Stores the bounding box of the drawing */
 	BoundingBox										m_boundingBox;
 

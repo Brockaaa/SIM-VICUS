@@ -17,7 +17,7 @@ VER_MAJ = 0
 	VERSION = $${VER_MAJ}.$${VER_MIN}.$${VER_PAT}
 }
 
-LIBS += -lNandrad -lIBK -lIBKMK -lTiCPP -lCCM -lclipper -lVicus
+LIBS += -lNandrad -lIBK -lIBKMK -lTiCPP -lCCM -lclipper -lVicus -lVicOSM
 
 INCLUDEPATH = \
 ../../src \
@@ -28,7 +28,8 @@ INCLUDEPATH = \
 	../../../Nandrad/src \
 	../../../DataIO/src \
 	../../../Vicus/src \
-	../../../TiCPP/src
+	../../../TiCPP/src \
+	../../../VicOSM/src \
 
 DEPENDPATH = $${INCLUDEPATH}
 

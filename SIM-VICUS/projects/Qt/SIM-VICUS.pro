@@ -38,7 +38,8 @@ LIBS += \
 -lIBKMK \
 -lsundials \
 -lSuiteSparse \
--lqwt6
+-lqwt6 \
+-lVicOSM
 
 win32 {
 LIBS += -luser32
@@ -64,6 +65,7 @@ INCLUDEPATH = \
 ../../../externals/Vicus/src \
 ../../../externals/Vicus/srcTranslations \
 ../../../externals/TiCPP/src \
+../../../externals/VicOSM/src \
 ../../../externals/qwt/src \
 ../../../externals/clipper/src \
 ../../../externals/RoomClipper/src \
@@ -88,7 +90,8 @@ $$PWD/../../../externals/lib$${DIR_PREFIX}/Vicus.lib \
 $$PWD/../../../externals/lib$${DIR_PREFIX}/Nandrad.lib \
 $$PWD/../../../externals/lib$${DIR_PREFIX}/TiCPP.lib \
 $$PWD/../../../externals/lib$${DIR_PREFIX}/IDFReader.lib \
-$$PWD/../../../externals/lib$${DIR_PREFIX}/IBKMK.lib
+$$PWD/../../../externals/lib$${DIR_PREFIX}/IBKMK.lib \
+$$PWD/../../../externals/lib$${DIR_PREFIX}/VicOSM.lib \
 }
 
 
