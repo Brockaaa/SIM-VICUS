@@ -6,8 +6,8 @@
 namespace VicOSM {
 
 /*! List of Nodes that make up a way. A way describes a polyline */
-struct Relation : public AbstractOSMElement {
-
+class Relation : public AbstractOSMElement {
+public:
 	Relation() {}
 
 	void readXML(const TiXmlElement * element);

@@ -13,7 +13,7 @@ include( ../../../IBK/projects/Qt/IBK.pri )
 QT += core gui
 
 unix|mac {
-	VER_MAJ = 0
+        VER_MAJ = 1
 	VER_MIN = 0
 	VER_PAT = 0
 	VERSION = $${VER_MAJ}.$${VER_MIN}.$${VER_PAT}
@@ -26,20 +26,23 @@ INCLUDEPATH = \
 ../../../IBK/src \
 ../../../IBKMK/src \
 ../../../TiCPP/src \
+../../../Nandrad/src \
 
 DEPENDPATH = $${INCLUDEPATH}
 
 SOURCES += \
-	../../src/VicOSM_AbstractDrawingObject.cpp \
+        ../../src/VicOSM_AbstractDrawingObject.cpp \
 	../../src/VicOSM_AbstractOSMElement.cpp \
 	../../src/VicOSM_AbstractOSMObject.cpp \
 	../../src/VicOSM_Amenity.cpp \
 	../../src/VicOSM_Barrier.cpp \
 	../../src/VicOSM_Bridge.cpp \
 	../../src/VicOSM_Building.cpp \
+	../../src/VicOSM_Constants.cpp \
 	../../src/VicOSM_Highway.cpp \
 	../../src/VicOSM_Land.cpp \
 	../../src/VicOSM_Leisure.cpp \
+	../../src/VicOSM_Multipolygon.cpp \
 	../../src/VicOSM_Natural.cpp \
 	../../src/VicOSM_Node.cpp \
 	../../src/VicOSM_Place.cpp \
@@ -47,9 +50,25 @@ SOURCES += \
 	../../src/VicOSM_Tourism.cpp \
 	../../src/VicOSM_Water.cpp \
 	../../src/VicOSM_Way.cpp \
+	../../src/ncg/ncg_VicOSM_AbstractOSMObject.cpp \
+	../../src/ncg/ncg_VicOSM_Building.cpp \
+	../../src/ncg/ncg_VicOSM_Amenity.cpp \
+	../../src/ncg/ncg_VicOSM_Area.cpp \
+	../../src/ncg/ncg_VicOSM_Barrier.cpp \
+	../../src/ncg/ncg_VicOSM_BoundingBox.cpp \
+	../../src/ncg/ncg_VicOSM_Bridge.cpp \
+	../../src/ncg/ncg_VicOSM_Circle.cpp \
+	../../src/ncg/ncg_VicOSM_Highway.cpp \
+	../../src/ncg/ncg_VicOSM_Land.cpp \
+	../../src/ncg/ncg_VicOSM_Leisure.cpp \
+	../../src/ncg/ncg_VicOSM_LineFromPlanes.cpp \
+	../../src/ncg/ncg_VicOSM_Natural.cpp \
+	../../src/ncg/ncg_VicOSM_Place.cpp \
+	../../src/ncg/ncg_VicOSM_Tourism.cpp \
+	../../src/ncg/ncg_VicOSM_Water.cpp \
 
 HEADERS += \
-	../../src/VicOSM_AbstractDrawingObject.h \
+        ../../src/VicOSM_AbstractDrawingObject.h \
 	../../src/VicOSM_AbstractOSMElement.h \
 	../../src/VicOSM_AbstractOSMObject.h \
 	../../src/VicOSM_Amenity.h \
@@ -59,6 +78,7 @@ HEADERS += \
 	../../src/VicOSM_Bridge.h \
 	../../src/VicOSM_Building.h \
 	../../src/VicOSM_Circle.h \
+	../../src/VicOSM_Constants.h \
 	../../src/VicOSM_Highway.h \
 	../../src/VicOSM_Land.h \
 	../../src/VicOSM_Leisure.h \
@@ -71,4 +91,3 @@ HEADERS += \
 	../../src/VicOSM_Tourism.h \
 	../../src/VicOSM_Water.h \
 	../../src/VicOSM_Way.h \
-

@@ -45,6 +45,8 @@
 #include <QMatrix4x4>
 #include <QColor>
 
+using namespace VicOSM;
+
 namespace VICUS {
 
 /*!
@@ -61,7 +63,7 @@ public:
 
 	struct GeometryData {
 		std::vector<VICUS::PlaneGeometry>	m_planeGeometry;
-		std::vector<VicOSM::Multipolygon>			m_multipolygons;
+		std::vector<Multipolygon>			m_multipolygons;
 		QColor								m_color;
 		bool								m_extrudingPolygon = false;
 		double								m_height = 3;
@@ -71,7 +73,7 @@ public:
 	std::vector<IBKMK::Vector2D> convertHoleToLocalCoordinates(const std::vector<IBKMK::Vector3D> & globalVertices, const IBKMK::Vector3D & offset, const IBKMK::Vector3D & localX, const IBKMK::Vector3D & localY) const;
 
 	// *** Methods and Helper Functions To Create Polygons ***
-	void createMultipolygonFromWay(VicOSM::Way &way, VicOSM::Multipolygon &multipolygon);
+	void createMultipolygonFromWay(Way &way, Multipolygon &multipolygon);
 
 	struct WayWithMarks {
 		std::vector<int> refs;
@@ -81,13 +83,17 @@ public:
 	};
 	std::vector<IBKMK::Vector2D> convertVectorWayWithMarksToVector2D(const std::vector<WayWithMarks*>& ways);
 	void ringAssignment(std::vector<WayWithMarks>& ways, std::vector<std::vector<WayWithMarks*>>& allRings);
-	void ringGrouping(std::vector<std::vector<WayWithMarks*>>& rings, std::vector<VicOSM::Multipolygon>& multipolygons);
-	void createMultipolygonsFromRelation(VicOSM::Relation &relation, std::vector<VicOSM::Multipolygon>& multipolygons);
+	void ringGrouping(std::vector<std::vector<WayWithMarks*>>& rings, std::vector<Multipolygon>& multipolygons);
+	void createMultipolygonsFromRelation(Relation &relation, std::vector<Multipolygon>& multipolygons);
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
-	/*! Fills m_nodes, m_ways, m_relations, m_boundingBox with values from a OSM XML */
 	void readXML(const TiXmlElement * element);
+	TiXmlElement * writeXML(TiXmlElement * parent) const;
+
+	/*! Fills m_nodes, m_ways, m_relations, m_boundingBox with values from a OSM XML */
+	void readOSM(const TiXmlElement * element);
+	void writeOSM(const IBK::Path & filename);
 
 	/*! calls readXML. Afterwards calculates m_utmZone and m_origin */
 	bool readOSMFile(QString filePath);
@@ -98,13 +104,13 @@ public:
 		redone.
 	*/
 	void updatePlaneGeometries();
-	void addGeometryData(const VicOSM::AbstractOSMObject& object, std::vector<GeometryData *>& geometryData) const;
+	void addGeometryData(const AbstractOSMObject& object, std::vector<GeometryData *>& geometryData) const;
 	const void geometryData(std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>>& geometryData) const;
 
 
-	const VicOSM::Node* findNodeFromId(unsigned int id) const;
-	const VicOSM::Way* findWayFromId(unsigned int id) const;
-	const VicOSM::Relation* findRelationFromId(unsigned int id) const;
+	const Node* findNodeFromId(unsigned int id) const;
+	const Way* findWayFromId(unsigned int id) const;
+	const Relation* findRelationFromId(unsigned int id) const;
 	inline IBKMK::Vector2D convertLatLonToVector2D(double lat, double lon) const;
 
 	// *** Methods to create Buildings streets. etc. ***
@@ -114,21 +120,20 @@ public:
 
 	// *** List of OSM XML Elements ***
 	/*! list of nodes */
-	std::unordered_map<unsigned int, VicOSM::Node>			m_nodes;
+	std::unordered_map<unsigned int, Node>			m_nodes;
 	/*! list of ways */
-	std::unordered_map<unsigned int, VicOSM::Way>			m_ways;
+	std::unordered_map<unsigned int, Way>			m_ways;
 	/*! lists of relations */
-	std::unordered_map<unsigned int, VicOSM::Relation>		m_relations;
+	std::unordered_map<unsigned int, Relation>		m_relations;
 	/*! Stores the bounding box of the drawing */
-	VicOSM::BoundingBox										m_boundingBox;
+	BoundingBox										m_boundingBox;		// XML:E
 	mutable GeometryData									m_geometryDataBoundingBox;
 
 
 	/*! UTM zone defined by the longitude (minlon) of the bounding box */
-	int												m_utmZone = 0;
-	/*! Conversion of minlat, minlon of bounding box in the Universal Transverse Mercator projection. */
-	IBKMK::Vector2D									m_centerMercatorProjection;
-
+	int												m_utmZone = 0;				// XML:A
+	double											m_centerX = 0;				// XML:A
+	double											m_centerY = 0;				// XML:A
 
 	/*! point of origin */
 	IBKMK::Vector3D									m_origin			= IBKMK::Vector3D(0,0,0);
@@ -137,22 +142,22 @@ public:
 	/*! scale factor */
 	double											m_scalingFactor		= 1.0;
 
-	bool											m_enable3D			= true;
+	bool											m_enable3D			= true;	// XML:A
 
 	// *** List of OSM Objects like buildings, streets with all relevant information ***
-	std::vector<VicOSM::Building>							m_buildings;
-	std::vector<VicOSM::Highway>							m_highways;
-	std::vector<VicOSM::Water>								m_waters;
-	std::vector<VicOSM::Land>								m_land;
-	std::vector<VicOSM::Leisure>							m_leisure;
-	std::vector<VicOSM::Natural>							m_natural;
-	std::vector<VicOSM::Amenity>							m_amenities;
-	std::vector<VicOSM::Place>								m_places;
-	std::vector<VicOSM::Bridge>								m_bridges;
-	std::vector<VicOSM::Tourism>							m_tourism;
-	std::vector<VicOSM::Barrier>							m_barriers;
+	std::vector<OSMBuilding>								m_houses;		// XML:E
+	std::vector<Highway>							m_highways;			// XML:E
+	std::vector<Water>								m_waters;			// XML:E
+	std::vector<Land>								m_land;				// XML:E
+	std::vector<Leisure>							m_leisure;			// XML:E
+	std::vector<Natural>							m_natural;			// XML:E
+	std::vector<Amenity>							m_amenities;		// XML:E
+	std::vector<Place>								m_places;			// XML:E
+	std::vector<Bridge>								m_bridges;			// XML:E
+	std::vector<Tourism>							m_tourism;			// XML:E
+	std::vector<Barrier>							m_barriers;			// XML:E
 
-	mutable std::map<const VicOSM::AbstractDrawingObject*, GeometryData>	m_geometryData;
+	mutable std::map<const AbstractDrawingObject*, GeometryData>	m_geometryData;
 	/*! path of the OSM File */
 	QString											m_filePath;
 

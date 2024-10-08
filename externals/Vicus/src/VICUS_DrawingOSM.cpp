@@ -52,21 +52,19 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertHoleToLocalCoordinates(
 	return localVertices;
 }
 
-void DrawingOSM::createMultipolygonFromWay(VicOSM::Way & way, VicOSM::Multipolygon & multipolygon)
-{
-	for (int i = 0; i < way.m_nd.size() ; i++) {
+void DrawingOSM::createMultipolygonFromWay(VicOSM::Way & way, VicOSM::Multipolygon & multipolygon) {
+	for (unsigned int i = 0; i < way.m_nd.size() ; i++) {
 		const VicOSM::Node * node = findNodeFromId(way.m_nd[i].ref);
 		Q_ASSERT(node);
 		multipolygon.m_outerPolyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
 	}
 }
 
-void DrawingOSM::createMultipolygonsFromRelation(VicOSM::Relation & relation, std::vector<VicOSM::Multipolygon> & multipolygons)
-{
+void DrawingOSM::createMultipolygonsFromRelation(VicOSM::Relation & relation, std::vector<VicOSM::Multipolygon> & multipolygons) {
 	auto processWay = [&](std::vector<int>& nodeRefs, int wayRef) -> bool {
 		const VicOSM::Way* way = findWayFromId(wayRef);
 		if(!way) return false;
-		for (int i = 0; i < way->m_nd.size(); i++) {
+		for (unsigned int i = 0; i < way->m_nd.size(); i++) {
 			nodeRefs.push_back(way->m_nd[i].ref);
 		}
 		return true;
@@ -74,7 +72,7 @@ void DrawingOSM::createMultipolygonsFromRelation(VicOSM::Relation & relation, st
 
 	std::vector<WayWithMarks> ways;
 
-	for (int i = 0; i < relation.m_members.size(); i++) {
+	for (unsigned int i = 0; i < relation.m_members.size(); i++) {
 		if (relation.m_members[i].type != VicOSM::WayType) continue;
 		WayWithMarks way;
 		/* if not all ways available, it is likely a huge multipolygon that is partially outside of the boundingbox of the .osm file.
@@ -92,8 +90,7 @@ void DrawingOSM::createMultipolygonsFromRelation(VicOSM::Relation & relation, st
 
 }
 
-void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<std::vector<WayWithMarks*>>& allRings)
-{
+void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<std::vector<WayWithMarks*>>& allRings) {
 	std::vector<WayWithMarks*> currentRing;
 
 	// get next unassigned way for a new ring
@@ -201,8 +198,7 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertVectorWayWithMarksToVector2D(con
 	return vectorCoordinates;
 }
 
-void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, std::vector<VicOSM::Multipolygon>& multipolygons)
-{
+void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, std::vector<VicOSM::Multipolygon>& multipolygons) {
 
 	// create Matrix and reset available flags
 	// matrix[i][j] true if ring i is in ring j
@@ -230,7 +226,7 @@ void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, 
 		matrix.push_back(row);
 	}
 
-	int activeOuterRing;
+	unsigned int activeOuterRing;
 	std::function<bool()> findOuterRing = [&]() -> bool {
 		for (unsigned int i = 0; i < rings.size(); i++) {
 			if (std::find(usedRings.begin(), usedRings.end(), i) != usedRings.end())  continue;
@@ -274,7 +270,7 @@ void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, 
 
 		std::vector<IBKMK::Vector3D> outerPolygon;
 
-		for (int i = 1; i < multipolygon.m_outerPolyline.size(); i++) {
+		for (unsigned int i = 1; i < multipolygon.m_outerPolyline.size(); i++) {
 			IBKMK::Vector3D p = IBKMK::Vector3D(multipolygon.m_outerPolyline[i].m_x,
 												multipolygon.m_outerPolyline[i].m_y,
 												0);
@@ -291,7 +287,7 @@ void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, 
 		for (auto& innerPolyline : multipolygon.m_innerPolylines) {
 			std::vector<IBKMK::Vector3D> innerPolygon;
 
-			for (int i = 1; i < innerPolyline.size(); i++) {
+			for (unsigned int i = 1; i < innerPolyline.size(); i++) {
 				IBKMK::Vector3D p = IBKMK::Vector3D(innerPolyline[i].m_x,
 													innerPolyline[i].m_y,
 													0);
@@ -318,8 +314,8 @@ void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, 
 
 }
 
-void DrawingOSM::readXML(const TiXmlElement * element) {
-	FUNCID(DrawingOSM::readXML);
+void DrawingOSM::readOSM(const TiXmlElement * element) {
+	FUNCID(DrawingOSM::readOSM);
 
 	try {
 		// search for mandatory attributes
@@ -357,13 +353,13 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 				while (attrib) {
 					const std::string & attribName = attrib->NameStr();
 					if (attribName == "minlat")
-						m_boundingBox.minlat = attrib->DoubleValue();
+						m_boundingBox.m_minlat = attrib->DoubleValue();
 					else if (attribName == "minlon")
-						m_boundingBox.minlon = attrib->DoubleValue();
+						m_boundingBox.m_minlon = attrib->DoubleValue();
 					else if (attribName == "maxlat")
-						m_boundingBox.maxlat = attrib->DoubleValue();
+						m_boundingBox.m_maxlat = attrib->DoubleValue();
 					else if (attribName == "maxlon")
-						m_boundingBox.maxlon = attrib->DoubleValue();
+						m_boundingBox.m_maxlon = attrib->DoubleValue();
 					attrib = attrib->Next();
 				}
 			}
@@ -393,8 +389,24 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 	}
 }
 
-bool DrawingOSM::readOSMFile(QString filePath)
+void DrawingOSM::writeOSM(const IBK::Path & filename)
 {
+	TiXmlDocument docDraw;
+	TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "UTF-8", "" );
+	docDraw.LinkEndChild( decl );
+
+	TiXmlElement * root = new TiXmlElement( "VicOSM" );
+	docDraw.LinkEndChild(root);
+
+	TiXmlElement * e = new TiXmlElement( "OSMs" );
+	root->LinkEndChild(e);
+
+	writeXML(e);
+
+	docDraw.SaveFile( filename.c_str() );
+}
+
+bool DrawingOSM::readOSMFile(QString filePath) {
 	TiXmlDocument document(filePath.toStdString());
 
 	if (!document.LoadFile()) {
@@ -412,12 +424,13 @@ bool DrawingOSM::readOSMFile(QString filePath)
 	// Print the root element's name
 	qDebug() << "Root element: " << root->Value();
 
-	readXML(document.RootElement());
+	readOSM(document.RootElement());
 	double minx, miny, maxx, maxy;
-	m_utmZone = IBKMK::LatLonToUTMXY(m_boundingBox.minlat, m_boundingBox.minlon, m_utmZone, minx, miny);
-	IBKMK::LatLonToUTMXY(m_boundingBox.maxlat, m_boundingBox.maxlon, m_utmZone, maxx, maxy);
+	m_utmZone = IBKMK::LatLonToUTMXY(m_boundingBox.m_minlat, m_boundingBox.m_minlon, m_utmZone, minx, miny);
+	IBKMK::LatLonToUTMXY(m_boundingBox.m_maxlat, m_boundingBox.m_maxlon, m_utmZone, maxx, maxy);
 
-	m_centerMercatorProjection = IBKMK::Vector2D(minx + (maxx - minx) / 2,miny + (maxy - miny) / 2);
+	m_centerX = minx + (maxx - minx) / 2;
+	m_centerY = miny + (maxy - miny) / 2;
 	qDebug() << "m_origin: " << QString::number(minx + (maxx - minx) / 2) << " " << QString::number(miny + (maxy - miny) / 2);
 	qDebug() << "m_utmZone: " << QString::number(m_utmZone);
 
@@ -426,11 +439,12 @@ bool DrawingOSM::readOSMFile(QString filePath)
 	return true;
 }
 
-void DrawingOSM::constructObjects()
-{
+void DrawingOSM::constructObjects() {
 	std::function<void(VicOSM::Node&, VicOSM::AbstractOSMObject&)> createCenterFromNodeAndAssignToObject = [&](VicOSM::Node& node, VicOSM::AbstractOSMObject& object){
 		for (auto& circle : object.m_circles) {
-			circle.m_center = convertLatLonToVector2D(node.m_lat, node.m_lon);
+			IBKMK::Vector2D center = convertLatLonToVector2D(node.m_lat, node.m_lon);
+			circle.m_x = center.m_x;
+			circle.m_y = center.m_y;
 			return;
 		}
 	};
@@ -444,7 +458,7 @@ void DrawingOSM::constructObjects()
 		}
 
 		for (auto& lineFromPlanes : object.m_linesFromPlanes) {
-			lineFromPlanes.m_polyline = multipolygon.m_outerPolyline;
+			lineFromPlanes.m_multiPolygon = multipolygon;
 			return;
 		}
 	};
@@ -480,10 +494,10 @@ void DrawingOSM::constructObjects()
 	 * In practice this does not always happen */
 	for (auto& pair : m_ways) {
 		if (pair.second.containsKey("building")) {
-			VicOSM::Building building;
-			if (VicOSM::Building::createBuilding(pair.second, building, m_enable3D)) {
+			VicOSM::OSMBuilding building;
+			if (VicOSM::OSMBuilding::createBuilding(pair.second, building, m_enable3D)) {
 				createMultipolygonFromWayAndAssignToObject(pair.second, building);
-				m_buildings.push_back(building);
+				m_houses.push_back(building);
 			}
 		}
 		else if (pair.second.containsKey("highway")) {
@@ -561,10 +575,10 @@ void DrawingOSM::constructObjects()
 	// construct all objects from relation
 	for (auto& pair : m_relations) {
 		if (pair.second.containsKey("building")) {
-			VicOSM::Building building;
-			if (VicOSM::Building::createBuilding(pair.second, building, m_enable3D)) {
+			VicOSM::OSMBuilding building;
+			if (VicOSM::OSMBuilding::createBuilding(pair.second, building, m_enable3D)) {
 				createMultipolygonFromRelationAndAssignToObject(pair.second, building);
-				m_buildings.push_back(building);
+				m_houses.push_back(building);
 			}
 		}
 		else if (pair.second.containsKey("place")) {
@@ -691,7 +705,7 @@ void DrawingOSM::constructObjects()
 
 	std::vector<int> usedKeyValues;
 
-	for (const auto & building : m_buildings) {
+	for (const auto & building : m_houses) {
 		usedKeyValues.push_back(convertKeyToInt(building));
 	}
 
@@ -747,7 +761,7 @@ void DrawingOSM::constructObjects()
 	}
 	usedKeyValues.insert(usedKeyValues.begin(), (static_cast<int>(VicOSM::BOUNDINGBOX))); // boundingbox always included
 
-	int i = 0;
+	unsigned int i = 0;
 	for (; i < usedKeyValues.size(); i++) {
 		if (usedKeyValues[i] == static_cast<int>(VicOSM::BOUNDINGBOX)) break;
 	}
@@ -755,14 +769,14 @@ void DrawingOSM::constructObjects()
 
 	std::function<void(VicOSM::AbstractOSMObject&)> assignZValue = [&](VicOSM::AbstractOSMObject& object){
 		int keyValue = convertKeyToInt(object);
-		int i = 0;
+		unsigned int i = 0;
 		for (; i < usedKeyValues.size(); i++) {
 			if (usedKeyValues[i] == keyValue) break;
 		}
 		object.m_zPosition = (i / (double)(usedKeyValues.size() - 1));
 	};
 
-	for (auto & building : m_buildings) {
+	for (auto & building : m_houses) {
 		assignZValue(building);
 	}
 
@@ -805,19 +819,24 @@ void DrawingOSM::constructObjects()
 	for( auto & barrier : m_barriers) {
 		assignZValue(barrier);
 	}
+
+	m_nodes.clear();
+	m_ways.clear();
+	m_relations.clear();
+
+	IBK::Path fname("/home/sandisk/SHK/a.vicosm");
+	writeOSM(fname);
 }
 
-void DrawingOSM::updatePlaneGeometries()
-{
-	for (auto& building : m_buildings) {
+void DrawingOSM::updatePlaneGeometries() {
+	for (auto& building : m_houses) {
 		for (auto& area : building.m_areas ){
 			area.updatePlaneGeometry();
 		}
 	}
 }
 
-void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::vector<GeometryData *> & geometryDataVector) const
-{
+void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::vector<GeometryData *> & geometryDataVector) const {
 	for (auto& area : object.m_areas) {
 		if (area.m_dirtyTriangulation) {
 			GeometryData geometryData;
@@ -833,7 +852,7 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 			} else {
 				std::vector<IBKMK::Vector3D> areaPoints;
 
-				for (int i = 1; i < area.m_multiPolygon.m_outerPolyline.size(); i++) {
+				for (unsigned int i = 1; i < area.m_multiPolygon.m_outerPolyline.size(); i++) {
 					IBKMK::Vector3D p = IBKMK::Vector3D(area.m_multiPolygon.m_outerPolyline[i].m_x,
 														area.m_multiPolygon.m_outerPolyline[i].m_y,
 														0);
@@ -850,7 +869,7 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 
 				if(!area.m_multiPolygon.m_innerPolylines.empty()) {
 					std::vector<PlaneGeometry::Hole> holes;
-					for(int j = 0; j < area.m_multiPolygon.m_innerPolylines.size(); j++) {
+					for(unsigned int j = 0; j < area.m_multiPolygon.m_innerPolylines.size(); j++) {
 						VICUS::Polygon2D polygon2d(area.m_multiPolygon.m_innerPolylines[j]);
 						holes.push_back(PlaneGeometry::Hole(j, polygon2d, false));
 					}
@@ -873,9 +892,9 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 			std::vector<IBKMK::Vector3D> polylinePoints;
 
 			// adds z-coordinate to polyline
-			for(unsigned int i = 0; i < lineFromPlanes.m_polyline.size(); ++i){
-				IBKMK::Vector3D p = IBKMK::Vector3D(lineFromPlanes.m_polyline[i].m_x,
-													lineFromPlanes.m_polyline[i].m_y,
+			for(unsigned int i = 0; i < lineFromPlanes.m_multiPolygon.m_outerPolyline.size(); ++i){
+				IBKMK::Vector3D p = IBKMK::Vector3D(lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_x,
+													lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_y,
 													0);
 				QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
 				vec += IBKVector2QVector(m_origin);
@@ -905,13 +924,13 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 
 			circlePoints.resize(SEGMENT_COUNT_ELLIPSE);
 
-			for (int i = 0; i < SEGMENT_COUNT_ELLIPSE; ++i) {
+			for (unsigned int i = 0; i < SEGMENT_COUNT_ELLIPSE; ++i) {
 				double currentAngle = i * angleStep;
 				double x = circle.m_radius * 0.5 * cos(currentAngle);
 				double y = circle.m_radius * 0.5 * sin(currentAngle);
 
-				IBKMK::Vector3D p = IBKMK::Vector3D(x + circle.m_center.m_x,
-													y + circle.m_center.m_y,
+				IBKMK::Vector3D p = IBKMK::Vector3D(x + circle.m_x,
+													y + circle.m_y,
 													0);
 
 				QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
@@ -935,17 +954,15 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 	}
 }
 
-const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>>& geometryData) const
-{
-
+const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>>& geometryData) const {
 	// add BoundingBox
 	if (m_dirtyTriangulation) {
 		std::vector<IBKMK::Vector3D> polyline;
 		std::vector<IBKMK::Vector3D> areaPoints;
-		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.maxlat, m_boundingBox.minlon)));
-		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.minlat, m_boundingBox.minlon)));
-		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.minlat, m_boundingBox.maxlon)));
-		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.maxlat, m_boundingBox.maxlon)));
+		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_maxlat, m_boundingBox.m_minlon)));
+		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_minlat, m_boundingBox.m_minlon)));
+		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_minlat, m_boundingBox.m_maxlon)));
+		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_maxlat, m_boundingBox.m_maxlon)));
 
 		for (auto &p : polyline) {
 			QVector3D vec = m_rotationMatrix.toQuaternion() * QVector3D((float)p.m_x, (float)p.m_y, (float)p.m_z);
@@ -960,7 +977,7 @@ const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>
 	geometryData[m_boundingBox.m_zPosition].push_back(&m_geometryDataBoundingBox);
 
 	// add all other objects
-	for (const auto & building : m_buildings) {
+	for (const auto & building : m_houses) {
 		addGeometryData(building, geometryData[building.m_zPosition]);
 	}
 
@@ -1007,8 +1024,7 @@ const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>
 	m_dirtyTriangulation = false;
 }
 
-const VicOSM::Node * DrawingOSM::findNodeFromId(unsigned int id) const
-{
+const VicOSM::Node * DrawingOSM::findNodeFromId(unsigned int id) const {
 	auto it = m_nodes.find(id);
 	if (it != m_nodes.end()) {
 		return &it->second;
@@ -1017,8 +1033,7 @@ const VicOSM::Node * DrawingOSM::findNodeFromId(unsigned int id) const
 	}
 }
 
-const VicOSM::Way * DrawingOSM::findWayFromId(unsigned int id) const
-{
+const VicOSM::Way * DrawingOSM::findWayFromId(unsigned int id) const {
 	auto it = m_ways.find(id);
 	if (it != m_ways.end()) {
 		return &it->second;
@@ -1027,8 +1042,7 @@ const VicOSM::Way * DrawingOSM::findWayFromId(unsigned int id) const
 	}
 }
 
-const VicOSM::Relation * DrawingOSM::findRelationFromId(unsigned int id) const
-{
+const VicOSM::Relation * DrawingOSM::findRelationFromId(unsigned int id) const {
 	auto it = m_relations.find(id);
 	if (it != m_relations.end()) {
 		return &it->second;
@@ -1037,16 +1051,14 @@ const VicOSM::Relation * DrawingOSM::findRelationFromId(unsigned int id) const
 	}
 }
 
-IBKMK::Vector2D DrawingOSM::convertLatLonToVector2D(double lat, double lon) const
-{
+IBKMK::Vector2D DrawingOSM::convertLatLonToVector2D(double lat, double lon) const {
 	double x, y;
 	IBKMK::LatLonToUTMXY(lat, lon, m_utmZone, x, y);
-	return IBKMK::Vector2D(x, y) - m_centerMercatorProjection;
+	return IBKMK::Vector2D(x - m_centerX, y - m_centerY);
 }
 
 
-bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline, bool connectEndStart, double width, std::vector<PlaneGeometry> & planes) const
-{
+bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline, bool connectEndStart, double width, std::vector<PlaneGeometry> & planes) const {
 	// initialise values
 	IBKMK::Vector3D lineVector, previousVector, crossProduct, perpendicularVector;
 	std::vector<IBKMK::Vector3D> previousVertices;

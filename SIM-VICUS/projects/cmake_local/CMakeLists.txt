@@ -33,6 +33,8 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/../../../externals/Shading/src
 	${PROJECT_SOURCE_DIR}/../../../externals/IDFReader/src
 	${PROJECT_SOURCE_DIR}/../../../externals/clipper/src
+	${PROJECT_SOURCE_DIR}/../../../externals/VicOSM/src
+	${PROJECT_SOURCE_DIR}/../../../externals/VicOSM/srcTranslations
 	${Qt5Widgets_INCLUDE_DIRS}
 	${Qt5Network_INCLUDE_DIRS}
 	${Qt5Svg_INCLUDE_DIRS}
@@ -164,6 +166,7 @@ target_link_libraries( ${PROJECT_NAME}
 	TiCPP
 	QuaZIP
 	qwt6
+	VicOSM
 	${QT_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${APPLE_FRAMEWORKS}

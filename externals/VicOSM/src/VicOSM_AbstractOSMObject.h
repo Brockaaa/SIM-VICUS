@@ -85,22 +85,25 @@ enum KeyValue{
 	NUM_KV
 };
 
-struct AbstractOSMObject {
+class AbstractOSMObject {
+public:
+	void readXML(const TiXmlElement * element);
+	TiXmlElement * writeXML(TiXmlElement * parent) const;
 	bool initialize(AbstractOSMElement& osmElement);
 
 	void assignKeyValue();
 
-	std::vector<Area>					m_areas; // Tag XMLE
-	std::vector<LineFromPlanes>			m_linesFromPlanes;
-	std::vector<Circle>					m_circles;
+	std::vector<Area>					m_areas;				// XML:E
+	std::vector<LineFromPlanes>			m_linesFromPlanes;		// XML:E
+	std::vector<Circle>					m_circles;				// XML:E
 
-	std::string							m_key = "";
+	std::string							m_key = "";				// XML:A
 
-	std::string							m_value = "";
+	std::string							m_value = "";			// XML:A
 
 	KeyValue							m_keyValue = NUM_KV;
 
-	double								m_zPosition = 0;
+	double								m_zPosition = 0;		// XML:A
 
 	int									m_layer = 0;
 

@@ -3,16 +3,19 @@
 
 #include <QColor>
 #include "VicOSM_AbstractDrawingObject.h"
+#include "tinyxml.h"
 
 namespace VicOSM {
 
-struct LineFromPlanes : AbstractDrawingObject {
+class LineFromPlanes : public AbstractDrawingObject {
+public:
+	void readXML(const TiXmlElement * element);
+	TiXmlElement * writeXML(TiXmlElement * parent) const;
+
 	/*! polyline coordinates */
-	std::vector<IBKMK::Vector2D>		m_polyline;
-
-	double								m_lineThickness = 1;
-
-	QColor								m_color = QColor("#78909c");
+	Multipolygon						m_multiPolygon;		// XML:E
+	double								m_lineThickness = 1;			// XML:A
+	QColor								m_color = QColor("#78909c");	// XML:A
 };
 
 } // namespace VicOSM

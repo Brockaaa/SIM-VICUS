@@ -6,7 +6,8 @@
 
 namespace VicOSM {
 
-struct AbstractDrawingObject {
+class AbstractDrawingObject {
+public:
 	void updatePlaneGeometry() {
 		m_dirtyTriangulation = true;
 	}

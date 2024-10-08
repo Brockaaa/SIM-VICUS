@@ -2375,8 +2375,32 @@ void SVMainWindow::on_actionFileImportOSM_triggered()
 		);
 
 	VICUS::DrawingOSM drawing;
-	drawing.readOSMFile(fname);
-	drawing.constructObjects();
+	if (fname.contains("vicosm")) {
+		TiXmlDocument document(fname.toStdString());
+
+		if (!document.LoadFile()) {
+			qDebug() << "Failed to load file: " << fname;
+			qDebug() << "Error: " << document.ErrorDesc();
+			return;
+		}
+
+		TiXmlElement* root = document.RootElement();
+		if (!root) {
+			qDebug() << "Failed to get root element";
+			return;
+		}
+
+		// Print the root element's name
+		qDebug() << "Root element: " << root->Value();
+		const TiXmlElement * c = document.FirstChildElement();
+		const TiXmlElement * d = c->FirstChildElement();
+
+		drawing.readXML(d->FirstChildElement());
+	} else {
+		drawing.readOSMFile(fname);
+		drawing.constructObjects();
+	}
+
 
 	SVUndoAddDrawingOSM * undoAdd = new SVUndoAddDrawingOSM(tr("modified network"), drawing);
 	undoAdd->push(); // modifies project and updates views

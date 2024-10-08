@@ -5,13 +5,17 @@
 
 namespace VicOSM {
 
-struct BoundingBox {
-	double minlat;
-	double maxlat;
-	double minlon;
-	double maxlon;
+class BoundingBox {
+public:
+	void readXML(const TiXmlElement * element);
+	TiXmlElement * writeXML(TiXmlElement * parent) const;
 
-	double								m_zPosition = 0;
+	double m_minlat;										// XML:A
+	double m_maxlat;										// XML:A
+	double m_minlon;										// XML:A
+	double m_maxlon;										// XML:A
+
+	double								m_zPosition = 0;	// XML:A
 };
 
 } // namespace VicOSM

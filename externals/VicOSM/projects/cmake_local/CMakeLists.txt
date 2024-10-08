@@ -1,42 +1,45 @@
-# CMakeLists.txt file for QuaZIP library
+# CMakeLists.txt file for Sim-Vicus data model library
+#
+# Note: This CMakeLists.txt file is not for stand-alone builds.
+#       Requires toplevel CMakeLists.txt file that defines the variable
+#       KEYWORDLISTCREATOR.
 
-project( QuaZIP )
+project( VicOSM )
 
 include_directories(
 	${PROJECT_SOURCE_DIR}/../../src
-	${PROJECT_SOURCE_DIR}/../../src/zlib
+	${PROJECT_SOURCE_DIR}/../../../IBK/src
+	${PROJECT_SOURCE_DIR}/../../../IBKMK/src
+	${PROJECT_SOURCE_DIR}/../../../TiCPP/src
+	${PROJECT_SOURCE_DIR}/../../../Nandrad/src
 	${Qt5Widgets_INCLUDE_DIRS}
 )
 
-# collect a list of all source files of the QuaZIP library and zlib library
-file( GLOB QuaZIP_LIB_CPP_SRCS ${PROJECT_SOURCE_DIR}/../../src/*.cpp )
-file( GLOB QuaZIP_LIB_C_SRCS ${PROJECT_SOURCE_DIR}/../../src/*.c )
-file( GLOB QuaZIP_LIB_ZLIB_SRCS ${PROJECT_SOURCE_DIR}/../../src/zlib/*.c )
+# collect a list of all source files of VicOSM library
+file( GLOB VicOSM_LIB_SRCS ${PROJECT_SOURCE_DIR}/../../src/*.cpp )
+file( GLOB VicOSM_NCG_LIB_SRCS ${PROJECT_SOURCE_DIR}/../../src/ncg/*.cpp )
 
-# collect a list of all header files (to be used in MOC compiler)
-file( GLOB LIB_HDRS ${PROJECT_SOURCE_DIR}/../../src/*.h )
-
-# run headers through moc compiler
-if (Qt5Widgets_INCLUDE_DIRS)
-
-	qt5_wrap_cpp( LIB_MOC_SRCS ${LIB_HDRS} )
-
-else (Qt5Widgets_INCLUDE_DIRS)
-
-	qt4_wrap_cpp( LIB_MOC_SRCS ${LIB_HDRS} )
-
-endif (Qt5Widgets_INCLUDE_DIRS)
-
-# join sources into one variable
-set( LIB_SRCS
-	${QuaZIP_LIB_CPP_SRCS}
-	${QuaZIP_LIB_C_SRCS}
-	${QuaZIP_LIB_ZLIB_SRCS}
+# add VICUS_KeywordList.cpp
+set( VicOSM_LIB_SRCS
+	${VicOSM_LIB_SRCS}
+	${VicOSM_NCG_LIB_SRCS}
+	${PROJECT_SOURCE_DIR}/../../../VicOSM/src/VicOSM_KeywordList.cpp
 )
 
-# add build target for library
-add_library( ${PROJECT_NAME} STATIC
-	${LIB_SRCS}
-	${LIB_MOC_SRCS}
+# collect a list of all header files of VicOSM library
+file( GLOB VicOSM_HDRS ${PROJECT_SOURCE_DIR}/../../src/*.h )
+
+# run the KeywordListCreator tool whenever the header files have changed
+# to update the VICUS_KeywordList.h and VICUS_KeywordList.cpp file
+add_custom_command (
+	OUTPUT   ${PROJECT_SOURCE_DIR}/../../../VicOSM/src/VicOSM_KeywordList.cpp
+	DEPENDS  ${VicOSM_HDRS} NandradCodeGenerator
+	COMMAND  NandradCodeGenerator
+	ARGS     VicOSM ${PROJECT_SOURCE_DIR}/../../src 1 VicOSM ncg
+)
+
+# build the library
+add_library( VicOSM STATIC
+	${VicOSM_LIB_SRCS}
 )
 

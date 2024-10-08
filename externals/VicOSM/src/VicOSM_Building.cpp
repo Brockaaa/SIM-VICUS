@@ -2,40 +2,69 @@
 
 namespace VicOSM {
 
-void Building::calculateHeight(AbstractOSMElement & element) {
+void OSMBuilding::calculateHeight(AbstractOSMElement & element) {
 	std::string valueLevel = element.getValueFromKey("building:levels");
 	if (valueLevel != "") {
-		double valueLevelDouble = std::stoi(valueLevel);
-		if (valueLevelDouble > 0) m_height = valueLevelDouble * m_levelHeight;
+		try {
+			double valueLevelDouble = std::stod(valueLevel);
+			if (valueLevelDouble > 0) m_height = valueLevelDouble * m_levelHeight;
+		} catch (const std::invalid_argument& e) {
+			// Handle invalid argument exception
+		} catch (const std::out_of_range& e) {
+			// Handle out of range exception
+		}
 	}
 
 	std::string valueRoof = element.getValueFromKey("roof:levels");
 	if (valueRoof != "") {
-		double valueRoofDouble = std::stoi(valueRoof);
-		if (valueRoofDouble > 0) m_height += valueRoofDouble * m_roofHeight;
+		try {
+			double valueRoofDouble = std::stod(valueRoof);
+			if (valueRoofDouble > 0) m_height += valueRoofDouble * m_roofHeight;
+		} catch (const std::invalid_argument& e) {
+			// Handle invalid argument exception
+		} catch (const std::out_of_range& e) {
+			// Handle out of range exception
+		}
 	}
 
 	std::string valueHeight = element.getValueFromKey("height");
 	if (valueHeight != "") {
-		double valueHeightDouble = std::stoi(valueHeight);
-		m_height = valueHeightDouble;
+		try {
+			double valueHeightDouble = std::stod(valueHeight);
+			m_height = valueHeightDouble;
+		} catch (const std::invalid_argument& e) {
+			// Handle invalid argument exception
+		} catch (const std::out_of_range& e) {
+			// Handle out of range exception
+		}
 	}
 
 	std::string valueMinLevel = element.getValueFromKey("building:min_level");
 	if (valueMinLevel != "") {
-		double valueMinLevelDouble = std::stoi(valueMinLevel);
-		if (valueMinLevelDouble > 0) m_minHeight = valueMinLevelDouble * m_levelHeight;
+		try {
+			double valueMinLevelDouble = std::stod(valueMinLevel);
+			if (valueMinLevelDouble > 0) m_minHeight = valueMinLevelDouble * m_levelHeight;
+		} catch (const std::invalid_argument& e) {
+			// Handle invalid argument exception
+		} catch (const std::out_of_range& e) {
+			// Handle out of range exception
+		}
 	}
 
 	std::string valueMinHeight = element.getValueFromKey("min_height");
 	if (valueMinHeight != "") {
-		double valueMinHeightDouble = std::stoi(valueMinHeight);
-		m_minHeight = valueMinHeightDouble;
+		try {
+			double valueMinHeightDouble = std::stod(valueMinHeight);
+			m_minHeight = valueMinHeightDouble;
+		} catch (const std::invalid_argument& e) {
+			// Handle invalid argument exception
+		} catch (const std::out_of_range& e) {
+			// Handle out of range exception
+		}
 	}
-
 }
 
-bool Building::createBuilding(Way & way, Building &building, bool enable3D) {
+bool OSMBuilding::createBuilding(Way & way, OSMBuilding &building, bool enable3D) {
 	if (way.containsKeyValue("building", "cellar")) return false;
 	if (way.containsKeyValue("building", "roof") && !enable3D) return false;
 	building.m_key = "building";
@@ -53,7 +82,7 @@ bool Building::createBuilding(Way & way, Building &building, bool enable3D) {
 	return true;
 }
 
-bool Building::createBuilding(Relation & relation, Building &building, bool enable3D) {
+bool OSMBuilding::createBuilding(Relation & relation, OSMBuilding &building, bool enable3D) {
 	if (!relation.containsKeyValue("type", "multipolygon")) return false;
 	if (relation.containsKeyValue("building", "cellar")) return false;
 	if (relation.containsKeyValue("building", "roof") && !enable3D) return false;

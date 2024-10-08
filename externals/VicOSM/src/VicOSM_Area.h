@@ -3,15 +3,20 @@
 
 #include <QColor>
 #include "VicOSM_AbstractDrawingObject.h"
+#include "tinyxml.h"
 
 namespace VicOSM {
 
-struct Area : AbstractDrawingObject {
-	Multipolygon						m_multiPolygon;
-	bool								m_extrudingPolygon = false;
-	double								m_height = 3;
-	double							    m_minHeight = 0;
-	QColor								m_color	  = QColor("#2f302f");
+class Area : public AbstractDrawingObject {
+public:
+	void readXML(const TiXmlElement * element);
+	TiXmlElement * writeXML(TiXmlElement * parent) const;
+
+	Multipolygon						m_multiPolygon;					// XML:E
+	bool								m_extrudingPolygon = false;		// XML:A
+	double								m_height = 3;					// XML:A
+	double							    m_minHeight = 0;				// XML:A
+	QColor								m_color	  = QColor("#2f302f");	// XML:A
 };
 
 } // namespace VicOSM

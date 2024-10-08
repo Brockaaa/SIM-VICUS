@@ -32,7 +32,8 @@ struct Nd {
 };
 
 
-struct AbstractOSMElement {
+class AbstractOSMElement {
+public:
 
 	virtual ~AbstractOSMElement() {}
 

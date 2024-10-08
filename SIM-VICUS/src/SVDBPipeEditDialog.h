@@ -8,6 +8,7 @@ class SVDBPipeDelegate;
 
 class SVDBPipeEditDialog : public SVAbstractDatabaseEditDialog
 {
+	Q_OBJECT
 public:
 	SVDBPipeEditDialog(QWidget *parent, SVAbstractDatabaseTableModel * tableModel,
 					   SVAbstractDatabaseEditWidget * editWidget,

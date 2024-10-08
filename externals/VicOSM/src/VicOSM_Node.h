@@ -6,8 +6,8 @@
 namespace VicOSM {
 
 /*! A single point on the map */
-struct Node : public AbstractOSMElement {
-
+class Node : public AbstractOSMElement {
+public:
 	void readXML(const TiXmlElement * element);
 
 	/*! Point coordinate */

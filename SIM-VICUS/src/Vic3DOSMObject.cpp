@@ -137,38 +137,48 @@ void OSMObject::generateOSMGeometry() {
 			unsigned int currentElementIndex = 0;
 
 			// adding geometry data to GeometryObject
-			for( const auto& data : geometryDataWithLayer[it->first]) {
+			for (const auto& data : geometryDataWithLayer[it->first]) {
 				if (data->m_extrudingPolygon) {
 					for (const auto &multipolygon : data->m_multipolygons) {
 						std::vector<IBKMK::Vector3D> areaPoints;
-						for (int i = 1; i < multipolygon.m_outerPolyline.size(); i++) {
+						for (unsigned int i = 1; i < multipolygon.m_outerPolyline.size(); i++) {
 							IBKMK::Vector3D p = IBKMK::Vector3D(multipolygon.m_outerPolyline[i].m_x,
 																multipolygon.m_outerPolyline[i].m_y,
 																data->m_minHeight);
-
 							QVector3D vec = drawing.m_rotationMatrix.toQuaternion() * QVector3D((float)p.m_x, (float)p.m_y, (float)p.m_z);
 							vec += QVector3D((double)drawing.m_origin.m_x, (double)drawing.m_origin.m_y, (double)drawing.m_origin.m_z);
-
 							areaPoints.push_back(IBKMK::Vector3D((double)vec.x(), (double)vec.y(), (double)vec.z()));
 						}
-						addPolygonExtrusion(areaPoints, data->m_height, data->m_color, currentVertexIndex, currentElementIndex,
-								 VAOWithBuffer->m_vertexBufferData,
-								 VAOWithBuffer->m_colorBufferData,
-								 VAOWithBuffer->m_indexBufferData,
-								 &multipolygon.m_innerPolylines);
+						try {
+							addPolygonExtrusion(areaPoints, data->m_height, data->m_color, currentVertexIndex, currentElementIndex,
+												VAOWithBuffer->m_vertexBufferData,
+												VAOWithBuffer->m_colorBufferData,
+												VAOWithBuffer->m_indexBufferData,
+												&multipolygon.m_innerPolylines);
+						}
+						catch (const std::exception& e) {
+							// Handle exception (e.g., log error, skip this polygon, etc.)
+							std::cerr << "Error in addPolygonExtrusion: " << e.what() << std::endl;
+						}
 					}
 				} else {
 					for (const VICUS::PlaneGeometry &plane : data->m_planeGeometry) {
-						addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
-								 VAOWithBuffer->m_vertexBufferData,
-								 VAOWithBuffer->m_colorBufferData,
-								 VAOWithBuffer->m_indexBufferData,
-								 false);
-						addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
-								 VAOWithBuffer->m_vertexBufferData,
-								 VAOWithBuffer->m_colorBufferData,
-								 VAOWithBuffer->m_indexBufferData,
-								 true);
+						try {
+							addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
+									 VAOWithBuffer->m_vertexBufferData,
+									 VAOWithBuffer->m_colorBufferData,
+									 VAOWithBuffer->m_indexBufferData,
+									 false);
+							addPlane(plane.triangulationData(), data->m_color, currentVertexIndex, currentElementIndex,
+									 VAOWithBuffer->m_vertexBufferData,
+									 VAOWithBuffer->m_colorBufferData,
+									 VAOWithBuffer->m_indexBufferData,
+									 true);
+						}
+						catch (const std::exception& e) {
+							// Handle exception (e.g., log error, skip this plane, etc.)
+							std::cerr << "Error in addPlane: " << e.what() << std::endl;
+						}
 					}
 				}
 			}
