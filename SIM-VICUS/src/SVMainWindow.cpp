@@ -89,6 +89,7 @@
 #include "SVPreferencesPageMisc.h"
 #include "SVViewStateHandler.h"
 #include "SVImportIDFDialog.h"
+#include "SVImportOSMDialog.h"
 #include "SVPropVertexListWidget.h"
 #include "SVPropertyWidget.h"
 #include "SVPropEditGeometry.h"
@@ -2366,44 +2367,18 @@ void SVMainWindow::on_actionDBAcousticSoundAbsorptions_triggered() {
 
 void SVMainWindow::on_actionFileImportOSM_triggered()
 {
-	QString fname = QFileDialog::getOpenFileName(
-		this,
-		tr("Select File to open"),
-		"/home/sandisk/SHK/osm/",
-		tr("OSM (*.osm *.xml *.txt);;All files (*.*)"), nullptr,
-		SVSettings::instance().m_dontUseNativeDialogs ? QFileDialog::DontUseNativeDialog : QFileDialog::Options()
-		);
-
-	VICUS::DrawingOSM drawing;
-	if (fname.contains("vicosm")) {
-		TiXmlDocument document(fname.toStdString());
-
-		if (!document.LoadFile()) {
-			qDebug() << "Failed to load file: " << fname;
-			qDebug() << "Error: " << document.ErrorDesc();
-			return;
-		}
-
-		TiXmlElement* root = document.RootElement();
-		if (!root) {
-			qDebug() << "Failed to get root element";
-			return;
-		}
-
-		// Print the root element's name
-		qDebug() << "Root element: " << root->Value();
-		const TiXmlElement * c = document.FirstChildElement();
-		const TiXmlElement * d = c->FirstChildElement();
-
-		drawing.readXML(d->FirstChildElement());
-	} else {
-		drawing.readOSMFile(fname);
-		drawing.constructObjects();
+	// now spawn import dialog
+	if (m_importOSMDialog == nullptr) {
+		m_importOSMDialog = new SVImportOSMDialog(this);
 	}
 
-
-	SVUndoAddDrawingOSM * undoAdd = new SVUndoAddDrawingOSM(tr("modified network"), drawing);
-	undoAdd->push(); // modifies project and updates views
+	if (m_importOSMDialog->import()) {
+		VICUS::DrawingOSM drawingOSM;
+		drawingOSM.readOSMFile(QString("/home/sandisk/SHK/osm/Garrel.osm"));
+		drawingOSM.constructObjects();
+		SVUndoAddDrawingOSM * undoAdd = new SVUndoAddDrawingOSM(tr("modified network"), drawingOSM);
+		undoAdd->push(); // modifies project and updates views
+	}
 
 }
 

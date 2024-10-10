@@ -54,6 +54,7 @@ class SVNavigationTreeWidget;
 class SVNetworkImportDialog;
 class SVNetworkExportDialog;
 class SVImportIDFDialog;
+class SVImportOSMDialog;
 class SVImportDXFDialog;
 class SVNetworkEditDialog;
 class SVViewStateHandler;
@@ -513,6 +514,9 @@ private:
 
 	/*! IDF import dialog */
 	SVImportIDFDialog			*m_importIDFDialog										= nullptr;
+
+	/*! OSM import dialog */
+	SVImportOSMDialog			*m_importOSMDialog										= nullptr;
 
 	/*! Network import dialog */
 	SVNetworkImportDialog		*m_networkImportDialog									= nullptr;

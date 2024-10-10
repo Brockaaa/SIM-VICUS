@@ -9,7 +9,7 @@ TEMPLATE = app
 # this pri must be sourced from all our applications
 include( ../../../externals/IBK/projects/Qt/IBK.pri )
 
-QT += xml opengl network printsupport widgets svg
+QT += xml opengl network printsupport widgets svg quickwidgets location
 
 CONFIG += c++11
 CONFIG(debug, debug|release) {
@@ -287,6 +287,7 @@ SOURCES += \
 	../../src/SVDebugApplication.cpp \
 	../../src/SVGeometryView.cpp \
 	../../src/SVImportIDFDialog.cpp \
+	../../src/SVImportOSMDialog.cpp \
 	../../src/SVImportPDFDialog.cpp \
 	../../src/SVLocalCoordinateView.cpp \
 	../../src/SVLogFileDialog.cpp \
@@ -554,6 +555,7 @@ HEADERS  += \
 	../../src/SVDebugApplication.h \
 	../../src/SVGeometryView.h \
 	../../src/SVImportIDFDialog.h \
+	../../src/SVImportOSMDialog.h \
 	../../src/SVImportPDFDialog.h \
 	../../src/SVLocalCoordinateView.h \
 	../../src/SVLogFileDialog.h \
@@ -652,6 +654,7 @@ FORMS    += \
 	../../src/SVDrawingPropertiesDialog.ui \
 	../../src/SVGeometryView.ui \
 	../../src/SVImportIDFDialog.ui \
+	../../src/SVImportOSMDialog.ui \
 	../../src/SVImportPDFDialog.ui \
 	../../src/SVLcaLccResultsWidget.ui \
 	../../src/SVLcaLccSettingsWidget.ui \
@@ -735,6 +738,7 @@ RESOURCES += \
 ../../resources/SIM-VICUS.qrc \
 	../../resources/predefinedSplines.qrc \
 ../../resources/qdarkstyle/style.qrc \
+    ../../resources/qml.qrc \
 ../../src/shaders/shaders.qrc \
 ../../resources/icons.qrc
 
