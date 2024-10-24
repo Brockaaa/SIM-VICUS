@@ -19,8 +19,8 @@ public:
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 
-	static bool createWater(Way &way, Water& water);
-	static bool createWater(Relation &relation, Water& water);
+	bool createWater(Way &way);
+	bool createWater(Relation &relation);
 
 };
 

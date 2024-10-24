@@ -48,7 +48,7 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 			else if (attribName == "centerY")
 				m_centerY = NANDRAD::readPODAttributeValue<double>(element, attrib);
 			else if (attribName == "enable3D")
-				m_enable3D = NANDRAD::readPODAttributeValue<bool>(element, attrib);
+				m_enable3DBuildings = NANDRAD::readPODAttributeValue<bool>(element, attrib);
 			else {
 				IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ATTRIBUTE).arg(attribName).arg(element->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 			}
@@ -67,7 +67,7 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 					OSMBuilding obj;
 					obj.readXML(c2);
-					m_houses.push_back(obj);
+					m_buildings.push_back(obj);
 					c2 = c2->NextSiblingElement();
 				}
 			}
@@ -191,6 +191,18 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
+			else if (cName == "Railways") {
+				const TiXmlElement * c2 = c->FirstChildElement();
+				while (c2) {
+					const std::string & c2Name = c2->ValueStr();
+					if (c2Name != "Railway")
+						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+					Railway obj;
+					obj.readXML(c2);
+					m_railways.push_back(obj);
+					c2 = c2->NextSiblingElement();
+				}
+			}
 			else if (cName == "BoundingBox")
 				m_boundingBox.readXML(c);
 			else {
@@ -214,17 +226,17 @@ TiXmlElement * DrawingOSM::writeXML(TiXmlElement * parent) const {
 	e->SetAttribute("utmZone", IBK::val2string<int>(m_utmZone));
 	e->SetAttribute("centerX", IBK::val2string<double>(m_centerX));
 	e->SetAttribute("centerY", IBK::val2string<double>(m_centerY));
-	if (m_enable3D != DrawingOSM().m_enable3D)
-		e->SetAttribute("enable3D", IBK::val2string<bool>(m_enable3D));
+	if (m_enable3DBuildings != DrawingOSM().m_enable3DBuildings)
+		e->SetAttribute("enable3D", IBK::val2string<bool>(m_enable3DBuildings));
 
 	m_boundingBox.writeXML(e);
 
-	if (!m_houses.empty()) {
+	if (!m_buildings.empty()) {
 		TiXmlElement * child = new TiXmlElement("Houses");
 		e->LinkEndChild(child);
 
-		for (std::vector<OSMBuilding>::const_iterator it = m_houses.begin();
-			it != m_houses.end(); ++it)
+		for (std::vector<OSMBuilding>::const_iterator it = m_buildings.begin();
+			it != m_buildings.end(); ++it)
 		{
 			it->writeXML(child);
 		}
@@ -345,6 +357,18 @@ TiXmlElement * DrawingOSM::writeXML(TiXmlElement * parent) const {
 
 		for (std::vector<Barrier>::const_iterator it = m_barriers.begin();
 			it != m_barriers.end(); ++it)
+		{
+			it->writeXML(child);
+		}
+	}
+
+
+	if (!m_railways.empty()) {
+		TiXmlElement * child = new TiXmlElement("Railways");
+		e->LinkEndChild(child);
+
+		for (std::vector<Railway>::const_iterator it = m_railways.begin();
+			it != m_railways.end(); ++it)
 		{
 			it->writeXML(child);
 		}

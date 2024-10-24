@@ -80,6 +80,7 @@ void Scene::create(SceneView * parent, std::vector<ShaderProgram> & shaderProgra
 	m_surfaceNormalsShader = &shaderPrograms[SHADER_LINES];
 	m_measurementShader = &shaderPrograms[SHADER_LINES];
 	m_buildingShader = &shaderPrograms[SHADER_OPAQUE_GEOMETRY];
+	// m_osmShader = &shaderPrograms[SHADER_NO_PHONG_GEOMETRY]; // TODO Maik
 	m_fixedColorTransformShader = &shaderPrograms[SHADER_WIREFRAME];
 	m_coordinateSystemShader = &shaderPrograms[SHADER_COORDINATE_SYSTEM];
 	m_transparencyShader = &shaderPrograms[SHADER_TRANSPARENT_GEOMETRY];

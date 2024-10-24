@@ -52,7 +52,7 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertHoleToLocalCoordinates(
 	return localVertices;
 }
 
-void DrawingOSM::createMultipolygonFromWay(VicOSM::Way & way, VicOSM::Multipolygon & multipolygon) {
+void DrawingOSM::createMultipolygonFromWay(const VicOSM::Way & way, VicOSM::Multipolygon & multipolygon) {
 	for (unsigned int i = 0; i < way.m_nd.size() ; i++) {
 		const VicOSM::Node * node = findNodeFromId(way.m_nd[i].ref);
 		Q_ASSERT(node);
@@ -60,7 +60,10 @@ void DrawingOSM::createMultipolygonFromWay(VicOSM::Way & way, VicOSM::Multipolyg
 	}
 }
 
-void DrawingOSM::createMultipolygonsFromRelation(VicOSM::Relation & relation, std::vector<VicOSM::Multipolygon> & multipolygons) {
+void DrawingOSM::createMultipolygonsFromRelation(const VicOSM::Relation & relation, std::vector<VicOSM::Multipolygon> & multipolygons) {
+	/* based on https://wiki.openstreetmap.org/wiki/Relation:multipolygon
+	 * and https://wiki.openstreetmap.org/wiki/Relation:multipolygon/Algorithm */
+
 	auto processWay = [&](std::vector<int>& nodeRefs, int wayRef) -> bool {
 		const VicOSM::Way* way = findWayFromId(wayRef);
 		if(!way) return false;
@@ -314,10 +317,11 @@ void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, 
 
 }
 
-void DrawingOSM::readOSM(const TiXmlElement * element) {
+void DrawingOSM::readOSM(const TiXmlElement * element, IBK::NotificationHandler *notifyer) {
 	FUNCID(DrawingOSM::readOSM);
 
 	try {
+		int counter = 0;
 		// search for mandatory attributes
 
 		// reading attributes
@@ -367,25 +371,29 @@ void DrawingOSM::readOSM(const TiXmlElement * element) {
 				VicOSM::Node obj;
 				obj.readXML(c);
 				m_nodes[obj.m_id] = obj;
+				if (notifyer && counter % 100 == 0)
+					notifyer->notify(10.0, "Reading Nodes");
 			}
 			else if (cName == "way") {
 				VicOSM::Way obj ;
 				obj.readXML(c);
 				m_ways[obj.m_id] = obj;
+				if (notifyer && counter % 100 == 0)
+					notifyer->notify(20.0, "Reading Ways");
 			}
 			else if (cName == "relation") {
 				VicOSM::Relation obj;
 				obj.readXML(c);
 				m_relations[obj.m_id] = obj;
+				if (notifyer && counter % 100 == 0)
+					notifyer->notify(30.0, "Reading Relations");
 			}
+			counter++;
 			c = c->NextSiblingElement();
 		}
 	}
 	catch (IBK::Exception & ex) {
-		throw IBK::Exception( ex, IBK::FormatString("Error reading 'Drawing' element."), FUNC_ID);
-	}
-	catch (std::exception & ex2) {
-		throw IBK::Exception( IBK::FormatString("%1\nError reading 'Drawing::Text' element.").arg(ex2.what()), FUNC_ID);
+		throw IBK::Exception( ex, IBK::FormatString("Error reading 'DrawingOSM' element."), FUNC_ID); //TODO
 	}
 }
 
@@ -406,7 +414,9 @@ void DrawingOSM::writeOSM(const IBK::Path & filename)
 	docDraw.SaveFile( filename.c_str() );
 }
 
-bool DrawingOSM::readOSMFile(QString filePath) {
+bool DrawingOSM::import(const QString filePath, IBK::NotificationHandler *notifyer) {
+	if (notifyer)
+		notifyer->notify(5.0, "Reading OSM");
 	TiXmlDocument document(filePath.toStdString());
 
 	if (!document.LoadFile()) {
@@ -424,7 +434,7 @@ bool DrawingOSM::readOSMFile(QString filePath) {
 	// Print the root element's name
 	qDebug() << "Root element: " << root->Value();
 
-	readOSM(document.RootElement());
+	readOSM(document.RootElement(), notifyer);
 	double minx, miny, maxx, maxy;
 	m_utmZone = IBKMK::LatLonToUTMXY(m_boundingBox.m_minlat, m_boundingBox.m_minlon, m_utmZone, minx, miny);
 	IBKMK::LatLonToUTMXY(m_boundingBox.m_maxlat, m_boundingBox.m_maxlon, m_utmZone, maxx, maxy);
@@ -434,12 +444,15 @@ bool DrawingOSM::readOSMFile(QString filePath) {
 	qDebug() << "m_origin: " << QString::number(minx + (maxx - minx) / 2) << " " << QString::number(miny + (maxy - miny) / 2);
 	qDebug() << "m_utmZone: " << QString::number(m_utmZone);
 
-	m_filePath = filePath;
-
 	return true;
 }
 
-void DrawingOSM::constructObjects() {
+void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
+	/* Generally there are two types of relation: Relations that group together OSMElements and relations that contain geometrical data.
+	 * First finds all ways and Multipolygon relations that are used (and being drawn) in another relation to prevent them from being standalone OSMObjects.
+	 * Then constructs all OSMObjects from nodes, ways and relations in this order.
+	 * Then calculates the order of the OSMObjects and assigns the resulting zValue to the objects */
+
 	std::function<void(VicOSM::Node&, VicOSM::AbstractOSMObject&)> createCenterFromNodeAndAssignToObject = [&](VicOSM::Node& node, VicOSM::AbstractOSMObject& object){
 		for (auto& circle : object.m_circles) {
 			IBKMK::Vector2D center = convertLatLonToVector2D(node.m_lat, node.m_lon);
@@ -478,139 +491,265 @@ void DrawingOSM::constructObjects() {
 		}
 	};
 
+	std::function<void(const Relation&, std::vector<int>&)> findUsedWaysAndRelations = [&](const Relation& relation, std::vector<int>& usedWaysAndRelations) {
+		for (auto& member : relation.m_members) {
+			if (member.type == Types::WayType) {
+				usedWaysAndRelations.push_back(member.ref);
+			} else if (member.type == Types::RelationType) {
+				usedWaysAndRelations.push_back(member.ref);
+				const Relation* newRel = findRelationFromId(member.ref);
+				if (newRel) {
+					findUsedWaysAndRelations(*newRel, usedWaysAndRelations);
+				}
+			}
+		}
+	};
+
+	std::vector<int> usedWaysInBuildingRelation;
+	/* finds all relations and ways that are used in a Simple 3D Building and add them to usedWaysInBuildingRelation
+	 * to prevent them to be independently drawn. */
+	if (m_enable3DBuildings) {
+		for (auto& pair : m_relations) {
+			if (pair.second.containsKey("building") || pair.second.containsKeyValue("type","building")) {
+				if (pair.second.containsKeyValue("type", "multipolygon")) continue;
+				findUsedWaysAndRelations(pair.second, usedWaysInBuildingRelation);
+			}
+		}
+	}
+
+	if (notifyer) {
+		notifyer->notify(65, "Construct Objects from Nodes");
+	}
 	// construct all objects from nodes
 	for (auto& pair : m_nodes) {
 		if (pair.second.containsKey("natural")) {
 			VicOSM::Natural natural;
-			if (VicOSM::Natural::createNatural(pair.second, natural)) {
+			if (natural.createNatural(pair.second)) {
 				createCenterFromNodeAndAssignToObject(pair.second, natural);
 				m_natural.push_back(natural);
 			}
 		}
 	}
-	/* construct all objects from ways
-	 * order relevant. For example heritage should come at the very end because key heritage
-	 * is not supposed to occur alone and only in combination with other keys like place.
-	 * In practice this does not always happen */
+
+	if (notifyer) {
+		notifyer->notify(75, "Construct Objects from Ways");
+	}
+	/* construct all objects from ways. Order of construction relevant*/
 	for (auto& pair : m_ways) {
-		if (pair.second.containsKey("building")) {
+		if (pair.second.containsKey("building") || (m_enable3DBuildings && pair.second.containsKey("building:part"))) {
+			if (m_enable3DBuildings && std::find(usedWaysInBuildingRelation.begin(), usedWaysInBuildingRelation.end(), (int)pair.second.m_id) != usedWaysInBuildingRelation.end()) {
+				continue;
+			}
 			VicOSM::OSMBuilding building;
-			if (VicOSM::OSMBuilding::createBuilding(pair.second, building, m_enable3D)) {
+			if (building.createBuilding(pair.second, m_enable3DBuildings)) {
 				createMultipolygonFromWayAndAssignToObject(pair.second, building);
-				m_houses.push_back(building);
+				m_buildings.push_back(building);
 			}
 		}
 		else if (pair.second.containsKey("highway")) {
 			VicOSM::Highway highway;
-			if (VicOSM::Highway::createHighway(pair.second, highway)) {
+			if (highway.createHighway(pair.second)) {
 				createMultipolygonFromWayAndAssignToObject(pair.second, highway);
 				m_highways.push_back(highway);
 			}
 		}
+		else if (pair.second.containsKey("railway")) {
+			VicOSM::Railway railway;
+			if (railway.createRailway(pair.second)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, railway);
+				m_railways.push_back(railway);
+			}
+		}
 		else if (pair.second.containsKey("water") || pair.second.containsKey("waterway")) {
 			VicOSM::Water water;
-			if (VicOSM::Water::createWater(pair.second, water)) {
+			if (water.createWater(pair.second)) {
 				createMultipolygonFromWayAndAssignToObject(pair.second, water);
 				m_waters.push_back(water);
 			}
 		}
 		else if (pair.second.containsKey("landuse")) {
 			VicOSM::Land land;
-			if (VicOSM::Land::createLand(pair.second, land)) {
+			if (land.createLand(pair.second)) {
 				createMultipolygonFromWayAndAssignToObject(pair.second, land);
 				m_land.push_back(land);
 			}
 		}
 		else if (pair.second.containsKey("leisure")) {
 			VicOSM::Leisure leisure;
-			if (VicOSM::Leisure::createLeisure(pair.second, leisure)) {
+			if (leisure.createLeisure(pair.second)) {
 				createMultipolygonFromWayAndAssignToObject(pair.second, leisure);
 				m_leisure.push_back(leisure);
 			}
 		}
 		else if (pair.second.containsKey("natural")) {
 			VicOSM::Natural natural;
-			if (VicOSM::Natural::createNatural(pair.second, natural)) {
+			if (natural.createNatural(pair.second)) {
 				createMultipolygonFromWayAndAssignToObject(pair.second, natural);
 				m_natural.push_back(natural);
 			}
 		}
 		else if (pair.second.containsKey("amenity")) {
 			VicOSM::Amenity amenity;
-			if (VicOSM::Amenity::createAmenity(pair.second, amenity)) {
+			if (amenity.createAmenity(pair.second)) {
 				createMultipolygonFromWayAndAssignToObject(pair.second, amenity);
 				m_amenities.push_back(amenity);
 			}
 		}
-		else if (pair.second.containsKey("bridge")) {
+		else if (pair.second.containsKey("bridge") || pair.second.containsKeyValue("type", "bridge") || pair.second.containsKeyValue("man_made", "bridge")) {
 			VicOSM::Bridge bridge;
-			if (VicOSM::Bridge::createBridge(pair.second, bridge)) {
+			if (bridge.createBridge(pair.second)) {
 				createMultipolygonFromWayAndAssignToObject(pair.second, bridge);
 				m_bridges.push_back(bridge);
 			}
 		}
-		else if (pair.second.containsKey("tourism")) {
-			VicOSM::Tourism tourism;
-			if (VicOSM::Tourism::createTourism(pair.second, tourism)) {
-				createMultipolygonFromWayAndAssignToObject(pair.second, tourism);
-				m_tourism.push_back(tourism);
-			}
-		}
 		else if (pair.second.containsKey("barrier")) {
 			VicOSM::Barrier barrier;
-			if (VicOSM::Barrier::createBarrier(pair.second, barrier)) {
+			if (barrier.createBarrier(pair.second)) {
 				createMultipolygonFromWayAndAssignToObject(pair.second, barrier);
 				m_barriers.push_back(barrier);
 			}
 		}
 		else if (pair.second.containsKey("place") || pair.second.containsKey("heritage")) {
 			VicOSM::Place place;
-			if (VicOSM::Place::createPlace(pair.second, place)) {
+			if (place.createPlace(pair.second)) {
 				createMultipolygonFromWayAndAssignToObject(pair.second, place);
 				m_places.push_back(place);
 			}
 		}
+		else if (pair.second.containsKey("tourism")) {
+			VicOSM::Tourism tourism;
+			if (tourism.createTourism(pair.second)) {
+				createMultipolygonFromWayAndAssignToObject(pair.second, tourism);
+				m_tourism.push_back(tourism);
+			}
+		}
 	}
 
+	if (notifyer) {
+		notifyer->notify(85, "Construct Objects from Relations");
+	}
 	// construct all objects from relation
 	for (auto& pair : m_relations) {
-		if (pair.second.containsKey("building")) {
-			VicOSM::OSMBuilding building;
-			if (VicOSM::OSMBuilding::createBuilding(pair.second, building, m_enable3D)) {
-				createMultipolygonFromRelationAndAssignToObject(pair.second, building);
-				m_houses.push_back(building);
+		if (pair.second.containsKey("building") || (m_enable3DBuildings && (pair.second.containsKey("building:part") || pair.second.containsKeyValue("type", "building"))) ) {
+			if (pair.second.containsKeyValue("type", "multipolygon")) {
+				if (m_enable3DBuildings && std::find(usedWaysInBuildingRelation.begin(), usedWaysInBuildingRelation.end(), (int)pair.second.m_id) != usedWaysInBuildingRelation.end()) {
+					continue;
+				}
+				VicOSM::OSMBuilding building;
+				if (building.createBuilding(pair.second, m_enable3DBuildings)) {
+					createMultipolygonFromRelationAndAssignToObject(pair.second, building);
+					m_buildings.push_back(building);
+				}
+			} else if (m_enable3DBuildings) {
+				// if enable3D enable Simple 3D Buildings will be constructed
+				VicOSM::OSMBuilding building;
+				building.initializeSimple3DBuilding(pair.second);
+				bool outlineAdded = false;												// workaround
+				int areaOutline = -1;													// workaround
+
+				for (auto& member : pair.second.m_members) {
+					if (member.role == "basement") continue;
+					bool outline = member.role == "outline"; // when a building:part exists, the outline of the building should generally not be used. In practice there are cases of floating buildings because they rely on the outline being drawn
+					if (outline) continue;
+					if (member.type == Types::WayType) {
+						const Way *way = findWayFromId(member.ref);
+						if (!way)
+							continue;
+						if (way->containsKey("roof:ridge")) continue;
+						Area area = building.createArea(*way, m_enable3DBuildings);
+						if (outline && area.m_height == 3 && area.m_minHeight == 0) {   // workaround
+							continue;													// workaround
+						}																// workaround
+						outlineAdded = outlineAdded || outline;							// workaround
+						Multipolygon multipolygon;
+						createMultipolygonFromWay(*way, multipolygon);
+						area.m_multiPolygon = multipolygon;
+						building.m_areas.push_back(area);
+						if (outline)													// workaround
+							areaOutline = building.m_areas.size() - 1;					// workaround
+					} else if (member.type == Types::RelationType) {
+						const Relation *relation = findRelationFromId(member.ref);
+						if (!relation)
+							continue;
+						Area area = building.createArea(*relation, m_enable3DBuildings);
+						if (outline && area.m_height == 3 && area.m_minHeight == 0) {
+							continue;
+						}
+						// outlineAdded = outlineAdded || outline;
+						std::vector<VicOSM::Multipolygon> multipolygons;
+						createMultipolygonsFromRelation(*relation, multipolygons);
+						for (auto& multipolygon : multipolygons) {
+							Area subArea = area;
+							subArea.m_multiPolygon = multipolygon;
+							building.m_areas.push_back(subArea);
+							if (outline) {												// workaround
+								areaOutline = building.m_areas.size() - 1;				// workaround
+								outline = false;										// workaround
+							}															// workaround
+						}
+					}
+				}
+
+				// find smallest height and set outline to smallest height
+				if (areaOutline >= 0) {													// workaround
+					double smallestHeight = building.m_areas[areaOutline].m_height;		// workaround
+					for (auto& area : building.m_areas) {								// workaround
+						if (area.m_height != 3 && smallestHeight > area.m_height)		// workaround
+							smallestHeight = area.m_height;								// workaround
+					}																	// workaround
+					if (smallestHeight > building.m_areas[areaOutline].m_minHeight) {	// workaround
+						building.m_areas[areaOutline].m_height = smallestHeight;		// workaround
+					}																	// workaround
+				}																		// workaround
+
+				m_buildings.push_back(building);
 			}
 		}
 		else if (pair.second.containsKey("place")) {
 			VicOSM::Place place;
-			if (VicOSM::Place::createPlace(pair.second, place)) {
+			if (place.createPlace(pair.second)) {
 				createMultipolygonFromRelationAndAssignToObject(pair.second, place);
 				m_places.push_back(place);
 			}
 		}
 		else if (pair.second.containsKey("water") || pair.second.containsKey("waterway")) {
 			VicOSM::Water water;
-			if (VicOSM::Water::createWater(pair.second, water)) {
+			if (water.createWater(pair.second)) {
 				createMultipolygonFromRelationAndAssignToObject(pair.second, water);
 				m_waters.push_back(water);
 			}
 		}
+		else if (pair.second.containsKey("bridge")  || pair.second.containsKeyValue("type", "bridge") || pair.second.containsKeyValue("man_made", "bridge")) {
+			VicOSM::Bridge bridge;
+			if (bridge.createBridge(pair.second)) {
+				createMultipolygonFromRelationAndAssignToObject(pair.second, bridge);
+				m_bridges.push_back(bridge);
+			}
+		}
 		else if (pair.second.containsKey("highway")) {
 			VicOSM::Highway highway;
-			if (VicOSM::Highway::createHighway(pair.second, highway)) {
+			if (highway.createHighway(pair.second)) {
 				createMultipolygonFromRelationAndAssignToObject(pair.second, highway);
 				m_highways.push_back(highway);
 			}
 		}
 		else if (pair.second.containsKey("landuse")) {
 			VicOSM::Land land;
-			if (VicOSM::Land::createLand(pair.second, land)) {
+			if (land.createLand(pair.second)) {
 				createMultipolygonFromRelationAndAssignToObject(pair.second, land);
 				m_land.push_back(land);
 			}
 		}
 	}
 
+	/*! Hacky Order calculation. Based on the following sentence:
+	 *  "layer can only "overrule" the natural ordering of features within one particular group but not place for example a river or landuse above a bridge or an aerialway (exception: use in indoor mapping or with location tag)"
+	 *  https://wiki.openstreetmap.org/wiki/Key:layer#Data_consumers
+	 *  Can lead to z fighting when 2 overlapping objects of the same group are assigned the same explicit layer. E.g. A LANDUSE_GRASS object and a AMENITY_SCHOOL object are both assigned layer 2
+	 *  First collects all layers from objects and removes duplicates, then sorts the layers ascendingly and calculates an explicit z value that is assigned to the objects */
+	if (notifyer) {
+		notifyer->notify(95, "Calculate Proper Ordering");
+	}
 	std::function<int(const VicOSM::AbstractOSMObject&)> convertKeyToInt = [&](const VicOSM::AbstractOSMObject& object){
 		if(object.m_layer == 0) {
 			return static_cast<int>(object.m_keyValue);
@@ -698,19 +837,23 @@ void DrawingOSM::constructObjects() {
 				break;
 			}
 			default:
-				return static_cast<int>(static_cast<int>(object.m_keyValue));
+				return static_cast<int>(object.m_keyValue);
 		}
 
 	};
 
 	std::vector<int> usedKeyValues;
 
-	for (const auto & building : m_houses) {
+	for (const auto & building : m_buildings) {
 		usedKeyValues.push_back(convertKeyToInt(building));
 	}
 
 	for( const auto & highway : m_highways) {
 		usedKeyValues.push_back(convertKeyToInt(highway));
+	}
+
+	for( const auto & railway : m_railways) {
+		usedKeyValues.push_back(convertKeyToInt(railway));
 	}
 
 	for( const auto & water : m_waters) {
@@ -750,8 +893,7 @@ void DrawingOSM::constructObjects() {
 	}
 
 	std::unordered_set<int> s;
-	for (int i : usedKeyValues)
-		s.insert(i);
+	s.insert(usedKeyValues.begin(), usedKeyValues.end());
 	usedKeyValues.assign( s.begin(), s.end() );
 	sort( usedKeyValues.begin(), usedKeyValues.end() );
 	int lastElement = static_cast<int>(VicOSM::NUM_KV);
@@ -776,7 +918,7 @@ void DrawingOSM::constructObjects() {
 		object.m_zPosition = (i / (double)(usedKeyValues.size() - 1));
 	};
 
-	for (auto & building : m_houses) {
+	for (auto & building : m_buildings) {
 		assignZValue(building);
 	}
 
@@ -820,19 +962,62 @@ void DrawingOSM::constructObjects() {
 		assignZValue(barrier);
 	}
 
+	for( auto & railway : m_railways) {
+		assignZValue(railway);
+	}
+
 	m_nodes.clear();
 	m_ways.clear();
 	m_relations.clear();
-
-	IBK::Path fname("/home/sandisk/SHK/a.vicosm");
-	writeOSM(fname);
 }
 
 void DrawingOSM::updatePlaneGeometries() {
-	for (auto& building : m_houses) {
-		for (auto& area : building.m_areas ){
-			area.updatePlaneGeometry();
-		}
+	for (auto& building : m_buildings) {
+		building.updatePlaneGeometry();
+	}
+
+	for (auto & highway : m_highways) {
+		highway.updatePlaneGeometry();
+	}
+
+	for ( auto & railway : m_railways) {
+		railway.updatePlaneGeometry();
+	}
+
+	for ( auto & water : m_waters) {
+		water.updatePlaneGeometry();
+	}
+
+	for ( auto & land : m_land) {
+		land.updatePlaneGeometry();
+	}
+
+	for ( auto & leisure : m_leisure) {
+		leisure.updatePlaneGeometry();
+	}
+
+	for ( auto & natural : m_natural) {
+		natural.updatePlaneGeometry();
+	}
+
+	for( auto & amenity : m_amenities) {
+		amenity.updatePlaneGeometry();
+	}
+
+	for( auto & place : m_places) {
+		place.updatePlaneGeometry();
+	}
+
+	for( auto & bridge : m_bridges) {
+		bridge.updatePlaneGeometry();
+	}
+
+	for( auto & tourism : m_tourism) {
+		tourism.updatePlaneGeometry();
+	}
+
+	for( auto & barrier : m_barriers) {
+		barrier.updatePlaneGeometry();
 	}
 }
 
@@ -891,8 +1076,14 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 			// Create Vector to store vertices of polyline
 			std::vector<IBKMK::Vector3D> polylinePoints;
 
+			unsigned int i = 0;
+			bool connectEndStart = lineFromPlanes.m_multiPolygon.m_outerPolyline.front() == lineFromPlanes.m_multiPolygon.m_outerPolyline.back();
+			if (connectEndStart) {
+				i = 1;
+			}
+
 			// adds z-coordinate to polyline
-			for(unsigned int i = 0; i < lineFromPlanes.m_multiPolygon.m_outerPolyline.size(); ++i){
+			for(; i < lineFromPlanes.m_multiPolygon.m_outerPolyline.size(); ++i){
 				IBKMK::Vector3D p = IBKMK::Vector3D(lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_x,
 													lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_y,
 													0);
@@ -903,7 +1094,7 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 			}
 
 			std::vector<PlaneGeometry> planeGeometry;
-			if (generatePlanesFromPolyline(polylinePoints, false, lineFromPlanes.m_lineThickness, planeGeometry)) {
+			if (generatePlanesFromPolyline(polylinePoints, connectEndStart, lineFromPlanes.m_lineThickness, planeGeometry)) {
 				GeometryData geometryData;
 				geometryData.m_planeGeometry = planeGeometry;
 				geometryData.m_color = lineFromPlanes.m_color;
@@ -955,6 +1146,7 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 }
 
 const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>>& geometryData) const {
+
 	// add BoundingBox
 	if (m_dirtyTriangulation) {
 		std::vector<IBKMK::Vector3D> polyline;
@@ -977,7 +1169,7 @@ const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>
 	geometryData[m_boundingBox.m_zPosition].push_back(&m_geometryDataBoundingBox);
 
 	// add all other objects
-	for (const auto & building : m_houses) {
+	for (const auto & building : m_buildings) {
 		addGeometryData(building, geometryData[building.m_zPosition]);
 	}
 
@@ -1019,6 +1211,10 @@ const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>
 
 	for( const auto & barrier : m_barriers) {
 		addGeometryData(barrier, geometryData[barrier.m_zPosition]);
+	}
+
+	for( const auto & railway : m_railways) {
+		addGeometryData(railway, geometryData[railway.m_zPosition]);
 	}
 
 	m_dirtyTriangulation = false;

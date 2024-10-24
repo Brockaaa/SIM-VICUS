@@ -1,19 +1,31 @@
 #include "VicOSM_AbstractOSMObject.h"
+#include "IBK_MessageHandler.h"
 
 namespace VicOSM {
 
 bool AbstractOSMObject::initialize(AbstractOSMElement & osmElement) {
 	if (osmElement.containsKeyValue("location", "underground")) return false;
 	if (osmElement.containsKeyValue("location", "underwater")) return false;
+	if (osmElement.containsKey("tunnel") && !osmElement.containsKeyValue("tunnel", "no")) return false;
+	if (osmElement.containsKeyValue("subway", "yes")) return false;
+	m_id = osmElement.m_id;
 	m_value = osmElement.getValueFromKey(m_key);
 	std::string layer = osmElement.getValueFromKey("layer");
-	assignKeyValue();
-	if (layer != "") m_layer = std::stoi(layer);
+	assignEnum();
+	try {
+		if (layer != "") m_layer = (int)std::stod(layer);
+	} catch (IBK::Exception & ex){
+
+	}
 	return true;
 }
 
-void AbstractOSMObject::assignKeyValue() {
-	if (m_key == "building") {
+void AbstractOSMObject::assignEnum() {
+	if (m_key == "type") {
+		m_keyValue = BUILDING;
+	} else if (m_key == "building") {
+		m_keyValue = BUILDING;
+	} else if (m_key == "building:part") {
 		m_keyValue = BUILDING;
 	} else if (m_key == "highway") {
 		if (m_value == "footway") {
@@ -94,7 +106,11 @@ void AbstractOSMObject::assignKeyValue() {
 			m_keyValue = NATURAL;
 		}
 	} else if (m_key == "place") {
-		m_keyValue = PLACE;
+		if (m_value == "square") {
+			m_keyValue = PLACE_SQUARE;
+		} else {
+			m_keyValue = PLACE;
+		}
 	} else if (m_key == "heritage") {
 		m_keyValue = HERITAGE;
 	} else if (m_key == "amenity") {
@@ -117,6 +133,8 @@ void AbstractOSMObject::assignKeyValue() {
 		m_keyValue = TOURISM;
 	} else if (m_key == "barrier") {
 		m_keyValue = BARRIER;
+	}else if (m_key == "railway") {
+		m_keyValue = RAILWAY;
 	}else {
 		m_keyValue = NUM_KV;
 	}

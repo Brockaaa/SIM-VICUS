@@ -19,8 +19,8 @@ public:
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 
-	static bool createNatural(Node &node, Natural& natural);
-	static bool createNatural(Way &way, Natural& natural);
+	bool createNatural(Node &node);
+	bool createNatural(Way &way);
 
 };
 

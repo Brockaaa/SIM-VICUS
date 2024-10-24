@@ -2,17 +2,17 @@
 
 namespace VicOSM {
 
-bool Leisure::createLeisure(Way & way, Leisure& leisure) {
-	if (!leisure.initialize(way)) return false;
+bool Leisure::createLeisure(Way & way) {
+	if (!initialize(way)) return false;
 
 	Area area;
 	area.m_color = QColor("#c8facc");
 
-	if (leisure.m_value == "park"){
+	if (m_value == "park"){
 		area.m_color = QColor("#c8facc");
 	}
 
-	leisure.m_areas.push_back(area);
+	m_areas.push_back(area);
 	return true;
 }
 

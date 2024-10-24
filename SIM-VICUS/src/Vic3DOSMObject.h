@@ -60,9 +60,6 @@ public:
 	QOpenGLShaderProgram		*m_shaderProgram = nullptr;
 	ShaderProgram				*m_buildingShader = nullptr;
 
-	 //std::vector<std::unique_ptr<OpaqueGeometryObject>>	m_drawingOSMGeometryObjects;
-	 //std::vector<double>									m_layers;
-
 	std::vector<VAOWithBufferStruct*>			m_VAOWithBuffers;
 
 };

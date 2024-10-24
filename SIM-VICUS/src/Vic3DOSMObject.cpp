@@ -2,6 +2,12 @@
 
 #include <QOpenGLShaderProgram>
 
+#include <QProgressDialog>
+#include <QApplication>
+#include <QCoreApplication>
+
+#include <SVMainWindow.h>
+
 #include <Vic3DOpaqueGeometryObject.h>
 #include <SVProjectHandler.h>
 #include <Vic3DShaderProgram.h>
@@ -114,12 +120,37 @@ void OSMObject::generateOSMGeometry() {
 
 	const VICUS::Project & p = project();
 
+	// displays progressDialog on first triangulation after import of a new DrawingOSM
+	QProgressDialog * progress = nullptr;
+	bool openDialog = false;
+
+	for (const VICUS::DrawingOSM & drawing : p.m_drawingsOSM) {
+		openDialog = openDialog || drawing.m_firstTriangulation;
+		drawing.m_firstTriangulation = false;
+	}
+
+	if (openDialog) {
+		progress = new QProgressDialog("Triangulation in Process.", QString(), 0, 0, nullptr);
+		progress->setWindowModality(Qt::WindowModal);
+		progress->setCancelButton(nullptr);
+		progress->setAutoClose(true);
+		progress->open();
+		// to keep progressbar and UI responsive
+		QCoreApplication::processEvents();
+	}
+
 	// collecting all geometryData from Objects
 	for (const VICUS::DrawingOSM & drawing : p.m_drawingsOSM) {
+		QCoreApplication::processEvents();
+		drawing.m_firstTriangulation = false;
+
 		std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>> geometryDataWithLayer; // std::map sorts by key
 		drawing.geometryData(geometryDataWithLayer);
 
 		for (std::map<double,std::vector<VICUS::DrawingOSM::GeometryData*>>::iterator it = geometryDataWithLayer.begin(); it != geometryDataWithLayer.end(); ++it) {
+
+			// to keep progressbar and UI responsive
+			QCoreApplication::processEvents();
 			VAOWithBufferStruct* VAOWithBuffer = new VAOWithBufferStruct();
 			VAOWithBuffer->m_layer = it->first;
 			configureNewVAOWithBuffer(VAOWithBuffer);
@@ -150,7 +181,7 @@ void OSMObject::generateOSMGeometry() {
 							areaPoints.push_back(IBKMK::Vector3D((double)vec.x(), (double)vec.y(), (double)vec.z()));
 						}
 						try {
-							addPolygonExtrusion(areaPoints, data->m_height, data->m_color, currentVertexIndex, currentElementIndex,
+							addPolygonExtrusion(areaPoints, data->m_height - data->m_minHeight, data->m_color, currentVertexIndex, currentElementIndex,
 												VAOWithBuffer->m_vertexBufferData,
 												VAOWithBuffer->m_colorBufferData,
 												VAOWithBuffer->m_indexBufferData,
@@ -175,7 +206,7 @@ void OSMObject::generateOSMGeometry() {
 									 VAOWithBuffer->m_indexBufferData,
 									 true);
 						}
-						catch (const std::exception& e) {
+						catch (const std::exception& e) { // IBK exception TODO
 							// Handle exception (e.g., log error, skip this plane, etc.)
 							std::cerr << "Error in addPlane: " << e.what() << std::endl;
 						}
@@ -186,14 +217,19 @@ void OSMObject::generateOSMGeometry() {
 			m_VAOWithBuffers.push_back(VAOWithBuffer);
 		}
 	}
+
+	if (progress) {
+		progress->close();
+		delete progress;
+	}
 }
 
 void OSMObject::render(float z) {
 	if(m_buildingShader == nullptr) return;
-	if (abs(z) < 10) z > 0 ? z = 10 : z = -10; // z needs to stay above a threshold. Value arbitrary, through observing in scene
+	if (abs(z) < 1000) z > 0 ? z = 1000 : z = -1000; // z needs to stay above a threshold. Value arbitrary, through observing in scene
 
 	for(auto VAOWithBuffer : m_VAOWithBuffers) {
-		m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], (float)VAOWithBuffer->m_layer * z / 2000/* value arbitrary */);
+		m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], (float)VAOWithBuffer->m_layer * z / 20000/* value arbitrary */);
 		// bind all buffers ("position", "normal" and "color" arrays)
 		VAOWithBuffer->m_vao.bind();
 		// now draw the geometry
@@ -202,7 +238,7 @@ void OSMObject::render(float z) {
 		VAOWithBuffer->m_vao.release();
 	}
 
-	m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], (float)5 * z / 10000);
+	m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], 0);
 }
 
 void OSMObject::updateBuffers() {

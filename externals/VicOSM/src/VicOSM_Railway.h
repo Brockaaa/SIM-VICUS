@@ -1,13 +1,12 @@
-#ifndef VicOSM_HIGHWAY_H
-#define VicOSM_HIGHWAY_H
+#ifndef VICOSM_RAILWAY_H
+#define VICOSM_RAILWAY_H
 
 #include "VicOSM_AbstractOSMObject.h"
 #include "VicOSM_Way.h"
-#include "VicOSM_Relation.h"
 
 namespace VicOSM {
 
-class Highway : public AbstractOSMObject {
+class Railway : public AbstractOSMObject {
 public:
 	void readXML(const TiXmlElement * element);
 	TiXmlElement * writeXML(TiXmlElement * parent) const;
@@ -19,12 +18,10 @@ public:
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 
-	bool createHighway(Way &way);
-	// should be deprecated. All highways that are areas should be some form of place, landuse etc.
-	bool createHighway(Relation &relation);
+	bool createRailway(Way &way);
 
 };
 
-} // namespace VicOSM
+}
 
-#endif // VicOSM_HIGHWAY_H
+#endif // VICOSM_RAILWAY_H

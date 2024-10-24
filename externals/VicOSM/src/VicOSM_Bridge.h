@@ -3,6 +3,7 @@
 
 #include "VicOSM_AbstractOSMObject.h"
 #include "VicOSM_Way.h"
+#include "VicOSM_Relation.h"
 
 namespace VicOSM {
 
@@ -18,7 +19,8 @@ public:
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 
-	static bool createBridge(Way &way, Bridge &bridge);
+	bool createBridge(Way &way);
+	bool createBridge(Relation &relation);
 
 };
 

@@ -18,7 +18,7 @@ public:
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 
-	static bool createAmenity(Way &way, Amenity& amenity);
+	bool createAmenity(Way &way);
 
 };
 

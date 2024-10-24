@@ -46,6 +46,7 @@ SOURCES += \
 	../../src/VicOSM_Natural.cpp \
 	../../src/VicOSM_Node.cpp \
 	../../src/VicOSM_Place.cpp \
+    ../../src/VicOSM_Railway.cpp \
 	../../src/VicOSM_Relation.cpp \
 	../../src/VicOSM_Tourism.cpp \
 	../../src/VicOSM_Water.cpp \
@@ -64,6 +65,7 @@ SOURCES += \
 	../../src/ncg/ncg_VicOSM_LineFromPlanes.cpp \
 	../../src/ncg/ncg_VicOSM_Natural.cpp \
 	../../src/ncg/ncg_VicOSM_Place.cpp \
+	../../src/ncg/ncg_VicOSM_Railway.cpp \
 	../../src/ncg/ncg_VicOSM_Tourism.cpp \
 	../../src/ncg/ncg_VicOSM_Water.cpp \
 
@@ -87,6 +89,7 @@ HEADERS += \
 	../../src/VicOSM_Natural.h \
 	../../src/VicOSM_Node.h \
 	../../src/VicOSM_Place.h \
+    ../../src/VicOSM_Railway.h \
 	../../src/VicOSM_Relation.h \
 	../../src/VicOSM_Tourism.h \
 	../../src/VicOSM_Water.h \

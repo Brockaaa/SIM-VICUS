@@ -20,8 +20,8 @@ public:
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 
 	QColor	setColor();
-	static bool createLand(Way &way, Land& land);
-	static bool createLand(Relation &relation, Land& land);
+	bool createLand(Way &way);
+	bool createLand(Relation &relation);
 
 };
 

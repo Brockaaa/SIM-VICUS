@@ -2373,10 +2373,7 @@ void SVMainWindow::on_actionFileImportOSM_triggered()
 	}
 
 	if (m_importOSMDialog->import()) {
-		VICUS::DrawingOSM drawingOSM;
-		drawingOSM.readOSMFile(QString("/home/sandisk/SHK/osm/Garrel.osm"));
-		drawingOSM.constructObjects();
-		SVUndoAddDrawingOSM * undoAdd = new SVUndoAddDrawingOSM(tr("modified network"), drawingOSM);
+		SVUndoAddDrawingOSM * undoAdd = new SVUndoAddDrawingOSM(tr("modified network"), m_importOSMDialog->drawingOSM());
 		undoAdd->push(); // modifies project and updates views
 	}
 

@@ -4,6 +4,7 @@
 #include "VICUS_Constants.h"
 #include "tinyxml.h"
 
+#include "IBK_NotificationHandler.h"
 #include <IBKMK_Vector2D.h>
 #include <VICUS_Object.h>
 #include <string>
@@ -27,6 +28,7 @@
 #include "VicOSM_Place.h"
 #include "VicOSM_Tourism.h"
 #include "VicOSM_Water.h"
+#include "VicOSM_Railway.h"
 
 #include "VicOSM_AbstractOSMElement.h"
 #include "VicOSM_Node.h"
@@ -47,10 +49,17 @@
 
 using namespace VicOSM;
 
+namespace IBK {
+class NotificationHandler;
+}
+
 namespace VICUS {
 
 /*!
-	DrawingOSM class is data structure for all primitive osm elements nodes, ways, relations
+ *  DrawingOSM class. Reads an OSM file. Generates all osm AbstractOSMElements from it (nodes, ways, relations). Then constructs all AbstractOSMObject (buildings, highways etc.) from osm elements  and holds these objects.
+ *  Objects can be saved to xml. An object can hold AbstractDrawingGeometry (circles, areas and lineFromPlanes). These geomentries will be saved as 2d polylines ( or a 2D vector in the case of the circle) with additional information like radius etc.
+ *  The objects, elements and geometryobjects are defined in the library VicOSM.
+ *  TriangulationData and PlaneGeometry of a DrawingObject is held in m_geometryData in this class, outside of OSMObjects
  */
 class DrawingOSM : public Object {
 
@@ -61,6 +70,7 @@ public:
 		return "DrawingOSM";
 	}
 
+	/*! Groups together planeGeometry with data like color, height etc. PlaneGeometry will be held in this struct. This struct is held in m_geometryData in VICUS::DrawingOSM */
 	struct GeometryData {
 		std::vector<VICUS::PlaneGeometry>	m_planeGeometry;
 		std::vector<Multipolygon>			m_multipolygons;
@@ -73,18 +83,23 @@ public:
 	std::vector<IBKMK::Vector2D> convertHoleToLocalCoordinates(const std::vector<IBKMK::Vector3D> & globalVertices, const IBKMK::Vector3D & offset, const IBKMK::Vector3D & localX, const IBKMK::Vector3D & localY) const;
 
 	// *** Methods and Helper Functions To Create Polygons ***
-	void createMultipolygonFromWay(Way &way, Multipolygon &multipolygon);
+	void createMultipolygonFromWay(const Way &way, Multipolygon &multipolygon);
 
+	/*! Struct only used in createMultipolygon, ringAssignment, ringGrouping */
 	struct WayWithMarks {
 		std::vector<int> refs;
 		bool assigned = false;
 		bool selected = false;
 		bool reversedOrder = false;
 	};
+	/*! Used in createMultipolygonsFromRelation. Small helper function to convert a way to a polyline std::vector<IBKMK::Vector2D */
 	std::vector<IBKMK::Vector2D> convertVectorWayWithMarksToVector2D(const std::vector<WayWithMarks*>& ways);
+	/*!  Used in createMultipolygonsFromRelation. Creates complete areas/rings from a set of open and closed polylines */
 	void ringAssignment(std::vector<WayWithMarks>& ways, std::vector<std::vector<WayWithMarks*>>& allRings);
+	/*!  Used in createMultipolygonsFromRelation. Creates multiple polygons with holes from a set of closed polylines */
 	void ringGrouping(std::vector<std::vector<WayWithMarks*>>& rings, std::vector<Multipolygon>& multipolygons);
-	void createMultipolygonsFromRelation(Relation &relation, std::vector<Multipolygon>& multipolygons);
+	/*! takes a relation as an input and tries to create (many) Multipolygons with holes */
+	void createMultipolygonsFromRelation(const Relation &relation, std::vector<Multipolygon>& multipolygons);
 
 	// *** PUBLIC MEMBER FUNCTIONS ***
 
@@ -92,11 +107,12 @@ public:
 	TiXmlElement * writeXML(TiXmlElement * parent) const;
 
 	/*! Fills m_nodes, m_ways, m_relations, m_boundingBox with values from a OSM XML */
-	void readOSM(const TiXmlElement * element);
+	void readOSM(const TiXmlElement * element, IBK::NotificationHandler *notifyer = nullptr);
+	/*! writes .vicosm to filename */
 	void writeOSM(const IBK::Path & filename);
 
-	/*! calls readXML. Afterwards calculates m_utmZone and m_origin */
-	bool readOSMFile(QString filePath);
+	/*! calls readOSM. Afterwards calculates m_utmZone and m_origin */
+	bool import(const QString filePath, IBK::NotificationHandler *notifyer = nullptr);
 
 	/*! Updates all planes, when transformation operations are applied.
 		MIND: Always call this function, when the drawing transformation
@@ -104,19 +120,21 @@ public:
 		redone.
 	*/
 	void updatePlaneGeometries();
+	/*! creates all PlaneGeometry objects from one OSMObject by iterating over all DrawingObjects int the OSMObject and creates a GeometryData object from it.
+	 *  Saves the resulting GeometryData object in a map with the address of the DrawingObject as key. Inserts the created GeometryData object to the geometryData Vector */
 	void addGeometryData(const AbstractOSMObject& object, std::vector<GeometryData *>& geometryData) const;
+	/*! Iterates over all OSMObjects and adds geometryData to the geometryData map. The map takes as a key the z-value of an object to define the order of the objects. */
 	const void geometryData(std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>>& geometryData) const;
 
-
+	/*! TODO DOCU */
 	const Node* findNodeFromId(unsigned int id) const;
 	const Way* findWayFromId(unsigned int id) const;
 	const Relation* findRelationFromId(unsigned int id) const;
 	inline IBKMK::Vector2D convertLatLonToVector2D(double lat, double lon) const;
 
 	// *** Methods to create Buildings streets. etc. ***
-	void constructObjects();
-
-	// *** PUBLIC MEMBER VARIABLES ***
+	/*! Creates all OSMObjects (buildings, highways, landuse) from OSMElements */
+	void constructObjects(IBK::NotificationHandler *notifyer = nullptr);
 
 	// *** List of OSM XML Elements ***
 	/*! list of nodes */
@@ -126,8 +144,7 @@ public:
 	/*! lists of relations */
 	std::unordered_map<unsigned int, Relation>		m_relations;
 	/*! Stores the bounding box of the drawing */
-	BoundingBox										m_boundingBox;		// XML:E
-	mutable GeometryData									m_geometryDataBoundingBox;
+	BoundingBox										m_boundingBox;				// XML:E
 
 
 	/*! UTM zone defined by the longitude (minlon) of the bounding box */
@@ -139,13 +156,11 @@ public:
 	IBKMK::Vector3D									m_origin			= IBKMK::Vector3D(0,0,0);
 	/*! rotation matrix */
 	RotationMatrix									m_rotationMatrix	= RotationMatrix(QQuaternion(1.0,0.0,0.0,0.0));
-	/*! scale factor */
-	double											m_scalingFactor		= 1.0;
 
-	bool											m_enable3D			= true;	// XML:A
+	bool											m_enable3DBuildings			= true;	// XML:A
 
 	// *** List of OSM Objects like buildings, streets with all relevant information ***
-	std::vector<OSMBuilding>								m_houses;		// XML:E
+	std::vector<OSMBuilding>						m_buildings;		// XML:E
 	std::vector<Highway>							m_highways;			// XML:E
 	std::vector<Water>								m_waters;			// XML:E
 	std::vector<Land>								m_land;				// XML:E
@@ -156,17 +171,17 @@ public:
 	std::vector<Bridge>								m_bridges;			// XML:E
 	std::vector<Tourism>							m_tourism;			// XML:E
 	std::vector<Barrier>							m_barriers;			// XML:E
-
-	mutable std::map<const AbstractDrawingObject*, GeometryData>	m_geometryData;
-	/*! path of the OSM File */
-	QString											m_filePath;
+	std::vector<Railway>							m_railways;			// XML:E
 
 	/*! Function to generate plane geometries from a polyline. */
 	bool generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline,
 									bool connectEndStart, double width, std::vector<PlaneGeometry> &planes) const;
 
-	/*! Flag to indictate recalculation triangulation. */
+	/*! Flags and Objects used for getting geometryData and rendering. Can be set externally */
+	mutable std::map<const AbstractDrawingObject*, GeometryData>	m_geometryData;
+	mutable GeometryData							m_geometryDataBoundingBox;
 	mutable bool								m_dirtyTriangulation = true;
+	mutable bool								m_firstTriangulation = true;
 
 };
 

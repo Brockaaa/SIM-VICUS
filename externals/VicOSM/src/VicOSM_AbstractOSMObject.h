@@ -34,7 +34,9 @@ enum KeyValue{
 	LANDUSE_RESIDENTIAL,
 	LANDUSE_RAILWAY,
 	LANDUSE_PUBLIC_ADMINISTRATION,
+	PLACE_SQUARE,
 	LANDUSE_RELIGIOUS,
+	HIGHWAY_GENERALAREA,
 	LANDUSE_RECREATION_GROUND,
 	TOURISM,
 	LEISURE,
@@ -65,6 +67,7 @@ enum KeyValue{
 	LAYERHIGHWAYNEG1,
 	BARRIER,
 	BRIDGE,
+	RAILWAY,
 	HIGHWAY_MOTORWAY,
 	HIGHWAY_PEDESTRIAN,
 	HIGHWAY_SERVICE,
@@ -87,30 +90,32 @@ enum KeyValue{
 
 class AbstractOSMObject {
 public:
+	void updatePlaneGeometry();
 	void readXML(const TiXmlElement * element);
 	TiXmlElement * writeXML(TiXmlElement * parent) const;
 	bool initialize(AbstractOSMElement& osmElement);
 
-	void assignKeyValue();
+	void assignEnum();
 
 	std::vector<Area>					m_areas;				// XML:E
 	std::vector<LineFromPlanes>			m_linesFromPlanes;		// XML:E
 	std::vector<Circle>					m_circles;				// XML:E
 
+	unsigned int						m_id = 0xFFFFFFFF;		// XML:A
+
 	std::string							m_key = "";				// XML:A
 
 	std::string							m_value = "";			// XML:A
 
+	// *** runtime only used in contructObjects
 	KeyValue							m_keyValue = NUM_KV;
 
-	double								m_zPosition = 0;		// XML:A
+	double								m_zPosition = 0;
 
 	int									m_layer = 0;
 
 	/*! Flag to indictate recalculation of points. */
 	mutable bool								m_dirtyPoints = true;
-	/*! Points of objects. */
-	mutable std::vector<IBKMK::Vector2D>		m_pickPoints;
 };
 
 } // namespace VicOSM

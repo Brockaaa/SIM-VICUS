@@ -47,10 +47,6 @@ void OSMBuilding::readXML(const TiXmlElement * element) {
 				m_value = attrib->ValueStr();
 			else if (attribName == "zPosition")
 				m_zPosition = NANDRAD::readPODAttributeValue<double>(element, attrib);
-			else if (attribName == "height")
-				m_height = NANDRAD::readPODAttributeValue<double>(element, attrib);
-			else if (attribName == "minHeight")
-				m_minHeight = NANDRAD::readPODAttributeValue<double>(element, attrib);
 			else if (attribName == "levelHeight")
 				m_levelHeight = NANDRAD::readPODAttributeValue<double>(element, attrib);
 			else if (attribName == "roofHeight")
@@ -124,8 +120,6 @@ TiXmlElement * OSMBuilding::writeXML(TiXmlElement * parent) const {
 	if (!m_value.empty())
 		e->SetAttribute("value", m_value);
 	e->SetAttribute("zPosition", IBK::val2string<double>(m_zPosition));
-	e->SetAttribute("height", IBK::val2string<double>(m_height));
-	e->SetAttribute("minHeight", IBK::val2string<double>(m_minHeight));
 	e->SetAttribute("levelHeight", IBK::val2string<double>(m_levelHeight));
 	e->SetAttribute("roofHeight", IBK::val2string<double>(m_roofHeight));
 

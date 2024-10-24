@@ -28,7 +28,7 @@ void main() {
   // correctly when viewing internal geometry
   vec3 normFixed = norm;
   if (viewVecNormalVec < 0.)
-   normFixed = norm;
+   normFixed = -norm;
 
   // diffuse
   vec3 lightDir = normalize(lightPos - fragPos);
@@ -42,5 +42,5 @@ void main() {
   vec3 specular = specularStrength * spec * lightColor;
 
   vec3 result = (ambient + diffuse + specular) * fragColor.xyz;
-  finalColor = vec4(result, fragColor.a);
+  finalColor = vec4(result, 1);
 }

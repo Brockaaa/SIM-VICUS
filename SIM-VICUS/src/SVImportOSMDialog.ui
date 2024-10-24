@@ -2,12 +2,15 @@
 <ui version="4.0">
  <class>SVImportOSMDialog</class>
  <widget class="QDialog" name="SVImportOSMDialog">
+  <property name="windowModality">
+   <enum>Qt::WindowModality::WindowModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1500</width>
-    <height>800</height>
+    <width>400</width>
+    <height>480</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,36 +18,73 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1">
      <item>
-      <widget class="QQuickWidget" name="quickWidget">
-       <property name="resizeMode">
-        <enum>QQuickWidget::ResizeMode::SizeRootObjectToView</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayoutSettings" stretch="0,0,0,1">
+      <layout class="QVBoxLayout" name="verticalLayoutSettings" stretch="0,0,0,0,0,0,1">
        <item>
-        <widget class="QtExt::BrowseFilenameWidget" name="widgetBrowseFilename" native="true"/>
+        <widget class="QRadioButton" name="radioButtonImportFile">
+         <property name="text">
+          <string>Import Local File</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroup</string>
+         </attribute>
+        </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButtonLocal">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>250</width>
-           <height>24</height>
-          </size>
-         </property>
+        <widget class="QWidget" name="widgetLocal" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QtExt::BrowseFilenameWidget" name="widgetBrowseFilename" native="true"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="radioButtonDownloadOSM">
          <property name="text">
-          <string>Select Local .osm file</string>
+          <string>Download From Map</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroup</string>
+         </attribute>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widgetDownload" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayoutBoundingBox">
+            <item>
+             <widget class="QLabel" name="labelBoundingBox">
+              <property name="text">
+               <string>Bounding Box:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="lineEditBoundingBox">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButtonMap">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Download From Map</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
@@ -61,17 +101,21 @@
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Orientation::Vertical</enum>
+        <widget class="QProgressBar" name="progressBar">
+         <property name="enabled">
+          <bool>false</bool>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
+         <property name="value">
+          <number>0</number>
          </property>
-        </spacer>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="plainTextEditLog">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -90,11 +134,6 @@
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>QQuickWidget</class>
-   <extends>QWidget</extends>
-   <header location="global">QtQuickWidgets/QQuickWidget</header>
-  </customwidget>
   <customwidget>
    <class>QtExt::BrowseFilenameWidget</class>
    <extends>QWidget</extends>
@@ -137,4 +176,11 @@
    </hints>
   </connection>
  </connections>
+ <buttongroups>
+  <buttongroup name="buttonGroup">
+   <property name="exclusive">
+    <bool>true</bool>
+   </property>
+  </buttongroup>
+ </buttongroups>
 </ui>

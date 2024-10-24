@@ -19,14 +19,13 @@ public:
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 
-	void calculateHeight(AbstractOSMElement& element);
+	void calculateHeight(const AbstractOSMElement& element, Area& area);
 
-	static bool createBuilding(Way &way, OSMBuilding &building, bool enable3D = false);
-	static bool createBuilding(Relation &relation, OSMBuilding &building, bool enable3D = false);
+	bool createBuilding(Way &way, bool enable3D = false);
+	bool createBuilding(Relation &relation, bool enable3D = false);
+	bool initializeSimple3DBuilding(Relation &relation);
 
-	double								m_height = 3;						// XML:A
-
-	double								m_minHeight = 0;					// XML:A
+	Area createArea(const AbstractOSMElement & element, bool enable3D);
 
 	double								m_levelHeight = 3;					// XML:A
 

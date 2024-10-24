@@ -28,7 +28,7 @@ QColor Land::setColor() {
 	} else if (m_value == "public_administration") {
 		color = QColor("#f2efe9");
 	} else if (m_value == "railway") {
-		color = QColor("#ebdbe8");
+		color = QColor("#f7f6f1");
 	} else if (m_value == "farmyard") {
 		color = QColor("#f5dcba");
 	} else if (m_value == "meadow") {
@@ -46,25 +46,25 @@ QColor Land::setColor() {
 	return color;
 }
 
-bool Land::createLand(Way & way, Land& land) {
-	land.m_key = "landuse";
-	if (!land.initialize(way)) return false;
+bool Land::createLand(Way & way) {
+	m_key = "landuse";
+	if (!initialize(way)) return false;
 
 	Area area;
-	area.m_color = land.setColor();
+	area.m_color = setColor();
 
-	land.m_areas.push_back(area);
+	m_areas.push_back(area);
 	return true;
 }
 
-bool Land::createLand(Relation & relation, Land &land) {
+bool Land::createLand(Relation & relation) {
 	if(!(relation.containsKeyValue("type", "multipolygon"))) return false;
-	land.m_key = "landuse";
-	if (!land.initialize(relation)) return false;
+	m_key = "landuse";
+	if (!initialize(relation)) return false;
 
 	Area area;
-	area.m_color = land.setColor();
-	land.m_areas.push_back(area);
+	area.m_color = setColor();
+	m_areas.push_back(area);
 
 	return true;
 }

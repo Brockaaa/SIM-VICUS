@@ -845,12 +845,17 @@ void addPolygonExtrusion(const std::vector<IBKMK::Vector3D> & bottomFace, double
 		}
 		g1.setHoles(holes);
 	}
+
 	addPlane(g1.triangulationData(), c, currentVertexIndex, currentElementIndex,
 			 vertexBufferData, colorBufferData, indexBufferData, true);
 	addPlane(g1.triangulationData(), c, currentVertexIndex, currentElementIndex,
 			 vertexBufferData, colorBufferData, indexBufferData, false);
 
 	IBKMK::Polygon3D pTop(topFace);
+	if (pTop.normal().m_z < 0) {
+		pTop.flip();
+	}
+
 	if (!pTop.isValid())
 		throw IBK::Exception("Invalid bottom face polygon.", FUNC_ID);
 	VICUS::PlaneGeometry g2(pTop);

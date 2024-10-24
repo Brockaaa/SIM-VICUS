@@ -19,7 +19,7 @@
 	Lesser General Public License for more details.
 */
 
-#include <VicOSM_AbstractOSMObject.h>
+#include <VicOSM_Railway.h>
 #include <VicOSM_KeywordList.h>
 
 #include <IBK_messages.h>
@@ -32,21 +32,8 @@
 
 namespace VicOSM {
 
-void AbstractOSMObject::updatePlaneGeometry()
-{
-	for (auto& area : m_areas ) {
-		area.updatePlaneGeometry();
-	}
-	for (auto& circle : m_circles) {
-		circle.updatePlaneGeometry();
-	}
-	for (auto& lineFromPlanes : m_linesFromPlanes) {
-		lineFromPlanes.updatePlaneGeometry();
-	}
-}
-
-void AbstractOSMObject::readXML(const TiXmlElement * element) {
-	FUNCID(AbstractOSMObject::readXML);
+void Railway::readXML(const TiXmlElement * element) {
+	FUNCID(Railway::readXML);
 
 	try {
 		// search for mandatory attributes
@@ -113,15 +100,15 @@ void AbstractOSMObject::readXML(const TiXmlElement * element) {
 		}
 	}
 	catch (IBK::Exception & ex) {
-		throw IBK::Exception( ex, IBK::FormatString("Error reading 'AbstractOSMObject' element."), FUNC_ID);
+		throw IBK::Exception( ex, IBK::FormatString("Error reading 'Railway' element."), FUNC_ID);
 	}
 	catch (std::exception & ex2) {
-		throw IBK::Exception( IBK::FormatString("%1\nError reading 'AbstractOSMObject' element.").arg(ex2.what()), FUNC_ID);
+		throw IBK::Exception( IBK::FormatString("%1\nError reading 'Railway' element.").arg(ex2.what()), FUNC_ID);
 	}
 }
 
-TiXmlElement * AbstractOSMObject::writeXML(TiXmlElement * parent) const {
-	TiXmlElement * e = new TiXmlElement("AbstractOSMObject");
+TiXmlElement * Railway::writeXML(TiXmlElement * parent) const {
+	TiXmlElement * e = new TiXmlElement("Railway");
 	parent->LinkEndChild(e);
 
 	if (!m_key.empty())
