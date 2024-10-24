@@ -33,6 +33,7 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertHoleToLocalCoordinates(
 	const IBKMK::Vector3D& offset,
 	const IBKMK::Vector3D& localX,
 	const IBKMK::Vector3D& localY) const {
+	FUNCID(DrawingOSM::convertHoleToLocalCoordinates);
 	std::vector<IBKMK::Vector2D> localVertices;
 	localVertices.reserve(globalVertices.size());
 
@@ -43,9 +44,7 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertHoleToLocalCoordinates(
 			localVertices.emplace_back(x_local, y_local);
 		}
 		else {
-			// Handle the case where the projection fails
-			// For example, you can log an error or throw an exception
-			throw std::runtime_error("Failed to project global vertex to local coordinates.");
+			throw IBK::Exception(IBK::FormatString("Failed to convert global vertex to local coordinates."));
 		}
 	}
 

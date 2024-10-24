@@ -126,9 +126,11 @@ public:
 	/*! Iterates over all OSMObjects and adds geometryData to the geometryData map. The map takes as a key the z-value of an object to define the order of the objects. */
 	const void geometryData(std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>>& geometryData) const;
 
-	/*! TODO DOCU */
+	/*! Searches in m_nodes for node with id. If no node was found, a nullptr is returned */
 	const Node* findNodeFromId(unsigned int id) const;
+	/*! Searches in m_ways for way with id. If no way was found, a nullptr is returned */
 	const Way* findWayFromId(unsigned int id) const;
+	/*! Searches in m_relations for relation with id. If no relation was found, a nullptr is returned */
 	const Relation* findRelationFromId(unsigned int id) const;
 	inline IBKMK::Vector2D convertLatLonToVector2D(double lat, double lon) const;
 
