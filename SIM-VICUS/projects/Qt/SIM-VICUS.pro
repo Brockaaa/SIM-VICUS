@@ -175,7 +175,6 @@ SOURCES += \
 	../../src/SVView3DCalculation.cpp \
 	../../src/SVZoneInformationDialog.cpp \
 	../../src/SVZoneSelectionDialog.cpp \
-	../../src/Vic3DOSMObject.cpp \
 	../../src/actions/SVUndoAddBuilding.cpp \
 	../../src/actions/SVUndoAddBuildingLevel.cpp \
 	../../src/actions/SVUndoAddNetwork.cpp \
@@ -223,6 +222,7 @@ SOURCES += \
 	../../src/core3D/Vic3DTransform3D.cpp \
 	../../src/core3D/Vic3DTransparentBuildingObject.cpp \
 	../../src/core3D/Vic3DWireFrameObject.cpp \
+	../../src/core3D/Vic3DOSMObject.cpp \
 	../../src/main.cpp \
 	../../src/SVAboutDialog.cpp \
 	../../src/SVAbstractDatabaseEditWidget.cpp \
@@ -439,7 +439,6 @@ HEADERS  += \
 	../../src/SVZoneInformationDialog.h \
 	../../src/SVZoneListModel.h \
 	../../src/SVZoneSelectionDialog.h \
-	../../src/Vic3DOSMObject.h \
 	../../src/actions/SVUndoAddBuilding.h \
 	../../src/actions/SVUndoAddBuildingLevel.h \
 	../../src/actions/SVUndoAddNetwork.h \
@@ -492,6 +491,7 @@ HEADERS  += \
 	../../src/core3D/Vic3DTransparentBuildingObject.h \
 	../../src/core3D/Vic3DVertex.h \
 	../../src/core3D/Vic3DWireFrameObject.h \
+	../../src/core3D/Vic3DOSMObject.h \
 	../../src/SVAboutDialog.h \
 	../../src/SVAbstractDatabaseEditWidget.h \
 	../../src/SVBMBlockItem.h \
@@ -744,6 +744,7 @@ RESOURCES += \
 
 DISTFILES += \
 ../../resources/style/light/lightstyle.qss
+
 
 
 

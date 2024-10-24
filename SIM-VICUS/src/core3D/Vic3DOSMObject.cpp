@@ -131,6 +131,7 @@ void OSMObject::generateOSMGeometry() {
 
 	if (openDialog) {
 		progress = new QProgressDialog("Triangulation in Process.", QString(), 0, 0, nullptr);
+		progress->setWindowTitle("Triangulation");
 		progress->setWindowModality(Qt::WindowModal);
 		progress->setCancelButton(nullptr);
 		progress->setAutoClose(true);
@@ -224,12 +225,12 @@ void OSMObject::generateOSMGeometry() {
 	}
 }
 
-void OSMObject::render(float z) {
+void OSMObject::render(float zCamera) {
 	if(m_buildingShader == nullptr) return;
-	if (abs(z) < 1000) z > 0 ? z = 1000 : z = -1000; // z needs to stay above a threshold. Value arbitrary, through observing in scene
+	if (abs(zCamera) < 1000) zCamera > 0 ? zCamera = 1000 : zCamera = -1000; // z needs to stay above a threshold. Value arbitrary, through observing in scene
 
 	for(auto VAOWithBuffer : m_VAOWithBuffers) {
-		m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], (float)VAOWithBuffer->m_layer * z / 20000/* value arbitrary */);
+		m_buildingShader->shaderProgram()->setUniformValue(m_buildingShader->m_uniformIDs[4], (float)VAOWithBuffer->m_layer * zCamera / 20000/* value arbitrary */);
 		// bind all buffers ("position", "normal" and "color" arrays)
 		VAOWithBuffer->m_vao.bind();
 		// now draw the geometry
@@ -264,7 +265,7 @@ void OSMObject::updateBuffers() {
 			VAOWithBuffer->m_colorBufferObject.allocate(VAOWithBuffer->m_colorBufferData.data(), VAOWithBuffer->m_colorBufferData.size()*sizeof(ColorRGBA) );
 		else  {
 			auto ptr = VAOWithBuffer->m_colorBufferObject.mapRange(0, VAOWithBuffer->m_colorBufferData.size() * sizeof(ColorRGBA),
-													QOpenGLBuffer::RangeInvalidateBuffer | QOpenGLBuffer::RangeWrite);
+																   QOpenGLBuffer::RangeInvalidateBuffer | QOpenGLBuffer::RangeWrite);
 			std::memcpy(ptr, VAOWithBuffer->m_colorBufferData.data(),  VAOWithBuffer->m_colorBufferData.size()*sizeof(ColorRGBA));
 			VAOWithBuffer->m_colorBufferObject.unmap();
 		}

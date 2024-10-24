@@ -145,6 +145,8 @@ public:
 	const Relation* findRelationFromId(unsigned int id) const;
 	/*! converts latitude, longitude to UTM mercator projection coordinates. Uses the UTM zone defined by the bounding box */
 	inline IBKMK::Vector2D convertLatLonToVector2D(double lat, double lon) const;
+	/*! converts Key of OSMObject to an integer corresponding to the order of the OSMObject */
+	int convertKeyToInt (const VicOSM::AbstractOSMObject& object) const;
 
 	// *** Methods to create Buildings streets. etc. ***
 	/*! Creates all OSMObjects (buildings, highways, landuse) from OSMElements */

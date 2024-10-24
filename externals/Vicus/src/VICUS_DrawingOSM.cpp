@@ -95,7 +95,7 @@ void DrawingOSM::createMultipolygonsFromRelation(const VicOSM::Relation & relati
 void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<std::vector<WayWithMarks*>>& allRings) {
 	std::vector<WayWithMarks*> currentRing;
 
-	// get next unassigned way for a new ring
+	/* get next unassigned way for a new ring. Returns false if no ring can be constructed. Ensures that way there is always atleast one way in the current ring */
 	std::function<bool()> createNewRing = [&]() -> bool {
 		currentRing.clear();
 		for (auto& way : ways) {
@@ -111,7 +111,7 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 		return false;
 	};
 
-	// uses Polygon3D to check if the
+	// uses Polygon3D to check if the constructed polyline is valid
 	auto checkIfValidGeometry = [&]() -> bool {
 		std::vector<IBKMK::Vector2D> polyline = convertVectorWayWithMarksToVector2D(currentRing);
 		Polygon2D polygon(polyline);
@@ -121,8 +121,8 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 	auto getNewWay = [&]() -> bool {
 		int nodeID = currentRing.back()->reversedOrder ? currentRing.back()->refs.front() : currentRing.back()->refs.back();
 		for (auto& way : ways) {
-			if (way.assigned || way.selected)
-				continue;
+			if (way.assigned || way.selected) continue;
+			// ensures a way with no nodes is marked as assigned
 			if (way.refs.empty()) {
 				way.assigned = true;
 				continue;
@@ -132,8 +132,7 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 				way.selected = true;
 				currentRing.push_back(&way);
 				return true;
-			}
-			else if (way.refs.front() == nodeID) {
+			} else if (way.refs.front() == nodeID) {
 				way.selected = true;
 				currentRing.push_back(&way);
 				return true;
@@ -142,8 +141,11 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 		return false;
 	};
 
+	// Tries to construct a valid closed polyline. Does that by iterating over all ways, takes each out one after another and tries to attach the way to the ring. If
 	auto constructRing = [&]() -> bool {
 		while(true) {
+			//
+			Q_ASSERT(currentRing.front());
 			if (!currentRing.front()->refs.empty() && !currentRing.back()->refs.empty() &&
 				currentRing.front()->refs[0] == (currentRing.back()->reversedOrder ? currentRing.back()->refs.front() : currentRing.back()->refs.back())) {
 				if (checkIfValidGeometry()) {
@@ -177,7 +179,9 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 		}
 	};
 
+	// First tries to take a new way to start a new ring. Assures there is always atleast one way in the current ring
 	while (createNewRing()) {
+		// Then tries to finish the ring by trying out different ways
 		constructRing();
 	}
 }
@@ -394,7 +398,7 @@ void DrawingOSM::readOSM(const TiXmlElement * element, IBK::NotificationHandler 
 		}
 	}
 	catch (IBK::Exception & ex) {
-		throw IBK::Exception( ex, IBK::FormatString("Error reading 'DrawingOSM' element."), FUNC_ID); //TODO
+		throw IBK::Exception( ex, IBK::FormatString("Error reading 'DrawingOSM' element."), FUNC_ID);
 	}
 }
 
@@ -510,6 +514,7 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 	/* finds all relations and ways that are used in a Simple 3D Building and add them to usedWaysInBuildingRelation
 	 * to prevent them to be independently drawn. */
 	if (m_enable3DBuildings) {
+#pragma omp parallel for
 		for (auto& pair : m_relations) {
 			if (pair.second.containsKey("building") || pair.second.containsKeyValue("type","building")) {
 				if (pair.second.containsKeyValue("type", "multipolygon")) continue;
@@ -521,7 +526,8 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 	if (notifyer) {
 		notifyer->notify(65, "Construct Objects from Nodes");
 	}
-	// construct all objects from nodes
+// construct all objects from nodes
+#pragma omp parallel for
 	for (auto& pair : m_nodes) {
 		if (pair.second.containsKey("natural")) {
 			VicOSM::Natural natural;
@@ -535,7 +541,8 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 	if (notifyer) {
 		notifyer->notify(75, "Construct Objects from Ways");
 	}
-	/* construct all objects from ways. Order of construction relevant*/
+/* construct all objects from ways. Order of construction relevant*/
+#pragma omp parallel for
 	for (auto& pair : m_ways) {
 		if (pair.second.containsKey("building") || (m_enable3DBuildings && pair.second.containsKey("building:part"))) {
 			if (m_enable3DBuildings && std::find(usedWaysInBuildingRelation.begin(), usedWaysInBuildingRelation.end(), (int)pair.second.m_id) != usedWaysInBuildingRelation.end()) {
@@ -629,7 +636,8 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 	if (notifyer) {
 		notifyer->notify(85, "Construct Objects from Relations");
 	}
-	// construct all objects from relation
+// construct all objects from relation
+#pragma omp parallel for
 	for (auto& pair : m_relations) {
 		if (pair.second.containsKey("building") || (m_enable3DBuildings && (pair.second.containsKey("building:part") || pair.second.containsKeyValue("type", "building"))) ) {
 			if (pair.second.containsKeyValue("type", "multipolygon")) {
@@ -753,96 +761,6 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 	if (notifyer) {
 		notifyer->notify(95, "Calculate Proper Ordering");
 	}
-
-	std::function<int(const VicOSM::AbstractOSMObject&)> convertKeyToInt = [&](const VicOSM::AbstractOSMObject& object) -> int {
-		if(object.m_layer == 0) {
-			return static_cast<int>(object.m_keyValue);
-		}
-
-		switch (object.m_layer) {
-			case -5: {			
-				if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
-					return VicOSM::LAYERLANDUSENEG5;
-				else
-					return VicOSM::LAYERHIGHWAYNEG5;
-			} break;
-			case -4: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
-					return static_cast<int>(VicOSM::LAYERLANDUSENEG4);
-				} else {
-					return static_cast<int>(VicOSM::LAYERHIGHWAYNEG4);
-				}
-				break;
-			}
-			case -3: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
-					return static_cast<int>(VicOSM::LAYERLANDUSENEG3);
-				} else {
-					return static_cast<int>(VicOSM::LAYERHIGHWAYNEG3);
-				}
-				break;
-			}
-			case -2: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
-					return static_cast<int>(VicOSM::LAYERLANDUSENEG2);
-				} else {
-					return static_cast<int>(VicOSM::LAYERHIGHWAYNEG2);
-				}
-				break;
-			}
-			case -1: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
-					return static_cast<int>(VicOSM::LAYERLANDUSENEG1);
-				} else {
-					return static_cast<int>(VicOSM::LAYERHIGHWAYNEG1);
-				}
-				break;
-			}
-			case 5: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
-					return static_cast<int>(VicOSM::LAYERLANDUSE5);
-				} else {
-					return static_cast<int>(VicOSM::LAYERHIGHWAY5);
-				}
-				break;
-			}
-			case 4: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
-					return static_cast<int>(VicOSM::LAYERLANDUSE4);
-				} else {
-					return static_cast<int>(VicOSM::LAYERHIGHWAY4);
-				}
-				break;
-			}
-			case 3: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
-					return static_cast<int>(VicOSM::LAYERLANDUSE3);
-				} else {
-					return static_cast<int>(VicOSM::LAYERHIGHWAY3);
-				}
-				break;
-			}
-			case 2: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
-					return static_cast<int>(VicOSM::LAYERLANDUSE2);
-				} else {
-					return static_cast<int>(VicOSM::LAYERHIGHWAY2);
-				}
-				break;
-			}
-			case 1: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
-					return static_cast<int>(VicOSM::LAYERLANDUSE1);
-				} else {
-					return static_cast<int>(VicOSM::LAYERHIGHWAY1);
-				}
-				break;
-			}
-			default:
-				return static_cast<int>(object.m_keyValue);
-		}
-
-	};
 
 	std::vector<int> usedKeyValues;
 
@@ -1130,11 +1048,11 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 				vec += IBKVector2QVector(m_origin);
 				circlePoints[i] = QVector2IBKVector(vec);
 			}
-	\
-			std::vector<PlaneGeometry> planeGeometry;
+			\
+				std::vector<PlaneGeometry> planeGeometry;
 			if (generatePlanesFromPolyline(circlePoints, true,
-													circle.m_radius,
-													planeGeometry)) {
+										   circle.m_radius,
+										   planeGeometry)) {
 				GeometryData geometryData;
 				geometryData.m_planeGeometry = planeGeometry;
 				geometryData.m_color = circle.m_color;
@@ -1253,6 +1171,77 @@ IBKMK::Vector2D DrawingOSM::convertLatLonToVector2D(double lat, double lon) cons
 	double x, y;
 	IBKMK::LatLonToUTMXY(lat, lon, m_utmZone, x, y);
 	return IBKMK::Vector2D(x - m_centerX, y - m_centerY);
+}
+
+int DrawingOSM::convertKeyToInt(const AbstractOSMObject & object) const {
+	if(object.m_layer == 0) {
+		return object.m_keyValue;
+	}
+
+	switch (object.m_layer) {
+		case -5: {
+			if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
+				return VicOSM::LAYERLANDUSENEG5;
+			else
+				return VicOSM::LAYERHIGHWAYNEG5;
+		}
+		case -4: {
+			if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
+				return VicOSM::LAYERLANDUSENEG4;
+			else
+				return VicOSM::LAYERHIGHWAYNEG4;
+		}
+		case -3: {
+			if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
+				return VicOSM::LAYERLANDUSENEG3;
+			else
+				return VicOSM::LAYERHIGHWAYNEG3;
+		}
+		case -2: {
+			if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
+				return VicOSM::LAYERLANDUSENEG2;
+			else
+				return VicOSM::LAYERHIGHWAYNEG2;
+		}
+		case -1: {
+			if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
+				return VicOSM::LAYERLANDUSENEG1;
+			else
+				return VicOSM::LAYERHIGHWAYNEG1;
+		}
+		case 5: {
+			if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
+				return VicOSM::LAYERLANDUSE5;
+			else
+				return VicOSM::LAYERHIGHWAY5;
+		}
+		case 4: {
+			if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
+				return VicOSM::LAYERLANDUSE4;
+			else
+				return VicOSM::LAYERHIGHWAY4;
+		}
+		case 3: {
+			if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
+				return VicOSM::LAYERLANDUSE3;
+			else
+				return VicOSM::LAYERHIGHWAY3;
+		}
+		case 2: {
+			if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
+				return VicOSM::LAYERLANDUSE2;
+			else
+				return VicOSM::LAYERHIGHWAY2;
+		}
+		case 1: {
+			if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
+				return VicOSM::LAYERLANDUSE1;
+			else
+				return VicOSM::LAYERHIGHWAY1;
+		}
+		default:
+			return object.m_keyValue;
+	}
 }
 
 

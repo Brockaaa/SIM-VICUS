@@ -20,14 +20,15 @@ SVImportOSMDialog::SVImportOSMDialog(QWidget *parent)
 {
 	m_ui->setupUi(this);
 
-	connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &SVImportOSMDialog::on_buttonbox_accepted);
-	connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &SVImportOSMDialog::on_buttonbox_cancel);
+	connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &SVImportOSMDialog::buttonbox_accepted);
+	connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &SVImportOSMDialog::buttonbox_cancel);
 	m_importButton = m_ui->buttonBox->button(QDialogButtonBox::Ok);
 	m_importButton->setText("Import");
 	initialise();
 	m_progressNotifyer = new OSMImportProgressNotifyer();
 	m_progressNotifyer->m_prgBar = m_ui->progressBar;
 	m_timer = new QTimer(this);
+	setWindowTitle("Import OSM");
 	m_downloadFilePath = QtExt::Directories::tmpDir() + QString("/tmpDownload.osm");
 	m_ui->widgetBrowseFilename->setup(m_downloadFilePath, true, true, tr("OSM files (*.osm *.vicosm);;All files (*.*)"), true);
 	connect(m_ui->widgetBrowseFilename, &QtExt::BrowseFilenameWidget::editingFinished, this, &SVImportOSMDialog::on_widgetBrowseFilename_changed);
@@ -44,7 +45,7 @@ bool SVImportOSMDialog::import()
 	return (bool)exec();
 }
 
-void SVImportOSMDialog::on_buttonbox_accepted() {
+void SVImportOSMDialog::buttonbox_accepted() {
 	if (m_selectFromMap) {
 		m_fname = m_downloadFilePath;
 	} else {
@@ -52,7 +53,7 @@ void SVImportOSMDialog::on_buttonbox_accepted() {
 	}
 }
 
-void SVImportOSMDialog::on_buttonbox_cancel()
+void SVImportOSMDialog::buttonbox_cancel()
 {
 	if (m_process && m_process->state() != QProcess::NotRunning) {
 		m_process->kill();
@@ -102,11 +103,15 @@ void SVImportOSMDialog::initialise()
 	m_selectFromMap = false;
 	m_ui->lineEditBoundingBox->clear();
 	m_ui->checkBoxToggle3D->setEnabled(true);
-	on_radioButtonImportFile_toggled(true);
-	m_ui->radioButtonImportFile->setChecked(true);
-	on_radioButtonDownloadOSM_toggled(false);
+
+	on_radioButtonImportFile_toggled(false);
+	m_ui->radioButtonImportFile->setChecked(false);
 	m_ui->radioButtonImportFile->setEnabled(true);
+
+	on_radioButtonDownloadOSM_toggled(true);
+	m_ui->radioButtonDownloadOSM->setChecked(true);
 	m_ui->radioButtonDownloadOSM->setEnabled(true);
+
 	m_ui->plainTextEditLog->clear();
 	m_ui->progressBar->reset();
 	m_ui->progressBar->setEnabled(false);
@@ -132,13 +137,9 @@ void SVImportOSMDialog::createQml() {
 		// Try to cast the active object to a QQuickWindow to center it
 		QQuickWindow* window = qobject_cast<QQuickWindow*>(m_activeObject);
 		if (window) {
-			// Get the screen geometry
-			QRect screenGeometry = window->screen()->geometry();
-			int x = (screenGeometry.width() - window->width()) / 2;
-			int y = (screenGeometry.height() - window->height()) / 2;
-
-			// Move the window to the center of the screen
-			window->setPosition(x, y);
+			// Move the window under the parent window
+			window->setPosition(geometry().x(), geometry().y());
+			window->setTitle("Map Selection Window");
 			window->show();  // Make sure the window is shown
 		}
 
@@ -252,9 +253,9 @@ void SVImportOSMDialog::on_qmlOK_clicked()
 			m_activeObject = nullptr;
 
 			QString boundingBoxString = QString("%1, %2, %3, %4").arg(minlon)
-					.arg(minlat)
-					.arg(maxlon)
-					.arg(maxlat);
+									   .arg(minlat)
+									   .arg(maxlon)
+									   .arg(maxlat);
 			m_ui->lineEditBoundingBox->setText(boundingBoxString);
 			m_ui->plainTextEditLog->appendPlainText("Bounding Box selected: " + boundingBoxString);
 			double minx, miny, maxx, maxy;
@@ -262,8 +263,33 @@ void SVImportOSMDialog::on_qmlOK_clicked()
 			IBKMK::LatLonToUTMXY(minlat, minlon, utmZone, minx, miny);
 			IBKMK::LatLonToUTMXY(maxlat, maxlon, utmZone, maxx, maxy);
 			double euclideanDistance = sqrt(pow(maxx - minx, 2) + pow(maxy - miny, 2));
-			if (euclideanDistance > 100000) {
+			if (euclideanDistance > 10000 && euclideanDistance <= 50000) {
+				QMessageBox msgBox;
+				msgBox.setWindowTitle("Confirmation");
+				msgBox.setText(QString("The selected Bounding Box is very large: %1km diagonal. The Download might take a long time. The download will be stopped when cancelling the Import OSM window. Do you want to proceed?").arg(euclideanDistance / 1000));
+				//msgBox.setInformativeText("Please choose whether to continue or cancel.");
+				msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+				msgBox.setDefaultButton(QMessageBox::Ok);
+
+				// Set custom button text (optional)
+				msgBox.button(QMessageBox::Ok)->setText("Import");
+				msgBox.button(QMessageBox::Cancel)->setText("Decline");
 				m_ui->plainTextEditLog->appendPlainText("Warning: The selected area is very large. Download can be stopped by closing this Dialog.");
+				int ret = msgBox.exec();
+				if (ret == QMessageBox::Cancel) {
+					m_ui->lineEditBoundingBox->clear();
+					return;
+				}
+			} else if (euclideanDistance > 50000) {
+				QMessageBox errorBox;
+				errorBox.setWindowTitle("Bounding Box Too Large");
+				errorBox.setText(QString("The selected Bounding Box is very large: %1km diagonal. The Download is not possible. The maximum allowed diagonal is 50km. Please choose a smaller map selection and try again.").arg(euclideanDistance / 1000));
+				// Only show OK button since this is an error notification
+				errorBox.setStandardButtons(QMessageBox::Ok);
+				errorBox.setDefaultButton(QMessageBox::Ok);
+				errorBox.exec();
+				m_ui->lineEditBoundingBox->clear();
+				return;
 			}
 			m_importButton->setEnabled(false);
 

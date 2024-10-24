@@ -100,25 +100,45 @@ Window {
 		}
 	}
 
-
-	RowLayout {
+	// Container for buttons and text with semi-transparent background
+	Rectangle {
 		anchors.right: parent.right
 		anchors.bottom: parent.bottom
-		anchors.margins: 10
-		spacing: 5
+		anchors.margins: 0
+		width: buttonLayout.width + 31  // Add padding around the content
+		height: buttonLayout.height + infoText.height + 10 // Add padding and space for text
+		color: "#90000000"  // Semi-transparent black (alpha: 0x80)
 
-		Button {
-			text: "OK"
-			onClicked: {
-				mapRectangle.okClicked()
+		RowLayout {
+			id: buttonLayout
+			anchors.right: parent.right
+			anchors.bottom: parent.bottom
+			anchors.margins: 16
+			spacing: 5
+
+			Button {
+				text: "Import"
+				onClicked: {
+					mapRectangle.okClicked()
+				}
+			}
+
+			Button {
+				text: "Cancel"
+				onClicked: {
+					mapRectangle.cancelClicked()
+				}
 			}
 		}
 
-		Button {
-			text: "Cancel"
-			onClicked: {
-				mapRectangle.cancelClicked()
-			}
+		Text {
+			id: infoText
+			anchors.top: buttonLayout.bottom
+			anchors.horizontalCenter: parent.horizontalCenter
+			anchors.margins: 2
+			text: "Entire visible map will be imported."
+			color: "white"
+			font.pixelSize: 12
 		}
 	}
 }
