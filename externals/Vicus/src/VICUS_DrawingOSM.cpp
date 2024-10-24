@@ -44,7 +44,7 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertHoleToLocalCoordinates(
 			localVertices.emplace_back(x_local, y_local);
 		}
 		else {
-			throw IBK::Exception(IBK::FormatString("Failed to convert global vertex to local coordinates."));
+			throw IBK::Exception(IBK::FormatString("Failed to convert global vertex to local coordinates."), FUNC_ID);
 		}
 	}
 

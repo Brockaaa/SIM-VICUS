@@ -132,6 +132,7 @@ public:
 	const Way* findWayFromId(unsigned int id) const;
 	/*! Searches in m_relations for relation with id. If no relation was found, a nullptr is returned */
 	const Relation* findRelationFromId(unsigned int id) const;
+	/*! converts latitude, longitude to UTM mercator projection coordinates. Uses the UTM zone defined by the bounding box */
 	inline IBKMK::Vector2D convertLatLonToVector2D(double lat, double lon) const;
 
 	// *** Methods to create Buildings streets. etc. ***

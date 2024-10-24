@@ -12,7 +12,7 @@ public:
 	void readXML(const TiXmlElement * element);
 	TiXmlElement * writeXML(TiXmlElement * parent) const;
 
-	std::vector<IBKMK::Vector2D> m_outerPolyline;					// IBKMK Vector2D TODO
+	std::vector<IBKMK::Vector2D> m_outerPolyline;
 	std::vector<std::vector<IBKMK::Vector2D>> m_innerPolylines;
 };
 
