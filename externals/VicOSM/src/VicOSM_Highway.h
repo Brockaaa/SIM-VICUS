@@ -6,7 +6,7 @@
 #include "VicOSM_Relation.h"
 
 namespace VicOSM {
-
+/*! Highway class in the VicOSM library. Represents a type of object visible in the scene */
 class Highway : public AbstractOSMObject {
 public:
 	void readXML(const TiXmlElement * element);
@@ -18,9 +18,9 @@ public:
 	//:inherited	std::vector<Area>				m_areas;				// XML:E
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
-
+	/*! Creates highway object from way */
 	bool createHighway(Way &way);
-	// should be deprecated. All highways that are areas should be some form of place, landuse etc.
+	/*! Creates highway object from relation */
 	bool createHighway(Relation &relation);
 
 };

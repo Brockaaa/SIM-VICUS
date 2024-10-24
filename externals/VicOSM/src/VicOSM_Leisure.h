@@ -5,7 +5,7 @@
 #include "VicOSM_Way.h"
 
 namespace VicOSM {
-
+/*! Leisure class in the VicOSM library. Represents a type of object visible in the scene */
 class Leisure : public AbstractOSMObject {
 public:
 	void readXML(const TiXmlElement * element);
@@ -17,7 +17,7 @@ public:
 	//:inherited	std::vector<Area>				m_areas;				// XML:E
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
-
+	/*! Creates leisure object from way */
 	bool createLeisure(Way &way);
 
 };

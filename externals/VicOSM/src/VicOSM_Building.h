@@ -6,7 +6,7 @@
 #include "VicOSM_Relation.h"
 
 namespace VicOSM {
-
+/*! Building class in the VicOSM library. Represents a type of object visible in the scene */
 class OSMBuilding : public AbstractOSMObject {
 public:
 	void readXML(const TiXmlElement * element);
@@ -20,8 +20,9 @@ public:
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 
 	void calculateHeight(const AbstractOSMElement& element, Area& area);
-
+	/*! Creates building object from way */
 	bool createBuilding(Way &way, bool enable3D = false);
+	/*! Creates building object from relation */
 	bool createBuilding(Relation &relation, bool enable3D = false);
 	bool initializeSimple3DBuilding(Relation &relation);
 

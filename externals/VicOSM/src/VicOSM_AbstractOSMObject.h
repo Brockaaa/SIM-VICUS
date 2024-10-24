@@ -93,8 +93,9 @@ public:
 	void updatePlaneGeometry() {}
 	void readXML(const TiXmlElement * element);
 	TiXmlElement * writeXML(TiXmlElement * parent) const;
+	/*! initializes an AbstractOSMObject. Checks if it might be underground, assigns m_value and sets the appropriate keyValue enum */
 	bool initialize(AbstractOSMElement& osmElement);
-
+	/*! assigns a keyValue enum based on the set m_key and m_value */
 	void assignEnum();
 
 	std::vector<Area>					m_areas;				// XML:E

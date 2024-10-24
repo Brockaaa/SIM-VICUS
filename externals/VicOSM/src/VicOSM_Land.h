@@ -6,7 +6,7 @@
 #include "VicOSM_Relation.h"
 
 namespace VicOSM {
-
+/*! Land class in the VicOSM library. Represents a type of object visible in the scene */
 class Land : public AbstractOSMObject {
 public:
 	void readXML(const TiXmlElement * element);
@@ -20,7 +20,9 @@ public:
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 
 	QColor	setColor();
+	/*! Creates land object from way */
 	bool createLand(Way &way);
+	/*! Creates land object from relation */
 	bool createLand(Relation &relation);
 
 };

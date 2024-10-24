@@ -6,7 +6,7 @@
 #include "VicOSM_Way.h"
 
 namespace VicOSM {
-
+/*! Natural class in the VicOSM library. Represents a type of object visible in the scene */
 class Natural : public AbstractOSMObject {
 public:
 	void readXML(const TiXmlElement * element);
@@ -18,8 +18,9 @@ public:
 	//:inherited	std::vector<Area>				m_areas;				// XML:E
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
-
+	/*! Creates natural object from node */
 	bool createNatural(Node &node);
+	/*! Creates natural object from way */
 	bool createNatural(Way &way);
 
 };

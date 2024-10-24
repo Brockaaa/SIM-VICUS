@@ -6,7 +6,7 @@
 #include "VicOSM_Relation.h"
 
 namespace VicOSM {
-
+/*! Water class in the VicOSM library. Represents a type of object visible in the scene */
 class Water : public AbstractOSMObject {
 public:
 	void readXML(const TiXmlElement * element);
@@ -18,8 +18,9 @@ public:
 	//:inherited	std::vector<Area>				m_areas;				// XML:E
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
-
+	/*! Creates water object from way */
 	bool createWater(Way &way);
+	/*! Creates water object from relation */
 	bool createWater(Relation &relation);
 
 };

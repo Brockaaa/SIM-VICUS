@@ -6,7 +6,7 @@
 #include "VicOSM_Relation.h"
 
 namespace VicOSM {
-
+/*! Bridge class in the VicOSM library. Represents a type of object visible in the scene */
 class Bridge : public AbstractOSMObject {
 public:
 	void readXML(const TiXmlElement * element);
@@ -18,7 +18,7 @@ public:
 	//:inherited	std::vector<Area>				m_areas;				// XML:E
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
-
+	/*! Creates bridge object from way */
 	bool createBridge(Way &way);
 	bool createBridge(Relation &relation);
 

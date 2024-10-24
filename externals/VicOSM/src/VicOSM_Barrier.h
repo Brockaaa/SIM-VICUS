@@ -5,7 +5,7 @@
 #include "VicOSM_Way.h"
 
 namespace VicOSM {
-
+/*! Barrier class in the VicOSM library. Represents a type of object visible in the scene */
 class Barrier : public AbstractOSMObject {
 public:
 	void readXML(const TiXmlElement * element);
@@ -17,7 +17,7 @@ public:
 	//:inherited	std::vector<Area>				m_areas;				// XML:E
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
-
+	/*! Creates barrier object from way */
 	bool createBarrier(Way &way);
 
 };
