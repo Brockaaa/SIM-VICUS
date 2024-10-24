@@ -86,7 +86,7 @@ private:
 
 	QTimer*					m_timer = nullptr;
 
-	QString					m_downloadFilePath = "/home/sandisk/SHK/downloaded_map.osm";
+	QString					m_downloadFilePath = "";
 
 	Ui::SVImportOSMDialog	*m_ui;
 
