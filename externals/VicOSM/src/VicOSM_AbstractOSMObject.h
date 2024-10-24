@@ -12,7 +12,7 @@
 namespace VicOSM {
 
 /*! Provides enum for key value pairs. Also defines the order in which objects are drawn when overlapping */
-enum KeyValue{
+enum KeyValue {
 	BOUNDINGBOX,
 	LAYERLANDUSENEG5,
 	LAYERLANDUSENEG4,

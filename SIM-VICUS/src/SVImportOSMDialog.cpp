@@ -3,6 +3,7 @@
 #include "SVSettings.h"
 
 #include <QtNetwork>
+#include <QScreen>
 #include <QtExt_Directories.h>
 #include <QFileDialog>
 #include <QQmlEngine>
@@ -11,6 +12,7 @@
 #include <QVariantMap>
 #include <QApplication>
 #include <QPushButton>
+#include <QQuickWindow>
 
 SVImportOSMDialog::SVImportOSMDialog(QWidget *parent)
 	: QDialog(parent)
@@ -65,10 +67,10 @@ void SVImportOSMDialog::downloadOsmFile(double minlon, double minlat, double max
 {
 	// Construct the URL for the OSM file
 	QString url = QString("https://overpass-api.de/api/map?bbox=%1,%2,%3,%4")
-					  .arg(minlon)
-					  .arg(minlat)
-					  .arg(maxlon)
-					  .arg(maxlat);
+			.arg(minlon)
+			.arg(minlat)
+			.arg(maxlon)
+			.arg(maxlat);
 
 
 	if (m_process != nullptr)
@@ -80,6 +82,7 @@ void SVImportOSMDialog::downloadOsmFile(double minlon, double minlat, double max
 
 	m_process = new QProcess();
 	m_process->setWorkingDirectory(QtExt::Directories::tmpDir());
+
 	QString binary = "/usr/bin/curl";
 	QStringList arguments;
 	arguments << "-o" << m_downloadFilePath << url;
@@ -110,13 +113,13 @@ void SVImportOSMDialog::initialise()
 	m_ui->lineEditBoundingBox->clear();
 }
 
-void SVImportOSMDialog::createQml()
-{
+void SVImportOSMDialog::createQml() {
 	if (m_engine == nullptr) {
 		m_engine = new QQmlEngine(this);
 		if (m_component != nullptr)
 			delete m_component;
 		m_component = new QQmlComponent(m_engine, QUrl("qrc:/qml/SVImportOSMMap.qml"));
+		m_component->setParent(this);
 	}
 
 	m_activeObject = m_component->create();
@@ -125,6 +128,20 @@ void SVImportOSMDialog::createQml()
 		// Connect the QML signals to the C++ slots
 		connect(m_activeObject, SIGNAL(okClicked()), this, SLOT(on_qmlOK_clicked()));
 		connect(m_activeObject, SIGNAL(cancelClicked()), this, SLOT(on_qmlCancel_clicked()));
+
+		// Try to cast the active object to a QQuickWindow to center it
+		QQuickWindow* window = qobject_cast<QQuickWindow*>(m_activeObject);
+		if (window) {
+			// Get the screen geometry
+			QRect screenGeometry = window->screen()->geometry();
+			int x = (screenGeometry.width() - window->width()) / 2;
+			int y = (screenGeometry.height() - window->height()) / 2;
+
+			// Move the window to the center of the screen
+			window->setPosition(x, y);
+			window->show();  // Make sure the window is shown
+		}
+
 	} else {
 		qDebug() << "Failed to create the QML component instance.";
 		foreach (const QQmlError &error, m_component->errors()) {
@@ -207,8 +224,7 @@ bool SVImportOSMDialog::readAndConstructOSM()
 	return true;
 }
 
-void SVImportOSMDialog::on_toolButtonMap_clicked()
-{
+void SVImportOSMDialog::on_toolButtonMap_clicked() {
 	createQml();
 }
 
@@ -236,9 +252,9 @@ void SVImportOSMDialog::on_qmlOK_clicked()
 			m_activeObject = nullptr;
 
 			QString boundingBoxString = QString("%1, %2, %3, %4").arg(minlon)
-									   .arg(minlat)
-									   .arg(maxlon)
-									   .arg(maxlat);
+					.arg(minlat)
+					.arg(maxlon)
+					.arg(maxlat);
 			m_ui->lineEditBoundingBox->setText(boundingBoxString);
 			m_ui->plainTextEditLog->appendPlainText("Bounding Box selected: " + boundingBoxString);
 			double minx, miny, maxx, maxy;
