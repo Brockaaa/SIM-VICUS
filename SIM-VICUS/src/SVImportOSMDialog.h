@@ -55,9 +55,9 @@ private slots:
 	void on_qmlOK_clicked();
 	/*! connected to cancel button of qml quick widget */
 	void on_qmlCancel_clicked();
-
+	/*! enables or disables widget containing local file import */
 	void on_radioButtonImportFile_toggled(bool checked);
-
+	/*! enables or disables widget containing osm download dialog */
 	void on_radioButtonDownloadOSM_toggled(bool checked);
 
 private:

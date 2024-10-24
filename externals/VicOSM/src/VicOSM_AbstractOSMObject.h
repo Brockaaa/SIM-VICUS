@@ -90,7 +90,7 @@ enum KeyValue {
 
 class AbstractOSMObject {
 public:
-	void updatePlaneGeometry();
+	void updatePlaneGeometry() {}
 	void readXML(const TiXmlElement * element);
 	TiXmlElement * writeXML(TiXmlElement * parent) const;
 	bool initialize(AbstractOSMElement& osmElement);

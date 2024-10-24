@@ -32,19 +32,6 @@
 
 namespace VicOSM {
 
-void AbstractOSMObject::updatePlaneGeometry()
-{
-	for (auto& area : m_areas ) {
-		area.updatePlaneGeometry();
-	}
-	for (auto& circle : m_circles) {
-		circle.updatePlaneGeometry();
-	}
-	for (auto& lineFromPlanes : m_linesFromPlanes) {
-		lineFromPlanes.updatePlaneGeometry();
-	}
-}
-
 void AbstractOSMObject::readXML(const TiXmlElement * element) {
 	FUNCID(AbstractOSMObject::readXML);
 
@@ -54,12 +41,12 @@ void AbstractOSMObject::readXML(const TiXmlElement * element) {
 		const TiXmlAttribute * attrib = element->FirstAttribute();
 		while (attrib) {
 			const std::string & attribName = attrib->NameStr();
-			if (attribName == "key")
+			if (attribName == "id")
+				m_id = NANDRAD::readPODAttributeValue<unsigned int>(element, attrib);
+			else if (attribName == "key")
 				m_key = attrib->ValueStr();
 			else if (attribName == "value")
 				m_value = attrib->ValueStr();
-			else if (attribName == "zPosition")
-				m_zPosition = NANDRAD::readPODAttributeValue<double>(element, attrib);
 			else {
 				IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ATTRIBUTE).arg(attribName).arg(element->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 			}
@@ -124,11 +111,12 @@ TiXmlElement * AbstractOSMObject::writeXML(TiXmlElement * parent) const {
 	TiXmlElement * e = new TiXmlElement("AbstractOSMObject");
 	parent->LinkEndChild(e);
 
+	if (m_id != VicOSM::INVALID_ID)
+		e->SetAttribute("id", IBK::val2string<unsigned int>(m_id));
 	if (!m_key.empty())
 		e->SetAttribute("key", m_key);
 	if (!m_value.empty())
 		e->SetAttribute("value", m_value);
-	e->SetAttribute("zPosition", IBK::val2string<double>(m_zPosition));
 
 	if (!m_areas.empty()) {
 		TiXmlElement * child = new TiXmlElement("Areas");

@@ -188,7 +188,7 @@ void OSMObject::generateOSMGeometry() {
 												VAOWithBuffer->m_indexBufferData,
 												&multipolygon.m_innerPolylines);
 						}
-						catch (const std::exception& e) {
+						catch (const IBK::Exception& e) {
 							// Handle exception (e.g., log error, skip this polygon, etc.)
 							std::cerr << "Error in addPolygonExtrusion: " << e.what() << std::endl;
 						}
@@ -207,7 +207,7 @@ void OSMObject::generateOSMGeometry() {
 									 VAOWithBuffer->m_indexBufferData,
 									 true);
 						}
-						catch (const std::exception& e) { // IBK exception TODO
+						catch (const IBK::Exception& e) {
 							// Handle exception (e.g., log error, skip this plane, etc.)
 							std::cerr << "Error in addPlane: " << e.what() << std::endl;
 						}

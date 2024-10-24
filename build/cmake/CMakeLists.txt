@@ -96,6 +96,8 @@ else (DISABLE_QT)
 	find_package(Qt5PrintSupport REQUIRED)
 	find_package(Qt5Network REQUIRED)
 	find_package(Qt5Concurrent REQUIRED)
+	find_package(Qt5Quick REQUIRED)
+	find_package(Qt5Positioning REQUIRED)
 
 	message("*** Building with Qt5, Version ${Qt5Widgets_VERSION} ***")
 	

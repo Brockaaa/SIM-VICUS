@@ -47,7 +47,7 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 				m_centerX = NANDRAD::readPODAttributeValue<double>(element, attrib);
 			else if (attribName == "centerY")
 				m_centerY = NANDRAD::readPODAttributeValue<double>(element, attrib);
-			else if (attribName == "enable3D")
+			else if (attribName == "enable3DBuildings")
 				m_enable3DBuildings = NANDRAD::readPODAttributeValue<bool>(element, attrib);
 			else {
 				IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ATTRIBUTE).arg(attribName).arg(element->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
@@ -59,7 +59,7 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 		const TiXmlElement * c = element->FirstChildElement();
 		while (c) {
 			const std::string & cName = c->ValueStr();
-			if (cName == "Houses") {
+			if (cName == "Buildings") {
 				const TiXmlElement * c2 = c->FirstChildElement();
 				while (c2) {
 					const std::string & c2Name = c2->ValueStr();
@@ -227,12 +227,12 @@ TiXmlElement * DrawingOSM::writeXML(TiXmlElement * parent) const {
 	e->SetAttribute("centerX", IBK::val2string<double>(m_centerX));
 	e->SetAttribute("centerY", IBK::val2string<double>(m_centerY));
 	if (m_enable3DBuildings != DrawingOSM().m_enable3DBuildings)
-		e->SetAttribute("enable3D", IBK::val2string<bool>(m_enable3DBuildings));
+		e->SetAttribute("enable3DBuildings", IBK::val2string<bool>(m_enable3DBuildings));
 
 	m_boundingBox.writeXML(e);
 
 	if (!m_buildings.empty()) {
-		TiXmlElement * child = new TiXmlElement("Houses");
+		TiXmlElement * child = new TiXmlElement("Buildings");
 		e->LinkEndChild(child);
 
 		for (std::vector<OSMBuilding>::const_iterator it = m_buildings.begin();

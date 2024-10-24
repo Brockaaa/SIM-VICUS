@@ -79,7 +79,7 @@ void DrawingOSM::createMultipolygonsFromRelation(const VicOSM::Relation & relati
 		WayWithMarks way;
 		/* if not all ways available, it is likely a huge multipolygon that is partially outside of the boundingbox of the .osm file.
 		 * To avoid weird bugs (e.g. areas covered by the polygon that should not be covered), we skip this incomplete multipolygon */
-		if (!processWay(way.refs, relation.m_members[i].ref))
+		if (!processWay(way.m_nodeRefs, relation.m_members[i].ref))
 			return;
 		ways.push_back(way);
 	}
@@ -99,9 +99,9 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 	std::function<bool()> createNewRing = [&]() -> bool {
 		currentRing.clear();
 		for (auto& way : ways) {
-			if (!way.assigned) {
-				way.assigned = true;
-				if(way.refs.empty()) {
+			if (!way.m_assigned) {
+				way.m_assigned = true;
+				if(way.m_nodeRefs.empty()) {
 					return createNewRing();
 				}
 				currentRing.push_back(&way);
@@ -119,21 +119,23 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 	};
 
 	auto getNewWay = [&]() -> bool {
-		int nodeID = currentRing.back()->reversedOrder ? currentRing.back()->refs.front() : currentRing.back()->refs.back();
+		int nodeID = currentRing.back()->m_reversedOrder ? currentRing.back()->m_nodeRefs.front() : currentRing.back()->m_nodeRefs.back();
 		for (auto& way : ways) {
-			if (way.assigned || way.selected) continue;
+			// if a way is already in the current ring or already used, skip it
+			if (way.m_assigned || way.m_selected) continue;
 			// ensures a way with no nodes is marked as assigned
-			if (way.refs.empty()) {
-				way.assigned = true;
+			if (way.m_nodeRefs.empty()) {
+				way.m_assigned = true;
 				continue;
 			}
-			if (way.refs.back() == nodeID) {
-				way.reversedOrder = true;
-				way.selected = true;
+			// searches for a way beginning or ending with nodeID. If successful, it will be added to the current ring and be marked as selected
+			if (way.m_nodeRefs.back() == nodeID) {
+				way.m_reversedOrder = true;
+				way.m_selected = true;
 				currentRing.push_back(&way);
 				return true;
-			} else if (way.refs.front() == nodeID) {
-				way.selected = true;
+			} else if (way.m_nodeRefs.front() == nodeID) {
+				way.m_selected = true;
 				currentRing.push_back(&way);
 				return true;
 			}
@@ -141,16 +143,18 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 		return false;
 	};
 
-	// Tries to construct a valid closed polyline. Does that by iterating over all ways, takes each out one after another and tries to attach the way to the ring. If
+	// Tries to construct a valid closed polyline. Does that by iterating over all ways, takes each out one after another and tries to attach the way to the ring.
 	auto constructRing = [&]() -> bool {
 		while(true) {
-			//
 			Q_ASSERT(currentRing.front());
-			if (!currentRing.front()->refs.empty() && !currentRing.back()->refs.empty() &&
-				currentRing.front()->refs[0] == (currentRing.back()->reversedOrder ? currentRing.back()->refs.front() : currentRing.back()->refs.back())) {
+			/* checks if the current ring forms a closed area by checking if the first node of the first way and last node of the last way are the same.
+				Needs to make sure all used vectors are not empty and needs to take the order of the nodes in the ways is respected.
+				if the ring does not form a valid ring, will continue to get new ways until either all ways are assigned or the ring is valid */
+			if (!currentRing.front()->m_nodeRefs.empty() && !currentRing.back()->m_nodeRefs.empty() &&
+				currentRing.front()->m_nodeRefs[0] == (currentRing.back()->m_reversedOrder ? currentRing.back()->m_nodeRefs.front() : currentRing.back()->m_nodeRefs.back())) {
 				if (checkIfValidGeometry()) {
 					for (WayWithMarks* way : currentRing) {
-						way->assigned = true;
+						way->m_assigned = true;
 					}
 					allRings.push_back(currentRing);
 					return true;
@@ -158,12 +162,14 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 					return false;
 				}
 			} else {
+				/* attempts to get a new way. If successful, it is checked if the ring is fully formed.
+					If unsuccessful, it will check the current ring and otherwise deselect all used ways and abort this current ring */
 				if (getNewWay()) {
 					continue;
 				} else {
 					for (auto it = currentRing.begin(); it != currentRing.end();) {
-						if ((*it)->selected) {
-							(*it)->selected = false;
+						if ((*it)->m_selected) {
+							(*it)->m_selected = false;
 							it = currentRing.erase(it);
 						} else {
 							++it;
@@ -189,14 +195,14 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 std::vector<IBKMK::Vector2D> DrawingOSM::convertVectorWayWithMarksToVector2D(const std::vector<WayWithMarks*>& ways){
 	std::vector<IBKMK::Vector2D> vectorCoordinates;
 	for (WayWithMarks * way : ways) {
-		if (way->reversedOrder) {
-			for (int i = way->refs.size() - 1; i >= 0; i--) {
-				const VicOSM::Node *node = findNodeFromId(way->refs[i]);
+		if (way->m_reversedOrder) {
+			for (int i = way->m_nodeRefs.size() - 1; i >= 0; i--) {
+				const VicOSM::Node *node = findNodeFromId(way->m_nodeRefs[i]);
 				Q_ASSERT(node);
 				vectorCoordinates.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
 			}
 		} else {
-			for (int refs : way->refs) {
+			for (int refs : way->m_nodeRefs) {
 				const VicOSM::Node *node = findNodeFromId(refs);
 				Q_ASSERT(node);
 				vectorCoordinates.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
@@ -219,9 +225,10 @@ void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, 
 
 	std::vector<int> usedRings;
 	int size = rings.size();
+	// fills the matrix
 	for (int i = 0; i < size; i++) {
 		std::vector<bool> row;
-		for(WayWithMarks * way : rings[i]) way->assigned = false;
+		for(WayWithMarks * way : rings[i]) way->m_assigned = false;
 		row.resize(size);
 		for (int j = 0; j < size; j++) {
 			// ring does not contain itself
@@ -235,6 +242,7 @@ void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, 
 	}
 
 	unsigned int activeOuterRing;
+	/* tries to find a valid outer ring by checking if it is contained in any other ring. If no, it is now the new active outer ring */
 	std::function<bool()> findOuterRing = [&]() -> bool {
 		for (unsigned int i = 0; i < rings.size(); i++) {
 			if (std::find(usedRings.begin(), usedRings.end(), i) != usedRings.end())  continue;
@@ -256,7 +264,8 @@ void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, 
 		return false;
 	};
 
-	// checks if ring is contained in the active Outer Ring and not contained in any other unused ring
+	/* checks if ring is contained in the active Outer Ring and not contained in any other unused ring
+	   if those conditions are true it will be part of the polygon of the active outer ring */
 	std::function<void(VicOSM::Multipolygon&)> addAllInners = [&](VicOSM::Multipolygon& multipolygon) {
 		for (unsigned int i = 0; i < matrix.size(); i++) {
 			if (std::find(usedRings.begin(), usedRings.end(), i) != usedRings.end())  continue;
@@ -314,6 +323,7 @@ void DrawingOSM::ringGrouping(std::vector<std::vector<WayWithMarks *> >& rings, 
 
 	};
 
+	/* while a new outer ring can be found, add all possible inner rings to the currently active outer ring */
 	while(findOuterRing()) {
 		VicOSM::Multipolygon multipolygon;
 		multipolygon.m_outerPolyline = ringsVector[activeOuterRing];
@@ -514,7 +524,6 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 	/* finds all relations and ways that are used in a Simple 3D Building and add them to usedWaysInBuildingRelation
 	 * to prevent them to be independently drawn. */
 	if (m_enable3DBuildings) {
-#pragma omp parallel for
 		for (auto& pair : m_relations) {
 			if (pair.second.containsKey("building") || pair.second.containsKeyValue("type","building")) {
 				if (pair.second.containsKeyValue("type", "multipolygon")) continue;
@@ -527,7 +536,6 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 		notifyer->notify(65, "Construct Objects from Nodes");
 	}
 // construct all objects from nodes
-#pragma omp parallel for
 	for (auto& pair : m_nodes) {
 		if (pair.second.containsKey("natural")) {
 			VicOSM::Natural natural;
@@ -542,7 +550,6 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 		notifyer->notify(75, "Construct Objects from Ways");
 	}
 /* construct all objects from ways. Order of construction relevant*/
-#pragma omp parallel for
 	for (auto& pair : m_ways) {
 		if (pair.second.containsKey("building") || (m_enable3DBuildings && pair.second.containsKey("building:part"))) {
 			if (m_enable3DBuildings && std::find(usedWaysInBuildingRelation.begin(), usedWaysInBuildingRelation.end(), (int)pair.second.m_id) != usedWaysInBuildingRelation.end()) {
@@ -637,7 +644,6 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 		notifyer->notify(85, "Construct Objects from Relations");
 	}
 // construct all objects from relation
-#pragma omp parallel for
 	for (auto& pair : m_relations) {
 		if (pair.second.containsKey("building") || (m_enable3DBuildings && (pair.second.containsKey("building:part") || pair.second.containsKeyValue("type", "building"))) ) {
 			if (pair.second.containsKeyValue("type", "multipolygon")) {
@@ -659,7 +665,7 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 				for (auto& member : pair.second.m_members) {
 					if (member.role == "basement") continue;
 					bool outline = member.role == "outline"; // when a building:part exists, the outline of the building should generally not be used. In practice there are cases of floating buildings because they rely on the outline being drawn
-					if (outline) continue;
+					if (outline) continue;												// comment out this line if workaround to make altstadt dresden pretty should be enabled
 					if (member.type == Types::WayType) {
 						const Way *way = findWayFromId(member.ref);
 						if (!way)

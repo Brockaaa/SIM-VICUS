@@ -100,6 +100,8 @@ set ( QT_LIBRARIES
 	Qt5::Xml
 	Qt5::Network
 	Qt5::Concurrent
+	Qt5::Quick
+	Qt5::Positioning
 )
 
 # build application executable for the different platforms

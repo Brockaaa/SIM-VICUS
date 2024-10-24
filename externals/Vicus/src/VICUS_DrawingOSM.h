@@ -88,10 +88,14 @@ public:
 
 	/*! Struct only used in createMultipolygon, ringAssignment, ringGrouping */
 	struct WayWithMarks {
-		std::vector<int> refs;
-		bool assigned = false;
-		bool selected = false;
-		bool reversedOrder = false;
+		/*! Reference to the nodes used by this way */
+		std::vector<int> m_nodeRefs;
+		/*! true if a ring or multipolygon was succesfully constructed using this way */
+		bool m_assigned = false;
+		/*! true if it is in the process of being assigned to a ring */
+		bool m_selected = false;
+		/*! true if the order of the nodes in m_nodesRefs is in reversed order */
+		bool m_reversedOrder = false;
 	};
 
 	/*! Used in createMultipolygonsFromRelation. Small helper function to
