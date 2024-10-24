@@ -3,6 +3,7 @@
 #include "SVSettings.h"
 
 #include <QtNetwork>
+#include <QtExt_Directories.h>
 #include <QFileDialog>
 #include <QQmlEngine>
 #include <QQmlContext>
@@ -25,6 +26,7 @@ SVImportOSMDialog::SVImportOSMDialog(QWidget *parent)
 	m_progressNotifyer = new OSMImportProgressNotifyer();
 	m_progressNotifyer->m_prgBar = m_ui->progressBar;
 	m_timer = new QTimer(this);
+	m_downloadFilePath = QtExt::Directories::tmpDir() + QString("/tmpDownload.osm");
 	m_ui->widgetBrowseFilename->setup(m_downloadFilePath, true, true, tr("OSM files (*.osm *.vicosm);;All files (*.*)"), true);
 	connect(m_ui->widgetBrowseFilename, &QtExt::BrowseFilenameWidget::editingFinished, this, &SVImportOSMDialog::on_widgetBrowseFilename_changed);
 }
@@ -42,7 +44,7 @@ bool SVImportOSMDialog::import()
 
 void SVImportOSMDialog::on_buttonbox_accepted() {
 	if (m_selectFromMap) {
-		m_fname = QString("/home/sandisk/SHK/downloaded_map.osm");
+		m_fname = m_downloadFilePath;
 	} else {
 		m_fname = m_ui->widgetBrowseFilename->filename();
 	}
@@ -77,7 +79,7 @@ void SVImportOSMDialog::downloadOsmFile(double minlon, double minlat, double max
 		file.remove();
 
 	m_process = new QProcess();
-	m_process->setWorkingDirectory("/home/sandisk/SHK");
+	m_process->setWorkingDirectory(QtExt::Directories::tmpDir());
 	QString binary = "/usr/bin/curl";
 	QStringList arguments;
 	arguments << "-o" << m_downloadFilePath << url;
@@ -144,9 +146,6 @@ void SVImportOSMDialog::updateDownloadProgress()
 		logText = logText.left(lastIndex) + QString("Download in Progress: %1 MB").arg(currentSize / 1048576.f/* 1 MB */ );
 		m_ui->plainTextEditLog->setPlainText(logText);
 	}
-
-	//QString fileSizeInMb = QString("Download in Progress: %1 MB").arg(currentSize / 1048576.f/* 1 MB */ );
-	//m_ui->plainTextEditLog->appendPlainText(fileSizeInMb);
 
 	if (m_process->state() == QProcess::NotRunning) {
 		m_timer->stop();
