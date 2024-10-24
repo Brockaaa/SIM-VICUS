@@ -70,7 +70,8 @@ public:
 		return "DrawingOSM";
 	}
 
-	/*! Groups together planeGeometry with data like color, height etc. PlaneGeometry will be held in this struct. This struct is held in m_geometryData in VICUS::DrawingOSM */
+	/*! Groups together planeGeometry with data like color, height etc. PlaneGeometry will
+	 *  be held in this struct. This struct is held in m_geometryData in VICUS::DrawingOSM */
 	struct GeometryData {
 		std::vector<VICUS::PlaneGeometry>	m_planeGeometry;
 		std::vector<Multipolygon>			m_multipolygons;
@@ -92,12 +93,19 @@ public:
 		bool selected = false;
 		bool reversedOrder = false;
 	};
-	/*! Used in createMultipolygonsFromRelation. Small helper function to convert a way to a polyline std::vector<IBKMK::Vector2D */
+
+	/*! Used in createMultipolygonsFromRelation. Small helper function to
+		convert a way to a polyline std::vector<IBKMK::Vector2D */
 	std::vector<IBKMK::Vector2D> convertVectorWayWithMarksToVector2D(const std::vector<WayWithMarks*>& ways);
-	/*!  Used in createMultipolygonsFromRelation. Creates complete areas/rings from a set of open and closed polylines */
+
+	/*! Used in createMultipolygonsFromRelation. Creates complete areas/rings
+		from a set of open and closed polylines */
 	void ringAssignment(std::vector<WayWithMarks>& ways, std::vector<std::vector<WayWithMarks*>>& allRings);
-	/*!  Used in createMultipolygonsFromRelation. Creates multiple polygons with holes from a set of closed polylines */
+
+	/*! Used in createMultipolygonsFromRelation. Creates multiple polygons
+		with holes from a set of closed polylines */
 	void ringGrouping(std::vector<std::vector<WayWithMarks*>>& rings, std::vector<Multipolygon>& multipolygons);
+
 	/*! takes a relation as an input and tries to create (many) Multipolygons with holes */
 	void createMultipolygonsFromRelation(const Relation &relation, std::vector<Multipolygon>& multipolygons);
 
@@ -108,6 +116,7 @@ public:
 
 	/*! Fills m_nodes, m_ways, m_relations, m_boundingBox with values from a OSM XML */
 	void readOSM(const TiXmlElement * element, IBK::NotificationHandler *notifyer = nullptr);
+
 	/*! writes .vicosm to filename */
 	void writeOSM(const IBK::Path & filename);
 
@@ -120,11 +129,13 @@ public:
 		redone.
 	*/
 	void updatePlaneGeometries();
+
 	/*! creates all PlaneGeometry objects from one OSMObject by iterating over all DrawingObjects int the OSMObject and creates a GeometryData object from it.
 	 *  Saves the resulting GeometryData object in a map with the address of the DrawingObject as key. Inserts the created GeometryData object to the geometryData Vector */
 	void addGeometryData(const AbstractOSMObject& object, std::vector<GeometryData *>& geometryData) const;
+
 	/*! Iterates over all OSMObjects and adds geometryData to the geometryData map. The map takes as a key the z-value of an object to define the order of the objects. */
-	const void geometryData(std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>>& geometryData) const;
+	void geometryData(std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>>& geometryData) const;
 
 	/*! Searches in m_nodes for node with id. If no node was found, a nullptr is returned */
 	const Node* findNodeFromId(unsigned int id) const;
@@ -147,13 +158,13 @@ public:
 	/*! lists of relations */
 	std::unordered_map<unsigned int, Relation>		m_relations;
 	/*! Stores the bounding box of the drawing */
-	BoundingBox										m_boundingBox;				// XML:E
+	BoundingBox										m_boundingBox;		// XML:E
 
 
 	/*! UTM zone defined by the longitude (minlon) of the bounding box */
-	int												m_utmZone = 0;				// XML:A
-	double											m_centerX = 0;				// XML:A
-	double											m_centerY = 0;				// XML:A
+	int												m_utmZone = 0;		// XML:A
+	double											m_centerX = 0;		// XML:A
+	double											m_centerY = 0;		// XML:A
 
 	/*! point of origin */
 	IBKMK::Vector3D									m_origin			= IBKMK::Vector3D(0,0,0);
@@ -182,9 +193,9 @@ public:
 
 	/*! Flags and Objects used for getting geometryData and rendering. Can be set externally */
 	mutable std::map<const AbstractDrawingObject*, GeometryData>	m_geometryData;
-	mutable GeometryData							m_geometryDataBoundingBox;
-	mutable bool								m_dirtyTriangulation = true;
-	mutable bool								m_firstTriangulation = true;
+	mutable GeometryData											m_geometryDataBoundingBox;
+	mutable bool													m_dirtyTriangulation = true;
+	mutable bool													m_firstTriangulation = true;
 
 };
 

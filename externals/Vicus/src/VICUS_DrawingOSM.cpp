@@ -121,7 +121,8 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 	auto getNewWay = [&]() -> bool {
 		int nodeID = currentRing.back()->reversedOrder ? currentRing.back()->refs.front() : currentRing.back()->refs.back();
 		for (auto& way : ways) {
-			if (way.assigned || way.selected) continue;
+			if (way.assigned || way.selected)
+				continue;
 			if (way.refs.empty()) {
 				way.assigned = true;
 				continue;
@@ -131,7 +132,8 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 				way.selected = true;
 				currentRing.push_back(&way);
 				return true;
-			} else if (way.refs.front() == nodeID) {
+			}
+			else if (way.refs.front() == nodeID) {
 				way.selected = true;
 				currentRing.push_back(&way);
 				return true;
@@ -742,27 +744,28 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 	}
 
 	/*! Hacky Order calculation. Based on the following sentence:
-	 *  "layer can only "overrule" the natural ordering of features within one particular group but not place for example a river or landuse above a bridge or an aerialway (exception: use in indoor mapping or with location tag)"
-	 *  https://wiki.openstreetmap.org/wiki/Key:layer#Data_consumers
-	 *  Can lead to z fighting when 2 overlapping objects of the same group are assigned the same explicit layer. E.g. A LANDUSE_GRASS object and a AMENITY_SCHOOL object are both assigned layer 2
-	 *  First collects all layers from objects and removes duplicates, then sorts the layers ascendingly and calculates an explicit z value that is assigned to the objects */
+		"layer can only "overrule" the natural ordering of features within one particular group but
+		not place for example a river or landuse above a bridge or an aerialway (exception: use in indoor mapping or with location tag)"
+		https://wiki.openstreetmap.org/wiki/Key:layer#Data_consumers
+		Can lead to z fighting when 2 overlapping objects of the same group are assigned the same explicit layer. E.g. A LANDUSE_GRASS
+		object and a AMENITY_SCHOOL object are both assigned layer 2
+		First collects all layers from objects and removes duplicates, then sorts the layers ascendingly and calculates an explicit z value that is assigned to the objects */
 	if (notifyer) {
 		notifyer->notify(95, "Calculate Proper Ordering");
 	}
-	std::function<int(const VicOSM::AbstractOSMObject&)> convertKeyToInt = [&](const VicOSM::AbstractOSMObject& object){
+
+	std::function<int(const VicOSM::AbstractOSMObject&)> convertKeyToInt = [&](const VicOSM::AbstractOSMObject& object) -> int {
 		if(object.m_layer == 0) {
 			return static_cast<int>(object.m_keyValue);
 		}
 
 		switch (object.m_layer) {
-			case -5: {
-				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
-					return static_cast<int>(VicOSM::LAYERLANDUSENEG5);
-				} else {
-					return static_cast<int>(VicOSM::LAYERHIGHWAYNEG5);
-				}
-				break;
-			}
+			case -5: {			
+				if (object.m_keyValue < VicOSM::LAYERHIGHWAYNEG5)
+					return VicOSM::LAYERLANDUSENEG5;
+				else
+					return VicOSM::LAYERHIGHWAYNEG5;
+			} break;
 			case -4: {
 				if (static_cast<int>(object.m_keyValue) < static_cast<int>(VicOSM::LAYERHIGHWAYNEG5)){
 					return static_cast<int>(VicOSM::LAYERLANDUSENEG4);
@@ -1144,7 +1147,7 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 	}
 }
 
-const void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>>& geometryData) const {
+void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>>& geometryData) const {
 
 	// add BoundingBox
 	if (m_dirtyTriangulation) {
@@ -1261,7 +1264,7 @@ bool DrawingOSM::generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> &
 	double length;
 
 	// if polyline is empty, return
-	if(polyline.size() < 2){
+	if (polyline.size() < 2){
 		return false;
 	}
 
