@@ -78,6 +78,7 @@ set( APP_QRCS
 	${PROJECT_SOURCE_DIR}/../../resources/icons.qrc 
 	${PROJECT_SOURCE_DIR}/../../resources/qdarkstyle/style.qrc
 	${PROJECT_SOURCE_DIR}/../../resources/predefinedSplines.qrc 
+	${PROJECT_SOURCE_DIR}/../../resources/qml.qrc 
 	${PROJECT_SOURCE_DIR}/../../src/shaders/shaders.qrc 	
 )
 
@@ -100,6 +101,7 @@ set ( QT_LIBRARIES
 	Qt5::Xml
 	Qt5::Network
 	Qt5::Concurrent
+	Qt5::Qml
 	Qt5::Quick
 	Qt5::Positioning
 )

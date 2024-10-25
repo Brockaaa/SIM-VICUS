@@ -53,7 +53,7 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertHoleToLocalCoordinates(
 
 void DrawingOSM::createMultipolygonFromWay(const VicOSM::Way & way, VicOSM::Multipolygon & multipolygon) {
 	for (unsigned int i = 0; i < way.m_nd.size() ; i++) {
-		const VicOSM::Node * node = findNodeFromId(way.m_nd[i].ref);
+		const VicOSM::Node * node = findNodeFromId(way.m_nd[i].m_ref);
 		Q_ASSERT(node);
 		multipolygon.m_outerPolyline.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
 	}
@@ -67,7 +67,7 @@ void DrawingOSM::createMultipolygonsFromRelation(const VicOSM::Relation & relati
 		const VicOSM::Way* way = findWayFromId(wayRef);
 		if(!way) return false;
 		for (unsigned int i = 0; i < way->m_nd.size(); i++) {
-			nodeRefs.push_back(way->m_nd[i].ref);
+			nodeRefs.push_back(way->m_nd[i].m_ref);
 		}
 		return true;
 	};
@@ -75,11 +75,11 @@ void DrawingOSM::createMultipolygonsFromRelation(const VicOSM::Relation & relati
 	std::vector<WayWithMarks> ways;
 
 	for (unsigned int i = 0; i < relation.m_members.size(); i++) {
-		if (relation.m_members[i].type != VicOSM::WayType) continue;
+		if (relation.m_members[i].m_type != VicOSM::WayType) continue;
 		WayWithMarks way;
 		/* if not all ways available, it is likely a huge multipolygon that is partially outside of the boundingbox of the .osm file.
 		 * To avoid weird bugs (e.g. areas covered by the polygon that should not be covered), we skip this incomplete multipolygon */
-		if (!processWay(way.m_nodeRefs, relation.m_members[i].ref))
+		if (!processWay(way.m_nodeRefs, relation.m_members[i].m_ref))
 			return;
 		ways.push_back(way);
 	}
@@ -508,11 +508,11 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 
 	std::function<void(const Relation&, std::vector<int>&)> findUsedWaysAndRelations = [&](const Relation& relation, std::vector<int>& usedWaysAndRelations) {
 		for (auto& member : relation.m_members) {
-			if (member.type == Types::WayType) {
-				usedWaysAndRelations.push_back(member.ref);
-			} else if (member.type == Types::RelationType) {
-				usedWaysAndRelations.push_back(member.ref);
-				const Relation* newRel = findRelationFromId(member.ref);
+			if (member.m_type == Types::WayType) {
+				usedWaysAndRelations.push_back(member.m_ref);
+			} else if (member.m_type == Types::RelationType) {
+				usedWaysAndRelations.push_back(member.m_ref);
+				const Relation* newRel = findRelationFromId(member.m_ref);
 				if (newRel) {
 					findUsedWaysAndRelations(*newRel, usedWaysAndRelations);
 				}
@@ -663,11 +663,11 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 				int areaOutline = -1;													// workaround
 
 				for (auto& member : pair.second.m_members) {
-					if (member.role == "basement") continue;
-					bool outline = member.role == "outline"; // when a building:part exists, the outline of the building should generally not be used. In practice there are cases of floating buildings because they rely on the outline being drawn
-					if (outline) continue;												// comment out this line if workaround to make altstadt dresden pretty should be enabled
-					if (member.type == Types::WayType) {
-						const Way *way = findWayFromId(member.ref);
+					if (member.m_role == "basement") continue;
+					bool outline = member.m_role == "outline"; // when a building:part exists, the outline of the building should generally not be used. In practice there are cases of floating buildings because they rely on the outline being drawn
+					if (outline) continue;												// comment out this line if workaround should be enabled to make altstadt dresden pretty
+					if (member.m_type == Types::WayType) {
+						const Way *way = findWayFromId(member.m_ref);
 						if (!way)
 							continue;
 						if (way->containsKey("roof:ridge")) continue;
@@ -682,8 +682,8 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 						building.m_areas.push_back(area);
 						if (outline)													// workaround
 							areaOutline = building.m_areas.size() - 1;					// workaround
-					} else if (member.type == Types::RelationType) {
-						const Relation *relation = findRelationFromId(member.ref);
+					} else if (member.m_type == Types::RelationType) {
+						const Relation *relation = findRelationFromId(member.m_ref);
 						if (!relation)
 							continue;
 						Area area = building.createArea(*relation, m_enable3DBuildings);

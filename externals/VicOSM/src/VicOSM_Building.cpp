@@ -4,7 +4,7 @@
 
 namespace VicOSM {
 
-void OSMBuilding::calculateHeight(const AbstractOSMElement & element, Area& area) {
+void OSMBuilding::calculateHeight(const AbstractOSMElement & element, Area& area) const{
 	std::string valueLevel = element.getValueFromKey("building:levels");
 	if (valueLevel != "") {
 		try {

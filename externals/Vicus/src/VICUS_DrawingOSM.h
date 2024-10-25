@@ -80,7 +80,7 @@ public:
 		double								m_height = 3;
 		double_t							m_minHeight = 0;
 	};
-
+	/*! Helper function to convert the global coordinates of a hole to the local coordinates of it's polygon */
 	std::vector<IBKMK::Vector2D> convertHoleToLocalCoordinates(const std::vector<IBKMK::Vector3D> & globalVertices, const IBKMK::Vector3D & offset, const IBKMK::Vector3D & localX, const IBKMK::Vector3D & localY) const;
 
 	// *** Methods and Helper Functions To Create Polygons ***
@@ -169,14 +169,16 @@ public:
 
 	/*! UTM zone defined by the longitude (minlon) of the bounding box */
 	int												m_utmZone = 0;		// XML:A
+	/*! x coordinate of the center of the osm file */
 	double											m_centerX = 0;		// XML:A
+	/*! y coordinate of the center of the osm file */
 	double											m_centerY = 0;		// XML:A
 
 	/*! point of origin */
 	IBKMK::Vector3D									m_origin			= IBKMK::Vector3D(0,0,0);
 	/*! rotation matrix */
 	RotationMatrix									m_rotationMatrix	= RotationMatrix(QQuaternion(1.0,0.0,0.0,0.0));
-
+	/*! Specifies if the buildings should be drawn 3 dimenstional defined by Simple 3D Buildings of openstreetmap */
 	bool											m_enable3DBuildings			= true;	// XML:A
 
 	// *** List of OSM Objects like buildings, streets with all relevant information ***
@@ -199,8 +201,12 @@ public:
 
 	/*! Flags and Objects used for getting geometryData and rendering. Can be set externally */
 	mutable std::map<const AbstractDrawingObject*, GeometryData>	m_geometryData;
+	/*! geometry data of the bounding box. Will draw a rectangle in the scene below the map.
+	   Visual cue for the user to see what exactly the .osm file covers and what "hangs over" and might be incomplete */
 	mutable GeometryData											m_geometryDataBoundingBox;
+	/*! Triangulates the bounding box new if set to true */
 	mutable bool													m_dirtyTriangulation = true;
+	/*! True on first triangulation. Relevant for the Triangulation progress bar on first launch */
 	mutable bool													m_firstTriangulation = true;
 
 };

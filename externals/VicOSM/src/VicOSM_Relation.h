@@ -8,8 +8,7 @@ namespace VicOSM {
 /*! List of Nodes that make up a way. A way describes a polyline */
 class Relation : public AbstractOSMElement {
 public:
-	Relation() {}
-
+	/*! readXML (handwritten) to read a relation in a .osm file */
 	void readXML(const TiXmlElement * element);
 };
 

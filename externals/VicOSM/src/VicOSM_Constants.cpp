@@ -1,10 +1,6 @@
 #include "VicOSM_Constants.h"
 
 namespace VicOSM {
-
-const char * const VERSION			= "1.0";
-const char * const LONG_VERSION		= "2.0.0";
-
 unsigned int INVALID_ID = 0xFFFFFFFF;
 
 const char * XML_READ_ERROR = "Error in XML file, line %1: %2";

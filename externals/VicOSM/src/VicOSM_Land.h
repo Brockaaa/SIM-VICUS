@@ -19,6 +19,7 @@ public:
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 
+	/*! Helper function to set the color for a given key value combination of a landuse object */
 	QColor	setColor();
 	/*! Creates land object from way */
 	bool createLand(Way &way);

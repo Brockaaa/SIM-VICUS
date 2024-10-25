@@ -8,10 +8,12 @@ namespace VicOSM {
 /*! A single point on the map */
 class Node : public AbstractOSMElement {
 public:
+	/*! readXML (handwritten) to read a node in a .osm file */
 	void readXML(const TiXmlElement * element);
 
-	/*! Point coordinate */
+	/*! Longitude */
 	double                          m_lon;
+	/*! Latitude */
 	double                          m_lat;
 };
 

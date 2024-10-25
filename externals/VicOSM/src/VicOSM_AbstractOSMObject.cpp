@@ -3,6 +3,15 @@
 
 namespace VicOSM {
 
+void AbstractOSMObject::updatePlaneGeometry() {
+	for (auto& area : m_areas)
+		area.m_dirtyTriangulation = true;
+	for (auto& lineFromPlanes : m_linesFromPlanes)
+		lineFromPlanes.m_dirtyTriangulation = true;
+	for (auto& circle : m_circles)
+		circle.m_dirtyTriangulation = true;
+}
+
 bool AbstractOSMObject::initialize(AbstractOSMElement & osmElement) {
 	if (osmElement.containsKeyValue("location", "underground")) return false;
 	if (osmElement.containsKeyValue("location", "underwater")) return false;

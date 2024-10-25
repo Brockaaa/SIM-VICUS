@@ -5,9 +5,10 @@
 #include "VicOSM_Multipolygon.h"
 
 namespace VicOSM {
-
+/*! Abstract Class for basic geometry objects like areas, lines, circles */
 class AbstractDrawingObject {
 public:
+	/*! if called, will triangulate this drawing object again */
 	void updatePlaneGeometry() {
 		m_dirtyTriangulation = true;
 	}

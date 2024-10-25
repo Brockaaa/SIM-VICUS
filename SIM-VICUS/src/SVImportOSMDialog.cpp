@@ -16,8 +16,7 @@
 
 SVImportOSMDialog::SVImportOSMDialog(QWidget *parent)
 	: QDialog(parent)
-	, m_ui(new Ui::SVImportOSMDialog)
-{
+	, m_ui(new Ui::SVImportOSMDialog) {
 	m_ui->setupUi(this);
 
 	connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &SVImportOSMDialog::buttonbox_accepted);
@@ -34,13 +33,11 @@ SVImportOSMDialog::SVImportOSMDialog(QWidget *parent)
 	connect(m_ui->widgetBrowseFilename, &QtExt::BrowseFilenameWidget::editingFinished, this, &SVImportOSMDialog::on_widgetBrowseFilename_changed);
 }
 
-SVImportOSMDialog::~SVImportOSMDialog()
-{
+SVImportOSMDialog::~SVImportOSMDialog() {
 	delete m_ui;
 }
 
-bool SVImportOSMDialog::import()
-{
+bool SVImportOSMDialog::import() {
 	initialise();
 	return (bool)exec();
 }
@@ -53,8 +50,7 @@ void SVImportOSMDialog::buttonbox_accepted() {
 	}
 }
 
-void SVImportOSMDialog::buttonbox_cancel()
-{
+void SVImportOSMDialog::buttonbox_cancel() {
 	if (m_process && m_process->state() != QProcess::NotRunning) {
 		m_process->kill();
 	}
@@ -64,8 +60,7 @@ void SVImportOSMDialog::buttonbox_cancel()
 	}
 }
 
-void SVImportOSMDialog::downloadOsmFile(double minlon, double minlat, double maxlon, double maxlat)
-{
+void SVImportOSMDialog::downloadOsmFile(double minlon, double minlat, double maxlon, double maxlat) {
 	// Construct the URL for the OSM file
 	QString url = QString("https://overpass-api.de/api/map?bbox=%1,%2,%3,%4")
 			.arg(minlon)
@@ -96,8 +91,7 @@ void SVImportOSMDialog::downloadOsmFile(double minlon, double minlat, double max
 	m_timer->start(100);
 }
 
-void SVImportOSMDialog::initialise()
-{
+void SVImportOSMDialog::initialise() {
 	m_importButton->setEnabled(false);
 	m_ui->widgetBrowseFilename->setFilename("");
 	m_selectFromMap = false;
@@ -131,8 +125,8 @@ void SVImportOSMDialog::createQml() {
 
 	if (m_activeObject) {
 		// Connect the QML signals to the C++ slots
-		connect(m_activeObject, SIGNAL(okClicked()), this, SLOT(on_qmlOK_clicked()));
-		connect(m_activeObject, SIGNAL(cancelClicked()), this, SLOT(on_qmlCancel_clicked()));
+		connect(m_activeObject, SIGNAL(okClicked()), this, SLOT(qmlOK_clicked()));
+		connect(m_activeObject, SIGNAL(cancelClicked()), this, SLOT(qmlCancel_clicked()));
 
 		// Try to cast the active object to a QQuickWindow to center it
 		QQuickWindow* window = qobject_cast<QQuickWindow*>(m_activeObject);
@@ -151,8 +145,7 @@ void SVImportOSMDialog::createQml() {
 	}
 }
 
-void SVImportOSMDialog::updateDownloadProgress()
-{
+void SVImportOSMDialog::updateDownloadProgress() {
 	QFileInfo fileInfo(m_downloadFilePath);
 	qint64 currentSize = fileInfo.size();
 
@@ -229,8 +222,7 @@ void SVImportOSMDialog::on_toolButtonMap_clicked() {
 	createQml();
 }
 
-void SVImportOSMDialog::on_qmlOK_clicked()
-{
+void SVImportOSMDialog::qmlOK_clicked() {
 	if (m_activeObject) {
 		QQuickItem *mapObject = m_activeObject->findChild<QQuickItem*>("mapObject");
 		if (mapObject) {
@@ -307,8 +299,7 @@ void SVImportOSMDialog::on_qmlOK_clicked()
 	m_activeObject = nullptr;
 }
 
-void SVImportOSMDialog::on_qmlCancel_clicked()
-{
+void SVImportOSMDialog::qmlCancel_clicked() {
 	if (m_activeObject) {
 		QMetaObject::invokeMethod(m_activeObject, "close");
 		m_activeObject = nullptr;
@@ -322,8 +313,7 @@ void SVImportOSMDialog::on_radioButtonImportFile_toggled(bool checked)
 		on_widgetBrowseFilename_changed();
 }
 
-void SVImportOSMDialog::on_radioButtonDownloadOSM_toggled(bool checked)
-{
+void SVImportOSMDialog::on_radioButtonDownloadOSM_toggled(bool checked) {
 	m_ui->widgetDownload->setEnabled(checked);
 }
 
@@ -356,13 +346,11 @@ void OSMImportProgressNotifyer::enableAnimation() {
 	m_prgBar->setTextVisible(true);
 }
 
-void OSMImportProgressNotifyer::disableAnimation()
-{
+void OSMImportProgressNotifyer::disableAnimation() {
 	m_prgBar->setRange(0, 100);
 	m_prgBar->setValue(30);
 }
 
-void OSMImportProgressNotifyer::enablePrgBar(bool enable)
-{
+void OSMImportProgressNotifyer::enablePrgBar(bool enable) {
 	m_prgBar->setEnabled(enable);
 }

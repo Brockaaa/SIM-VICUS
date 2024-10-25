@@ -14,8 +14,8 @@ void Tag::readXML(const TiXmlElement * element)
 		throw IBK::Exception( IBK::FormatString("Error in XML file, line %1: %2").arg(element->Row()).arg(
 								 IBK::FormatString("Missing required 'v' attribute.") ), FUNC_ID);
 
-	key = TiXmlAttribute::attributeByName(element, "k")->ValueStr();
-	value = TiXmlAttribute::attributeByName(element, "v")->ValueStr();
+	m_key = TiXmlAttribute::attributeByName(element, "k")->ValueStr();
+	m_value = TiXmlAttribute::attributeByName(element, "v")->ValueStr();
 }
 
 void Member::readXML(const TiXmlElement * element)
@@ -34,17 +34,17 @@ void Member::readXML(const TiXmlElement * element)
 
 	std::string typeStr = TiXmlAttribute::attributeByName(element, "type")->ValueStr();
 	if (typeStr == "node")
-		type = NodeType;
+		m_type = NodeType;
 	else if (typeStr == "way")
-		type = WayType;
+		m_type = WayType;
 	else if (typeStr == "relation")
-		type = RelationType;
+		m_type = RelationType;
 	else
 		throw IBK::Exception( IBK::FormatString("Error in XML file, line %1: %2").arg(element->Row()).arg(
 								 IBK::FormatString("Unknown type '%1'.").arg(typeStr) ), FUNC_ID);
 
-	ref = TiXmlAttribute::attributeByName(element, "ref")->IntValue();
-	role = TiXmlAttribute::attributeByName(element, "role")->ValueStr();
+	m_ref = TiXmlAttribute::attributeByName(element, "ref")->IntValue();
+	m_role = TiXmlAttribute::attributeByName(element, "role")->ValueStr();
 }
 
 void Nd::readXML(const TiXmlElement * element)
@@ -55,7 +55,7 @@ void Nd::readXML(const TiXmlElement * element)
 		throw IBK::Exception( IBK::FormatString("Error in XML file, line %1: %2").arg(element->Row()).arg(
 								 IBK::FormatString("Missing required 'ref' attribute.") ), FUNC_ID);
 
-	ref = TiXmlAttribute::attributeByName(element, "ref")->IntValue();
+	m_ref = TiXmlAttribute::attributeByName(element, "ref")->IntValue();
 }
 
 void AbstractOSMElement::readXML(const TiXmlElement * element)
@@ -85,7 +85,7 @@ void AbstractOSMElement::readXML(const TiXmlElement * element)
 bool AbstractOSMElement::containsKey(const std::string & key) const
 {
 	for (int i = 0; i < m_tags.size(); i++) {
-		if(m_tags[i].key == key)
+		if(m_tags[i].m_key == key)
 			return true;
 	}
 	return false;
@@ -94,7 +94,7 @@ bool AbstractOSMElement::containsKey(const std::string & key) const
 bool AbstractOSMElement::containsValue(const std::string & value) const
 {
 	for (int i = 0; i < m_tags.size(); i++) {
-		if(m_tags[i].value == value)
+		if(m_tags[i].m_value == value)
 			return true;
 	}
 	return false;
@@ -103,7 +103,7 @@ bool AbstractOSMElement::containsValue(const std::string & value) const
 bool AbstractOSMElement::containsKeyValue(const std::string & key, const std::string & value) const
 {
 	for (int i = 0; i < m_tags.size(); i++) {
-		if(m_tags[i].key == key && m_tags[i].value == value)
+		if(m_tags[i].m_key == key && m_tags[i].m_value == value)
 			return true;
 	}
 	return false;
@@ -112,8 +112,8 @@ bool AbstractOSMElement::containsKeyValue(const std::string & key, const std::st
 std::string AbstractOSMElement::getValueFromKey(const std::string & key) const
 {
 	for (int i = 0; i < m_tags.size(); i++) {
-		if(m_tags[i].key == key)
-			return m_tags[i].value;
+		if(m_tags[i].m_key == key)
+			return m_tags[i].m_value;
 	}
 	return std::string("");
 }

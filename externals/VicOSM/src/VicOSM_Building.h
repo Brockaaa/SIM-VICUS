@@ -19,17 +19,19 @@ public:
 	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 
-	void calculateHeight(const AbstractOSMElement& element, Area& area);
+	/*! Calculates the m_height and m_minHeight of an area in this building */
+	void calculateHeight(const AbstractOSMElement& element, Area& area) const;
 	/*! Creates building object from way */
 	bool createBuilding(Way &way, bool enable3D = false);
 	/*! Creates building object from relation */
 	bool createBuilding(Relation &relation, bool enable3D = false);
+	/*! Helper function to initialize a building relation if 3D geometry is enabled */
 	bool initializeSimple3DBuilding(Relation &relation);
-
+	/*! Helper function to initialze an area from a way or relation. Does not read in geometry data like the coordinates of a node */
 	Area createArea(const AbstractOSMElement & element, bool enable3D);
-
+	/*! Specifies the default height of a building level. Value 3 taken from the osm wiki. Can be specified for an individual OSM object */
 	double								m_levelHeight = 3;					// XML:A
-
+	/*! Specifies the default height of roof. Value 3 taken from the osm wiki. Can be specified for an individual OSM Element */
 	double								m_roofHeight = 3;					// XML:A
 };
 

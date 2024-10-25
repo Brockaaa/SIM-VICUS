@@ -20,6 +20,7 @@ public:
 	//:inherited	std::vector<Circle>				m_circles;				// XML:E
 	/*! Creates bridge object from way */
 	bool createBridge(Way &way);
+	/*! Creates bridge object from relation */
 	bool createBridge(Relation &relation);
 
 };

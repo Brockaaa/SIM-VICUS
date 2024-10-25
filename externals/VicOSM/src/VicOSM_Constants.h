@@ -2,10 +2,6 @@
 #define VicOSM_CONSTANTS_H
 
 namespace VicOSM {
-
-	extern const char * const VERSION;
-	extern const char * const LONG_VERSION;
-
 	extern unsigned int INVALID_ID;
 
 	extern const char * XML_READ_ERROR;

@@ -13,16 +13,23 @@ namespace Ui {
 class SVImportOSMDialog;
 }
 
+/*! progress notifyer used to update the progress bar inside the ImportOSMDialog */
 class OSMImportProgressNotifyer : public IBK::NotificationHandler {
 public:
+	/*! notify method fromm superclass IBK::NotificationHandler. Empty implementation */
 	void notify() override {}
+	/*! notify method fromm superclass IBK::NotificationHandler. Sets text in progress bar */
 	void notify(double, const char *) override;
+	/*! Method to update the size of the downloaded file during the download in the log */
 	void notifyDownloadProgress(QString text);
+	/*! Enables the Busy animation of the progress bar */
 	void enableAnimation();
+	/*! Disables the Busy animation of the progress bar */
 	void disableAnimation();
+	/*! Enables the progress bar **/
 	void enablePrgBar(bool enable);
+	/*! The  progress bar */
 	QProgressBar		*m_prgBar = nullptr;
-	QPropertyAnimation	*m_animation = nullptr;
 };
 
 class QQmlEngine;
@@ -30,12 +37,15 @@ class QQmlComponent;
 class QProcess;
 class QTimer;
 
+/*! Dialog to import a osm file either by choosing a file locally or downloading it from a map */
 class SVImportOSMDialog : public QDialog
 {
 	Q_OBJECT
 
 public:
+	/*! Constructor */
 	explicit SVImportOSMDialog(QWidget *parent = nullptr);
+	/*! Destructor */
 	~SVImportOSMDialog();
 
 	/*! Opens the Import OSM Dialog. After a successful import, the resulting DrawingOSM can be requested with drawingOSM() */
@@ -52,9 +62,9 @@ private slots:
 	/*! will call createQml() */
 	void on_toolButtonMap_clicked();
 	/*! connected to Import button of qml quick widget */
-	void on_qmlOK_clicked();
+	void qmlOK_clicked();
 	/*! connected to cancel button of qml quick widget */
-	void on_qmlCancel_clicked();
+	void qmlCancel_clicked();
 	/*! enables or disables widget containing local file import */
 	void on_radioButtonImportFile_toggled(bool checked);
 	/*! enables or disables widget containing osm download dialog */
@@ -73,32 +83,30 @@ private:
 	bool readAndConstructOSM();
 	/*! connected to slot in QtExt::BrowseFilenameWidget. Gets called whenever the filename in the widgetBrowseFilename gets changed */
 	void on_widgetBrowseFilename_changed();
-
+	/*! holds the name of the to be imported .osm file. Either locally specified by user or the m_downloadFilePath when downloading a bounding box from the map */
 	QString					m_fname = "";
-
-	// true if user chose radioButton to select map
+	/*! true if user chose radioButton to select map */
 	bool					m_selectFromMap = false;
-
-	// QML engine, used to spawn the qml window that displays the osm map
+	/*! QML engine, used to spawn the qml window that displays the osm map */
 	QQmlEngine*				m_engine = nullptr;
-	// QML component, used to spawn the qml window that displays the osm map
+	/*! QML component, used to spawn the qml window that displays the osm map */
 	QQmlComponent*			m_component = nullptr;
-	// QML object, used to spawn the qml window that displays the osm map
+	/*! QML object, used to spawn the qml window that displays the osm map */
 	QObject*				m_activeObject = nullptr;
-	// import button of the QDialog buttonbox
+	/*! import button of the QDialog buttonbox */
 	QPushButton *			m_importButton = nullptr;
-	// Progress notifyer that is passed to readOSM and constructObjects in VICUS_DrawingOSM
+	/*! Progress notifyer that is passed to readOSM and constructObjects in VICUS_DrawingOSM */
 	OSMImportProgressNotifyer*	m_progressNotifyer = nullptr;
-	// Process that is used to download the map
+	/*! Process that is used to download the map */
 	QProcess*				m_process = nullptr;
-	// Timer, updates the download progress in the log periodically
+	/*! Timer, updates the download progress in the log periodically */
 	QTimer*					m_timer = nullptr;
-	// path of temporary downloaded file
+	/*! path of temporary downloaded file */
 	QString					m_downloadFilePath = "";
-
+	/*! Main user interface pointer. */
 	Ui::SVImportOSMDialog	*m_ui;
 
-	// DrawingOSM. After successful import ready to be imported to the scene
+	/*! DrawingOSM. After successful import ready to be imported to the scene */
 	VICUS::DrawingOSM		m_drawingOSM;
 
 
