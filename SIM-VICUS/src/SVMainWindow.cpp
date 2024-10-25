@@ -2365,7 +2365,7 @@ void SVMainWindow::on_actionDBAcousticSoundAbsorptions_triggered() {
 	dbAcousticSoundAbsorptionEditDialog()->edit();
 }
 
-void SVMainWindow::on_actionFileImportOSM_triggered()
+void SVMainWindow::on_actionOpenStreetMap_OSM_triggered()
 {
 	// now spawn import dialog
 	if (m_importOSMDialog == nullptr) {

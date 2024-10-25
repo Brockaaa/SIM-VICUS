@@ -43,7 +43,6 @@
      </property>
      <addaction name="actionFileImportEneryPlusIDF"/>
      <addaction name="actionFileImportNetworkGISData"/>
-     <addaction name="actionFileImportOSM"/>
     </widget>
     <addaction name="actionFileNew"/>
     <addaction name="actionFileOpen"/>
@@ -201,6 +200,7 @@
     </property>
     <addaction name="actionEneryPlus_IDF"/>
     <addaction name="actionNetwork_GIS_data"/>
+    <addaction name="actionOpenStreetMap_OSM"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -219,7 +219,7 @@
     <bool>false</bool>
    </property>
    <property name="allowedAreas">
-    <set>Qt::LeftToolBarArea</set>
+    <set>Qt::ToolBarArea::LeftToolBarArea</set>
    </property>
    <property name="iconSize">
     <size>
@@ -321,7 +321,7 @@
     <string>Ctrl+Q</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::QuitRole</enum>
+    <enum>QAction::MenuRole::QuitRole</enum>
    </property>
   </action>
   <action name="actionFileRecentProjects">
@@ -375,7 +375,7 @@
     <string>&amp;Preferences...</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::PreferencesRole</enum>
+    <enum>QAction::MenuRole::PreferencesRole</enum>
    </property>
   </action>
   <action name="actionEditCleanProject">
@@ -460,7 +460,7 @@
     <string>About &amp;Qt...</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::AboutQtRole</enum>
+    <enum>QAction::MenuRole::AboutQtRole</enum>
    </property>
   </action>
   <action name="actionHelpAbout">
@@ -472,7 +472,7 @@
     <string>&amp;About SIM-VICUS...</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::AboutRole</enum>
+    <enum>QAction::MenuRole::AboutRole</enum>
    </property>
   </action>
   <action name="actionHelpCheckForUpdates">
@@ -941,9 +941,9 @@
     <string>Test</string>
    </property>
   </action>
-  <action name="actionFileImportOSM">
+  <action name="actionOpenStreetMap_OSM">
    <property name="text">
-    <string>Import OSM</string>
+    <string>OpenStreetMap OSM...</string>
    </property>
   </action>
  </widget>

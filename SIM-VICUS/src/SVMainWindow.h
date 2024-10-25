@@ -389,7 +389,7 @@ private slots:
 
 	void on_actionDBAcousticSoundAbsorptions_triggered();
 
-	void on_actionFileImportOSM_triggered();
+	void on_actionOpenStreetMap_OSM_triggered();
 
 private:
 
