@@ -114,6 +114,8 @@ public:
 	std::string							m_key = "";				// XML:A
 	/*! Value of the key that defines this OSM Object. */
 	std::string							m_value = "";			// XML:A
+	/*! Display name of Building, visible in navigation tree */
+	std::string							m_displayName = "";		// XML:A
 
 	// *** runtime only used in contructObjects
 	/*! Key and value enum that define this OSM Object. Only relevant for the order which the OSMObjects overlap.
@@ -126,6 +128,12 @@ public:
 
 	/*! Flag to indictate recalculation of points. */
 	mutable bool						m_dirtyPoints = true;
+
+	/*! Indicates whether object is visible in the scene. */
+	mutable bool						m_visible = true;				// XML:A
+
+	/*! Indicates whether object is selected. */
+	mutable bool						m_selected = false;
 };
 
 } // namespace VicOSM
