@@ -2,6 +2,8 @@
 #include "ui_SVImportOSMDialog.h"
 #include "SVSettings.h"
 
+#include <SVProjectHandler.h>
+
 #include <QtNetwork>
 #include <QScreen>
 #include <QtExt_Directories.h>
@@ -38,6 +40,20 @@ SVImportOSMDialog::~SVImportOSMDialog() {
 }
 
 bool SVImportOSMDialog::import() {
+
+	/* Checks if there is a DrawingOSM in the project. If yes, the dialog wont open and a MessageBox appears
+	 * to inform the user to remove the already existing one if applicable */
+	if (!SVProjectHandler::instance().project().m_drawingsOSM.empty()) {
+		QMessageBox errorBox;
+		errorBox.setWindowTitle("OpenStreetMap Already Imported");
+		errorBox.setText("There is already an OpenStreetMap file imported. Please remove the existing OpenStreetMap file to import another file.");
+		// Only show OK button since this is an error notification
+		errorBox.setStandardButtons(QMessageBox::Ok);
+		errorBox.setDefaultButton(QMessageBox::Ok);
+		errorBox.exec();
+		return false;
+	}
+
 	initialise();
 	return (bool)exec();
 }
