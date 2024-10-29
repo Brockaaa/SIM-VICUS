@@ -120,6 +120,34 @@ SVUndoTreeNodeState::SVUndoTreeNodeState(const QString & label,
 		}
 	}
 
+	// search OSM drawings
+	// TODO WIP, currently crashes sometimes
+	for (const VICUS::DrawingOSM & d : p.m_drawingsOSM) {
+		// store state for building object root
+		if (exclusive || nodeIDs.find(d.m_id) != nodeIDs.end()) {
+			if (d.m_id == p.m_osmBuildingObjectRoot.m_id) {
+				storeState(d, m_nodeStates[d.m_id]);
+			}
+			// store state for ground layer
+			else if (exclusive || nodeIDs.find(p.m_osmGroundLayer.m_id) != nodeIDs.end()) {
+				storeState(d, m_nodeStates[d.m_id]);
+			}
+			// store state for street layer
+			else if (exclusive || nodeIDs.find(p.m_osmStreetLayer.m_id) != nodeIDs.end()) {
+				storeState(d, m_nodeStates[d.m_id]);
+			}
+			// store state for building objects
+			else if (nodeIDs.find(d.m_id) != nodeIDs.end()) {
+				for (const auto& osmBuildingObject : p.m_osmBuildingObjects) {
+					if (osmBuildingObject.m_id == d.m_id) {
+						storeState(d, m_nodeStates[d.m_id]);
+						osmBuildingObject.m_osmBuilding->m_selected = true;
+					}
+				}
+			}
+		}
+	}
+
 	m_otherNodeStates = m_nodeStates;
 
 	// now set the "new" node states

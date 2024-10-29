@@ -385,6 +385,50 @@ void SVNavigationTreeWidget::onModified(int modificationType, ModificationInfo *
 		}
 	}
 
+	// DrawingOSM Buildings
+	//TODO
+	if (!prj.m_drawingsOSM.empty()) {
+		// only one DrawingOSM supported
+		QTreeWidgetItem * drawingOSM = new QTreeWidgetItem(QStringList() << "OpenStreetMap", QTreeWidgetItem::Type);
+		drawingOSM->setData(0, SVNavigationTreeItemDelegate::NodeID, prj.m_drawingsOSM.back().m_id); // not a child node
+		drawingOSM->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, true);
+		drawingOSM->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, false);
+		m_ui->treeWidget->addTopLevelItem(drawingOSM);
+
+
+		QTreeWidgetItem * osmBuildingRoot = new QTreeWidgetItem(QStringList() << "OSM Buildings", QTreeWidgetItem::Type);
+		osmBuildingRoot->setData(0, SVNavigationTreeItemDelegate::NodeID, prj.m_osmBuildingObjectRoot.m_id);
+		osmBuildingRoot->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, true);
+		osmBuildingRoot->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, false);
+
+		QTreeWidgetItem * osmGround = new QTreeWidgetItem(QStringList() << "OSM Ground", QTreeWidgetItem::Type);
+		osmGround->setData(0, SVNavigationTreeItemDelegate::NodeID, prj.m_osmGroundLayer.m_id);
+		osmGround->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, true);
+		osmGround->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, false);
+
+		QTreeWidgetItem * osmStreets = new QTreeWidgetItem(QStringList() << "OSM Streets & Railways", QTreeWidgetItem::Type);
+		osmStreets->setData(0, SVNavigationTreeItemDelegate::NodeID, prj.m_osmStreetLayer.m_id);
+		osmStreets->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, true);
+		osmStreets->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, false);
+
+		drawingOSM->addChild(osmBuildingRoot);
+		drawingOSM->addChild(osmGround);
+		drawingOSM->addChild(osmStreets);
+
+		for (auto& osmBuilding : prj.m_osmBuildingObjects) {
+			QTreeWidgetItem * ln;
+			if (osmBuilding.m_displayName.isEmpty())
+				ln = new QTreeWidgetItem(QStringList() << QString("OSM Building %1").arg(osmBuilding.m_id), QTreeWidgetItem::Type);
+			else
+				ln = new QTreeWidgetItem(QStringList() << osmBuilding.m_displayName, QTreeWidgetItem::Type);
+
+			ln->setData(0, SVNavigationTreeItemDelegate::NodeID, osmBuilding.m_id);
+			ln->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, osmBuilding.m_osmBuilding->m_visible);
+			ln->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, osmBuilding.m_osmBuilding->m_selected);
+			osmBuildingRoot->addChild(ln);
+		}
+	}
+
 	// Dumb plain geometry
 	if (!prj.m_plainGeometry.m_surfaces.empty()) {
 		QTreeWidgetItem * plainGeo = new QTreeWidgetItem(QStringList() << tr("Obstacles/Shading Geometry"), QTreeWidgetItem::Type);

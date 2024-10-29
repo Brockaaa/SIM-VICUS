@@ -2373,7 +2373,7 @@ void SVMainWindow::on_actionOpenStreetMap_OSM_triggered()
 	}
 
 	if (m_importOSMDialog->import()) {
-		SVUndoAddDrawingOSM * undoAdd = new SVUndoAddDrawingOSM(tr("modified network"), m_importOSMDialog->drawingOSM());
+		SVUndoAddDrawingOSM * undoAdd = new SVUndoAddDrawingOSM(tr("added DrawingOSM"), m_importOSMDialog->drawingOSM());
 		undoAdd->push(); // modifies project and updates views
 	}
 

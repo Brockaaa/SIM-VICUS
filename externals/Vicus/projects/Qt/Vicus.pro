@@ -88,6 +88,9 @@ HEADERS += \
 	../../src/VICUS_NetworkLine.h \
 	../../src/VICUS_NetworkNode.h \
 	../../src/VICUS_NetworkPipe.h \
+    ../../src/VICUS_OSMBuildingObject.h \
+    ../../src/VICUS_OSMGround.h \
+    ../../src/VICUS_OSMStreets.h \
 	../../src/VICUS_Object.h \
 	../../src/VICUS_OutputDefinition.h \
 	../../src/VICUS_Outputs.h \
@@ -172,6 +175,9 @@ SOURCES += \
 	../../src/VICUS_NetworkLine.cpp \
 	../../src/VICUS_NetworkNode.cpp \
 	../../src/VICUS_NetworkPipe.cpp \
+    ../../src/VICUS_OSMBuildingObject.cpp \
+    ../../src/VICUS_OSMGround.cpp \
+    ../../src/VICUS_OSMStreets.cpp \
 	../../src/VICUS_Object.cpp \
 	../../src/VICUS_OutputDefinition.cpp \
 	../../src/VICUS_Outputs.cpp \

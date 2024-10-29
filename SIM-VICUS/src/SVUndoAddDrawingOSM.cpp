@@ -2,6 +2,8 @@
 #include "SVProjectHandler.h"
 #include "SVSettings.h"
 
+#include <VICUS_OSMBuildingObject.h>
+
 SVUndoAddDrawingOSM::SVUndoAddDrawingOSM(const QString & label, const VICUS::DrawingOSM & addedDrawing) :
 	m_addedDrawing(addedDrawing)
 {
@@ -14,6 +16,12 @@ void SVUndoAddDrawingOSM::undo() {
 	Q_ASSERT(!theProject().m_drawingsOSM.empty());
 
 	theProject().m_drawingsOSM.pop_back();
+	theProject().m_osmBuildingObjects.clear();
+
+	theProject().m_osmBuildingObjectRoot = VICUS::OSMBuildingObject();
+	theProject().m_osmGroundLayer = VICUS::OSMGround();
+	theProject().m_osmStreetLayer = VICUS::OSMStreets();
+
 	theProject().updatePointers();
 
 	SVProjectHandler::instance().setModified( SVProjectHandler::DrawingOSMModified);

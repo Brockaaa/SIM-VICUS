@@ -898,6 +898,7 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 }
 
 void DrawingOSM::updatePlaneGeometries() {
+	return;
 	for (auto& building : m_buildings) {
 		building.updatePlaneGeometry();
 	}

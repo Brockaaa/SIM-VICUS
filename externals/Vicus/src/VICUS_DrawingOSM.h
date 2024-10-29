@@ -195,6 +195,9 @@ public:
 	std::vector<Barrier>							m_barriers;			// XML:E
 	std::vector<Railway>							m_railways;			// XML:E
 
+	/*! False before added to project. Needed to generate VICUS::Objects with unique ids for buildings */
+	mutable bool													m_addedToProject = false; // XML:A
+
 	/*! Function to generate plane geometries from a polyline. */
 	bool generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline,
 									bool connectEndStart, double width, std::vector<PlaneGeometry> &planes) const;
