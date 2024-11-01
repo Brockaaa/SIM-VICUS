@@ -359,13 +359,13 @@ public:
 
 	std::vector<DrawingOSM>								m_drawingsOSM;
 
-	std::vector<OSMBuildingObject>						m_osmBuildingObjects;		// XML:E
+	std::vector<OSMBuildingObject>						m_osmBuildingObjects;
 
-	OSMBuildingObject									m_osmBuildingObjectRoot;
+	OSMBuildingObject									m_osmBuildingObjectRoot;	// XML:E
 
-	OSMGround											m_osmGroundLayer;
+	OSMGround											m_osmGroundLayer;			// XML:E
 
-	OSMStreets											m_osmStreetLayer;
+	OSMStreets											m_osmStreetLayer;			// XML:E
 
 
 	/*! Path placeholder mappings used to substitute placeholders for database and user databases.

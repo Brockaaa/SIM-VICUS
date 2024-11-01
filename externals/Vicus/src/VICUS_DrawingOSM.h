@@ -152,6 +152,12 @@ public:
 	/*! converts Key of OSMObject to an integer corresponding to the order of the OSMObject */
 	int convertKeyToInt (const VicOSM::AbstractOSMObject& object) const;
 
+	void setGroundVisible(bool visible);
+	void setStreetsVisible(bool visible);
+
+	void setBuildingLayerVisible(bool visible);
+	void setBuildingLayerSelected(bool selected);
+
 	// *** Methods to create Buildings streets. etc. ***
 	/*! Creates all OSMObjects (buildings, highways, landuse) from OSMElements */
 	void constructObjects(IBK::NotificationHandler *notifyer = nullptr);
@@ -196,7 +202,7 @@ public:
 	std::vector<Railway>							m_railways;			// XML:E
 
 	/*! False before added to project. Needed to generate VICUS::Objects with unique ids for buildings */
-	mutable bool													m_addedToProject = false; // XML:A
+	bool													m_addedToProject = false; // XML:A
 
 	/*! Function to generate plane geometries from a polyline. */
 	bool generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline,
@@ -211,6 +217,25 @@ public:
 	mutable bool													m_dirtyTriangulation = true;
 	/*! True on first triangulation. Relevant for the Triangulation progress bar on first launch */
 	mutable bool													m_firstTriangulation = true;
+
+	/*! Indicates whether all OSMObjects belonging to ground areas are visible. Please use the setter to set the flag*/
+	bool															m_groundVisible = true;
+	/*! Indicates whether all OSMObjects belonging to ground areas are selected. Please use the setter to set the flag*/
+	bool															m_groundSelected = false;
+	/*! Indicates whether the layers associated with the ground need to be recreated */
+	bool															m_groundDirty = true;
+
+	/*! Indicates whether all OSMObjects belonging to streets and railways are visible. Please use the setter to set the flag*/
+	bool															m_streetsVisible = true;
+	/*! Indicates whether all OSMObjects belonging to streets and railways are selected. Please use the setter to set the flag*/
+	bool															m_streetsSelected = false;
+	/*! Indicates whether the layers associated with streets and railways need to be recreated */
+	bool															m_streetsDirty = true;
+
+	/*! Indicates whether all OSMBuildings are visible. Please use the setter to set the flag*/
+	bool															m_buildingsVisible = true;
+	/*! Indicates whether all OSMBuildings are selected. Please use the setter to set the flag*/
+	bool															m_buildingsSelected = false;
 
 };
 

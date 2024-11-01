@@ -212,7 +212,7 @@ void Scene::onModified(int modificationType, ModificationInfo * /*data*/) {
 		updateBuilding = true;
 		updateNetwork = true;
 		updateDrawing = true;
-		//updateDrawingOSM = true;
+		updateDrawingOSM = true;
 
 		// Now check if our new selection set is different from the previous selection set.
 		std::set<const VICUS::Object*> selectedObjects;

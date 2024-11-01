@@ -170,6 +170,7 @@ void OSMObject::generateOSMGeometry() {
 
 			// adding geometry data to GeometryObject
 			for (const auto& data : geometryDataWithLayer[it->first]) {
+				QCoreApplication::processEvents();
 				if (data->m_extrudingPolygon) {
 					for (const auto &multipolygon : data->m_multipolygons) {
 						std::vector<IBKMK::Vector3D> areaPoints;

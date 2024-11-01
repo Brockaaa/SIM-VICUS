@@ -149,5 +149,17 @@ void AbstractOSMObject::assignEnum() {
 	}
 }
 
+void AbstractOSMObject::setVisible(bool visible)
+{
+	m_visible = visible;
+	m_dirtyLayer = true;
+}
+
+void AbstractOSMObject::setSelected(bool selected)
+{
+	m_selected = selected;
+	m_dirtyLayer = true;
+}
+
 
 } // namespace VicOSM

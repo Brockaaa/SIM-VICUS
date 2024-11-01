@@ -949,127 +949,128 @@ void DrawingOSM::updatePlaneGeometries() {
 }
 
 void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::vector<GeometryData *> & geometryDataVector) const {
-	for (auto& area : object.m_areas) {
-		if (area.m_dirtyTriangulation) {
-			GeometryData geometryData;
+		for (auto& area : object.m_areas) {
+			if (area.m_dirtyTriangulation) {
+				GeometryData geometryData;
 
-			if (area.m_extrudingPolygon) {
-				geometryData.m_extrudingPolygon = true;
-				if (!area.m_multiPolygon.m_outerPolyline.empty()) {
-					geometryData.m_multipolygons.push_back(area.m_multiPolygon);
+				if (area.m_extrudingPolygon) {
+					geometryData.m_extrudingPolygon = true;
+					if (!area.m_multiPolygon.m_outerPolyline.empty()) {
+						geometryData.m_multipolygons.push_back(area.m_multiPolygon);
+						geometryData.m_color = area.m_color;
+						geometryData.m_height = area.m_height;
+						geometryData.m_minHeight = area.m_minHeight;
+					}
+				} else {
+					std::vector<IBKMK::Vector3D> areaPoints;
+
+					for (unsigned int i = 1; i < area.m_multiPolygon.m_outerPolyline.size(); i++) {
+						IBKMK::Vector3D p = IBKMK::Vector3D(area.m_multiPolygon.m_outerPolyline[i].m_x,
+															area.m_multiPolygon.m_outerPolyline[i].m_y,
+															0);
+
+						QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+						vec += IBKVector2QVector(m_origin);
+
+						areaPoints.push_back(QVector2IBKVector(vec));
+					}
+
+					VICUS::Polygon3D polygon3D(areaPoints);
+					// Initialize PlaneGeometry with the polygon
+					geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(polygon3D));
+
+					if(!area.m_multiPolygon.m_innerPolylines.empty()) {
+						std::vector<PlaneGeometry::Hole> holes;
+						for(unsigned int j = 0; j < area.m_multiPolygon.m_innerPolylines.size(); j++) {
+							VICUS::Polygon2D polygon2d(area.m_multiPolygon.m_innerPolylines[j]);
+							holes.push_back(PlaneGeometry::Hole(j, polygon2d, false));
+						}
+
+						VICUS::PlaneGeometry& planeGeometry = geometryData.m_planeGeometry.back();
+						planeGeometry.setHoles(holes);
+					}
+
 					geometryData.m_color = area.m_color;
-					geometryData.m_height = area.m_height;
-					geometryData.m_minHeight = area.m_minHeight;
 				}
-			} else {
-				std::vector<IBKMK::Vector3D> areaPoints;
+				m_geometryData[&area] = geometryData;
+				area.m_dirtyTriangulation = false;
+			}
+			geometryDataVector.push_back(&m_geometryData[&area]);
+		}
 
-				for (unsigned int i = 1; i < area.m_multiPolygon.m_outerPolyline.size(); i++) {
-					IBKMK::Vector3D p = IBKMK::Vector3D(area.m_multiPolygon.m_outerPolyline[i].m_x,
-														area.m_multiPolygon.m_outerPolyline[i].m_y,
+		for (auto& lineFromPlanes : object.m_linesFromPlanes) {
+			if (lineFromPlanes.m_dirtyTriangulation) {
+				// Create Vector to store vertices of polyline
+				std::vector<IBKMK::Vector3D> polylinePoints;
+
+				unsigned int i = 0;
+				bool connectEndStart = lineFromPlanes.m_multiPolygon.m_outerPolyline.front() == lineFromPlanes.m_multiPolygon.m_outerPolyline.back();
+				if (connectEndStart) {
+					i = 1;
+				}
+
+				// adds z-coordinate to polyline
+				for(; i < lineFromPlanes.m_multiPolygon.m_outerPolyline.size(); ++i){
+					IBKMK::Vector3D p = IBKMK::Vector3D(lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_x,
+														lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_y,
+														0);
+					QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+					vec += IBKVector2QVector(m_origin);
+
+					polylinePoints.push_back(QVector2IBKVector(vec));
+				}
+
+				std::vector<PlaneGeometry> planeGeometry;
+				if (generatePlanesFromPolyline(polylinePoints, connectEndStart, lineFromPlanes.m_lineThickness, planeGeometry)) {
+					GeometryData geometryData;
+					geometryData.m_planeGeometry = planeGeometry;
+					geometryData.m_color = lineFromPlanes.m_color;
+					m_geometryData[&lineFromPlanes] = geometryData;
+				}
+
+				lineFromPlanes.m_dirtyTriangulation = false;
+			}
+			geometryDataVector.push_back(&m_geometryData[&lineFromPlanes]);
+		}
+
+		for (auto& circle : object.m_circles) {
+			if (circle.m_dirtyTriangulation) {
+				std::vector<IBKMK::Vector3D> circlePoints;
+
+				const double TWO_PI = 2 * M_PI;
+				double angleStep = TWO_PI / SEGMENT_COUNT_ELLIPSE;
+
+				circlePoints.resize(SEGMENT_COUNT_ELLIPSE);
+
+				for (unsigned int i = 0; i < SEGMENT_COUNT_ELLIPSE; ++i) {
+					double currentAngle = i * angleStep;
+					double x = circle.m_radius * 0.5 * cos(currentAngle);
+					double y = circle.m_radius * 0.5 * sin(currentAngle);
+
+					IBKMK::Vector3D p = IBKMK::Vector3D(x + circle.m_x,
+														y + circle.m_y,
 														0);
 
 					QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
 					vec += IBKVector2QVector(m_origin);
-
-					areaPoints.push_back(QVector2IBKVector(vec));
+					circlePoints[i] = QVector2IBKVector(vec);
+				}
+				\
+					std::vector<PlaneGeometry> planeGeometry;
+				if (generatePlanesFromPolyline(circlePoints, true,
+											   circle.m_radius,
+											   planeGeometry)) {
+					GeometryData geometryData;
+					geometryData.m_planeGeometry = planeGeometry;
+					geometryData.m_color = circle.m_color;
+					m_geometryData[&circle] = geometryData;
 				}
 
-				VICUS::Polygon3D polygon3D(areaPoints);
-				// Initialize PlaneGeometry with the polygon
-				geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(polygon3D));
-
-				if(!area.m_multiPolygon.m_innerPolylines.empty()) {
-					std::vector<PlaneGeometry::Hole> holes;
-					for(unsigned int j = 0; j < area.m_multiPolygon.m_innerPolylines.size(); j++) {
-						VICUS::Polygon2D polygon2d(area.m_multiPolygon.m_innerPolylines[j]);
-						holes.push_back(PlaneGeometry::Hole(j, polygon2d, false));
-					}
-
-					VICUS::PlaneGeometry& planeGeometry = geometryData.m_planeGeometry.back();
-					planeGeometry.setHoles(holes);
-				}
-
-				geometryData.m_color = area.m_color;
+				circle.m_dirtyTriangulation = false;
 			}
-			m_geometryData[&area] = geometryData;
-			area.m_dirtyTriangulation = false;
+			geometryDataVector.push_back(&m_geometryData[&circle]);
 		}
-		geometryDataVector.push_back(&m_geometryData[&area]);
-	}
-
-	for (auto& lineFromPlanes : object.m_linesFromPlanes) {
-		if (lineFromPlanes.m_dirtyTriangulation) {
-			// Create Vector to store vertices of polyline
-			std::vector<IBKMK::Vector3D> polylinePoints;
-
-			unsigned int i = 0;
-			bool connectEndStart = lineFromPlanes.m_multiPolygon.m_outerPolyline.front() == lineFromPlanes.m_multiPolygon.m_outerPolyline.back();
-			if (connectEndStart) {
-				i = 1;
-			}
-
-			// adds z-coordinate to polyline
-			for(; i < lineFromPlanes.m_multiPolygon.m_outerPolyline.size(); ++i){
-				IBKMK::Vector3D p = IBKMK::Vector3D(lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_x,
-													lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_y,
-													0);
-				QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
-				vec += IBKVector2QVector(m_origin);
-
-				polylinePoints.push_back(QVector2IBKVector(vec));
-			}
-
-			std::vector<PlaneGeometry> planeGeometry;
-			if (generatePlanesFromPolyline(polylinePoints, connectEndStart, lineFromPlanes.m_lineThickness, planeGeometry)) {
-				GeometryData geometryData;
-				geometryData.m_planeGeometry = planeGeometry;
-				geometryData.m_color = lineFromPlanes.m_color;
-				m_geometryData[&lineFromPlanes] = geometryData;
-			}
-
-			lineFromPlanes.m_dirtyTriangulation = false;
-		}
-		geometryDataVector.push_back(&m_geometryData[&lineFromPlanes]);
-	}
-
-	for (auto& circle : object.m_circles) {
-		if (circle.m_dirtyTriangulation) {
-			std::vector<IBKMK::Vector3D> circlePoints;
-
-			const double TWO_PI = 2 * M_PI;
-			double angleStep = TWO_PI / SEGMENT_COUNT_ELLIPSE;
-
-			circlePoints.resize(SEGMENT_COUNT_ELLIPSE);
-
-			for (unsigned int i = 0; i < SEGMENT_COUNT_ELLIPSE; ++i) {
-				double currentAngle = i * angleStep;
-				double x = circle.m_radius * 0.5 * cos(currentAngle);
-				double y = circle.m_radius * 0.5 * sin(currentAngle);
-
-				IBKMK::Vector3D p = IBKMK::Vector3D(x + circle.m_x,
-													y + circle.m_y,
-													0);
-
-				QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
-				vec += IBKVector2QVector(m_origin);
-				circlePoints[i] = QVector2IBKVector(vec);
-			}
-			\
-				std::vector<PlaneGeometry> planeGeometry;
-			if (generatePlanesFromPolyline(circlePoints, true,
-										   circle.m_radius,
-										   planeGeometry)) {
-				GeometryData geometryData;
-				geometryData.m_planeGeometry = planeGeometry;
-				geometryData.m_color = circle.m_color;
-				m_geometryData[&circle] = geometryData;
-			}
-
-			circle.m_dirtyTriangulation = false;
-		}
-		geometryDataVector.push_back(&m_geometryData[&circle]);
-	}
+		object.m_dirtyLayer = false;
 }
 
 void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>>& geometryData) const {
@@ -1248,6 +1249,32 @@ int DrawingOSM::convertKeyToInt(const AbstractOSMObject & object) const {
 		}
 		default:
 			return object.m_keyValue;
+	}
+}
+
+void DrawingOSM::setGroundVisible(bool visible)
+{
+	m_groundVisible = visible;
+	m_groundDirty = true;
+}
+
+void DrawingOSM::setStreetsVisible(bool visible)
+{
+	m_streetsVisible = visible;
+	m_streetsVisible = true;
+}
+
+void DrawingOSM::setBuildingLayerVisible(bool visible)
+{
+	for (auto& building : m_buildings) {
+		building.setVisible(visible && building.m_visible);
+	}
+}
+
+void DrawingOSM::setBuildingLayerSelected(bool selected)
+{
+	for (auto& building : m_buildings) {
+		building.setSelected(selected && building.m_selected);
 	}
 }
 

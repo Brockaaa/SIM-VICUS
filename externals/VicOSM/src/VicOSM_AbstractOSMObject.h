@@ -100,6 +100,10 @@ public:
 	bool initialize(AbstractOSMElement& osmElement);
 	/*! assigns a keyValue enum based on the set m_key and m_value */
 	void assignEnum();
+	/*! setter for m_visible */
+	void setVisible(bool visible);
+	/*! setter for m_selected */
+	void setSelected(bool selected);
 
 	/*! Contains all areas in the OSM Object */
 	std::vector<Area>					m_areas;				// XML:E
@@ -129,11 +133,14 @@ public:
 	/*! Flag to indictate recalculation of points. */
 	mutable bool						m_dirtyPoints = true;
 
-	/*! Indicates whether object is visible in the scene. */
-	mutable bool						m_visible = true;				// XML:A
+	/*! Indicates whether the layer needs to be recreated because this object was selected or made(in-)visible */
+	mutable bool						m_dirtyLayer = true;
 
-	/*! Indicates whether object is selected. */
-	mutable bool						m_selected = false;
+	/*! Indicates whether object is visible in the scene. Please do not set directly but use setVisible() instead */
+	bool								m_visible = true;
+
+	/*! Indicates whether object is selected. Please do not set directly but use setSelected() instead */
+	bool								m_selected = false;
 };
 
 } // namespace VicOSM

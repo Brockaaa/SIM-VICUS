@@ -819,12 +819,13 @@ void Project::updatePointers() {
 			m_osmBuildingObjectRoot.m_id = nextUnusedID();
 			addAndCheckForUniqueness(&m_osmBuildingObjectRoot);
 
+			m_osmBuildingObjects.reserve(dOSM.m_buildings.size());
 			for (auto& OSMBuilding : dOSM.m_buildings) {
-				VICUS::OSMBuildingObject *newBuilding = new VICUS::OSMBuildingObject();
-				newBuilding->m_id = nextUnusedID();
-				newBuilding->m_osmBuilding = &OSMBuilding;
-				newBuilding->m_displayName = QString::fromStdString(OSMBuilding.m_displayName);
-				m_osmBuildingObjects.push_back(*newBuilding);
+				VICUS::OSMBuildingObject newBuilding;
+				newBuilding.m_id = nextUnusedID();
+				newBuilding.m_osmBuilding = &OSMBuilding;
+				newBuilding.m_displayName = QString::fromStdString(OSMBuilding.m_displayName);
+				m_osmBuildingObjects.push_back(newBuilding);
 				addAndCheckForUniqueness(&m_osmBuildingObjects.back());
 			}
 
@@ -833,6 +834,9 @@ void Project::updatePointers() {
 		}
 
 		addAndCheckForUniqueness(&dOSM);
+		addAndCheckForUniqueness(&m_osmGroundLayer);
+		addAndCheckForUniqueness(&m_osmStreetLayer);
+		addAndCheckForUniqueness(&m_osmBuildingObjectRoot);
 		for (auto& OSMBuildingObject : m_osmBuildingObjects) {
 			addAndCheckForUniqueness(&OSMBuildingObject);
 		}

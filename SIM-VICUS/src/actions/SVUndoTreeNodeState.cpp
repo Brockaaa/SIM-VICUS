@@ -28,6 +28,8 @@
 
 #include <VICUS_Project.h>
 
+#include <VICUS_DrawingOSM.h>
+
 template<typename T>
 void storeState(const T & obj, int & bitmask) {
 	bitmask = 0;
@@ -121,30 +123,36 @@ SVUndoTreeNodeState::SVUndoTreeNodeState(const QString & label,
 	}
 
 	// search OSM drawings
-	// TODO WIP, currently crashes sometimes
 	for (const VICUS::DrawingOSM & d : p.m_drawingsOSM) {
 		// store state for building object root
 		if (exclusive || nodeIDs.find(d.m_id) != nodeIDs.end()) {
 			if (d.m_id == p.m_osmBuildingObjectRoot.m_id) {
 				storeState(d, m_nodeStates[d.m_id]);
 			}
-			// store state for ground layer
-			else if (exclusive || nodeIDs.find(p.m_osmGroundLayer.m_id) != nodeIDs.end()) {
-				storeState(d, m_nodeStates[d.m_id]);
-			}
-			// store state for street layer
-			else if (exclusive || nodeIDs.find(p.m_osmStreetLayer.m_id) != nodeIDs.end()) {
-				storeState(d, m_nodeStates[d.m_id]);
-			}
-			// store state for building objects
-			else if (nodeIDs.find(d.m_id) != nodeIDs.end()) {
-				for (const auto& osmBuildingObject : p.m_osmBuildingObjects) {
-					if (osmBuildingObject.m_id == d.m_id) {
-						storeState(d, m_nodeStates[d.m_id]);
-						osmBuildingObject.m_osmBuilding->m_selected = true;
-					}
-				}
-			}
+		}
+	}
+
+	// store state for ground layer
+	if (exclusive || nodeIDs.find(p.m_osmGroundLayer.m_id) != nodeIDs.end()) {
+		storeState(p.m_osmGroundLayer, m_nodeStates[p.m_osmGroundLayer.m_id]);
+	}
+
+	// store state for street layer
+	if (exclusive || nodeIDs.find(p.m_osmStreetLayer.m_id) != nodeIDs.end()) {
+		storeState(p.m_osmStreetLayer, m_nodeStates[p.m_osmStreetLayer.m_id]);
+	}
+
+	// store state for street layer
+	if (exclusive || nodeIDs.find(p.m_osmBuildingObjectRoot.m_id) != nodeIDs.end()) {
+		storeState(p.m_osmBuildingObjectRoot, m_nodeStates[p.m_osmBuildingObjectRoot.m_id]);
+	}
+
+	// store state for building objects
+	for (auto& osmBuildingObject : p.m_osmBuildingObjects) {
+		if (exclusive || nodeIDs.find(osmBuildingObject.m_id) != nodeIDs.end()) {
+			storeState(osmBuildingObject, m_nodeStates[osmBuildingObject.m_id]);
+			osmBuildingObject.m_osmBuilding->setSelected(osmBuildingObject.m_selected);
+			osmBuildingObject.m_osmBuilding->setVisible(osmBuildingObject.m_visible);
 		}
 	}
 
@@ -341,6 +349,51 @@ void SVUndoTreeNodeState::redo() {
 				setState(dl, it->second);
 				modifiedIDs.push_back(it->first);
 			}
+		}
+	}
+
+
+	// modify OSM drawing state
+	for (VICUS::DrawingOSM & d : p.m_drawingsOSM) {
+		// store state for building object root
+		if ((it = m_nodeStates.find(d.m_id)) != m_nodeStates.end()) {
+			setState(d, it->second);
+			modifiedIDs.push_back(it->first);
+		}
+	}
+
+	// store state for ground layer
+	if ((it = m_nodeStates.find(p.m_osmGroundLayer.m_id)) != m_nodeStates.end()) {
+		setState(p.m_osmGroundLayer, it->second);
+		modifiedIDs.push_back(it->first);
+		p.m_drawingsOSM.back().m_groundVisible = p.m_osmGroundLayer.m_visible;
+		p.m_drawingsOSM.back().m_groundSelected = p.m_osmGroundLayer.m_selected;
+	}
+
+	// store state for street layer
+	if ((it = m_nodeStates.find(p.m_osmStreetLayer.m_id)) != m_nodeStates.end()) {
+		setState(p.m_osmStreetLayer, it->second);
+		modifiedIDs.push_back(it->first);
+		p.m_drawingsOSM.back().m_streetsVisible = p.m_osmStreetLayer.m_visible;
+		p.m_drawingsOSM.back().m_streetsSelected = p.m_osmStreetLayer.m_selected;
+	}
+
+	// store state for building root layer
+	if ((it = m_nodeStates.find(p.m_osmBuildingObjectRoot.m_id)) != m_nodeStates.end()) {
+		setState(p.m_osmBuildingObjectRoot, it->second);
+		modifiedIDs.push_back(it->first);
+		p.m_drawingsOSM.back().m_buildingsVisible = p.m_osmBuildingObjectRoot.m_visible;
+		p.m_drawingsOSM.back().m_buildingsSelected = p.m_osmBuildingObjectRoot.m_selected;
+	}
+
+
+	// store state for building objects
+	for (auto& osmBuildingObject : p.m_osmBuildingObjects) {
+		if ((it = m_nodeStates.find(osmBuildingObject.m_id)) != m_nodeStates.end()) {
+			setState(osmBuildingObject, it->second);
+			modifiedIDs.push_back(it->first);
+			osmBuildingObject.m_osmBuilding->m_selected = osmBuildingObject.m_selected;
+			osmBuildingObject.m_osmBuilding->m_visible = osmBuildingObject.m_visible;
 		}
 	}
 

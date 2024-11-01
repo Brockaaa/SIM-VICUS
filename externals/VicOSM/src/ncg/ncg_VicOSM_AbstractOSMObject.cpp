@@ -47,6 +47,8 @@ void AbstractOSMObject::readXML(const TiXmlElement * element) {
 				m_key = attrib->ValueStr();
 			else if (attribName == "value")
 				m_value = attrib->ValueStr();
+			else if (attribName == "displayName")
+				m_displayName = attrib->ValueStr();
 			else {
 				IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ATTRIBUTE).arg(attribName).arg(element->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 			}
@@ -117,6 +119,8 @@ TiXmlElement * AbstractOSMObject::writeXML(TiXmlElement * parent) const {
 		e->SetAttribute("key", m_key);
 	if (!m_value.empty())
 		e->SetAttribute("value", m_value);
+	if (!m_displayName.empty())
+		e->SetAttribute("displayName", m_displayName);
 
 	if (!m_areas.empty()) {
 		TiXmlElement * child = new TiXmlElement("Areas");
