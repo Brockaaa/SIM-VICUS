@@ -30,7 +30,31 @@ void SVUndoAddDrawingOSM::undo() {
 
 void SVUndoAddDrawingOSM::redo() {
 	// append drawing
+
+	unsigned int newId = theProject().nextUnusedID();
+	m_addedDrawing.m_id = newId;
+	newId++;
+
+	theProject().m_osmGroundLayer.m_id = newId;
+	newId++;
+
+	theProject().m_osmStreetLayer.m_id = newId;
+	newId++;
+
+	theProject().m_osmBuildingObjectRoot.m_id = newId;
+	newId++;
 	theProject().m_drawingsOSM.push_back(m_addedDrawing);
+
+	theProject().m_osmBuildingObjects.reserve(m_addedDrawing.m_buildings.size());
+	for (auto& OSMBuilding : theProject().m_drawingsOSM.back().m_buildings) {
+		VICUS::OSMBuildingObject newBuilding;
+		newBuilding.m_id = newId;
+		newId++;
+		newBuilding.m_osmBuilding = &OSMBuilding;
+		newBuilding.m_displayName = QString::fromStdString(OSMBuilding.m_displayName);
+		theProject().m_osmBuildingObjects.push_back(newBuilding);
+	}
+
 	theProject().updatePointers();
 
 	SVProjectHandler::instance().setModified( SVProjectHandler::DrawingOSMModified);

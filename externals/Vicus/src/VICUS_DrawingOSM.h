@@ -136,7 +136,10 @@ public:
 
 	/*! creates all PlaneGeometry objects from one OSMObject by iterating over all DrawingObjects int the OSMObject and creates a GeometryData object from it.
 	 *  Saves the resulting GeometryData object in a map with the address of the DrawingObject as key. Inserts the created GeometryData object to the geometryData Vector */
-	void addGeometryData(const AbstractOSMObject& object, std::vector<GeometryData *>& geometryData) const;
+	void addGeometryDataArea(const Area & area, std::vector<GeometryData *>& geometryDataVector, bool force2D = false) const;
+	void addGeometryDataLineFromPlanes(const LineFromPlanes & lineFromPlanes, std::vector<GeometryData *>& geometryDataVector) const;
+	void addGeometryDataCircle(const Circle & circle, std::vector<GeometryData *>& geometryDataVector) const;
+	void addGeometryData(const AbstractOSMObject& object, std::vector<GeometryData *>& geometryDataVector) const;
 
 	/*! Iterates over all OSMObjects and adds geometryData to the geometryData map. The map takes as a key the z-value of an object to define the order of the objects. */
 	void geometryData(std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>>& geometryData) const;
@@ -200,9 +203,6 @@ public:
 	std::vector<Tourism>							m_tourism;			// XML:E
 	std::vector<Barrier>							m_barriers;			// XML:E
 	std::vector<Railway>							m_railways;			// XML:E
-
-	/*! False before added to project. Needed to generate VICUS::Objects with unique ids for buildings */
-	bool													m_addedToProject = false; // XML:A
 
 	/*! Function to generate plane geometries from a polyline. */
 	bool generatePlanesFromPolyline(const std::vector<IBKMK::Vector3D> & polyline,

@@ -49,8 +49,6 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 				m_centerY = NANDRAD::readPODAttributeValue<double>(element, attrib);
 			else if (attribName == "enable3DBuildings")
 				m_enable3DBuildings = NANDRAD::readPODAttributeValue<bool>(element, attrib);
-			else if (attribName == "addedToProject")
-				m_addedToProject = NANDRAD::readPODAttributeValue<bool>(element, attrib);
 			else {
 				IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ATTRIBUTE).arg(attribName).arg(element->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 			}
@@ -230,8 +228,6 @@ TiXmlElement * DrawingOSM::writeXML(TiXmlElement * parent) const {
 	e->SetAttribute("centerY", IBK::val2string<double>(m_centerY));
 	if (m_enable3DBuildings != DrawingOSM().m_enable3DBuildings)
 		e->SetAttribute("enable3DBuildings", IBK::val2string<bool>(m_enable3DBuildings));
-	if (m_addedToProject != DrawingOSM().m_addedToProject)
-		e->SetAttribute("addedToProject", IBK::val2string<bool>(m_addedToProject));
 
 	m_boundingBox.writeXML(e);
 

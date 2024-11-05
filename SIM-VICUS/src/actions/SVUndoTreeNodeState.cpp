@@ -392,8 +392,8 @@ void SVUndoTreeNodeState::redo() {
 		if ((it = m_nodeStates.find(osmBuildingObject.m_id)) != m_nodeStates.end()) {
 			setState(osmBuildingObject, it->second);
 			modifiedIDs.push_back(it->first);
-			osmBuildingObject.m_osmBuilding->m_selected = osmBuildingObject.m_selected;
-			osmBuildingObject.m_osmBuilding->m_visible = osmBuildingObject.m_visible;
+			osmBuildingObject.m_osmBuilding->setSelected(osmBuildingObject.m_selected);
+			osmBuildingObject.m_osmBuilding->setVisible(osmBuildingObject.m_visible);
 		}
 	}
 

@@ -29,10 +29,18 @@ public:
 	bool initializeSimple3DBuilding(Relation &relation);
 	/*! Helper function to initialze an area from a way or relation. Does not read in geometry data like the coordinates of a node */
 	Area createArea(const AbstractOSMElement & element, bool enable3D);
+	/*! Helper function to set the display name in the navigation tree */
+	void setDisplayName(const AbstractOSMElement& element);
+	/*! setter for m_visible */
+	void setVisible(bool visible);
+	/*! setter for m_selected */
+	void setSelected(bool selected);
 	/*! Specifies the default height of a building level. Value 3 taken from the osm wiki. Can be specified for an individual OSM object */
 	double								m_levelHeight = 3;					// XML:A
 	/*! Specifies the default height of roof. Value 3 taken from the osm wiki. Can be specified for an individual OSM Element */
 	double								m_roofHeight = 3;					// XML:A
+	/*! Specifies the position of the area that describes the outline of the building in the m_areas std::vector. Used for switching between 2D and 3D rendering of buildings */
+	Area								m_outline;							// XML:E
 };
 
 } // namespace VicOSM

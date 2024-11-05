@@ -2374,6 +2374,7 @@ void SVMainWindow::on_actionOpenStreetMap_OSM_triggered()
 
 	if (m_importOSMDialog->import()) {
 		SVUndoAddDrawingOSM * undoAdd = new SVUndoAddDrawingOSM(tr("added DrawingOSM"), m_importOSMDialog->drawingOSM());
+		m_importOSMDialog->clear();
 		undoAdd->push(); // modifies project and updates views
 	}
 

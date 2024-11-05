@@ -51,6 +51,8 @@ public:
 	/*! Opens the Import OSM Dialog. After a successful import, the resulting DrawingOSM can be requested with drawingOSM() */
 	bool import();
 
+	void clear() { m_drawingOSM = VICUS::DrawingOSM(); }
+
 	/*! returns the created DrawingOSM. Should only be called after a successful import */
 	VICUS::DrawingOSM& drawingOSM(){ return m_drawingOSM; }
 

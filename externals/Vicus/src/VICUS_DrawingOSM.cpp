@@ -643,7 +643,7 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 	if (notifyer) {
 		notifyer->notify(85, "Construct Objects from Relations");
 	}
-// construct all objects from relation
+	// construct all objects from relation
 	for (auto& pair : m_relations) {
 		if (pair.second.containsKey("building") || (m_enable3DBuildings && (pair.second.containsKey("building:part") || pair.second.containsKeyValue("type", "building"))) ) {
 			if (pair.second.containsKeyValue("type", "multipolygon")) {
@@ -665,7 +665,32 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 				for (auto& member : pair.second.m_members) {
 					if (member.m_role == "basement") continue;
 					bool outline = member.m_role == "outline"; // when a building:part exists, the outline of the building should generally not be used. In practice there are cases of floating buildings because they rely on the outline being drawn
-					if (outline) continue;												// comment out this line if workaround should be enabled to make altstadt dresden pretty
+					if (outline) {
+						if (member.m_type == Types::WayType) {
+							const Way *way = findWayFromId(member.m_ref);
+							if (!way)
+								continue;
+							building.m_outline = building.createArea(*way, false);
+							building.m_outline.m_extrudingPolygon = false;
+							Multipolygon multipolygon;
+							createMultipolygonFromWay(*way, multipolygon);
+							building.m_outline.m_multiPolygon = multipolygon;
+						} else if (member.m_type == Types::RelationType) {
+							const Relation *relation = findRelationFromId(member.m_ref);
+							if (!relation)
+								continue;
+							Area area = building.createArea(*relation, m_enable3DBuildings);
+							std::vector<VicOSM::Multipolygon> multipolygons;
+							createMultipolygonsFromRelation(*relation, multipolygons);
+							for (auto& multipolygon : multipolygons) {
+								Area subArea = area;
+								subArea.m_multiPolygon = multipolygon;
+								building.m_areas.push_back(subArea);
+							}
+						}
+						continue;
+					}
+
 					if (member.m_type == Types::WayType) {
 						const Way *way = findWayFromId(member.m_ref);
 						if (!way)
@@ -948,127 +973,142 @@ void DrawingOSM::updatePlaneGeometries() {
 	}
 }
 
+void DrawingOSM::addGeometryDataArea(const Area & area, std::vector<GeometryData *> & geometryDataVector, bool force2D) const
+{
+	if (area.m_dirtyTriangulation) {
+		GeometryData geometryData;
+
+		if (area.m_extrudingPolygon && !force2D) {
+			geometryData.m_extrudingPolygon = true;
+			if (!area.m_multiPolygon.m_outerPolyline.empty()) {
+				geometryData.m_multipolygons.push_back(area.m_multiPolygon);
+				geometryData.m_color = area.m_color;
+				geometryData.m_height = area.m_height;
+				geometryData.m_minHeight = area.m_minHeight;
+			}
+		} else {
+			std::vector<IBKMK::Vector3D> areaPoints;
+
+			for (unsigned int i = 1; i < area.m_multiPolygon.m_outerPolyline.size(); i++) {
+				IBKMK::Vector3D p = IBKMK::Vector3D(area.m_multiPolygon.m_outerPolyline[i].m_x,
+													area.m_multiPolygon.m_outerPolyline[i].m_y,
+													0);
+
+				QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+				vec += IBKVector2QVector(m_origin);
+
+				areaPoints.push_back(QVector2IBKVector(vec));
+			}
+
+			VICUS::Polygon3D polygon3D(areaPoints);
+			// Initialize PlaneGeometry with the polygon
+			geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(polygon3D));
+
+			if(!area.m_multiPolygon.m_innerPolylines.empty()) {
+				std::vector<PlaneGeometry::Hole> holes;
+				for(unsigned int j = 0; j < area.m_multiPolygon.m_innerPolylines.size(); j++) {
+					VICUS::Polygon2D polygon2d(area.m_multiPolygon.m_innerPolylines[j]);
+					holes.push_back(PlaneGeometry::Hole(j, polygon2d, false));
+				}
+
+				VICUS::PlaneGeometry& planeGeometry = geometryData.m_planeGeometry.back();
+				planeGeometry.setHoles(holes);
+			}
+
+			geometryData.m_color = area.m_color;
+		}
+		m_geometryData[&area] = geometryData;
+		area.m_dirtyTriangulation = false;
+	}
+	geometryDataVector.push_back(&m_geometryData[&area]);
+}
+
+void DrawingOSM::addGeometryDataLineFromPlanes(const LineFromPlanes & lineFromPlanes, std::vector<GeometryData *> & geometryDataVector) const
+{
+	if (lineFromPlanes.m_dirtyTriangulation) {
+		// Create Vector to store vertices of polyline
+		std::vector<IBKMK::Vector3D> polylinePoints;
+
+		unsigned int i = 0;
+		bool connectEndStart = lineFromPlanes.m_multiPolygon.m_outerPolyline.front() == lineFromPlanes.m_multiPolygon.m_outerPolyline.back();
+		if (connectEndStart) {
+			i = 1;
+		}
+
+		// adds z-coordinate to polyline
+		for(; i < lineFromPlanes.m_multiPolygon.m_outerPolyline.size(); ++i){
+			IBKMK::Vector3D p = IBKMK::Vector3D(lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_x,
+												lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_y,
+												0);
+			QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+			vec += IBKVector2QVector(m_origin);
+
+			polylinePoints.push_back(QVector2IBKVector(vec));
+		}
+
+		std::vector<PlaneGeometry> planeGeometry;
+		if (generatePlanesFromPolyline(polylinePoints, connectEndStart, lineFromPlanes.m_lineThickness, planeGeometry)) {
+			GeometryData geometryData;
+			geometryData.m_planeGeometry = planeGeometry;
+			geometryData.m_color = lineFromPlanes.m_color;
+			m_geometryData[&lineFromPlanes] = geometryData;
+		}
+
+		lineFromPlanes.m_dirtyTriangulation = false;
+	}
+	geometryDataVector.push_back(&m_geometryData[&lineFromPlanes]);
+}
+
+void DrawingOSM::addGeometryDataCircle(const Circle & circle, std::vector<GeometryData *> & geometryDataVector) const
+{
+	if (circle.m_dirtyTriangulation) {
+		std::vector<IBKMK::Vector3D> circlePoints;
+
+		const double TWO_PI = 2 * M_PI;
+		double angleStep = TWO_PI / SEGMENT_COUNT_ELLIPSE;
+
+		circlePoints.resize(SEGMENT_COUNT_ELLIPSE);
+
+		for (unsigned int i = 0; i < SEGMENT_COUNT_ELLIPSE; ++i) {
+			double currentAngle = i * angleStep;
+			double x = circle.m_radius * 0.5 * cos(currentAngle);
+			double y = circle.m_radius * 0.5 * sin(currentAngle);
+
+			IBKMK::Vector3D p = IBKMK::Vector3D(x + circle.m_x,
+												y + circle.m_y,
+												0);
+
+			QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
+			vec += IBKVector2QVector(m_origin);
+			circlePoints[i] = QVector2IBKVector(vec);
+		}
+		\
+			std::vector<PlaneGeometry> planeGeometry;
+		if (generatePlanesFromPolyline(circlePoints, true,
+									   circle.m_radius,
+									   planeGeometry)) {
+			GeometryData geometryData;
+			geometryData.m_planeGeometry = planeGeometry;
+			geometryData.m_color = circle.m_color;
+			m_geometryData[&circle] = geometryData;
+		}
+
+		circle.m_dirtyTriangulation = false;
+	}
+	geometryDataVector.push_back(&m_geometryData[&circle]);
+}
+
 void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::vector<GeometryData *> & geometryDataVector) const {
 		for (auto& area : object.m_areas) {
-			if (area.m_dirtyTriangulation) {
-				GeometryData geometryData;
-
-				if (area.m_extrudingPolygon) {
-					geometryData.m_extrudingPolygon = true;
-					if (!area.m_multiPolygon.m_outerPolyline.empty()) {
-						geometryData.m_multipolygons.push_back(area.m_multiPolygon);
-						geometryData.m_color = area.m_color;
-						geometryData.m_height = area.m_height;
-						geometryData.m_minHeight = area.m_minHeight;
-					}
-				} else {
-					std::vector<IBKMK::Vector3D> areaPoints;
-
-					for (unsigned int i = 1; i < area.m_multiPolygon.m_outerPolyline.size(); i++) {
-						IBKMK::Vector3D p = IBKMK::Vector3D(area.m_multiPolygon.m_outerPolyline[i].m_x,
-															area.m_multiPolygon.m_outerPolyline[i].m_y,
-															0);
-
-						QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
-						vec += IBKVector2QVector(m_origin);
-
-						areaPoints.push_back(QVector2IBKVector(vec));
-					}
-
-					VICUS::Polygon3D polygon3D(areaPoints);
-					// Initialize PlaneGeometry with the polygon
-					geometryData.m_planeGeometry.push_back(VICUS::PlaneGeometry(polygon3D));
-
-					if(!area.m_multiPolygon.m_innerPolylines.empty()) {
-						std::vector<PlaneGeometry::Hole> holes;
-						for(unsigned int j = 0; j < area.m_multiPolygon.m_innerPolylines.size(); j++) {
-							VICUS::Polygon2D polygon2d(area.m_multiPolygon.m_innerPolylines[j]);
-							holes.push_back(PlaneGeometry::Hole(j, polygon2d, false));
-						}
-
-						VICUS::PlaneGeometry& planeGeometry = geometryData.m_planeGeometry.back();
-						planeGeometry.setHoles(holes);
-					}
-
-					geometryData.m_color = area.m_color;
-				}
-				m_geometryData[&area] = geometryData;
-				area.m_dirtyTriangulation = false;
-			}
-			geometryDataVector.push_back(&m_geometryData[&area]);
+			addGeometryDataArea(area, geometryDataVector);
 		}
 
 		for (auto& lineFromPlanes : object.m_linesFromPlanes) {
-			if (lineFromPlanes.m_dirtyTriangulation) {
-				// Create Vector to store vertices of polyline
-				std::vector<IBKMK::Vector3D> polylinePoints;
-
-				unsigned int i = 0;
-				bool connectEndStart = lineFromPlanes.m_multiPolygon.m_outerPolyline.front() == lineFromPlanes.m_multiPolygon.m_outerPolyline.back();
-				if (connectEndStart) {
-					i = 1;
-				}
-
-				// adds z-coordinate to polyline
-				for(; i < lineFromPlanes.m_multiPolygon.m_outerPolyline.size(); ++i){
-					IBKMK::Vector3D p = IBKMK::Vector3D(lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_x,
-														lineFromPlanes.m_multiPolygon.m_outerPolyline[i].m_y,
-														0);
-					QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
-					vec += IBKVector2QVector(m_origin);
-
-					polylinePoints.push_back(QVector2IBKVector(vec));
-				}
-
-				std::vector<PlaneGeometry> planeGeometry;
-				if (generatePlanesFromPolyline(polylinePoints, connectEndStart, lineFromPlanes.m_lineThickness, planeGeometry)) {
-					GeometryData geometryData;
-					geometryData.m_planeGeometry = planeGeometry;
-					geometryData.m_color = lineFromPlanes.m_color;
-					m_geometryData[&lineFromPlanes] = geometryData;
-				}
-
-				lineFromPlanes.m_dirtyTriangulation = false;
-			}
-			geometryDataVector.push_back(&m_geometryData[&lineFromPlanes]);
+			addGeometryDataLineFromPlanes(lineFromPlanes, geometryDataVector);
 		}
 
 		for (auto& circle : object.m_circles) {
-			if (circle.m_dirtyTriangulation) {
-				std::vector<IBKMK::Vector3D> circlePoints;
-
-				const double TWO_PI = 2 * M_PI;
-				double angleStep = TWO_PI / SEGMENT_COUNT_ELLIPSE;
-
-				circlePoints.resize(SEGMENT_COUNT_ELLIPSE);
-
-				for (unsigned int i = 0; i < SEGMENT_COUNT_ELLIPSE; ++i) {
-					double currentAngle = i * angleStep;
-					double x = circle.m_radius * 0.5 * cos(currentAngle);
-					double y = circle.m_radius * 0.5 * sin(currentAngle);
-
-					IBKMK::Vector3D p = IBKMK::Vector3D(x + circle.m_x,
-														y + circle.m_y,
-														0);
-
-					QVector3D vec = m_rotationMatrix.toQuaternion() * IBKVector2QVector(p);
-					vec += IBKVector2QVector(m_origin);
-					circlePoints[i] = QVector2IBKVector(vec);
-				}
-				\
-					std::vector<PlaneGeometry> planeGeometry;
-				if (generatePlanesFromPolyline(circlePoints, true,
-											   circle.m_radius,
-											   planeGeometry)) {
-					GeometryData geometryData;
-					geometryData.m_planeGeometry = planeGeometry;
-					geometryData.m_color = circle.m_color;
-					m_geometryData[&circle] = geometryData;
-				}
-
-				circle.m_dirtyTriangulation = false;
-			}
-			geometryDataVector.push_back(&m_geometryData[&circle]);
+			addGeometryDataCircle(circle, geometryDataVector);
 		}
 		object.m_dirtyLayer = false;
 }
@@ -1076,73 +1116,107 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>>& geometryData) const {
 
 	// add BoundingBox
-	if (m_dirtyTriangulation) {
-		std::vector<IBKMK::Vector3D> polyline;
-		std::vector<IBKMK::Vector3D> areaPoints;
-		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_maxlat, m_boundingBox.m_minlon)));
-		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_minlat, m_boundingBox.m_minlon)));
-		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_minlat, m_boundingBox.m_maxlon)));
-		polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_maxlat, m_boundingBox.m_maxlon)));
+	if (m_groundVisible) {
+		if (m_dirtyTriangulation) {
+			std::vector<IBKMK::Vector3D> polyline;
+			std::vector<IBKMK::Vector3D> areaPoints;
+			polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_maxlat, m_boundingBox.m_minlon)));
+			polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_minlat, m_boundingBox.m_minlon)));
+			polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_minlat, m_boundingBox.m_maxlon)));
+			polyline.push_back(IBKMK::Vector3D(convertLatLonToVector2D(m_boundingBox.m_maxlat, m_boundingBox.m_maxlon)));
 
-		for (auto &p : polyline) {
-			QVector3D vec = m_rotationMatrix.toQuaternion() * QVector3D((float)p.m_x, (float)p.m_y, (float)p.m_z);
-			vec += QVector3D((double)m_origin.m_x, (double)m_origin.m_y, (double)m_origin.m_z);
+			for (auto &p : polyline) {
+				QVector3D vec = m_rotationMatrix.toQuaternion() * QVector3D((float)p.m_x, (float)p.m_y, (float)p.m_z);
+				vec += QVector3D((double)m_origin.m_x, (double)m_origin.m_y, (double)m_origin.m_z);
 
-			areaPoints.push_back(IBKMK::Vector3D((double)vec.x(), (double)vec.y(), (double)vec.z()));
+				areaPoints.push_back(IBKMK::Vector3D((double)vec.x(), (double)vec.y(), (double)vec.z()));
+			}
+
+			m_geometryDataBoundingBox.m_color = QColor("#f2efe9");
+			m_geometryDataBoundingBox.m_planeGeometry.push_back(VICUS::PlaneGeometry(areaPoints));
 		}
-
-		m_geometryDataBoundingBox.m_color = QColor("#f2efe9");
-		m_geometryDataBoundingBox.m_planeGeometry.push_back(VICUS::PlaneGeometry(areaPoints));
+		geometryData[m_boundingBox.m_zPosition].push_back(&m_geometryDataBoundingBox);
 	}
-	geometryData[m_boundingBox.m_zPosition].push_back(&m_geometryDataBoundingBox);
 
 	// add all other objects
-	for (const auto & building : m_buildings) {
-		addGeometryData(building, geometryData[building.m_zPosition]);
+	if (m_buildingsVisible) {
+		for (const auto & building : m_buildings) {
+			if (building.m_visible)
+				addGeometryData(building, geometryData[building.m_zPosition]);
+			else if (m_enable3DBuildings) {
+				if (building.m_outline.m_multiPolygon.m_outerPolyline.size() > 0) {
+					addGeometryDataArea(building.m_outline, geometryData[building.m_zPosition]);
+				} else if (building.m_areas.size() > 0) {
+					addGeometryDataArea(building.m_areas[0], geometryData[building.m_zPosition], true);
+				}
+			}
+		}
 	}
 
-	for( const auto & highway : m_highways) {
-		addGeometryData(highway, geometryData[highway.m_zPosition]);
+	if (m_streetsVisible) {
+		for( const auto & highway : m_highways) {
+			addGeometryData(highway, geometryData[highway.m_zPosition]);
+		}
 	}
 
-	for( const auto & water : m_waters) {
-		addGeometryData(water, geometryData[water.m_zPosition]);
+	if (m_groundVisible) {
+		for( const auto & water : m_waters) {
+			addGeometryData(water, geometryData[water.m_zPosition]);
+		}
 	}
 
-	for( const auto & land : m_land) {
-		addGeometryData(land, geometryData[land.m_zPosition]);
+	if (m_groundVisible) {
+		for( const auto & land : m_land) {
+			addGeometryData(land, geometryData[land.m_zPosition]);
+		}
 	}
 
-	for( const auto & leisure : m_leisure) {
-		addGeometryData(leisure, geometryData[leisure.m_zPosition]);
+	if (m_groundVisible) {
+		for( const auto & leisure : m_leisure) {
+			addGeometryData(leisure, geometryData[leisure.m_zPosition]);
+		}
 	}
 
-	for( const auto & natural : m_natural) {
-		addGeometryData(natural, geometryData[natural.m_zPosition]);
+	if (m_groundVisible) {
+		for( const auto & natural : m_natural) {
+			addGeometryData(natural, geometryData[natural.m_zPosition]);
+		}
 	}
 
-	for( const auto & amenity : m_amenities) {
-		addGeometryData(amenity, geometryData[amenity.m_zPosition]);
+	if (m_groundVisible) {
+		for( const auto & amenity : m_amenities) {
+			addGeometryData(amenity, geometryData[amenity.m_zPosition]);
+		}
 	}
 
-	for( const auto & place : m_places) {
-		addGeometryData(place, geometryData[place.m_zPosition]);
+	if (m_groundVisible) {
+		for( const auto & place : m_places) {
+			addGeometryData(place, geometryData[place.m_zPosition]);
+		}
 	}
 
-	for( const auto & bridge : m_bridges) {
-		addGeometryData(bridge, geometryData[bridge.m_zPosition]);
+	if (m_groundVisible) {
+		for( const auto & bridge : m_bridges) {
+			addGeometryData(bridge, geometryData[bridge.m_zPosition]);
+		}
 	}
 
-	for( const auto & tourism : m_tourism) {
-		addGeometryData(tourism, geometryData[tourism.m_zPosition]);
+	if (m_groundVisible) {
+		for( const auto & tourism : m_tourism) {
+			addGeometryData(tourism, geometryData[tourism.m_zPosition]);
+		}
 	}
 
-	for( const auto & barrier : m_barriers) {
-		addGeometryData(barrier, geometryData[barrier.m_zPosition]);
+	if (m_groundVisible) {
+		for( const auto & barrier : m_barriers) {
+			addGeometryData(barrier, geometryData[barrier.m_zPosition]);
+		}
 	}
 
-	for( const auto & railway : m_railways) {
-		addGeometryData(railway, geometryData[railway.m_zPosition]);
+	if (m_streetsVisible) {
+		for( const auto & railway : m_railways) {
+			addGeometryData(railway, geometryData[railway.m_zPosition]);
+		}
 	}
 
 	m_dirtyTriangulation = false;

@@ -806,33 +806,6 @@ void Project::updatePointers() {
 	}
 
 	for (VICUS::DrawingOSM &dOSM : m_drawingsOSM) {
-		if (!dOSM.m_addedToProject) {
-			dOSM.m_id = nextUnusedID();
-			addAndCheckForUniqueness(&dOSM);
-
-			m_osmGroundLayer.m_id = nextUnusedID();
-			addAndCheckForUniqueness(&m_osmGroundLayer);
-
-			m_osmStreetLayer.m_id = nextUnusedID();
-			addAndCheckForUniqueness(&m_osmStreetLayer);
-
-			m_osmBuildingObjectRoot.m_id = nextUnusedID();
-			addAndCheckForUniqueness(&m_osmBuildingObjectRoot);
-
-			m_osmBuildingObjects.reserve(dOSM.m_buildings.size());
-			for (auto& OSMBuilding : dOSM.m_buildings) {
-				VICUS::OSMBuildingObject newBuilding;
-				newBuilding.m_id = nextUnusedID();
-				newBuilding.m_osmBuilding = &OSMBuilding;
-				newBuilding.m_displayName = QString::fromStdString(OSMBuilding.m_displayName);
-				m_osmBuildingObjects.push_back(newBuilding);
-				addAndCheckForUniqueness(&m_osmBuildingObjects.back());
-			}
-
-			dOSM.m_addedToProject = true;
-			continue;
-		}
-
 		addAndCheckForUniqueness(&dOSM);
 		addAndCheckForUniqueness(&m_osmGroundLayer);
 		addAndCheckForUniqueness(&m_osmStreetLayer);

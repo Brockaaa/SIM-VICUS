@@ -123,6 +123,12 @@ void Project::readXML(const TiXmlElement * element) {
 				m_lccSettings.readXML(c);
 			else if (cName == "PlainGeometry")
 				m_plainGeometry.readXML(c);
+			else if (cName == "OSMBuildingObject")
+				m_osmBuildingObjectRoot.readXML(c);
+			else if (cName == "OSMGround")
+				m_osmGroundLayer.readXML(c);
+			else if (cName == "OSMStreets")
+				m_osmStreetLayer.readXML(c);
 			else if (cName == "EmbeddedDatabase")
 				m_embeddedDB.readXML(c);
 			else if (cName == "FMIDescription")
@@ -223,6 +229,12 @@ TiXmlElement * Project::writeXML(TiXmlElement * parent) const {
 
 
 	m_plainGeometry.writeXML(e);
+
+	m_osmBuildingObjectRoot.writeXML(e);
+
+	m_osmGroundLayer.writeXML(e);
+
+	m_osmStreetLayer.writeXML(e);
 
 	m_embeddedDB.writeXML(e);
 

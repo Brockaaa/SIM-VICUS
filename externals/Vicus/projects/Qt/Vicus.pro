@@ -242,6 +242,9 @@ SOURCES += \
 	../../src/ncg/ncg_VICUS_NetworkFluid.cpp \
 	../../src/ncg/ncg_VICUS_NetworkNode.cpp \
 	../../src/ncg/ncg_VICUS_NetworkPipe.cpp \
+	../../src/ncg/ncg_VICUS_OSMBuildingObject.cpp \
+	../../src/ncg/ncg_VICUS_OSMGround.cpp \
+	../../src/ncg/ncg_VICUS_OSMStreets.cpp \
 	../../src/ncg/ncg_VICUS_OutputDefinition.cpp \
 	../../src/ncg/ncg_VICUS_Outputs.cpp \
 	../../src/ncg/ncg_VICUS_PlainGeometry.cpp \
