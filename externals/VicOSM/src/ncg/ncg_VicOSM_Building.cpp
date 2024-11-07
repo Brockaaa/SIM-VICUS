@@ -99,8 +99,18 @@ void OSMBuilding::readXML(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
-			else if (cName == "Area")
-				m_outline.readXML(c);
+			else if (cName == "Outlines") {
+				const TiXmlElement * c2 = c->FirstChildElement();
+				while (c2) {
+					const std::string & c2Name = c2->ValueStr();
+					if (c2Name != "Area")
+						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+					Area obj;
+					obj.readXML(c2);
+					m_outlines.push_back(obj);
+					c2 = c2->NextSiblingElement();
+				}
+			}
 			else {
 				IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(cName).arg(c->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 			}
@@ -165,7 +175,17 @@ TiXmlElement * OSMBuilding::writeXML(TiXmlElement * parent) const {
 	}
 
 
-	m_outline.writeXML(e);
+	if (!m_outlines.empty()) {
+		TiXmlElement * child = new TiXmlElement("Outlines");
+		e->LinkEndChild(child);
+
+		for (std::vector<Area>::const_iterator it = m_outlines.begin();
+			it != m_outlines.end(); ++it)
+		{
+			it->writeXML(child);
+		}
+	}
+
 	return e;
 }
 

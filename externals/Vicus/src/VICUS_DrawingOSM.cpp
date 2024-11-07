@@ -671,11 +671,12 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 							const Way *way = findWayFromId(member.m_ref);
 							if (!way)
 								continue;
-							building.m_outline = building.createArea(*way, false);
-							building.m_outline.m_extrudingPolygon = false;
+							Area area = building.createArea(*way, false);
+							area.m_extrudingPolygon = false;
 							Multipolygon multipolygon;
 							createMultipolygonFromWay(*way, multipolygon);
-							building.m_outline.m_multiPolygon = multipolygon;
+							area.m_multiPolygon = multipolygon;
+							building.m_outlines.push_back(area);
 						} else if (member.m_type == Types::RelationType) {
 							const Relation *relation = findRelationFromId(member.m_ref);
 							if (!relation)
@@ -686,7 +687,7 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 							for (auto& multipolygon : multipolygons) {
 								Area subArea = area;
 								subArea.m_multiPolygon = multipolygon;
-								building.m_areas.push_back(subArea);
+								building.m_outlines.push_back(subArea);
 							}
 						}
 						continue;
@@ -1145,9 +1146,12 @@ void DrawingOSM::geometryData(std::map<double, std::tuple<std::vector<GeometryDa
 			addGeometryData(building, std::get<0>(geometryData[building.m_zPosition]));
 		}
 		else if (m_enable3DBuildings) {
-			if (building.m_outline.m_multiPolygon.m_outerPolyline.size() > 0) {
-				addGeometryDataArea(building.m_outline, std::get<0>(geometryData[building.m_zPosition]), true);
+			// if a building is defined by many members, it has (should have) an outline defined. Draw this.
+			if (building.m_outlines.size() > 0) {
+				for (const VicOSM::Area& area : building.m_outlines)
+					addGeometryDataArea(area, std::get<0>(geometryData[building.m_zPosition]), true);
 			} else if (building.m_areas.size() > 0) {
+				// if a building does not have an outline defined, it was created by a single way or multipolygon relation. Draw an outline based on this
 				addGeometryDataArea(building.m_areas[0], std::get<0>(geometryData[building.m_zPosition]), true);
 			}
 		}

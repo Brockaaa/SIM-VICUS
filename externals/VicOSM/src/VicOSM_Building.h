@@ -41,7 +41,7 @@ public:
 	/*! Specifies the default height of roof. Value 3 taken from the osm wiki. Can be specified for an individual OSM Element */
 	double								m_roofHeight = 3;					// XML:A
 	/*! Specifies the position of the area that describes the outline of the building in the m_areas std::vector. Used for switching between 2D and 3D rendering of buildings */
-	Area								m_outline;							// XML:E
+	std::vector<Area>					m_outlines;							// XML:E
 };
 
 } // namespace VicOSM
