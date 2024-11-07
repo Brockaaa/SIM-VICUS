@@ -8,6 +8,7 @@
 #include <QProgressDialog>
 #include <QApplication>
 #include <QPropertyAnimation>
+#include <QFile>
 
 namespace Ui {
 class SVImportOSMDialog;
@@ -36,6 +37,7 @@ class QQmlEngine;
 class QQmlComponent;
 class QProcess;
 class QTimer;
+class QNetworkAccessManager;
 
 /*! Dialog to import a osm file either by choosing a file locally or downloading it from a map */
 class SVImportOSMDialog : public QDialog
@@ -80,7 +82,10 @@ private:
 	/*! creates the QQuickWindow displaying the OSM Map */
 	void createQml();
 	/*! requests the file size of the downloaded file and updates the log */
-	void updateDownloadProgress();
+	void updateDownloadProgressCurl();
+	void updateDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+	/*! called when download finished */
+	void downloadFinished();
 	/*! attempts to reads the (downloaded or local) file and constructs all objects */
 	bool readAndConstructOSM();
 	/*! connected to slot in QtExt::BrowseFilenameWidget. Gets called whenever the filename in the widgetBrowseFilename gets changed */
@@ -101,6 +106,8 @@ private:
 	OSMImportProgressNotifyer*	m_progressNotifyer = nullptr;
 	/*! Process that is used to download the map */
 	QProcess*				m_process = nullptr;
+	/*! Class used to download the map */
+	QNetworkAccessManager*	m_networkAccessManager = nullptr;
 	/*! Timer, updates the download progress in the log periodically */
 	QTimer*					m_timer = nullptr;
 	/*! path of temporary downloaded file */

@@ -15,6 +15,7 @@
 #include <QApplication>
 #include <QPushButton>
 #include <QQuickWindow>
+#include <QNetworkAccessManager>
 
 SVImportOSMDialog::SVImportOSMDialog(QWidget *parent)
 	: QDialog(parent)
@@ -84,7 +85,7 @@ void SVImportOSMDialog::downloadOsmFile(double minlon, double minlat, double max
 			.arg(maxlon)
 			.arg(maxlat);
 
-
+#if defined(Q_OS_UNIX)
 	if (m_process != nullptr)
 		delete m_process;
 
@@ -103,8 +104,30 @@ void SVImportOSMDialog::downloadOsmFile(double minlon, double minlat, double max
 
 	QString fileSizeInMb = QString("Download in Progress: %1 MB").arg(0/* 1 MB */ );
 	m_ui->plainTextEditLog->appendPlainText(fileSizeInMb);
-	connect(m_timer, &QTimer::timeout, this, &SVImportOSMDialog::updateDownloadProgress);
+	connect(m_timer, &QTimer::timeout, this, &SVImportOSMDialog::updateDownloadProgressCurl);
 	m_timer->start(100);
+#endif
+
+#if defined(Q_OS_WIN)
+	// Delete the existing QNetworkAccessManager if it exists
+	if (m_networkAccessManager != nullptr) {
+		delete m_networkAccessManager;
+		m_networkAccessManager = nullptr;
+	}
+
+	// Create a new QNetworkAccessManager
+	m_networkAccessManager = new QNetworkAccessManager(this);
+
+	// Create a new QNetworkRequest
+	QNetworkRequest request(url);
+
+	// Create a new QNetworkReply
+	QNetworkReply* reply = m_networkAccessManager->get(request);
+
+	// Connect the necessary signals
+	connect(reply, &QNetworkReply::finished, this, &SVImportOSMDialog::downloadFinished);
+	connect(reply, &QNetworkReply::downloadProgress, this, &SVImportOSMDialog::updateDownloadProgress);
+#endif
 }
 
 void SVImportOSMDialog::initialise() {
@@ -161,7 +184,7 @@ void SVImportOSMDialog::createQml() {
 	}
 }
 
-void SVImportOSMDialog::updateDownloadProgress() {
+void SVImportOSMDialog::updateDownloadProgressCurl() {
 	QFileInfo fileInfo(m_downloadFilePath);
 	qint64 currentSize = fileInfo.size();
 
@@ -176,9 +199,47 @@ void SVImportOSMDialog::updateDownloadProgress() {
 
 	if (m_process->state() == QProcess::NotRunning) {
 		m_timer->stop();
-		m_progressNotifyer->disableAnimation();
-		readAndConstructOSM();
+		downloadFinished();
 	}
+}
+
+void SVImportOSMDialog::updateDownloadProgress(qint64 bytesReceived, qint64 bytesTotal)
+{
+	if (bytesTotal > 0) {
+		QString logText = m_ui->plainTextEditLog->toPlainText();
+		QString searchString = "Download in Progress:";
+		int lastIndex = logText.lastIndexOf(searchString);
+
+		if (lastIndex != -1) {
+			logText = logText.left(lastIndex) + QString("Download in Progress: %1 MB").arg(bytesTotal / 1048576.f/* 1 MB */ );
+			m_ui->plainTextEditLog->setPlainText(logText);
+		}
+	}
+}
+
+void SVImportOSMDialog::downloadFinished()
+{
+	m_progressNotifyer->disableAnimation();
+
+#if defined(Q_OS_WIN)
+	QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
+	if (reply->error() != QNetworkReply::NoError) {
+		// Handle the error
+		m_ui->plainTextEditLog->appendPlainText(QString("Download failed: %1").arg(reply->errorString()));
+	} else {
+		// Save the downloaded data to the file
+		QFile file;
+		file.setFileName(m_downloadFilePath);
+		file.open(QIODevice::WriteOnly);
+		file.write(reply->readAll());
+		file.flush();
+		file.close();
+	}
+	reply->deleteLater();
+	m_networkAccessManager->deleteLater();
+#endif
+
+	readAndConstructOSM();
 }
 
 bool SVImportOSMDialog::readAndConstructOSM()
@@ -222,6 +283,8 @@ bool SVImportOSMDialog::readAndConstructOSM()
 		const TiXmlElement * c = document.FirstChildElement();
 		const TiXmlElement * d = c->FirstChildElement();
 		m_drawingOSM.readXML(d->FirstChildElement());
+		m_importButton->setEnabled(true);
+		return true;
 	} else {
 		return false;
 	}
@@ -336,7 +399,7 @@ void SVImportOSMDialog::on_radioButtonDownloadOSM_toggled(bool checked) {
 void SVImportOSMDialog::on_widgetBrowseFilename_changed()
 {
 	const QString& filename = m_ui->widgetBrowseFilename->filename();
-	if (filename.endsWith(".osm")) {
+	if (filename.endsWith(".osm") || filename.endsWith(".vicosm")) {
 		m_ui->plainTextEditLog->appendPlainText(QString("New local filename set: %1").arg(filename));
 		m_importButton->setEnabled(false);
 		m_fname = m_ui->widgetBrowseFilename->filename();
