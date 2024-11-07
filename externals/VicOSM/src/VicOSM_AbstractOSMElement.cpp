@@ -84,7 +84,7 @@ void AbstractOSMElement::readXML(const TiXmlElement * element)
 
 bool AbstractOSMElement::containsKey(const std::string & key) const
 {
-	for (int i = 0; i < m_tags.size(); i++) {
+	for (unsigned int i = 0; i < m_tags.size(); i++) {
 		if(m_tags[i].m_key == key)
 			return true;
 	}
@@ -93,7 +93,7 @@ bool AbstractOSMElement::containsKey(const std::string & key) const
 
 bool AbstractOSMElement::containsValue(const std::string & value) const
 {
-	for (int i = 0; i < m_tags.size(); i++) {
+	for (unsigned int i = 0; i < m_tags.size(); i++) {
 		if(m_tags[i].m_value == value)
 			return true;
 	}
@@ -102,7 +102,7 @@ bool AbstractOSMElement::containsValue(const std::string & value) const
 
 bool AbstractOSMElement::containsKeyValue(const std::string & key, const std::string & value) const
 {
-	for (int i = 0; i < m_tags.size(); i++) {
+	for (unsigned int i = 0; i < m_tags.size(); i++) {
 		if(m_tags[i].m_key == key && m_tags[i].m_value == value)
 			return true;
 	}
@@ -111,7 +111,7 @@ bool AbstractOSMElement::containsKeyValue(const std::string & key, const std::st
 
 std::string AbstractOSMElement::getValueFromKey(const std::string & key) const
 {
-	for (int i = 0; i < m_tags.size(); i++) {
+	for (unsigned int i = 0; i < m_tags.size(); i++) {
 		if(m_tags[i].m_key == key)
 			return m_tags[i].m_value;
 	}

@@ -45,6 +45,8 @@ void OSMBuilding::readXML(const TiXmlElement * element) {
 				m_key = attrib->ValueStr();
 			else if (attribName == "value")
 				m_value = attrib->ValueStr();
+			else if (attribName == "displayName")
+				m_displayName = attrib->ValueStr();
 			else if (attribName == "zPosition")
 				m_zPosition = NANDRAD::readPODAttributeValue<double>(element, attrib);
 			else if (attribName == "levelHeight")
@@ -97,6 +99,8 @@ void OSMBuilding::readXML(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
+			else if (cName == "Area")
+				m_outline.readXML(c);
 			else {
 				IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(cName).arg(c->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
 			}
@@ -119,6 +123,8 @@ TiXmlElement * OSMBuilding::writeXML(TiXmlElement * parent) const {
 		e->SetAttribute("key", m_key);
 	if (!m_value.empty())
 		e->SetAttribute("value", m_value);
+	if (!m_displayName.empty())
+		e->SetAttribute("displayName", m_displayName);
 	e->SetAttribute("zPosition", IBK::val2string<double>(m_zPosition));
 	e->SetAttribute("levelHeight", IBK::val2string<double>(m_levelHeight));
 	e->SetAttribute("roofHeight", IBK::val2string<double>(m_roofHeight));
@@ -158,6 +164,8 @@ TiXmlElement * OSMBuilding::writeXML(TiXmlElement * parent) const {
 		}
 	}
 
+
+	m_outline.writeXML(e);
 	return e;
 }
 

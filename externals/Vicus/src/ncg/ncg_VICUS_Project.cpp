@@ -103,6 +103,18 @@ void Project::readXML(const TiXmlElement * element) {
 					c2 = c2->NextSiblingElement();
 				}
 			}
+			else if (cName == "OsmBuildingObjects") {
+				const TiXmlElement * c2 = c->FirstChildElement();
+				while (c2) {
+					const std::string & c2Name = c2->ValueStr();
+					if (c2Name != "OSMBuildingObject")
+						IBK::IBK_Message(IBK::FormatString(XML_READ_UNKNOWN_ELEMENT).arg(c2Name).arg(c2->Row()), IBK::MSG_WARNING, FUNC_ID, IBK::VL_STANDARD);
+					OSMBuildingObject obj;
+					obj.readXML(c2);
+					m_osmBuildingObjects.push_back(obj);
+					c2 = c2->NextSiblingElement();
+				}
+			}
 			else if (cName == "IfcFilePath")
 				m_ifcFilePath = IBK::Path(c->GetText());
 			else if (cName == "DrawingFilePath")
@@ -229,6 +241,18 @@ TiXmlElement * Project::writeXML(TiXmlElement * parent) const {
 
 
 	m_plainGeometry.writeXML(e);
+
+	if (!m_osmBuildingObjects.empty()) {
+		TiXmlElement * child = new TiXmlElement("OsmBuildingObjects");
+		e->LinkEndChild(child);
+
+		for (std::vector<OSMBuildingObject>::const_iterator it = m_osmBuildingObjects.begin();
+			it != m_osmBuildingObjects.end(); ++it)
+		{
+			it->writeXML(child);
+		}
+	}
+
 
 	m_osmBuildingObjectRoot.writeXML(e);
 

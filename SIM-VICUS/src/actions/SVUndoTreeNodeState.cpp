@@ -126,9 +126,7 @@ SVUndoTreeNodeState::SVUndoTreeNodeState(const QString & label,
 	for (const VICUS::DrawingOSM & d : p.m_drawingsOSM) {
 		// store state for building object root
 		if (exclusive || nodeIDs.find(d.m_id) != nodeIDs.end()) {
-			if (d.m_id == p.m_osmBuildingObjectRoot.m_id) {
-				storeState(d, m_nodeStates[d.m_id]);
-			}
+			storeState(d, m_nodeStates[d.m_id]);
 		}
 	}
 
@@ -142,7 +140,7 @@ SVUndoTreeNodeState::SVUndoTreeNodeState(const QString & label,
 		storeState(p.m_osmStreetLayer, m_nodeStates[p.m_osmStreetLayer.m_id]);
 	}
 
-	// store state for street layer
+	// store state for building layer
 	if (exclusive || nodeIDs.find(p.m_osmBuildingObjectRoot.m_id) != nodeIDs.end()) {
 		storeState(p.m_osmBuildingObjectRoot, m_nodeStates[p.m_osmBuildingObjectRoot.m_id]);
 	}
@@ -151,8 +149,6 @@ SVUndoTreeNodeState::SVUndoTreeNodeState(const QString & label,
 	for (auto& osmBuildingObject : p.m_osmBuildingObjects) {
 		if (exclusive || nodeIDs.find(osmBuildingObject.m_id) != nodeIDs.end()) {
 			storeState(osmBuildingObject, m_nodeStates[osmBuildingObject.m_id]);
-			osmBuildingObject.m_osmBuilding->setSelected(osmBuildingObject.m_selected);
-			osmBuildingObject.m_osmBuilding->setVisible(osmBuildingObject.m_visible);
 		}
 	}
 
@@ -366,7 +362,7 @@ void SVUndoTreeNodeState::redo() {
 	if ((it = m_nodeStates.find(p.m_osmGroundLayer.m_id)) != m_nodeStates.end()) {
 		setState(p.m_osmGroundLayer, it->second);
 		modifiedIDs.push_back(it->first);
-		p.m_drawingsOSM.back().m_groundVisible = p.m_osmGroundLayer.m_visible;
+		p.m_drawingsOSM.back().setGroundVisible(p.m_osmGroundLayer.m_visible);
 		p.m_drawingsOSM.back().m_groundSelected = p.m_osmGroundLayer.m_selected;
 	}
 
@@ -374,7 +370,7 @@ void SVUndoTreeNodeState::redo() {
 	if ((it = m_nodeStates.find(p.m_osmStreetLayer.m_id)) != m_nodeStates.end()) {
 		setState(p.m_osmStreetLayer, it->second);
 		modifiedIDs.push_back(it->first);
-		p.m_drawingsOSM.back().m_streetsVisible = p.m_osmStreetLayer.m_visible;
+		p.m_drawingsOSM.back().setStreetsVisible(p.m_osmStreetLayer.m_visible);
 		p.m_drawingsOSM.back().m_streetsSelected = p.m_osmStreetLayer.m_selected;
 	}
 
@@ -382,8 +378,8 @@ void SVUndoTreeNodeState::redo() {
 	if ((it = m_nodeStates.find(p.m_osmBuildingObjectRoot.m_id)) != m_nodeStates.end()) {
 		setState(p.m_osmBuildingObjectRoot, it->second);
 		modifiedIDs.push_back(it->first);
-		p.m_drawingsOSM.back().m_buildingsVisible = p.m_osmBuildingObjectRoot.m_visible;
-		p.m_drawingsOSM.back().m_buildingsSelected = p.m_osmBuildingObjectRoot.m_selected;
+		p.m_drawingsOSM.back().setBuildingLayerVisible(p.m_osmBuildingObjectRoot.m_visible);
+		p.m_drawingsOSM.back().setBuildingLayerSelected(p.m_osmBuildingObjectRoot.m_selected);
 	}
 
 

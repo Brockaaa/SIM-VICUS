@@ -389,31 +389,37 @@ void SVNavigationTreeWidget::onModified(int modificationType, ModificationInfo *
 	//TODO
 	if (!prj.m_drawingsOSM.empty()) {
 		// only one DrawingOSM supported
-		QTreeWidgetItem * drawingOSM = new QTreeWidgetItem(QStringList() << "OpenStreetMap", QTreeWidgetItem::Type);
-		//drawingOSM->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
-		//drawingOSM->setData(0, SVNavigationTreeItemDelegate::NodeID, prj.m_drawingsOSM.back().m_id); // not a child node
-		//drawingOSM->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, prj.m_drawingsOSM.back().m_visible);
-		//drawingOSM->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, prj.m_drawingsOSM.back().m_selected);
-		m_ui->treeWidget->addTopLevelItem(drawingOSM);
+		QTreeWidgetItem * openstreetmap = new QTreeWidgetItem(QStringList() << "OpenStreetMap", QTreeWidgetItem::Type);
+		openstreetmap->setFlags(Qt::ItemIsEnabled);
+		m_ui->treeWidget->addTopLevelItem(openstreetmap);
+
+		QTreeWidgetItem * drawingOSM = new QTreeWidgetItem(QStringList() << "OSM", QTreeWidgetItem::Type);
 		m_treeItemMap[prj.m_drawingsOSM.back().m_id] = drawingOSM;
+		drawingOSM->setFlags(Qt::ItemIsEnabled);
+		drawingOSM->setData(0, SVNavigationTreeItemDelegate::NodeID, prj.m_drawingsOSM.back().m_id); // not a child node
+		drawingOSM->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, prj.m_drawingsOSM.back().m_visible);
+		drawingOSM->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, prj.m_drawingsOSM.back().m_selected);
+		m_treeItemMap[prj.m_drawingsOSM.back().m_id] = drawingOSM;
+
+		openstreetmap->addChild(drawingOSM);
 
 		QTreeWidgetItem * osmBuildingRoot = new QTreeWidgetItem(QStringList() << "OSM Buildings", QTreeWidgetItem::Type);
 		m_treeItemMap[prj.m_osmBuildingObjectRoot.m_id] = osmBuildingRoot;
-		osmBuildingRoot->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
+		osmBuildingRoot->setFlags(Qt::ItemIsEnabled);
 		osmBuildingRoot->setData(0, SVNavigationTreeItemDelegate::NodeID, prj.m_osmBuildingObjectRoot.m_id);
 		osmBuildingRoot->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, prj.m_osmBuildingObjectRoot.m_visible);
 		osmBuildingRoot->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, prj.m_osmBuildingObjectRoot.m_selected);
 
 		QTreeWidgetItem * osmGround = new QTreeWidgetItem(QStringList() << "OSM Ground", QTreeWidgetItem::Type);
 		m_treeItemMap[prj.m_osmGroundLayer.m_id] = osmGround;
-		osmGround->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
+		osmGround->setFlags(Qt::ItemIsEnabled);
 		osmGround->setData(0, SVNavigationTreeItemDelegate::NodeID, prj.m_osmGroundLayer.m_id);
 		osmGround->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, prj.m_osmGroundLayer.m_visible);
 		osmGround->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, prj.m_osmGroundLayer.m_selected);
 
 		QTreeWidgetItem * osmStreets = new QTreeWidgetItem(QStringList() << "OSM Streets & Railways", QTreeWidgetItem::Type);
 		m_treeItemMap[prj.m_osmStreetLayer.m_id] = osmStreets;
-		osmStreets->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
+		osmStreets->setFlags(Qt::ItemIsEnabled);
 		osmStreets->setData(0, SVNavigationTreeItemDelegate::NodeID, prj.m_osmStreetLayer.m_id);
 		osmStreets->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, prj.m_osmStreetLayer.m_visible);
 		osmStreets->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, prj.m_osmStreetLayer.m_selected);
@@ -429,7 +435,7 @@ void SVNavigationTreeWidget::onModified(int modificationType, ModificationInfo *
 			else
 				ln = new QTreeWidgetItem(QStringList() << osmBuilding.m_displayName, QTreeWidgetItem::Type);
 			m_treeItemMap[osmBuilding.m_id] = ln;
-			ln->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
+			ln->setFlags(Qt::ItemIsEnabled);
 			ln->setData(0, SVNavigationTreeItemDelegate::NodeID, osmBuilding.m_id);
 			ln->setData(0, SVNavigationTreeItemDelegate::VisibleFlag, osmBuilding.m_visible);
 			ln->setData(0, SVNavigationTreeItemDelegate::SelectedFlag, osmBuilding.m_selected);

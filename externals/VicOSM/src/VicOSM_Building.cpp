@@ -149,6 +149,7 @@ void OSMBuilding::setDisplayName(const AbstractOSMElement& element) {
 
 void OSMBuilding::setVisible(bool visible) {
 	AbstractOSMObject::setVisible(visible);
+	m_dirtyLayer = true;
 	for (auto& area : m_areas)
 		area.m_dirtyTriangulation = true;
 }

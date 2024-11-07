@@ -6,6 +6,7 @@
 #include "IBK_physics.h"
 
 #include <unordered_set>
+#include <tuple>
 
 #include "NANDRAD_Utilities.h"
 
@@ -1110,10 +1111,9 @@ void DrawingOSM::addGeometryData(const VicOSM::AbstractOSMObject & object, std::
 		for (auto& circle : object.m_circles) {
 			addGeometryDataCircle(circle, geometryDataVector);
 		}
-		object.m_dirtyLayer = false;
 }
 
-void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>>& geometryData) const {
+void DrawingOSM::geometryData(std::map<double, std::tuple<std::vector<GeometryData *>, bool>>& geometryData) const {
 
 	// add BoundingBox
 	if (m_groundVisible) {
@@ -1135,90 +1135,91 @@ void DrawingOSM::geometryData(std::map<double, std::vector<GeometryData *>>& geo
 			m_geometryDataBoundingBox.m_color = QColor("#f2efe9");
 			m_geometryDataBoundingBox.m_planeGeometry.push_back(VICUS::PlaneGeometry(areaPoints));
 		}
-		geometryData[m_boundingBox.m_zPosition].push_back(&m_geometryDataBoundingBox);
+		std::get<0>(geometryData[m_boundingBox.m_zPosition]).push_back(&m_geometryDataBoundingBox);
 	}
+	std::get<1>(geometryData[m_boundingBox.m_zPosition]) = m_groundDirty;
 
 	// add all other objects
-	if (m_buildingsVisible) {
-		for (const auto & building : m_buildings) {
-			if (building.m_visible)
-				addGeometryData(building, geometryData[building.m_zPosition]);
-			else if (m_enable3DBuildings) {
-				if (building.m_outline.m_multiPolygon.m_outerPolyline.size() > 0) {
-					addGeometryDataArea(building.m_outline, geometryData[building.m_zPosition]);
-				} else if (building.m_areas.size() > 0) {
-					addGeometryDataArea(building.m_areas[0], geometryData[building.m_zPosition], true);
-				}
+	for (const auto & building : m_buildings) {
+		if (building.m_visible && m_buildingsVisible) {
+			addGeometryData(building, std::get<0>(geometryData[building.m_zPosition]));
+			if (building.m_dirtyLayer) {
+				std::get<1>(geometryData[building.m_zPosition]) = true;
+				building.m_dirtyLayer = false;
+			}
+		}
+		else if (m_enable3DBuildings) {
+			if (building.m_outline.m_multiPolygon.m_outerPolyline.size() > 0) {
+				addGeometryDataArea(building.m_outline, std::get<0>(geometryData[building.m_zPosition]), true);
+			} else if (building.m_areas.size() > 0) {
+				addGeometryDataArea(building.m_areas[0], std::get<0>(geometryData[building.m_zPosition]), true);
+			}
+			if (building.m_dirtyLayer) {
+				std::get<1>(geometryData[building.m_zPosition]) = true;
+				building.m_dirtyLayer = false;
 			}
 		}
 	}
 
-	if (m_streetsVisible) {
-		for( const auto & highway : m_highways) {
-			addGeometryData(highway, geometryData[highway.m_zPosition]);
-		}
+
+	for (const auto & highway : m_highways) {
+		if (m_streetsVisible)
+			addGeometryData(highway, std::get<0>(geometryData[highway.m_zPosition]));
+		std::get<1>(geometryData[highway.m_zPosition]) = m_streetsDirty;
+	}
+	for (const auto & water : m_waters) {
+		if (m_groundVisible)
+			addGeometryData(water, std::get<0>(geometryData[water.m_zPosition]));
+		std::get<1>(geometryData[water.m_zPosition]) = m_groundDirty;
+	}
+	for (const auto & land : m_land) {
+		if (m_groundVisible)
+			addGeometryData(land, std::get<0>(geometryData[land.m_zPosition]));
+		std::get<1>(geometryData[land.m_zPosition]) = m_groundDirty;
+	}
+	for (const auto & leisure : m_leisure) {
+		if (m_groundVisible)
+			addGeometryData(leisure, std::get<0>(geometryData[leisure.m_zPosition]));
+		std::get<1>(geometryData[leisure.m_zPosition]) = m_groundDirty;
+	}
+	for (const auto & natural : m_natural) {
+		if (m_groundVisible)
+			addGeometryData(natural, std::get<0>(geometryData[natural.m_zPosition]));
+		std::get<1>(geometryData[natural.m_zPosition]) = m_groundDirty;
+	}
+	for (const auto & amenity : m_amenities) {
+		if (m_groundVisible)
+			addGeometryData(amenity, std::get<0>(geometryData[amenity.m_zPosition]));
+		std::get<1>(geometryData[amenity.m_zPosition]) = m_groundDirty;
+	}
+	for (const auto & place : m_places) {
+		if (m_groundVisible)
+			addGeometryData(place, std::get<0>(geometryData[place.m_zPosition]));
+		std::get<1>(geometryData[place.m_zPosition]) = m_groundDirty;
+	}
+	for (const auto & bridge : m_bridges) {
+		if (m_groundVisible)
+			addGeometryData(bridge, std::get<0>(geometryData[bridge.m_zPosition]));
+		std::get<1>(geometryData[bridge.m_zPosition]) = m_groundDirty;
+	}
+	for (const auto & tourism : m_tourism) {
+		if (m_groundVisible)
+			addGeometryData(tourism, std::get<0>(geometryData[tourism.m_zPosition]));
+		std::get<1>(geometryData[tourism.m_zPosition]) = m_groundDirty;
+	}
+	for (const auto & barrier : m_barriers) {
+		if (m_groundVisible)
+			addGeometryData(barrier, std::get<0>(geometryData[barrier.m_zPosition]));
+		std::get<1>(geometryData[barrier.m_zPosition]) = m_groundDirty;
+	}
+	for (const auto & railway : m_railways) {
+		if (m_streetsVisible)
+			addGeometryData(railway, std::get<0>(geometryData[railway.m_zPosition]));
+		std::get<1>(geometryData[railway.m_zPosition]) = m_streetsDirty;
 	}
 
-	if (m_groundVisible) {
-		for( const auto & water : m_waters) {
-			addGeometryData(water, geometryData[water.m_zPosition]);
-		}
-	}
-
-	if (m_groundVisible) {
-		for( const auto & land : m_land) {
-			addGeometryData(land, geometryData[land.m_zPosition]);
-		}
-	}
-
-	if (m_groundVisible) {
-		for( const auto & leisure : m_leisure) {
-			addGeometryData(leisure, geometryData[leisure.m_zPosition]);
-		}
-	}
-
-	if (m_groundVisible) {
-		for( const auto & natural : m_natural) {
-			addGeometryData(natural, geometryData[natural.m_zPosition]);
-		}
-	}
-
-	if (m_groundVisible) {
-		for( const auto & amenity : m_amenities) {
-			addGeometryData(amenity, geometryData[amenity.m_zPosition]);
-		}
-	}
-
-	if (m_groundVisible) {
-		for( const auto & place : m_places) {
-			addGeometryData(place, geometryData[place.m_zPosition]);
-		}
-	}
-
-	if (m_groundVisible) {
-		for( const auto & bridge : m_bridges) {
-			addGeometryData(bridge, geometryData[bridge.m_zPosition]);
-		}
-	}
-
-	if (m_groundVisible) {
-		for( const auto & tourism : m_tourism) {
-			addGeometryData(tourism, geometryData[tourism.m_zPosition]);
-		}
-	}
-
-	if (m_groundVisible) {
-		for( const auto & barrier : m_barriers) {
-			addGeometryData(barrier, geometryData[barrier.m_zPosition]);
-		}
-	}
-
-	if (m_streetsVisible) {
-		for( const auto & railway : m_railways) {
-			addGeometryData(railway, geometryData[railway.m_zPosition]);
-		}
-	}
-
+	m_groundDirty = false;
+	m_streetsDirty = false;
 	m_dirtyTriangulation = false;
 }
 
@@ -1332,16 +1333,35 @@ void DrawingOSM::setGroundVisible(bool visible)
 	m_groundDirty = true;
 }
 
+void DrawingOSM::setGroundSelected(bool selected)
+{
+	m_groundVisible = selected;
+	m_groundDirty = true;
+}
+
 void DrawingOSM::setStreetsVisible(bool visible)
 {
 	m_streetsVisible = visible;
-	m_streetsVisible = true;
+	m_streetsDirty = true;
+}
+
+void DrawingOSM::setStreetsSelected(bool selected)
+{
+	m_streetsVisible = selected;
+	m_streetsDirty = true;
 }
 
 void DrawingOSM::setBuildingLayerVisible(bool visible)
 {
+	m_buildingsVisible = visible;
 	for (auto& building : m_buildings) {
-		building.setVisible(visible && building.m_visible);
+		// if building changes visibility state
+		if (building.m_visible) {
+			for (auto& area : building.m_areas) {
+					area.m_dirtyTriangulation = true;
+			}
+		}
+
 	}
 }
 

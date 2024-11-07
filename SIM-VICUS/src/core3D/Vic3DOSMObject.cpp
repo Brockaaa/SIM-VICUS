@@ -116,9 +116,12 @@ void OSMObject::configureNewVAOWithBuffer(VAOWithBufferStruct * VAOWithBuffer)
 }
 
 void OSMObject::generateOSMGeometry() {
-	destroy();
 
 	const VICUS::Project & p = project();
+
+
+	if (p.m_drawingsOSM.empty())
+		destroy();
 
 	// displays progressDialog on first triangulation after import of a new DrawingOSM
 	QProgressDialog * progress = nullptr;
@@ -144,15 +147,34 @@ void OSMObject::generateOSMGeometry() {
 	for (const VICUS::DrawingOSM & drawing : p.m_drawingsOSM) {
 		QCoreApplication::processEvents();
 		drawing.m_firstTriangulation = false;
-
-		std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>> geometryDataWithLayer; // std::map sorts by key
+		std::map<double, std::tuple<std::vector<VICUS::DrawingOSM::GeometryData *>, bool>> geometryDataWithLayer; // std::map sorts by key
 		drawing.geometryData(geometryDataWithLayer);
 
-		for (std::map<double,std::vector<VICUS::DrawingOSM::GeometryData*>>::iterator it = geometryDataWithLayer.begin(); it != geometryDataWithLayer.end(); ++it) {
 
+		for (std::map<double, std::tuple<std::vector<VICUS::DrawingOSM::GeometryData *>, bool>>::iterator it = geometryDataWithLayer.begin(); it != geometryDataWithLayer.end(); ++it) {
+			if (!std::get<1>(it->second)) continue;
 			// to keep progressbar and UI responsive
+			VAOWithBufferStruct* VAOWithBuffer;
+			bool notInVector = true;
+
+			for (int i = 0; i < m_VAOWithBuffers.size(); i++) {
+				if (m_VAOWithBuffers[i] != nullptr && m_VAOWithBuffers[i]->m_layer == it->first) {
+					m_VAOWithBuffers[i]->m_vao.destroy();
+					m_VAOWithBuffers[i]->m_vertexBufferObject.destroy();
+					m_VAOWithBuffers[i]->m_colorBufferObject.destroy();
+					m_VAOWithBuffers[i]->m_indexBufferObject.destroy();
+					delete(m_VAOWithBuffers[i]);
+					m_VAOWithBuffers[i] = new VAOWithBufferStruct();
+					VAOWithBuffer = m_VAOWithBuffers[i];
+					notInVector = false;
+					break;
+				}
+			}
+			if (notInVector) {
+				VAOWithBuffer = new VAOWithBufferStruct();
+				m_VAOWithBuffers.push_back(VAOWithBuffer);
+			}
 			QCoreApplication::processEvents();
-			VAOWithBufferStruct* VAOWithBuffer = new VAOWithBufferStruct();
 			VAOWithBuffer->m_layer = it->first;
 			configureNewVAOWithBuffer(VAOWithBuffer);
 
@@ -169,7 +191,7 @@ void OSMObject::generateOSMGeometry() {
 			unsigned int currentElementIndex = 0;
 
 			// adding geometry data to GeometryObject
-			for (const auto& data : geometryDataWithLayer[it->first]) {
+			for (const auto& data : std::get<0>(geometryDataWithLayer[it->first])) {
 				QCoreApplication::processEvents();
 				if (data->m_extrudingPolygon) {
 					for (const auto &multipolygon : data->m_multipolygons) {
@@ -216,7 +238,6 @@ void OSMObject::generateOSMGeometry() {
 				}
 			}
 			VAOWithBuffer->m_transparentStartIndex = VAOWithBuffer->m_indexBufferData.size();
-			m_VAOWithBuffers.push_back(VAOWithBuffer);
 		}
 	}
 
@@ -227,7 +248,8 @@ void OSMObject::generateOSMGeometry() {
 }
 
 void OSMObject::render(float zCamera) {
-	if(m_buildingShader == nullptr) return;
+	if (m_buildingShader == nullptr) return;
+	if (!project().m_drawingsOSM.empty() && !project().m_drawingsOSM.back().m_visible) return;
 	if (abs(zCamera) < 1000) zCamera > 0 ? zCamera = 1000 : zCamera = -1000; // z needs to stay above a threshold. Value arbitrary, through observing in scene
 
 	for(auto VAOWithBuffer : m_VAOWithBuffers) {

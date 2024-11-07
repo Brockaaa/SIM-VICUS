@@ -359,7 +359,7 @@ public:
 
 	std::vector<DrawingOSM>								m_drawingsOSM;
 
-	std::vector<OSMBuildingObject>						m_osmBuildingObjects;
+	std::vector<OSMBuildingObject>						m_osmBuildingObjects;		// XML:E
 
 	OSMBuildingObject									m_osmBuildingObjectRoot;	// XML:E
 

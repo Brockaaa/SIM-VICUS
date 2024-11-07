@@ -70,6 +70,9 @@ public:
 		return "DrawingOSM";
 	}
 
+	//:inherited	unsigned int		m_id = INVALID_ID;			// XML:A:required
+	//:inherited	bool				m_visible = true;			// XML:A
+
 	/*! Groups together planeGeometry with data like color, height etc. PlaneGeometry will
 	 *  be held in this struct. This struct is held in m_geometryData in VICUS::DrawingOSM */
 	struct GeometryData {
@@ -142,7 +145,7 @@ public:
 	void addGeometryData(const AbstractOSMObject& object, std::vector<GeometryData *>& geometryDataVector) const;
 
 	/*! Iterates over all OSMObjects and adds geometryData to the geometryData map. The map takes as a key the z-value of an object to define the order of the objects. */
-	void geometryData(std::map<double, std::vector<VICUS::DrawingOSM::GeometryData*>>& geometryData) const;
+	void geometryData(std::map<double, std::tuple<std::vector<GeometryData *>, bool>>& geometryData) const;
 
 	/*! Searches in m_nodes for node with id. If no node was found, a nullptr is returned */
 	const Node* findNodeFromId(unsigned int id) const;
@@ -156,7 +159,10 @@ public:
 	int convertKeyToInt (const VicOSM::AbstractOSMObject& object) const;
 
 	void setGroundVisible(bool visible);
+	void setGroundSelected(bool selected);
+
 	void setStreetsVisible(bool visible);
+	void setStreetsSelected(bool selected);
 
 	void setBuildingLayerVisible(bool visible);
 	void setBuildingLayerSelected(bool selected);
@@ -223,14 +229,14 @@ public:
 	/*! Indicates whether all OSMObjects belonging to ground areas are selected. Please use the setter to set the flag*/
 	bool															m_groundSelected = false;
 	/*! Indicates whether the layers associated with the ground need to be recreated */
-	bool															m_groundDirty = true;
+	mutable bool													m_groundDirty = true;
 
 	/*! Indicates whether all OSMObjects belonging to streets and railways are visible. Please use the setter to set the flag*/
 	bool															m_streetsVisible = true;
 	/*! Indicates whether all OSMObjects belonging to streets and railways are selected. Please use the setter to set the flag*/
 	bool															m_streetsSelected = false;
 	/*! Indicates whether the layers associated with streets and railways need to be recreated */
-	bool															m_streetsDirty = true;
+	mutable bool													m_streetsDirty = true;
 
 	/*! Indicates whether all OSMBuildings are visible. Please use the setter to set the flag*/
 	bool															m_buildingsVisible = true;
