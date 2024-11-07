@@ -1143,10 +1143,6 @@ void DrawingOSM::geometryData(std::map<double, std::tuple<std::vector<GeometryDa
 	for (const auto & building : m_buildings) {
 		if (building.m_visible && m_buildingsVisible) {
 			addGeometryData(building, std::get<0>(geometryData[building.m_zPosition]));
-			if (building.m_dirtyLayer) {
-				std::get<1>(geometryData[building.m_zPosition]) = true;
-				building.m_dirtyLayer = false;
-			}
 		}
 		else if (m_enable3DBuildings) {
 			if (building.m_outline.m_multiPolygon.m_outerPolyline.size() > 0) {
@@ -1154,10 +1150,10 @@ void DrawingOSM::geometryData(std::map<double, std::tuple<std::vector<GeometryDa
 			} else if (building.m_areas.size() > 0) {
 				addGeometryDataArea(building.m_areas[0], std::get<0>(geometryData[building.m_zPosition]), true);
 			}
-			if (building.m_dirtyLayer) {
-				std::get<1>(geometryData[building.m_zPosition]) = true;
-				building.m_dirtyLayer = false;
-			}
+		}
+		if (building.m_dirtyLayer) {
+			std::get<1>(geometryData[building.m_zPosition]) = true;
+			building.m_dirtyLayer = false;
 		}
 	}
 
