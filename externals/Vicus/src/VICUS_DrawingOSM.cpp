@@ -197,7 +197,7 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertVectorWayWithMarksToVector2D(con
 	std::vector<IBKMK::Vector2D> vectorCoordinates;
 	for (WayWithMarks * way : ways) {
 		if (way->m_reversedOrder) {
-			for (unsigned int i = way->m_nodeRefs.size() - 1; i >= 0; i--) {
+			for (unsigned int i = 0; i < way->m_nodeRefs.size() - 1; i--) {
 				const VicOSM::Node *node = findNodeFromId(way->m_nodeRefs[i]);
 				Q_ASSERT(node);
 				vectorCoordinates.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
