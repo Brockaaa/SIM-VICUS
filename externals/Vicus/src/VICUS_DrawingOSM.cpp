@@ -64,7 +64,7 @@ void DrawingOSM::createMultipolygonsFromRelation(const VicOSM::Relation & relati
 	/* based on https://wiki.openstreetmap.org/wiki/Relation:multipolygon
 	 * and https://wiki.openstreetmap.org/wiki/Relation:multipolygon/Algorithm */
 
-	auto processWay = [&](std::vector<int>& nodeRefs, int wayRef) -> bool {
+	auto processWay = [&](std::vector<uint64_t>& nodeRefs, int wayRef) -> bool {
 		const VicOSM::Way* way = findWayFromId(wayRef);
 		if(!way) return false;
 		for (unsigned int i = 0; i < way->m_nd.size(); i++) {
@@ -120,7 +120,7 @@ void DrawingOSM::ringAssignment(std::vector<WayWithMarks> & ways, std::vector<st
 	};
 
 	auto getNewWay = [&]() -> bool {
-		int nodeID = currentRing.back()->m_reversedOrder ? currentRing.back()->m_nodeRefs.front() : currentRing.back()->m_nodeRefs.back();
+		uint64_t nodeID = currentRing.back()->m_reversedOrder ? currentRing.back()->m_nodeRefs.front() : currentRing.back()->m_nodeRefs.back();
 		for (auto& way : ways) {
 			// if a way is already in the current ring or already used, skip it
 			if (way.m_assigned || way.m_selected) continue;
@@ -197,13 +197,13 @@ std::vector<IBKMK::Vector2D> DrawingOSM::convertVectorWayWithMarksToVector2D(con
 	std::vector<IBKMK::Vector2D> vectorCoordinates;
 	for (WayWithMarks * way : ways) {
 		if (way->m_reversedOrder) {
-			for (int i = way->m_nodeRefs.size() - 1; i >= 0; i--) {
+			for (unsigned int i = way->m_nodeRefs.size() - 1; i >= 0; i--) {
 				const VicOSM::Node *node = findNodeFromId(way->m_nodeRefs[i]);
 				Q_ASSERT(node);
 				vectorCoordinates.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
 			}
 		} else {
-			for (int refs : way->m_nodeRefs) {
+			for (uint64_t refs : way->m_nodeRefs) {
 				const VicOSM::Node *node = findNodeFromId(refs);
 				Q_ASSERT(node);
 				vectorCoordinates.push_back(convertLatLonToVector2D(node->m_lat, node->m_lon));
@@ -507,7 +507,7 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 		}
 	};
 
-	std::function<void(const Relation&, std::vector<int>&)> findUsedWaysAndRelations = [&](const Relation& relation, std::vector<int>& usedWaysAndRelations) {
+	std::function<void(const Relation&, std::vector<uint64_t>&)> findUsedWaysAndRelations = [&](const Relation& relation, std::vector<uint64_t>& usedWaysAndRelations) {
 		for (auto& member : relation.m_members) {
 			if (member.m_type == Types::WayType) {
 				usedWaysAndRelations.push_back(member.m_ref);
@@ -521,7 +521,7 @@ void DrawingOSM::constructObjects(IBK::NotificationHandler *notifyer) {
 		}
 	};
 
-	std::vector<int> usedWaysInBuildingRelation;
+	std::vector<uint64_t> usedWaysInBuildingRelation;
 	/* finds all relations and ways that are used in a Simple 3D Building and add them to usedWaysInBuildingRelation
 	 * to prevent them to be independently drawn. */
 	if (m_enable3DBuildings) {
@@ -1223,7 +1223,7 @@ void DrawingOSM::geometryData(std::map<double, std::tuple<std::vector<GeometryDa
 	m_dirtyTriangulation = false;
 }
 
-const VicOSM::Node * DrawingOSM::findNodeFromId(unsigned int id) const {
+const VicOSM::Node * DrawingOSM::findNodeFromId(uint64_t id) const {
 	auto it = m_nodes.find(id);
 	if (it != m_nodes.end()) {
 		return &it->second;
@@ -1232,7 +1232,7 @@ const VicOSM::Node * DrawingOSM::findNodeFromId(unsigned int id) const {
 	}
 }
 
-const VicOSM::Way * DrawingOSM::findWayFromId(unsigned int id) const {
+const VicOSM::Way * DrawingOSM::findWayFromId(uint64_t id) const {
 	auto it = m_ways.find(id);
 	if (it != m_ways.end()) {
 		return &it->second;
@@ -1241,7 +1241,7 @@ const VicOSM::Way * DrawingOSM::findWayFromId(unsigned int id) const {
 	}
 }
 
-const VicOSM::Relation * DrawingOSM::findRelationFromId(unsigned int id) const {
+const VicOSM::Relation * DrawingOSM::findRelationFromId(uint64_t id) const {
 	auto it = m_relations.find(id);
 	if (it != m_relations.end()) {
 		return &it->second;

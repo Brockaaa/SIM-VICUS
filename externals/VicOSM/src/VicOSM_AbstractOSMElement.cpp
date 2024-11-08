@@ -1,5 +1,11 @@
 #include "VicOSM_AbstractOSMElement.h"
+#include <VicOSM_KeywordList.h>
+
+#include <IBK_messages.h>
 #include <IBK_Exception.h>
+#include <IBK_StringUtils.h>
+#include <VicOSM_Constants.h>
+#include <NANDRAD_Utilities.h>
 
 namespace VicOSM {
 
@@ -43,7 +49,7 @@ void Member::readXML(const TiXmlElement * element)
 		throw IBK::Exception( IBK::FormatString("Error in XML file, line %1: %2").arg(element->Row()).arg(
 								 IBK::FormatString("Unknown type '%1'.").arg(typeStr) ), FUNC_ID);
 
-	m_ref = TiXmlAttribute::attributeByName(element, "ref")->IntValue();
+	m_ref = std::atol(TiXmlAttribute::attributeByName(element, "ref")->Value());
 	m_role = TiXmlAttribute::attributeByName(element, "role")->ValueStr();
 }
 
@@ -55,7 +61,7 @@ void Nd::readXML(const TiXmlElement * element)
 		throw IBK::Exception( IBK::FormatString("Error in XML file, line %1: %2").arg(element->Row()).arg(
 								 IBK::FormatString("Missing required 'ref' attribute.") ), FUNC_ID);
 
-	m_ref = TiXmlAttribute::attributeByName(element, "ref")->IntValue();
+	m_ref = std::atol(TiXmlAttribute::attributeByName(element, "ref")->Value());
 }
 
 void AbstractOSMElement::readXML(const TiXmlElement * element)
@@ -72,7 +78,7 @@ void AbstractOSMElement::readXML(const TiXmlElement * element)
 	while (attrib) {
 		const std::string & attribName = attrib->NameStr();
 		if (attribName == "id") {
-			m_id = attrib->IntValue();
+			m_id = std::atol(attrib->Value());
 		}
 		else if (attribName == "visible") {
 			std::string value = attrib->ValueStr();

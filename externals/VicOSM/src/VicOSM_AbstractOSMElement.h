@@ -28,7 +28,7 @@ struct Member {
 	/*! Specifies if the member is a node, way or relation */
 	Types m_type;
 	/*! Reference to the OSM Element */
-	int m_ref;
+	uint64_t m_ref;
 	/*! Role of the OSM Element */
 	std::string m_role;
 	/*! readXML (handwritten) to read a member in a .osm file */
@@ -38,7 +38,7 @@ struct Member {
 /*! Nd (for node) only used by ways to reference nodes. The order of the nodes define the polyline described by the way element */
 struct Nd {
 	/*! Reference to a node element */
-	int m_ref;
+	uint64_t m_ref;
 	/*! readXML (handwritten) to read a node in a .osm file */
 	void readXML(const TiXmlElement * element);
 };
@@ -59,7 +59,7 @@ public:
 	std::string getValueFromKey(const std::string& key) const;
 	/*! Unique ID of the OSM Element. The ID space is described by openstreetmap and is unique for every osm element
 		in Planet.osm */
-	unsigned int                    m_id = -1; // unique id
+	uint64_t				        m_id = -1; // unique id
 	/*! Stores all tags of a OSM Element */
 	std::vector<Tag>				m_tags; // stores all tags. Does not make an effort to interpret them
 	/*! Stores all Nd elements of a way */

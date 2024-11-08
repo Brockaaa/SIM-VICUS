@@ -203,7 +203,7 @@ void SVImportOSMDialog::updateDownloadProgressCurl() {
 	}
 }
 
-void SVImportOSMDialog::updateDownloadProgress(qint64 bytesReceived, qint64 bytesTotal)
+void SVImportOSMDialog::updateDownloadProgress(qint64 /* bytesReceived*/, qint64 bytesTotal)
 {
 	if (bytesTotal > 0) {
 		QString logText = m_ui->plainTextEditLog->toPlainText();

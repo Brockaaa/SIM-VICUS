@@ -37,11 +37,19 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 
 	try {
 		// search for mandatory attributes
+		if (!TiXmlAttribute::attributeByName(element, "id"))
+			throw IBK::Exception( IBK::FormatString(XML_READ_ERROR).arg(element->Row()).arg(
+				IBK::FormatString("Missing required 'id' attribute.") ), FUNC_ID);
+
 		// reading attributes
 		const TiXmlAttribute * attrib = element->FirstAttribute();
 		while (attrib) {
 			const std::string & attribName = attrib->NameStr();
-			if (attribName == "utmZone")
+			if (attribName == "id")
+				m_id = NANDRAD::readPODAttributeValue<unsigned int>(element, attrib);
+			else if (attribName == "visible")
+				m_visible = NANDRAD::readPODAttributeValue<bool>(element, attrib);
+			else if (attribName == "utmZone")
 				m_utmZone = NANDRAD::readPODAttributeValue<int>(element, attrib);
 			else if (attribName == "centerX")
 				m_centerX = NANDRAD::readPODAttributeValue<double>(element, attrib);
@@ -220,9 +228,14 @@ void DrawingOSM::readXML(const TiXmlElement * element) {
 }
 
 TiXmlElement * DrawingOSM::writeXML(TiXmlElement * parent) const {
+	if (m_id == VICUS::INVALID_ID)  return nullptr;
 	TiXmlElement * e = new TiXmlElement("DrawingOSM");
 	parent->LinkEndChild(e);
 
+	if (m_id != VICUS::INVALID_ID)
+		e->SetAttribute("id", IBK::val2string<unsigned int>(m_id));
+	if (m_visible != DrawingOSM().m_visible)
+		e->SetAttribute("visible", IBK::val2string<bool>(m_visible));
 	e->SetAttribute("utmZone", IBK::val2string<int>(m_utmZone));
 	e->SetAttribute("centerX", IBK::val2string<double>(m_centerX));
 	e->SetAttribute("centerY", IBK::val2string<double>(m_centerY));

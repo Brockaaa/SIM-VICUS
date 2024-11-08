@@ -106,20 +106,20 @@ public:
 	void setSelected(bool selected);
 
 	/*! Contains all areas in the OSM Object */
-	std::vector<Area>					m_areas;				// XML:E
+	std::vector<Area>					m_areas;
 	/*! Contains all lines in the OSM Object */
-	std::vector<LineFromPlanes>			m_linesFromPlanes;		// XML:E
+	std::vector<LineFromPlanes>			m_linesFromPlanes;
 	/*! Contains all circles in the OSM Object */
-	std::vector<Circle>					m_circles;				// XML:E
+	std::vector<Circle>					m_circles;
 	/*! Unique ID of the OSM object defined by the relation, way or node describing this OSM object. The ID space is described by openstreetmap and is unique for every osm element
 		in Planet.osm */
-	unsigned int						m_id = 0xFFFFFFFF;		// XML:A
+	uint64_t							m_id = 0xFFFFFFFF;
 	/*! Key that defines this OSM Object. */
-	std::string							m_key = "";				// XML:A
+	std::string							m_key = "";
 	/*! Value of the key that defines this OSM Object. */
-	std::string							m_value = "";			// XML:A
+	std::string							m_value = "";
 	/*! Display name of Building, visible in navigation tree */
-	std::string							m_displayName = "";		// XML:A
+	std::string							m_displayName = "";
 
 	// *** runtime only used in contructObjects
 	/*! Key and value enum that define this OSM Object. Only relevant for the order which the OSMObjects overlap.

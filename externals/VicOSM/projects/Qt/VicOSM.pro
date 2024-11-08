@@ -51,8 +51,6 @@ SOURCES += \
 	../../src/VicOSM_Tourism.cpp \
 	../../src/VicOSM_Water.cpp \
 	../../src/VicOSM_Way.cpp \
-	../../src/ncg/ncg_VicOSM_AbstractOSMObject.cpp \
-	../../src/ncg/ncg_VicOSM_Building.cpp \
 	../../src/ncg/ncg_VicOSM_Amenity.cpp \
 	../../src/ncg/ncg_VicOSM_Area.cpp \
 	../../src/ncg/ncg_VicOSM_Barrier.cpp \

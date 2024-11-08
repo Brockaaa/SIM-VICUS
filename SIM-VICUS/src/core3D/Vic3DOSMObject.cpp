@@ -157,7 +157,7 @@ void OSMObject::generateOSMGeometry() {
 			VAOWithBufferStruct* VAOWithBuffer;
 			bool notInVector = true;
 
-			for (int i = 0; i < m_VAOWithBuffers.size(); i++) {
+			for (unsigned int i = 0; i < m_VAOWithBuffers.size(); i++) {
 				if (m_VAOWithBuffers[i] != nullptr && m_VAOWithBuffers[i]->m_layer == it->first) {
 					m_VAOWithBuffers[i]->m_vao.destroy();
 					m_VAOWithBuffers[i]->m_vertexBufferObject.destroy();

@@ -92,7 +92,7 @@ public:
 	/*! Struct only used in createMultipolygon, ringAssignment, ringGrouping */
 	struct WayWithMarks {
 		/*! Reference to the nodes used by this way */
-		std::vector<int> m_nodeRefs;
+		std::vector<uint64_t> m_nodeRefs;
 		/*! true if a ring or multipolygon was succesfully constructed using this way */
 		bool m_assigned = false;
 		/*! true if it is in the process of being assigned to a ring */
@@ -148,11 +148,11 @@ public:
 	void geometryData(std::map<double, std::tuple<std::vector<GeometryData *>, bool>>& geometryData) const;
 
 	/*! Searches in m_nodes for node with id. If no node was found, a nullptr is returned */
-	const Node* findNodeFromId(unsigned int id) const;
+	const Node* findNodeFromId(uint64_t id) const;
 	/*! Searches in m_ways for way with id. If no way was found, a nullptr is returned */
-	const Way* findWayFromId(unsigned int id) const;
+	const Way* findWayFromId(uint64_t id) const;
 	/*! Searches in m_relations for relation with id. If no relation was found, a nullptr is returned */
-	const Relation* findRelationFromId(unsigned int id) const;
+	const Relation* findRelationFromId(uint64_t id) const;
 	/*! converts latitude, longitude to UTM mercator projection coordinates. Uses the UTM zone defined by the bounding box */
 	inline IBKMK::Vector2D convertLatLonToVector2D(double lat, double lon) const;
 	/*! converts Key of OSMObject to an integer corresponding to the order of the OSMObject */
@@ -173,11 +173,11 @@ public:
 
 	// *** List of OSM XML Elements ***
 	/*! list of nodes */
-	std::unordered_map<unsigned int, Node>			m_nodes;
+	std::unordered_map<uint64_t, Node>			m_nodes;
 	/*! list of ways */
-	std::unordered_map<unsigned int, Way>			m_ways;
+	std::unordered_map<uint64_t, Way>			m_ways;
 	/*! lists of relations */
-	std::unordered_map<unsigned int, Relation>		m_relations;
+	std::unordered_map<uint64_t, Relation>		m_relations;
 	/*! Stores the bounding box of the drawing */
 	BoundingBox										m_boundingBox;		// XML:E
 

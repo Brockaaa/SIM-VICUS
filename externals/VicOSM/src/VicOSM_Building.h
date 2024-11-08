@@ -12,14 +12,6 @@ public:
 	void readXML(const TiXmlElement * element);
 	TiXmlElement * writeXML(TiXmlElement * parent) const;
 
-	//:inherited	std::string						m_key = "";				// XML:A
-	//:inherited	std::string						m_value = "";			// XML:A
-	//:inherited	std::string						m_displayName = "";		// XML:A
-	//:inherited	double							m_zPosition = 0;		// XML:A
-	//:inherited	std::vector<Area>				m_areas;				// XML:E
-	//:inherited	std::vector<LineFromPlanes>		m_linesFromPlanes;		// XML:E
-	//:inherited	std::vector<Circle>				m_circles;				// XML:E
-
 	/*! Calculates the m_height and m_minHeight of an area in this building */
 	void calculateHeight(const AbstractOSMElement& element, Area& area) const;
 	/*! Creates building object from way */
@@ -37,11 +29,11 @@ public:
 	/*! setter for m_selected */
 	void setSelected(bool selected);
 	/*! Specifies the default height of a building level. Value 3 taken from the osm wiki. Can be specified for an individual OSM object */
-	double								m_levelHeight = 3;					// XML:A
+	double								m_levelHeight = 3;
 	/*! Specifies the default height of roof. Value 3 taken from the osm wiki. Can be specified for an individual OSM Element */
-	double								m_roofHeight = 3;					// XML:A
+	double								m_roofHeight = 3;
 	/*! Specifies the position of the area that describes the outline of the building in the m_areas std::vector. Used for switching between 2D and 3D rendering of buildings */
-	std::vector<Area>					m_outlines;							// XML:E
+	std::vector<Area>					m_outlines;
 };
 
 } // namespace VicOSM
