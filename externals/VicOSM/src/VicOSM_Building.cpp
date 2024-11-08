@@ -76,7 +76,7 @@ bool OSMBuilding::createBuilding(Way & way, bool enable3D) {
 	if (way.containsKeyValue("building", "roof") && !enable3D) return false;
 	m_key = "building";
 	if (!initialize(way)) return false;
-	//if (enable3D) m_layer = 0;
+	if (enable3D) m_layer = 0;
 	setDisplayName(way);
 
 	m_areas.push_back(createArea(way, enable3D));
@@ -88,7 +88,7 @@ bool OSMBuilding::createBuilding(Relation & relation, bool enable3D) {
 	if (relation.containsKeyValue("building", "roof") && !enable3D) return false;
 	m_key = "building";
 	if (!initialize(relation)) return false;
-	//if (enable3D) m_layer = 0;
+	if (enable3D) m_layer = 0;
 	setDisplayName(relation);
 
 	m_areas.push_back(createArea(relation, enable3D));
